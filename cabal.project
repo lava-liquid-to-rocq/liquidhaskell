@@ -7,6 +7,7 @@ packages: .
           ./liquid-prelude
           ./liquid-vector
           ./liquidhaskell-boot
+          ./lava
           ./tests
           ./tests/benchmarks/popl18/lib
           ./benchmark-timings
@@ -50,8 +51,10 @@ package liquid-vector
   ghc-options: -j
 package liquid-parallel
   ghc-options: -j
+package lava
+  ghc-options: -j
 
-flags: +devel
+-- flags: +devel
 
 constraints:
   -- since 1.4.7 there's a clash between data-default-class and data-default-0.8 when building SVGFonts

@@ -1,3 +1,4 @@
+{- ORMOLU_DISABLE -}
 -- | This module provides a GHC 'Plugin' that allows LiquidHaskell to be hooked directly into GHC's
 -- compilation pipeline, facilitating its usage and adoption.
 
@@ -14,6 +15,8 @@ module Language.Haskell.Liquid.GHC.Plugin (
   plugin
 
   ) where
+
+import Language.Haskell.Liquid.Lava.Translate (runLava, SrcInfo (..))
 
 import qualified Liquid.GHC.API         as O
 import           Liquid.GHC.API         as GHC hiding (Type)
@@ -69,6 +72,7 @@ import           Language.Haskell.Liquid.Types.Errors
 import           Language.Haskell.Liquid.Types.PrettyPrint
 import           Language.Haskell.Liquid.Types.Specs
 import           Language.Haskell.Liquid.Types.Types
+import           Language.Haskell.Liquid.Types.RType (SpecType)
 import           Language.Haskell.Liquid.Types.Visitors
 import           Language.Haskell.Liquid.Bare
 import qualified Language.Haskell.Liquid.Bare.Resolve as Resolve
@@ -415,6 +419,16 @@ liquidHaskellCheckWithConfig cfg pipelineData modSummary = do
     reportErrs :: (Show e, F.PPrint e) => [TError e] -> TcM (Either LiquidCheckException a)
     reportErrs  = LH.filterReportErrors thisFile GHC.failM continue (getFilters cfg) Full
 
+-- NOTE: Addition for Lava
+mkSrcInfo :: LiquidHaskellContext -> TargetInfo -> AnnInfo SpecType -> SrcInfo
+mkSrcInfo lhContext targetInfo infTypes =
+  SrcInfo
+    { s_moduleName = moduleName $ ms_mod $ lhModuleSummary lhContext,
+      s_summary = lhModuleSummary lhContext,
+      s_targetInfo = targetInfo,
+      s_infTypes = infTypes
+    }
+
 checkLiquidHaskellContext :: LiquidHaskellContext -> TcM (Either LiquidCheckException LiquidLib)
 checkLiquidHaskellContext lhContext = do
   pmr <- processModule lhContext
@@ -422,9 +436,13 @@ checkLiquidHaskellContext lhContext = do
     Left e -> pure $ Left e
     Right ProcessModuleResult{..} -> do
       -- Call into the existing Liquid interface
-      out <- liftIO $ LH.checkTargetInfo pmrTargetInfo
+      (out, infTypes) <- liftIO $ LH.checkTargetInfo pmrTargetInfo
 
       let bareSpec = lhInputSpec lhContext
+
+      -- NOTE: Addition for Lava
+      when (lava $ lhGlobalCfg lhContext) (
+        liftIO $ runLava (mkSrcInfo lhContext pmrTargetInfo infTypes))
 
       withPragmas (lhGlobalCfg lhContext) (Ms.pragmas bareSpec) $ \moduleCfg ->  do
         let filters = getFilters moduleCfg

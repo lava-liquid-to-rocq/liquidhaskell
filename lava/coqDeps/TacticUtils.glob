@@ -1,0 +1,915 @@
+DIGEST 74b633250f65c88fad5c8067c3d93ef9
+FcoqDeps.TacticUtils
+R379:381 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R379:381 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R446:449 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R442:445 Coq.Init.Logic <> True ind
+R451:453 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R527:527 Coq.Init.Logic <> I constr
+R585:588 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R581:584 Coq.Init.Logic <> True ind
+R590:592 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R663:663 Coq.Init.Logic <> I constr
+R652:652 Coq.Init.Logic <> I constr
+R785:788 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R781:784 Coq.Init.Logic <> True ind
+R791:793 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R785:788 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R781:784 Coq.Init.Logic <> True ind
+R791:793 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R855:857 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R880:880 Coq.Init.Logic <> I constr
+R919:919 Coq.Init.Logic <> I constr
+R977:979 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1626:1628 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1626:1628 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1718:1720 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1698:1703 Coq.Init.Specif <> existT constr
+R1722:1727 Coq.Init.Specif <> existT constr
+R1718:1720 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1698:1703 Coq.Init.Specif <> existT constr
+R1722:1727 Coq.Init.Specif <> existT constr
+R1662:1667 Coq.Init.Logic <> eq_sym thm
+R1962:1964 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1962:1964 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1982:1987 Coq.Init.Logic <> eq_sym thm
+R2506:2508 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R2608:2611 coqDeps.TacticUtils <> _nil def
+R2608:2611 coqDeps.TacticUtils <> _nil def
+R2628:2633 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R2628:2633 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R2841:2844 coqDeps.TacticUtils <> _nil def
+R2841:2844 coqDeps.TacticUtils <> _nil def
+R2861:2866 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R2861:2866 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R2914:2919 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R2914:2919 coqDeps.TacticUtils <> :::x_'_::_'_x not
+binder 3170:3172 <> wit:666
+R3315:3317 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R3420:3422 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R3420:3422 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R3929:3931 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R3916:3921 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R3929:3931 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R3916:3921 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R4345:4347 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R4341:4344 coqDeps.TacticUtils <> _nil def
+R4345:4347 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R4341:4344 coqDeps.TacticUtils <> _nil def
+R4131:4134 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
+R4124:4126 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R4127:4130 Coq.Init.Datatypes <> true constr
+R4139:4141 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R4142:4146 Coq.Init.Datatypes <> false constr
+R4718:4721 coqDeps.TacticUtils <> _nil def
+R4718:4721 coqDeps.TacticUtils <> _nil def
+R4738:4743 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R4738:4743 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R4889:4892 coqDeps.TacticUtils <> _nil def
+R5514:5516 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R5514:5516 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R5745:5750 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R6173:6175 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R6158:6163 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R6173:6175 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R6158:6163 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R6317:6319 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R6313:6316 coqDeps.TacticUtils <> _nil def
+R6317:6319 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R6313:6316 coqDeps.TacticUtils <> _nil def
+R6545:6547 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R6545:6547 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R6691:6696 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R6691:6696 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R7046:7051 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R7052:7055 coqDeps.TacticUtils <> _nil def
+R7121:7124 coqDeps.TacticUtils <> _nil def
+R7121:7124 coqDeps.TacticUtils <> _nil def
+R7147:7152 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R7153:7156 coqDeps.TacticUtils <> _nil def
+R7147:7152 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R7153:7156 coqDeps.TacticUtils <> _nil def
+R7202:7207 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R7202:7207 coqDeps.TacticUtils <> :::x_'_::_'_x not
+binder 8201:8204 <> name:667
+binder 8360:8360 <> x:668
+R8367:8367 coqDeps.TacticUtils <> x:668 var
+R8411:8414 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8411:8414 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8803:8807 Coq.Init.Specif <> exist constr
+R8813:8819 Coq.Init.Logic <> eq_refl constr
+R8875:8879 Coq.Init.Specif <> exist constr
+R8888:8894 Coq.Init.Logic <> eq_refl constr
+R9248:9251 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9248:9251 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+binder 9332:9332 <> v:669
+binder 9332:9332 <> v:670
+binder 9378:9378 <> v:671
+R9390:9393 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9389:9389 coqDeps.TacticUtils <> v:671 var
+binder 9378:9378 <> v:672
+R9390:9393 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9389:9389 coqDeps.TacticUtils <> v:672 var
+binder 9466:9466 <> v:673
+binder 9466:9466 <> v:674
+R9637:9639 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R9637:9639 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R9714:9718 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R9714:9718 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R9793:9796 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R9793:9796 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R9871:9874 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
+R9871:9874 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
+R10251:10251 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R10274:10277 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R10252:10252 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R10266:10272 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R10256:10261 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R10262:10265 coqDeps.TacticUtils <> _nil def
+R10251:10251 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R10274:10277 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R10252:10252 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R10266:10272 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R10256:10261 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R10262:10265 coqDeps.TacticUtils <> _nil def
+R10572:10574 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R10572:10574 Coq.Init.Logic <> ::type_scope:x_'='_x not
+binder 10685:10685 <> x:675
+R10692:10692 coqDeps.TacticUtils <> x:675 var
+R10746:10749 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R10734:10734 Coq.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R10736:10736 Coq.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R10739:10741 Coq.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R10744:10745 Coq.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+binder 10735:10735 <> x:676
+R10746:10749 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R10734:10734 Coq.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R10736:10736 Coq.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R10739:10741 Coq.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R10744:10745 Coq.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+binder 10735:10735 <> x:677
+binder 10765:10765 <> x:678
+R10848:10855 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R10859:10861 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R10848:10855 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R10859:10861 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R10889:10896 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R10906:10908 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R10889:10896 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R10906:10908 Coq.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R11099:11101 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R11099:11101 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R11381:11383 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R11381:11383 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R11697:11700 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R11693:11695 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R11697:11700 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R11693:11695 Coq.Init.Logic <> ::type_scope:x_'='_x not
+ind 11946:11956 <> LookupItems
+constr 11971:11973 <> rel
+constr 11993:11997 <> rwLem
+R11977:11987 coqDeps.TacticUtils <> LookupItems:679 ind
+R12001:12011 coqDeps.TacticUtils <> LookupItems:679 ind
+scheme 11946:11956 <> LookupItems_rect
+scheme 11946:11956 <> LookupItems_ind
+scheme 11946:11956 <> LookupItems_rec
+scheme 11946:11956 <> LookupItems_sind
+rec 12020:12029 <> dictionary
+proj 12078:12079 <> ty
+proj 12092:12098 <> lookup'
+R12038:12048 coqDeps.TacticUtils <> LookupItems ind
+binder 12032:12035 <> item:681
+binder 12052:12052 <> A:682
+R12067:12067 coqDeps.TacticUtils <> A:682 var
+binder 12063:12063 <> a:683
+R12102:12103 coqDeps.TacticUtils <> ty:685 meth
+def 12119:12124 <> lookup
+binder 12126:12129 <> item:687
+binder 12132:12132 <> A:688
+binder 12140:12140 <> a:689
+R12154:12163 coqDeps.TacticUtils <> dictionary class
+R12170:12170 coqDeps.TacticUtils <> a:689 var
+R12165:12168 coqDeps.TacticUtils <> item:687 var
+binder 12143:12150 <> instance:690
+R12174:12175 coqDeps.TacticUtils <> ty meth
+R12182:12188 coqDeps.TacticUtils <> lookup' meth
+R12190:12193 coqDeps.TacticUtils <> item:687 var
+R12195:12195 coqDeps.TacticUtils <> A:688 var
+R12197:12197 coqDeps.TacticUtils <> a:689 var
+R12200:12207 coqDeps.TacticUtils <> instance:690 var
+rec 12217:12223 <> getFunc
+proj 12248:12251 <> f_tp
+proj 12263:12267 <> getF'
+binder 12226:12226 <> B:691
+R12238:12238 coqDeps.TacticUtils <> B:691 var
+binder 12236:12236 <> b:692
+R12271:12274 coqDeps.TacticUtils <> f_tp:694 meth
+def 12290:12293 <> getF
+binder 12296:12296 <> B:696
+R12307:12307 coqDeps.TacticUtils <> B:696 var
+binder 12305:12305 <> b:697
+R12321:12327 coqDeps.TacticUtils <> getFunc class
+R12329:12329 coqDeps.TacticUtils <> b:697 var
+binder 12311:12318 <> instance:698
+R12333:12336 coqDeps.TacticUtils <> f_tp meth
+R12343:12347 coqDeps.TacticUtils <> getF' meth
+R12349:12349 coqDeps.TacticUtils <> B:696 var
+R12351:12351 coqDeps.TacticUtils <> b:697 var
+R12354:12361 coqDeps.TacticUtils <> instance:698 var
+binder 12516:12516 <> x:699
+R12528:12528 coqDeps.TacticUtils <> x:699 var
+binder 12516:12516 <> x:700
+R12528:12528 coqDeps.TacticUtils <> x:700 var
+R12567:12570 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R12573:12576 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R12567:12570 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R12573:12576 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R12631:12635 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R12631:12635 coqDeps.TacticUtils <> :::x_'⤖'_x not
+binder 12698:12698 <> a:701
+R12705:12705 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R12710:12715 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R12709:12709 coqDeps.TacticUtils <> a:701 var
+binder 12698:12698 <> a:702
+R12705:12705 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R12710:12715 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R12709:12709 coqDeps.TacticUtils <> a:702 var
+binder 12857:12858 <> x1:703
+R12875:12876 coqDeps.TacticUtils <> x1:703 var
+binder 12867:12868 <> x2:704
+R12884:12885 coqDeps.TacticUtils <> x1:703 var
+R12887:12888 coqDeps.TacticUtils <> x2:704 var
+binder 12857:12858 <> x1:705
+R12875:12876 coqDeps.TacticUtils <> x1:705 var
+binder 12867:12868 <> x2:706
+R12884:12885 coqDeps.TacticUtils <> x1:705 var
+R12887:12888 coqDeps.TacticUtils <> x2:706 var
+R12928:12931 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R12935:12938 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R12941:12944 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R12928:12931 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R12935:12938 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R12941:12944 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R13000:13004 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13000:13004 coqDeps.TacticUtils <> :::x_'⤖'_x not
+binder 13068:13069 <> x1:707
+R13077:13077 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13084:13089 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13082:13083 coqDeps.TacticUtils <> x1:707 var
+binder 13068:13069 <> x1:708
+R13077:13077 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13084:13089 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13082:13083 coqDeps.TacticUtils <> x1:708 var
+binder 13157:13158 <> x1:709
+R13173:13174 coqDeps.TacticUtils <> x1:709 var
+binder 13166:13167 <> x2:710
+R13178:13178 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13187:13192 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13182:13183 coqDeps.TacticUtils <> x1:709 var
+R13185:13186 coqDeps.TacticUtils <> x2:710 var
+binder 13157:13158 <> x1:711
+R13173:13174 coqDeps.TacticUtils <> x1:711 var
+binder 13166:13167 <> x2:712
+R13178:13178 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13187:13192 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13182:13183 coqDeps.TacticUtils <> x1:711 var
+R13185:13186 coqDeps.TacticUtils <> x2:712 var
+binder 13350:13351 <> x1:713
+R13368:13369 coqDeps.TacticUtils <> x1:713 var
+binder 13360:13361 <> x2:714
+R13381:13382 coqDeps.TacticUtils <> x1:713 var
+R13384:13385 coqDeps.TacticUtils <> x2:714 var
+binder 13373:13374 <> x3:715
+R13393:13394 coqDeps.TacticUtils <> x1:713 var
+R13396:13397 coqDeps.TacticUtils <> x2:714 var
+R13399:13400 coqDeps.TacticUtils <> x3:715 var
+binder 13350:13351 <> x1:716
+R13368:13369 coqDeps.TacticUtils <> x1:716 var
+binder 13360:13361 <> x2:717
+R13381:13382 coqDeps.TacticUtils <> x1:716 var
+R13384:13385 coqDeps.TacticUtils <> x2:717 var
+binder 13373:13374 <> x3:718
+R13393:13394 coqDeps.TacticUtils <> x1:716 var
+R13396:13397 coqDeps.TacticUtils <> x2:717 var
+R13399:13400 coqDeps.TacticUtils <> x3:718 var
+R13440:13443 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R13447:13450 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R13454:13457 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R13460:13463 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R13440:13443 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R13447:13450 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R13454:13457 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R13460:13463 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R13519:13523 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13519:13523 coqDeps.TacticUtils <> :::x_'⤖'_x not
+binder 13587:13588 <> x1:719
+R13596:13596 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13603:13608 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13601:13602 coqDeps.TacticUtils <> x1:719 var
+binder 13587:13588 <> x1:720
+R13596:13596 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13603:13608 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13601:13602 coqDeps.TacticUtils <> x1:720 var
+binder 13676:13677 <> x1:721
+R13692:13693 coqDeps.TacticUtils <> x1:721 var
+binder 13685:13686 <> x2:722
+R13697:13697 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13707:13712 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13702:13703 coqDeps.TacticUtils <> x1:721 var
+R13705:13706 coqDeps.TacticUtils <> x2:722 var
+binder 13676:13677 <> x1:723
+R13692:13693 coqDeps.TacticUtils <> x1:723 var
+binder 13685:13686 <> x2:724
+R13697:13697 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13707:13712 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13702:13703 coqDeps.TacticUtils <> x1:723 var
+R13705:13706 coqDeps.TacticUtils <> x2:724 var
+binder 13784:13785 <> x1:725
+R13800:13801 coqDeps.TacticUtils <> x1:725 var
+binder 13793:13794 <> x2:726
+R13812:13813 coqDeps.TacticUtils <> x1:725 var
+R13815:13816 coqDeps.TacticUtils <> x2:726 var
+binder 13805:13806 <> x3:727
+R13820:13820 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13832:13837 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13824:13825 coqDeps.TacticUtils <> x1:725 var
+R13827:13828 coqDeps.TacticUtils <> x2:726 var
+R13830:13831 coqDeps.TacticUtils <> x3:727 var
+binder 13784:13785 <> x1:728
+R13800:13801 coqDeps.TacticUtils <> x1:728 var
+binder 13793:13794 <> x2:729
+R13812:13813 coqDeps.TacticUtils <> x1:728 var
+R13815:13816 coqDeps.TacticUtils <> x2:729 var
+binder 13805:13806 <> x3:730
+R13820:13820 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13832:13837 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R13824:13825 coqDeps.TacticUtils <> x1:728 var
+R13827:13828 coqDeps.TacticUtils <> x2:729 var
+R13830:13831 coqDeps.TacticUtils <> x3:730 var
+R14187:14192 coqDeps.TacticUtils <> lookup def
+R14194:14196 coqDeps.TacticUtils <> rel constr
+R14346:14349 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14352:14355 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14346:14349 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14352:14355 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+binder 14402:14402 <> x:731
+R14414:14414 coqDeps.TacticUtils <> x:731 var
+binder 14402:14402 <> x:732
+R14414:14414 coqDeps.TacticUtils <> x:732 var
+R14465:14469 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R14465:14469 coqDeps.TacticUtils <> :::x_'⤖'_x not
+binder 14532:14532 <> a:733
+R14539:14539 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R14544:14549 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R14543:14543 coqDeps.TacticUtils <> a:733 var
+binder 14532:14532 <> a:734
+R14539:14539 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R14544:14549 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R14543:14543 coqDeps.TacticUtils <> a:734 var
+R14689:14692 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14696:14699 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14702:14705 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14689:14692 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14696:14699 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R14702:14705 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+binder 14752:14753 <> x1:735
+R14770:14771 coqDeps.TacticUtils <> x1:735 var
+binder 14762:14763 <> x2:736
+R14779:14780 coqDeps.TacticUtils <> x1:735 var
+R14782:14783 coqDeps.TacticUtils <> x2:736 var
+binder 14752:14753 <> x1:737
+R14770:14771 coqDeps.TacticUtils <> x1:737 var
+binder 14762:14763 <> x2:738
+R14779:14780 coqDeps.TacticUtils <> x1:737 var
+R14782:14783 coqDeps.TacticUtils <> x2:738 var
+R14835:14839 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R14835:14839 coqDeps.TacticUtils <> :::x_'⤖'_x not
+binder 14903:14904 <> x1:739
+R14912:14912 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R14919:14924 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R14917:14918 coqDeps.TacticUtils <> x1:739 var
+binder 14903:14904 <> x1:740
+R14912:14912 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R14919:14924 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R14917:14918 coqDeps.TacticUtils <> x1:740 var
+binder 14992:14993 <> x1:741
+R15008:15009 coqDeps.TacticUtils <> x1:741 var
+binder 15001:15002 <> x2:742
+R15013:15013 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15022:15027 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15017:15018 coqDeps.TacticUtils <> x1:741 var
+R15020:15021 coqDeps.TacticUtils <> x2:742 var
+binder 14992:14993 <> x1:743
+R15008:15009 coqDeps.TacticUtils <> x1:743 var
+binder 15001:15002 <> x2:744
+R15013:15013 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15022:15027 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15017:15018 coqDeps.TacticUtils <> x1:743 var
+R15020:15021 coqDeps.TacticUtils <> x2:744 var
+R15183:15186 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R15190:15193 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R15197:15200 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R15203:15206 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R15183:15186 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R15190:15193 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R15197:15200 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R15203:15206 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+binder 15253:15254 <> x1:745
+R15271:15272 coqDeps.TacticUtils <> x1:745 var
+binder 15263:15264 <> x2:746
+R15284:15285 coqDeps.TacticUtils <> x1:745 var
+R15287:15288 coqDeps.TacticUtils <> x2:746 var
+binder 15276:15277 <> x3:747
+R15296:15297 coqDeps.TacticUtils <> x1:745 var
+R15299:15300 coqDeps.TacticUtils <> x2:746 var
+R15302:15303 coqDeps.TacticUtils <> x3:747 var
+binder 15253:15254 <> x1:748
+R15271:15272 coqDeps.TacticUtils <> x1:748 var
+binder 15263:15264 <> x2:749
+R15284:15285 coqDeps.TacticUtils <> x1:748 var
+R15287:15288 coqDeps.TacticUtils <> x2:749 var
+binder 15276:15277 <> x3:750
+R15296:15297 coqDeps.TacticUtils <> x1:748 var
+R15299:15300 coqDeps.TacticUtils <> x2:749 var
+R15302:15303 coqDeps.TacticUtils <> x3:750 var
+R15355:15359 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15355:15359 coqDeps.TacticUtils <> :::x_'⤖'_x not
+binder 15423:15424 <> x1:751
+R15432:15432 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15439:15444 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15437:15438 coqDeps.TacticUtils <> x1:751 var
+binder 15423:15424 <> x1:752
+R15432:15432 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15439:15444 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15437:15438 coqDeps.TacticUtils <> x1:752 var
+binder 15512:15513 <> x1:753
+R15528:15529 coqDeps.TacticUtils <> x1:753 var
+binder 15521:15522 <> x2:754
+R15533:15533 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15543:15548 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15538:15539 coqDeps.TacticUtils <> x1:753 var
+R15541:15542 coqDeps.TacticUtils <> x2:754 var
+binder 15512:15513 <> x1:755
+R15528:15529 coqDeps.TacticUtils <> x1:755 var
+binder 15521:15522 <> x2:756
+R15533:15533 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15543:15548 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15538:15539 coqDeps.TacticUtils <> x1:755 var
+R15541:15542 coqDeps.TacticUtils <> x2:756 var
+binder 15620:15621 <> x1:757
+R15636:15637 coqDeps.TacticUtils <> x1:757 var
+binder 15629:15630 <> x2:758
+R15648:15649 coqDeps.TacticUtils <> x1:757 var
+R15651:15652 coqDeps.TacticUtils <> x2:758 var
+binder 15641:15642 <> x3:759
+R15656:15656 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15668:15673 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15660:15661 coqDeps.TacticUtils <> x1:757 var
+R15663:15664 coqDeps.TacticUtils <> x2:758 var
+R15666:15667 coqDeps.TacticUtils <> x3:759 var
+binder 15620:15621 <> x1:760
+R15636:15637 coqDeps.TacticUtils <> x1:760 var
+binder 15629:15630 <> x2:761
+R15648:15649 coqDeps.TacticUtils <> x1:760 var
+R15651:15652 coqDeps.TacticUtils <> x2:761 var
+binder 15641:15642 <> x3:762
+R15656:15656 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15668:15673 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R15660:15661 coqDeps.TacticUtils <> x1:760 var
+R15663:15664 coqDeps.TacticUtils <> x2:761 var
+R15666:15667 coqDeps.TacticUtils <> x3:762 var
+R16038:16041 coqDeps.TacticUtils <> getF def
+R16113:16116 coqDeps.TacticUtils <> getF def
+binder 16216:16216 <> x:763
+R16228:16228 coqDeps.TacticUtils <> x:763 var
+binder 16216:16216 <> x:764
+R16228:16228 coqDeps.TacticUtils <> x:764 var
+R16267:16270 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R16273:16276 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R16267:16270 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R16273:16276 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R16331:16335 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R16331:16335 coqDeps.TacticUtils <> :::x_'⤖'_x not
+binder 16398:16398 <> a:765
+R16405:16405 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R16410:16415 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R16409:16409 coqDeps.TacticUtils <> a:765 var
+binder 16398:16398 <> a:766
+R16405:16405 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R16410:16415 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R16409:16409 coqDeps.TacticUtils <> a:766 var
+binder 16482:16482 <> x:767
+binder 16489:16489 <> v:768
+R16521:16525 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R16517:16519 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R16506:16509 coqDeps.TacticUtils <> proj meth
+R16502:16502 coqDeps.TacticUtils <> x:767 var
+R16515:16515 coqDeps.TacticUtils <> x:767 var
+R16520:16520 coqDeps.TacticUtils <> v:768 var
+R16538:16541 coqDeps.TacticUtils <> proj meth
+R16544:16544 coqDeps.TacticUtils <> x:767 var
+R16547:16547 coqDeps.TacticUtils <> v:768 var
+binder 16482:16482 <> x:769
+binder 16489:16489 <> v:770
+R16521:16525 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R16517:16519 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R16506:16509 coqDeps.TacticUtils <> proj meth
+R16502:16502 coqDeps.TacticUtils <> x:769 var
+R16515:16515 coqDeps.TacticUtils <> x:769 var
+R16520:16520 coqDeps.TacticUtils <> v:770 var
+R16538:16541 coqDeps.TacticUtils <> proj meth
+R16544:16544 coqDeps.TacticUtils <> x:769 var
+R16547:16547 coqDeps.TacticUtils <> v:770 var
+binder 16707:16708 <> x1:771
+R16725:16726 coqDeps.TacticUtils <> x1:771 var
+binder 16717:16718 <> x2:772
+R16734:16735 coqDeps.TacticUtils <> x1:771 var
+R16737:16738 coqDeps.TacticUtils <> x2:772 var
+binder 16707:16708 <> x1:773
+R16725:16726 coqDeps.TacticUtils <> x1:773 var
+binder 16717:16718 <> x2:774
+R16734:16735 coqDeps.TacticUtils <> x1:773 var
+R16737:16738 coqDeps.TacticUtils <> x2:774 var
+R16778:16781 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R16785:16788 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R16791:16794 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R16778:16781 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R16785:16788 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R16791:16794 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R16848:16852 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R16848:16852 coqDeps.TacticUtils <> :::x_'⤖'_x not
+binder 16914:16915 <> x1:775
+R16923:16923 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R16930:16935 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R16928:16929 coqDeps.TacticUtils <> x1:775 var
+binder 16914:16915 <> x1:776
+R16923:16923 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R16930:16935 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R16928:16929 coqDeps.TacticUtils <> x1:776 var
+binder 17001:17002 <> x1:777
+R17017:17018 coqDeps.TacticUtils <> x1:777 var
+binder 17010:17011 <> x2:778
+R17022:17022 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17031:17036 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17026:17027 coqDeps.TacticUtils <> x1:777 var
+R17029:17030 coqDeps.TacticUtils <> x2:778 var
+binder 17001:17002 <> x1:779
+R17017:17018 coqDeps.TacticUtils <> x1:779 var
+binder 17010:17011 <> x2:780
+R17022:17022 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17031:17036 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17026:17027 coqDeps.TacticUtils <> x1:779 var
+R17029:17030 coqDeps.TacticUtils <> x2:780 var
+binder 17109:17110 <> x1:781
+R17125:17126 coqDeps.TacticUtils <> x1:781 var
+binder 17118:17119 <> x2:782
+binder 17130:17130 <> v:783
+R17168:17172 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R17164:17166 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R17149:17152 coqDeps.TacticUtils <> proj meth
+R17141:17142 coqDeps.TacticUtils <> x1:781 var
+R17144:17145 coqDeps.TacticUtils <> x2:782 var
+R17158:17159 coqDeps.TacticUtils <> x1:781 var
+R17161:17162 coqDeps.TacticUtils <> x2:782 var
+R17167:17167 coqDeps.TacticUtils <> v:783 var
+R17183:17186 coqDeps.TacticUtils <> proj meth
+R17189:17190 coqDeps.TacticUtils <> x1:781 var
+R17204:17207 coqDeps.TacticUtils <> proj meth
+R17199:17200 coqDeps.TacticUtils <> x1:781 var
+R17210:17211 coqDeps.TacticUtils <> x2:782 var
+R17214:17214 coqDeps.TacticUtils <> v:783 var
+binder 17109:17110 <> x1:784
+R17125:17126 coqDeps.TacticUtils <> x1:784 var
+binder 17118:17119 <> x2:785
+binder 17130:17130 <> v:786
+R17168:17172 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R17164:17166 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R17149:17152 coqDeps.TacticUtils <> proj meth
+R17141:17142 coqDeps.TacticUtils <> x1:784 var
+R17144:17145 coqDeps.TacticUtils <> x2:785 var
+R17158:17159 coqDeps.TacticUtils <> x1:784 var
+R17161:17162 coqDeps.TacticUtils <> x2:785 var
+R17167:17167 coqDeps.TacticUtils <> v:786 var
+R17183:17186 coqDeps.TacticUtils <> proj meth
+R17189:17190 coqDeps.TacticUtils <> x1:784 var
+R17204:17207 coqDeps.TacticUtils <> proj meth
+R17199:17200 coqDeps.TacticUtils <> x1:784 var
+R17210:17211 coqDeps.TacticUtils <> x2:785 var
+R17214:17214 coqDeps.TacticUtils <> v:786 var
+binder 17396:17397 <> x1:787
+R17414:17415 coqDeps.TacticUtils <> x1:787 var
+binder 17406:17407 <> x2:788
+R17427:17428 coqDeps.TacticUtils <> x1:787 var
+R17430:17431 coqDeps.TacticUtils <> x2:788 var
+binder 17419:17420 <> x3:789
+R17439:17440 coqDeps.TacticUtils <> x1:787 var
+R17442:17443 coqDeps.TacticUtils <> x2:788 var
+R17445:17446 coqDeps.TacticUtils <> x3:789 var
+binder 17396:17397 <> x1:790
+R17414:17415 coqDeps.TacticUtils <> x1:790 var
+binder 17406:17407 <> x2:791
+R17427:17428 coqDeps.TacticUtils <> x1:790 var
+R17430:17431 coqDeps.TacticUtils <> x2:791 var
+binder 17419:17420 <> x3:792
+R17439:17440 coqDeps.TacticUtils <> x1:790 var
+R17442:17443 coqDeps.TacticUtils <> x2:791 var
+R17445:17446 coqDeps.TacticUtils <> x3:792 var
+R17486:17489 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R17493:17496 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R17500:17503 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R17506:17509 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R17486:17489 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R17493:17496 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R17500:17503 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R17506:17509 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R17565:17569 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17565:17569 coqDeps.TacticUtils <> :::x_'⤖'_x not
+binder 17631:17632 <> x1:793
+R17640:17640 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17647:17652 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17645:17646 coqDeps.TacticUtils <> x1:793 var
+binder 17631:17632 <> x1:794
+R17640:17640 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17647:17652 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17645:17646 coqDeps.TacticUtils <> x1:794 var
+binder 17718:17719 <> x1:795
+R17734:17735 coqDeps.TacticUtils <> x1:795 var
+binder 17727:17728 <> x2:796
+R17739:17739 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17749:17754 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17744:17745 coqDeps.TacticUtils <> x1:795 var
+R17747:17748 coqDeps.TacticUtils <> x2:796 var
+binder 17718:17719 <> x1:797
+R17734:17735 coqDeps.TacticUtils <> x1:797 var
+binder 17727:17728 <> x2:798
+R17739:17739 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17749:17754 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17744:17745 coqDeps.TacticUtils <> x1:797 var
+R17747:17748 coqDeps.TacticUtils <> x2:798 var
+binder 17824:17825 <> x1:799
+R17840:17841 coqDeps.TacticUtils <> x1:799 var
+binder 17833:17834 <> x2:800
+R17852:17853 coqDeps.TacticUtils <> x1:799 var
+R17855:17856 coqDeps.TacticUtils <> x2:800 var
+binder 17845:17846 <> x3:801
+R17860:17860 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17872:17877 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17864:17865 coqDeps.TacticUtils <> x1:799 var
+R17867:17868 coqDeps.TacticUtils <> x2:800 var
+R17870:17871 coqDeps.TacticUtils <> x3:801 var
+binder 17824:17825 <> x1:802
+R17840:17841 coqDeps.TacticUtils <> x1:802 var
+binder 17833:17834 <> x2:803
+R17852:17853 coqDeps.TacticUtils <> x1:802 var
+R17855:17856 coqDeps.TacticUtils <> x2:803 var
+binder 17845:17846 <> x3:804
+R17860:17860 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17872:17877 coqDeps.TacticUtils <> :::x_'⤖'_x not
+R17864:17865 coqDeps.TacticUtils <> x1:802 var
+R17867:17868 coqDeps.TacticUtils <> x2:803 var
+R17870:17871 coqDeps.TacticUtils <> x3:804 var
+binder 17952:17953 <> x1:805
+R17968:17969 coqDeps.TacticUtils <> x1:805 var
+binder 17961:17962 <> x2:806
+R17980:17981 coqDeps.TacticUtils <> x1:805 var
+R17983:17984 coqDeps.TacticUtils <> x2:806 var
+binder 17973:17974 <> x3:807
+binder 17988:17988 <> v:808
+R18032:18036 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R18028:18030 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R18010:18013 coqDeps.TacticUtils <> proj meth
+R17999:18000 coqDeps.TacticUtils <> x1:805 var
+R18002:18003 coqDeps.TacticUtils <> x2:806 var
+R18005:18006 coqDeps.TacticUtils <> x3:807 var
+R18019:18020 coqDeps.TacticUtils <> x1:805 var
+R18022:18023 coqDeps.TacticUtils <> x2:806 var
+R18025:18026 coqDeps.TacticUtils <> x3:807 var
+R18031:18031 coqDeps.TacticUtils <> v:808 var
+R18047:18050 coqDeps.TacticUtils <> proj meth
+R18042:18044 coqDeps.TacticUtils <> pr1 def
+R18053:18054 coqDeps.TacticUtils <> x1:805 var
+R18068:18071 coqDeps.TacticUtils <> proj meth
+R18063:18064 coqDeps.TacticUtils <> x1:805 var
+R18074:18075 coqDeps.TacticUtils <> x2:806 var
+R18092:18095 coqDeps.TacticUtils <> proj meth
+R18084:18085 coqDeps.TacticUtils <> x1:805 var
+R18087:18088 coqDeps.TacticUtils <> x2:806 var
+R18098:18099 coqDeps.TacticUtils <> x3:807 var
+R18102:18102 coqDeps.TacticUtils <> v:808 var
+binder 17952:17953 <> x1:809
+R17968:17969 coqDeps.TacticUtils <> x1:809 var
+binder 17961:17962 <> x2:810
+R17980:17981 coqDeps.TacticUtils <> x1:809 var
+R17983:17984 coqDeps.TacticUtils <> x2:810 var
+binder 17973:17974 <> x3:811
+binder 17988:17988 <> v:812
+R18032:18036 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R18028:18030 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R18010:18013 coqDeps.TacticUtils <> proj meth
+R17999:18000 coqDeps.TacticUtils <> x1:809 var
+R18002:18003 coqDeps.TacticUtils <> x2:810 var
+R18005:18006 coqDeps.TacticUtils <> x3:811 var
+R18019:18020 coqDeps.TacticUtils <> x1:809 var
+R18022:18023 coqDeps.TacticUtils <> x2:810 var
+R18025:18026 coqDeps.TacticUtils <> x3:811 var
+R18031:18031 coqDeps.TacticUtils <> v:812 var
+R18047:18050 coqDeps.TacticUtils <> proj meth
+R18042:18044 coqDeps.TacticUtils <> pr1 def
+R18053:18054 coqDeps.TacticUtils <> x1:809 var
+R18068:18071 coqDeps.TacticUtils <> proj meth
+R18063:18064 coqDeps.TacticUtils <> x1:809 var
+R18074:18075 coqDeps.TacticUtils <> x2:810 var
+R18092:18095 coqDeps.TacticUtils <> proj meth
+R18084:18085 coqDeps.TacticUtils <> x1:809 var
+R18087:18088 coqDeps.TacticUtils <> x2:810 var
+R18098:18099 coqDeps.TacticUtils <> x3:811 var
+R18102:18102 coqDeps.TacticUtils <> v:812 var
+R18483:18488 coqDeps.TacticUtils <> lookup def
+R18490:18494 coqDeps.TacticUtils <> rwLem constr
+R18558:18563 coqDeps.TacticUtils <> lookup def
+R18565:18569 coqDeps.TacticUtils <> rwLem constr
+binder 18867:18867 <> x:813
+binder 18869:18869 <> y:814
+R18878:18881 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R18873:18876 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R18872:18872 coqDeps.TacticUtils <> x:813 var
+R18877:18877 coqDeps.TacticUtils <> y:814 var
+R18888:18891 Coq.Init.Logic <> ::type_scope:x_'<>'_x not
+R18887:18887 coqDeps.TacticUtils <> x:813 var
+R18897:18897 coqDeps.TacticUtils <> y:814 var
+R19182:19184 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19182:19184 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19376:19376 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19402:19405 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19377:19377 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R19394:19400 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R19384:19389 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R19390:19393 coqDeps.TacticUtils <> _nil def
+R19376:19376 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19402:19405 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19377:19377 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R19394:19400 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R19384:19389 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R19390:19393 coqDeps.TacticUtils <> _nil def
+R19635:19635 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19657:19660 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19636:19636 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R19649:19655 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R19639:19644 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R19645:19648 coqDeps.TacticUtils <> _nil def
+R19635:19635 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19657:19660 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19636:19636 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R19649:19655 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R19639:19644 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R19645:19648 coqDeps.TacticUtils <> _nil def
+R19917:19919 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R19917:19919 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R21032:21032 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21034:21035 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21041:21041 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21032:21032 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21034:21035 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21041:21041 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21136:21136 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21140:21141 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21143:21143 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21136:21136 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21140:21141 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21143:21143 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21237:21237 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21240:21241 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21243:21243 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21237:21237 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21240:21241 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21243:21243 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21368:21368 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21370:21371 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21377:21377 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21368:21368 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21370:21371 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21377:21377 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R21464:21467 coqDeps.TacticUtils <> _nil def
+R21464:21467 coqDeps.TacticUtils <> _nil def
+R21548:21553 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R21548:21553 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R21664:21667 coqDeps.TacticUtils <> _nil def
+R21664:21667 coqDeps.TacticUtils <> _nil def
+R21684:21689 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R21684:21689 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R22029:22032 coqDeps.TacticUtils <> _nil def
+R22029:22032 coqDeps.TacticUtils <> _nil def
+R22056:22061 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R22056:22061 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R22210:22212 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R22296:22298 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R22296:22298 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R22387:22390 coqDeps.TacticUtils <> getF def
+R22565:22567 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R22565:22567 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R22841:22844 coqDeps.TacticUtils <> _nil def
+R22982:22984 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R22982:22984 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R23154:23159 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R23602:23602 Coq.Init.Specif <> ::type_scope:'{'_x_'|'_x_'}' not
+R23604:23606 Coq.Init.Specif <> ::type_scope:'{'_x_'|'_x_'}' not
+R23609:23609 Coq.Init.Specif <> ::type_scope:'{'_x_'|'_x_'}' not
+binder 23603:23603 <> v:815
+R23602:23602 Coq.Init.Specif <> ::type_scope:'{'_x_'|'_x_'}' not
+R23604:23606 Coq.Init.Specif <> ::type_scope:'{'_x_'|'_x_'}' not
+R23609:23609 Coq.Init.Specif <> ::type_scope:'{'_x_'|'_x_'}' not
+binder 23603:23603 <> v:816
+binder 23831:23831 <> v:817
+R23837:23841 Coq.Init.Specif <> exist constr
+R23845:23845 coqDeps.TacticUtils <> v:817 var
+R24007:24009 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R24007:24009 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R24156:24158 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R24156:24158 Coq.Init.Logic <> ::type_scope:x_'='_x not
+binder 24426:24426 <> x:818
+binder 24426:24426 <> x:819
+R24514:24517 coqDeps.TacticUtils <> _nil def
+R24486:24486 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R24488:24488 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R24492:24492 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R24579:24579 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R24585:24586 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R24598:24598 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R24579:24579 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R24585:24586 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R24598:24598 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R24706:24709 coqDeps.TacticUtils <> _nil def
+R24706:24709 coqDeps.TacticUtils <> _nil def
+R24726:24731 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R24726:24731 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R24918:24923 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R24908:24908 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R24911:24912 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R24917:24917 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R24918:24923 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R24908:24908 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R24911:24912 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R24917:24917 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25082:25087 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R25088:25091 coqDeps.TacticUtils <> _nil def
+R25082:25087 coqDeps.TacticUtils <> :::x_'_::_'_x not
+R25088:25091 coqDeps.TacticUtils <> _nil def
+R24998:24998 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25000:25001 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25007:25007 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25303:25305 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R25303:25305 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R25406:25406 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25409:25410 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25431:25431 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25411:25411 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25417:25418 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25430:25430 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25406:25406 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25409:25410 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25431:25431 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25411:25411 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25417:25418 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R25430:25430 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+binder 25618:25618 <> w:820
+R25624:25624 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R25633:25637 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R25632:25632 coqDeps.TacticUtils <> w:820 var
+R25639:25641 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R25638:25638 coqDeps.TacticUtils <> w:820 var
+R26251:26253 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R26251:26253 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R26468:26471 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R26468:26471 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R26699:26702 coqDeps.TacticUtils <> _nil def
+binder 26927:26927 <> x:821
+binder 26927:26927 <> x:822
+R27073:27076 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R27073:27076 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R27280:27280 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27285:27286 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27289:27289 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27281:27284 coqDeps.TacticUtils <> unit constr
+R27154:27157 Coq.Init.Logic <> True ind
+R27211:27211 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27231:27232 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27241:27241 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27212:27212 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27220:27221 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27230:27230 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27213:27213 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27215:27215 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27219:27219 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27222:27224 Coq.Init.Datatypes <> fst def
+R27233:27235 Coq.Init.Datatypes <> snd def
+R27010:27010 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27030:27031 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27040:27040 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27011:27011 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27019:27020 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27029:27029 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27012:27012 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27014:27014 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27018:27018 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R27021:27023 Coq.Init.Datatypes <> fst def
+R27032:27034 Coq.Init.Datatypes <> snd def

@@ -1,3 +1,4 @@
+{- ORMOLU_DISABLE -}
 {-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
@@ -428,6 +429,9 @@ defConfig = Config {
     = False &= help "Dump time measures of the Liquid Haskell plugin"
           &= name "ddump-timings"
           &= explicit
+
+  , lava
+    = False &= help "Translate the Liquid Haskell program to Rocq"
   } &= program "liquidhaskell"
     &= help    "Refinement Types for Haskell"
     &= summary copyright

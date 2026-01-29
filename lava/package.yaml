@@ -1,0 +1,93 @@
+name: lava
+version: 0.9.12.2.1
+synopsis: Translate Liquid Haskell files to Rocq
+license: BSD-3-Clause # Same as LH (https://github.com/ucsd-progsys/liquidhaskell/blob/develop/LICENSE)
+author: "Colin Rothgang, Loïc Peyrot"
+maintainer: "colin.rothgang@imdea.org"
+github: lava-liquid-to-rocq/lava
+
+verbatim:
+  cabal-version: 2.4 # Same as LH 9.12.2
+
+# Overarching dependencies
+dependencies:
+  - base >= 4.11.1.0 && < 5
+  # - liquidhaskell == 0.9.12.2.1
+  # - liquidhaskell-boot == 0.9.12.2.1
+  # - liquid-prelude
+  # - liquid-fixpoint
+
+# haddock:
+#   options: --odir=./doc/html
+
+library:
+  source-dirs: src
+  # exposed-modules:
+    # - Lava
+  # ghc-options: -Wdefault -Wall -Wno-missing-signatures -Wno-incomplete-uni-patterns -Wno-x-partial -Wno-orphans +RTS -K0 -RTS
+  dependencies:
+    - array # in Plugin
+    - containers
+    - extra
+    - syb # for Data.Generics in Plugin
+    - hashable
+    - semialign
+    - mtl
+    - ghc
+    - ghc-boot
+    - unordered-containers
+    - directory
+    - pretty
+    - exceptions
+    - binary
+    - transformers
+    - bytestring
+    - yjtools
+    - text
+
+# benchmarks:
+#   lh-examples-bench:
+#     main: Main.hs
+#     source-dirs: lhExamples
+#     other-modules:
+#       - Benchmark.ApplicativeId
+#       - Benchmark.FoldrUniversal
+#       - Benchmark.FunctorId
+#       - Benchmark.FunctorList
+#       - Benchmark.FunctorMaybe
+#       - Benchmark.MonadId
+#       - Benchmark.MonadList
+#       - Benchmark.MonadMaybe
+#       - Benchmark.MonoidList
+#       - Benchmark.MonoidMaybe
+#       - Benchmark.GradeExample
+#       - Benchmark.Half
+#       - Benchmark.SubExample
+#       - Benchmark.SafeIndexing
+#       - Benchmark.Overview
+#       - Benchmark.PeanoNats
+#       - Benchmark.RBinsToBins
+#       - Benchmark.SoftwareFoundations
+#       # - PLE.Append
+#       # - PLE.Compose
+#       # - PLE.Euclide
+#       # - PLE.Fibonacci
+#       # - PLE.Lists
+#       # - PLE.MapFusion
+#       # - PLE.NatInduction
+#       # - PLE.Overview
+#       # - PLE.OverviewListInfix
+#       # - PLE.Peano
+#       # - Todo.ComplexPatternMatching
+#         # - Todo.Lambdas
+#     dependencies:
+#       - lava
+#       - ghc-prim # for the embeds, could be great to remove it (and the embeds)
+#       # - time
+#       # - directory
+#       # - filepath
+#       # - process
+#     ghc-options: -fforce-recomp # -fplugin=Lava # -Rghc-timing
+#     # build-tools: []
+#     default-extensions:
+#       - GADTs

@@ -1,0 +1,30 @@
+opam-version: "2.0"
+maintainer: "colin.rothgang@imdea.org"
+version: "main"
+
+homepage: "https://github.com/lava-liquid-to-rocq/lava"
+dev-repo: "git+https://github.com/lava-liquid-to-rocq/lava.git"
+bug-reports: "https://github.com/lava-liquid-to-rocq/lava/issues"
+
+synopsis: "A translation from a fragment of Liquid Haskell to Rocq"
+description: """
+
+"""
+license: "BSD-3-Clause"
+
+build: [make]
+install: [make]
+depends: [
+  "ocaml" { (= "4.14.1") }
+  "coq" { (= "9.0.0") }
+]
+
+tags: [
+  "category:Computer Science/Program Verification"
+  "keyword:liquid haskell"
+  "keyword:refinement type system"
+  "logpath:lava"
+]
+authors: [
+  "Colin Rothgang"
+]

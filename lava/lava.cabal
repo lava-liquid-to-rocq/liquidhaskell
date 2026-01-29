@@ -1,0 +1,62 @@
+cabal-version: 2.4
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           lava
+version:        0.9.12.2.1
+synopsis:       Translate Liquid Haskell files to Rocq
+homepage:       https://github.com/lava-liquid-to-rocq/lava#readme
+bug-reports:    https://github.com/lava-liquid-to-rocq/lava/issues
+author:         Colin Rothgang, Loïc Peyrot
+maintainer:     colin.rothgang@imdea.org
+license:        BSD-3-Clause
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/lava-liquid-to-rocq/lava
+
+library
+  exposed-modules:
+      Lava
+      Lava.Coq
+      Lava.CoqPrinter
+      Lava.CoqSyntaxUtil
+      Lava.CoqUtil
+      Lava.InternalLH
+      Lava.LH
+      Lava.Misc
+      Lava.PaperUtils
+      Lava.TypedTranslation
+      Lava.TypingContext
+      Lava.UntypedTranslations
+      Lava.Util
+  other-modules:
+      Paths_lava
+  autogen-modules:
+      Paths_lava
+  hs-source-dirs:
+      src
+  build-depends:
+      array
+    , base >=4.11.1.0 && <5
+    , binary
+    , bytestring
+    , containers
+    , directory
+    , exceptions
+    , extra
+    , ghc
+    , ghc-boot
+    , hashable
+    , mtl
+    , pretty
+    , semialign
+    , syb
+    , text
+    , transformers
+    , unordered-containers
+    , yjtools
+  default-language: Haskell2010
