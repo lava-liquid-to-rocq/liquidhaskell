@@ -2658,6 +2658,40 @@ executable typeclass-pos
     hs-source-dirs:   app
                     , typeclasses/pos
 
+executable benchmark-lava
+    import:           common-ghc-options
+    main-is:          Main.hs
+    if !flag(ple-neg) && flag(stack)
+      buildable:      False
+    ghc-options: -fforce-recomp
+    other-modules:
+                       Benchmark.ApplicativeId
+                    ,  Benchmark.FoldrUniversal
+                    ,  Benchmark.FunctorId
+                    ,  Benchmark.FunctorList
+                    ,  Benchmark.FunctorMaybe
+                    ,  Benchmark.MonadId
+                    ,  Benchmark.MonadList
+                    ,  Benchmark.MonadMaybe
+                    ,  Benchmark.MonoidList
+                    ,  Benchmark.MonoidMaybe
+                    ,  Benchmark.GradeExample
+                    ,  Benchmark.Half
+                    ,  Benchmark.SubExample
+                    ,  Benchmark.SafeIndexing
+                    ,  Benchmark.Overview
+                    ,  Benchmark.PeanoNats
+                    ,  Benchmark.RBinsToBins
+                    ,  Benchmark.SoftwareFoundations
+    build-depends:    base
+                    , liquid-prelude
+                    -- , containers
+                    , liquidhaskell
+                    , lava
+    hs-source-dirs:   app
+                    , lava
+    default-extensions: GADTs
+
 -- This test suite is for internal function unit tests, not for checking LH on
 -- source files.
 test-suite tasty
