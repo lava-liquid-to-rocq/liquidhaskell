@@ -84,7 +84,7 @@ data LHDecl
 -- | General LH terms
 --
 -- > e ::= r | (rec) case x of (| c y* |-> e)*
--- >      | let x := e in e
+-- >      | let (x:R?) := e in e
 -- >      | if r then e else e
 -- >      | undefined
 -- >      | r === r ? e
@@ -95,8 +95,9 @@ data LHTerm
     Annot LHTerm RefType
   | -- | pattern matches, the flag indicates the presence of recursive calls
     Case LHSimpleTerm [(Id, [Id], LHTerm)] Bool
-  | -- | special case of a pattern match on type bool
-    Let Id LHTerm LHTerm
+  | -- | let with type annotation
+    --   for lets in the code, we can always get an annotation, but we also create some for ANF
+    Let Id (Maybe RefType) LHTerm LHTerm
   | Lambda Id LHTerm
   | -- | represents the "missing term" in a "missing branch" in a match, where the case is provably redundant (as checked by LH)
     Undefined
@@ -203,7 +204,9 @@ instance PrettyPrintable LHTerm where
     BasicTerm t -> show t
     Undefined -> "undefined"
     Case x branches _ -> "case " ++ show x ++ " of " ++ showNewline (indent + 1) ++ showIndent " | " False (indent + 1) branches
-    Let x def e' -> "let " ++ x ++ " := " ++ show def ++ " in " ++ show e'
+    Let x tp def e' -> "let " ++ var ++ " := " ++ show def ++ " in " ++ show e'
+      where
+        var = maybe x (\tp' -> "(" ++ x ++ ": " ++ show tp' ++ ")") tp
     Lambda x e' -> "λ" ++ x ++ ". " ++ show e'
     SEqn s t hint -> showP s ++ (if hint == BasicTerm unitTm then "" else " ? " ++ showP hint) ++ " === " ++ showP t
     QMark z t -> showP z ++ " ? " ++ showP t
@@ -284,7 +287,7 @@ instance AppSuable LHTerm LHSimpleTerm where
           -- \| we are replacing the variable matched on by another variable, i.e. just renamingthe variable
           Var v_r -> Case (Var v_r) (map (\(c, argNms, expr) -> (renameVar r c, map (renameVar r) argNms, replaceSubterm p r expr)) brs) b
           -- \| we cannot replace the variable matched on by an arbitrary term, as matches on arbitrary terms are not supported in ILH
-          _ -> Let v_r (BasicTerm r) $ Case (Var v_r) (map (\(c, argNms, expr) -> (renameVar r c, map (renameVar r) argNms, replaceSubterm p r expr)) brs) b
+          _ -> Let v_r Nothing (BasicTerm r) $ Case (Var v_r) (map (\(c, argNms, expr) -> (renameVar r c, map (renameVar r) argNms, replaceSubterm p r expr)) brs) b
             where
               v_r = "v_" ++ hashName r
         -- \| we don't need to replace the matched on variable
@@ -311,7 +314,7 @@ instance AppSuable LHTerm LHSimpleTerm where
                     other -> error $ "Error in AppSuable LHTerm LHSimpleTerm: " ++ show other
                in y'
             else y
-    Let x df e -> recurseFindAndRepl2 p (Let x) df e
+    Let x tp df e -> recurseFindAndRepl2 p (Let x tp) df e
     Lambda x e -> recurseFindAndRepl p (Lambda x) e
     Undefined -> unchanged
     SEqn s t z -> recurseFindAndRepl3 p SEqn s t z
@@ -339,10 +342,10 @@ instance AppSuable LHSimpleTerm LHTerm where
 
 instance AppSuable LHTerm LHTerm where
   findAndReplace p tm = {- trace (unwords ["findAndReplace", show p, show e]) $ -} case tm of
-    Annot t rt -> recurseFindAndRepl p (\s -> Annot s rt) t
+    Annot t rt -> recurseFindAndRepl p (`Annot` rt) t
     BasicTerm t -> recurseFindAndRepl p BasicTerm t
     -- \| Don't replace x itself if it is bound by this let binder
-    Let x s t -> {- if isSubsId (Var x) then recurseFindAndRepl p (\y -> Let x y t) s else -} recurseFindAndRepl2 p (Let x) s t
+    Let x tp s t -> {- if isSubsId (Var x) then recurseFindAndRepl p (\y -> Let x y t) s else -} recurseFindAndRepl2 p (Let x tp) s t
     Lambda x e -> recurseFindAndRepl p (Lambda x) e
     Undefined -> unchanged
     Case (Var x) branches b -> resRec matches func
@@ -375,7 +378,7 @@ instance AppSuable LHTerm LHTerm where
               tsPT = map toLHSimpleTermPat tPs
           AnyPat -> Just AnyPat
           _ -> Nothing
-    Case _ _ _ -> error "Match not on a variable found when substituting."
+    Case {} -> error "Match not on a variable found when substituting."
     SEqn s t hint -> recurseFindAndRepl3 p SEqn s t hint
     QMark s t -> recurseFindAndRepl2 p QMark s t
 

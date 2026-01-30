@@ -1,12 +1,12 @@
-{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--ple" @-}
-{-@ LIQUID "--reflection" @-}
+-- {-@ LIQUID "--reflection" @-}
+{-@ LIQUID "--lava" @-}
 
 module Todo.Lambdas where
 
 -- import Language.Haskell.Liquid.ProofCombinators
 
--- {-@ reflect appId @-}
+{- reflect appId @-}
 {-@ appId :: x:Int -> Int @-}
 appId :: Int -> Int
 appId x =
@@ -14,6 +14,6 @@ appId x =
       f y = y
    in f x
 
-{-@ fvInLambda :: x:Int -> Int @-}
+{- {-@ fvInLambda :: x:Int -> Int @-}
 fvInLambda :: Int -> Int
-fvInLambda x = let f y = x + y in f x
+fvInLambda x = let f y = x + y in f x -}

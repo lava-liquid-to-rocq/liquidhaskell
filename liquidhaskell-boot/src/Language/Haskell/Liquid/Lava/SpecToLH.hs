@@ -1,7 +1,7 @@
 -- {-# LANGUAGE TupleSections #-}
 
 -- TODO: maybe move defaultBind somewhere else
-module Language.Haskell.Liquid.Lava.SpecToLH (transSig, showppStripped, defaultBind, bops, buildins) where
+module Language.Haskell.Liquid.Lava.SpecToLH (transSig, transType, showppStripped, defaultBind, bops, buildins, InternalCont (..)) where
 
 -- import Data.List.Extra (replace)
 

@@ -309,7 +309,7 @@ trBop Impl = Coq.ImplB
 -- | Reduction from ILH terms to ILH simple terms
 simplifyLHTerm :: LHTerm -> Either TransError LHSimpleTerm
 simplifyLHTerm (BasicTerm r) = Right r
-simplifyLHTerm (Let x e1 e2) = do
+simplifyLHTerm (Let x _ e1 e2) = do
   r1 <- simplifyLHTerm e1
   e2' <- substSmpTmTm r1 x e2
   simplifyLHTerm e2'
@@ -317,6 +317,7 @@ simplifyLHTerm e = Left . TransErr $ "Cannot reduce the expression " ++ show e +
 
 -- | implements the function pp from the POPL paper
 sigmaReduce :: LHTerm -> LHTerm
+-- TODO: check if we handle the type of letcorrectly (in particular wrt subtyping)
 sigmaReduce expr = {-traceFuncRet ["sigmaReduce", show e] $ -} case expr of
   (Annot e _) -> sigmaReduce e
   (QMark e1 _) -> sigmaReduce e1
@@ -326,20 +327,20 @@ sigmaReduce expr = {-traceFuncRet ["sigmaReduce", show e] $ -} case expr of
   Lambda {} -> error "Cannot σ-reduce λ-expression."
   (Case y alts b) -> Case y (mapThd sigmaReduce alts) b
   Undefined -> Undefined
-  Let x _ e | not (hasMatch xPat e) -> sigmaReduce e
+  Let x _ _ e | not (hasMatch xPat e) -> sigmaReduce e
     where
       xPat :: SubtermPattern LHTerm
       xPat = (IdPat x, True)
-  Let x (BasicTerm r) (Case (Var x') cases rC) | x == x' -> sigmaReduce $ Case r (mapThd (sub x r) cases) rC
-  Let x ex e -> case ex of
+  Let x _ (BasicTerm r) (Case (Var x') cases rC) | x == x' -> sigmaReduce $ Case r (mapThd (sub x r) cases) rC
+  Let x tp ex e -> case ex of
     BasicTerm r -> sigmaReduce $ sub x r e
     Lambda {} -> error "Cannot σ-reduce let-bound λ-expression."
-    Annot tm _ -> sigmaReduce $ Let x tm e
-    QMark tm _ -> sigmaReduce $ Let x tm e
+    Annot tm _ -> sigmaReduce $ Let x tp tm e
+    QMark tm _ -> sigmaReduce $ Let x tp tm e
     SEqn _ tm _ -> sigmaReduce $ sub x tm e
-    lt@Let {} -> sigmaReduce $ Let x (sigmaReduce lt) e
+    lt@Let {} -> sigmaReduce $ Let x tp (sigmaReduce lt) e
     -- Again the if-then-else case is subsumed by the one for pattern matches
-    (Case r alts rC) -> Case r (mapThd (\t -> sigmaReduce (Let x t e)) alts) rC
+    (Case r alts rC) -> Case r (mapThd (\t -> sigmaReduce (Let x tp t e)) alts) rC
     Undefined -> error "Cannot reduce let-bound Undefined constructor."
 
 constructMap :: Ctx.TypingCtx -> Map.Map Id Coq.RocqType

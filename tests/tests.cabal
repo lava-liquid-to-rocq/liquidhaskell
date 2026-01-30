@@ -2658,14 +2658,17 @@ executable typeclass-pos
     hs-source-dirs:   app
                     , typeclasses/pos
 
+flag benchmark-lava
+     default: False
+
 executable benchmark-lava
     import:           common-ghc-options
     main-is:          Main.hs
-    if !flag(ple-neg) && flag(stack)
+    if !flag(benchmark-lava) && flag(stack)
       buildable:      False
-    ghc-options: -fforce-recomp
+    -- ghc-options: -fforce-recomp
     other-modules:
-                    , TranslationTests.Append
+                      TranslationTests.Append
                     , TranslationTests.ApplicativeId
                     , TranslationTests.ApplicativeMaybe
                     , TranslationTests.FoldrUniversal

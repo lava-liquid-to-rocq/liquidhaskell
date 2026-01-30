@@ -77,10 +77,10 @@ substSmpTmTm :: LHSimpleTerm -> Id -> LHTerm -> Either TransError LHTerm
 substSmpTmTm r x e = case e of
   BasicTerm r' -> return . BasicTerm $ substSmpTerm r x r'
   Case (Var y) _ _ | y == x -> Left . SubstErr $ "Cannot substitute variable " ++ x ++ " because it is used in a match"
-  Case _ _ _ -> trace "TODO: complete PaperUtils.substSmmpTmTm" undefined
-  Let y _ _ | y /= x -> trace "TODO: complete PaperUtils.substSmmpTmTm" undefined
-  Let _ _ _ -> trace "TODO: complete PaperUtils.substSmmpTmTm" undefined
-  Lambda _ _ -> trace "TODO: complete PaperUtils.substSmmpTmTm" undefined
+  Case {} -> trace "TODO: complete PaperUtils.substSmmpTmTm" undefined
+  Let y _ _ _ | y /= x -> trace "TODO: complete PaperUtils.substSmmpTmTm" undefined
+  Let {} -> trace "TODO: complete PaperUtils.substSmmpTmTm" undefined
+  Lambda {} -> trace "TODO: complete PaperUtils.substSmmpTmTm" undefined
   Undefined -> return Undefined
   SEqn r1 r2 e' -> SEqn r1' r2' <$> substSmpTmTm r x e'
     where

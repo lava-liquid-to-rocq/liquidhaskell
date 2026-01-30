@@ -51,11 +51,15 @@ dependsBranch (c, ts, e) name = (c == name || e `dependsOn` name) && name `notEl
 
 -- \|| any (\c -> c == name && isUpper (head c)) ts
 
+instance (Dependencies a) => Dependencies (Maybe a) where
+  dependsOn Nothing _ = False
+  dependsOn (Just tm) name = tm `dependsOn` name
+
 instance Dependencies LHTerm where
   dependsOn (BasicTerm t) name = t `dependsOn` name
   dependsOn (Annot t rt) name = t `dependsOn` name || rt `dependsOn` name
   dependsOn (Case x branches _) name = any (`dependsBranch` name) branches || x `dependsOn` name
-  dependsOn (Let x df tm) name = (df `dependsOn` name || tm `dependsOn` name) && x /= name
+  dependsOn (Let x tp df tm) name = (df `dependsOn` name || tm `dependsOn` name || tp `dependsOn` name) && x /= name
   dependsOn (Lambda x bdy) name = bdy `dependsOn` name && name /= x
   dependsOn Undefined _ = False
   dependsOn (SEqn s t z) name = s `dependsOn` name || z `dependsOn` name || t `dependsOn` name

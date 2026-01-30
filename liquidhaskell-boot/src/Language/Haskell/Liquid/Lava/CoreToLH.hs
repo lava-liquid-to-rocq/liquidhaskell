@@ -22,7 +22,7 @@ import GHC.Types.Literal
 import GHC.Types.Name
 import GHC.Utils.Outputable (ppr, showSDocUnsafe)
 import qualified Language.Haskell.Liquid.GHC.Misc ()
-import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH (bops, transSig)
+import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
 import Language.Haskell.Liquid.Types.RType (SpecType)
 import Language.Haskell.Liquid.Types.Types (AnnInfo (..))
 import qualified Language.Haskell.Liquid.Types.Types ()
@@ -149,14 +149,15 @@ trans modId infTypes f trTm = case trTm of
       bop = M.lookup name SLH.bops
 
       evaluate (ILH.BasicTerm t) = ([], t)
-      evaluate tm = ([ILH.Let x tm], ILH.Var x)
+      evaluate tm = ([ILH.Let x Nothing tm], ILH.Var x)
         where
           x = "x_" ++ hashName tm
   Lam x e -> {-trace (unwords [show x, show $ trans f e]) $ -} ILH.Lambda (stripLegalName modId $ show x) $ trans modId infTypes f e -- error "lambda expression not supported."
   (Case e _ _ []) -> trans modId infTypes f e
+  -- NOTE: we could support match on simple terms
   (Case e _ _ alts) -> case eT of
     ILH.BasicTerm (ILH.Var x') -> mkCase f x' branches
-    ILH.BasicTerm {} -> ILH.Let y eT (mkCase f y branches)
+    ILH.BasicTerm {} -> ILH.Let y Nothing eT (mkCase f y branches)
     _ -> error $ "unexpected case: case " ++ show eT ++ " of \n" ++ intercalate "\n" (map show branches)
     where
       eT = trans modId infTypes f e
@@ -170,9 +171,13 @@ trans modId infTypes f trTm = case trTm of
   (Let bind e) ->
     let (x, e') = deconstructBind bind
      in case e' of
-          _ | trace ("LH info: " ++ show (SLH.transSig "" Nothing $ binderType infTypes x)) False -> undefined
           Lit {} -> trans modId infTypes f e -- ignore let lit (part of patError)
-          _ -> ILH.Let (stripLegalName modId $ show x) (trans modId infTypes f e') (trans modId infTypes f e)
+          _ ->
+            ILH.Let
+              (stripLegalName modId $ show x)
+              (Just $ SLH.transType "" (SLH.ConstrArgsCtx Nothing []) $ binderType infTypes x)
+              (trans modId infTypes f e')
+              (trans modId infTypes f e)
   (Lit lit) -> ILH.BasicTerm $ transLit lit
 
 -- | Trivial translation of literals
@@ -273,9 +278,10 @@ transCaseExpr = recurse []
     recurse prevPats fO indVar isRec cases' = {- traceFuncRet ["recurse", show prevPats, show fO, indVar, show isRec, show cases] $ -} subst substs res
       where
         cases = map (\(c, cargs, ce) -> (c, cargs, replaceSubterm (TermPat (ILH.Var indVar), True) (ILH.App (ILH.Var c) (map ILH.Var cargs)) ce)) cases'
-        res = case branches of
+        res = caseOrInduct indVar branches
+        {- res = case branches of
           -- [("False", [], elseE), ("True", [], thenE)] -> ILH.Ite (ILH.Var indVar) thenE elseE
-          _ -> caseOrInduct indVar branches
+          _ -> caseOrInduct indVar branches -}
         (cutCases, substs) = cutRedundantBranches indVar prevPats cases
         cleanedCases = map collapseUnproductiveMatches cutCases
         isRecursive :: ILH.LHTerm -> Bool
@@ -286,7 +292,7 @@ transCaseExpr = recurse []
         transBranchE :: ILH.LHTerm -> ILH.LHTerm
         transBranchE e = case e of
           ILH.Case (ILH.Var x) css _ -> recurse prevPats fO x (isRecursive e) css
-          ILH.Let x def tm -> ILH.Let x (transBranchE def) (transBranchE tm)
+          ILH.Let x tpx def tm -> ILH.Let x tpx (transBranchE def) (transBranchE tm)
           _ -> e
         {- Case (Let x def _) _ css -> LHTerm $ Let x (transBranchE def) (LHTerm $ recurse prevPats fO x (isRecursive e) css)
         _ -> transAExpr fO e (isRecursive e) -}

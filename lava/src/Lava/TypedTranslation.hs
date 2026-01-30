@@ -85,7 +85,7 @@ wfDeclsAux γ (d : decls') = do
   (γ', d') <- wfDecl γ d
   (γ'', declsT) <- wfDeclsAux γ' decls'
   return (γ'', d' ++ declsT)
-  
+
 
 -- | Well-formedness of declarations
 -- We also return the updated context, so that we can use it for the next declarations in the program
@@ -129,7 +129,7 @@ checkTerm :: Ctx.TypingCtx -> LHTerm -> RefType -> (Id, MatchCtx) -> Either Tran
 checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", "...", showP e, showP tp, show (f, mCtx)] $ -} case e of
   -- An if-then-else written as a match
   Case cond [("False", [], elseE), ("True", [], thenE)] _ -> do
-    let 
+    let
       condT = utrSmpTerm (fetchFuncts γ) cond
       transBrExpr _ expr = checkTerm γ expr tp (f, mCtx)
     elseET <- transBrExpr Coq.btrue elseE
@@ -140,7 +140,7 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
   -- TODO: check that the left of the arrows are correctly typed? That R is an inductive?
   Case r alts _ -> do
     (tpR@(RefType v b r0), _) <- synSmpTerm γ r (f, mCtx)
-    rT <- checkSmpTerm γ r tpR(f, mCtx)
+    rT <- checkSmpTerm γ r tpR (f, mCtx)
     tc <- case b of
       TDat itc -> Right itc
       _ -> Left . CheckingErr $ "Cannot match on term " ++ show r ++ " of non-inductive type " ++ show b ++ "."
@@ -178,7 +178,7 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
         -- New variables that are of the same inductive type as x
         let indVars = [yij | (yij, (_, tpj)) <- zip ys args, argTp tpj == argTp ret, isInduction]
 
-        {- traceFuncRet ["checkBranch", show isInduction, show tpx, show alt] . -} 
+        {- traceFuncRet ["checkBranch", show isInduction, show tpx, show alt] . -}
 
         let tpReplaced = case xO of
               Just x -> sub x (App (Var c) $ map Var ys) tp
@@ -191,34 +191,40 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
         let varPattern y =
               Coq.SingleIdPat y : [Coq.SingleIdPat (ihName y) | y `elem` indVars]
         in Coq.ConjDestrPat $ concatMap varPattern ys
-    
+
     branchesT <- mapM checkBranch alts
     -- ToDo: type-check the expressions on the branches
 
     return . singleton $
       if isInduction
         -- TODO: need to add the variables to generalize
-        then 
+        then
           let x = fromJust xO in
           Coq.Concat $ [Coq.GeneralizeDependent (reverse $ args \\ [x]) | not (null $ args \\ [x]) && onToplevel] ++ [Coq.Induction (Coq.Var x) branchesT]
         else Coq.Destruct (projectTm rT) branchesT
-        
+
   -- An if
-  Let x (BasicTerm cond) (Case (Var x') [("False", [], elseE), ("True", [], thenE)] _) | x == x' -> do
-    let 
+  Let x _ (BasicTerm cond) (Case (Var x') [("False", [], elseE), ("True", [], thenE)] _) | x == x' -> do
+    let
       condT = utrSmpTerm (fetchFuncts γ) cond
       transBrExpr _ expr = checkTerm γ expr tp (f, mCtx)
     elseET <- transBrExpr Coq.btrue elseE
     thenET <- transBrExpr Coq.btrue thenE
     return [Coq.Destruct condT [("true", (Coq.ConjDestrPat [], thenET)), ("false", (Coq.ConjDestrPat [], elseET))]]
   -- A destruct
-  Let x (BasicTerm r) (Case (Var x') cases rC) | x == x' -> checkTerm γ (Case r (mapThd (sub x r) cases) rC) tp (f, mCtx)
-  -- (C-Let)
-  Let x e1 e2 -> do
-    (tp', tacs1) <- synTerm γ e1 (f, mCtx)
-    γ' <- Ctx.insertRefType (x, tp') γ
+  Let x _ (BasicTerm r) (Case (Var x') cases rC) | x == x' -> checkTerm γ (Case r (mapThd (sub x r) cases) rC) tp (f, mCtx)
+  -- TODO: (C-Let)
+  Let x tpx' e1 e2 -> do
+    -- NOTE: we try to synthesize the type to keep current examples working.
+    -- We probs want to change it later
+    (tpx, tacs1) <- case (synTerm γ e1 (f, mCtx), tpx') of
+        (Right (tpx, tacs1), _) -> return (tpx, tacs1)
+        (Left _, Just tpx) -> do
+          tacs1 <- checkTerm γ e1 tpx (f, mCtx)
+          return (tpx, tacs1)
+    γ' <- Ctx.insertRefType (x, tpx) γ
     tacs2 <- checkTerm γ' e2 tp (f, mCtx)
-    return $ Coq.Assert x (trRefType γ tp') (Coq.Concat tacs1) : tacs2
+    return $ Coq.Assert x (trRefType γ tpx) (Coq.Concat tacs1) : tacs2
     -- C-Lam
   Lambda x bdy -> case tp of
     RefType _ (Pi (x', xTp') codom) _ -> do
@@ -231,13 +237,13 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
   -- (C-Hint)
   QMark e1 e2 -> do
     (tp2, tacs2) <- synTerm γ e2 (f, mCtx)
-    if argTp tp2 /= unitTp 
+    if argTp tp2 /= unitTp
       then Left . CheckingErr $ "Hint " ++ show e2 ++ " is not of unit type, but of type " ++ show tp2
       else do
         -- TODO: create insertWithFresh function
         γ' <- Ctx.insertRefType (argName tp2, tp2) γ
         tacs1 <- checkTerm γ' e1 tp (f, mCtx)
-        let 
+        let
           asserted = Coq.Prop . utrSmpTermProp γ $ argRef tp2
           transHint = case tacs2 of
             [pp@(Coq.ProofPose h tm)] -> [Coq.Custom "fix_notations", pp, Coq.Assert (h++"'") asserted Coq.Oracle]-- assertFresh asserted Coq.Oracle]
@@ -255,7 +261,7 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
         [Coq.Exact tm] -> if isSubtype γ from to then
           [Coq.Exact $ transSub γ from to tm]
           else [Coq.Exact $ castFctTp γ tm from to]
-        [Coq.ProofPose h tm] | refinesUnit to -> 
+        [Coq.ProofPose h tm] | refinesUnit to ->
           [Coq.Concat [Coq.ProofPose h tm, Coq.Refine $ Coq.Exist Coq.TermHole Coq.unitTm (Coq.TermWitness Coq.unitTm), Coq.Oracle]]
         [Coq.ProofPose h tm] -> if isSubtype γ from to then
           [Coq.ProofPose h tm, Coq.Concat [Coq.Refine $ transSub γ from to (Coq.Var h)]]
@@ -292,9 +298,9 @@ checkSmpTerm γ r tp (f, mCtx) = {- traceFuncRet ["checkSmpTerm", "...", "...", 
   (tp', cqtm) <- synSmpTerm γ r (f, mCtx)
   if isSubtype γ tp' tp
     then return {- $ traceFuncRet ["checkSmpTerm", "...", showP r, showP tp, show (f, mCtx)] -} $ transSub γ tp' tp cqtm
-    else if 
+    else if
       isCompatible tp' tp
-      then return $ castFctTp γ cqtm tp' tp 
+      then return $ castFctTp γ cqtm tp' tp
       else Left . SubtypingErr $ "Inferred type " ++ show tp' ++ " for " ++ show r ++ " is not a subtype of " ++ show tp ++ " in context:\n" ++ Ctx.showCtx γ
 
 -- | Cast a function type
@@ -302,12 +308,12 @@ castFctTp :: Ctx.TypingCtx -> Coq.CoqTerm -> RefType -> RefType -> Coq.CoqTerm
 castFctTp γ r have@(RefType x Pi{} xRef) need@(RefType y needBaseTp@Pi{} _) =
   transSub γ interTp need $ castFctTp γ r have interTp where
     interTp = RefType x (sub y (Var x) needBaseTp) xRef
-castFctTp γ r (RefType x (Pi (_, dom) codom) xRef) (RefType x' (Pi (x_2', dom') codom') xRef') | x == x' && xRef == xRef' = case r of
+{- castFctTp γ r (RefType x (Pi (_, dom) codom) xRef) (RefType x' (Pi (x_2', dom') codom') xRef') | x == x' && xRef == xRef' = case r of
   Coq.Lambda y _ body -> Coq.Lambda y tp' . transSub γ codom codom' $ sub y (yCast y) body
   _ -> Coq.Lambda x_2' tp' . transSub γ codom codom' $ Coq.App r [yCast x_2']
   where
     tp' = trRefType γ dom'
-    yCast y = transSub γ dom' dom (Coq.Var y)
+    yCast y = transSub γ dom' dom (Coq.Var y) -}
 castFctTp γ r have need | isSubtype γ have need = transSub γ have need r
 castFctTp _ _ have need = error $ "Cannot cast type " ++ show have ++ " into " ++ show need ++ ": not a subtype."
 
@@ -334,7 +340,7 @@ synSmpTerm γ r (f, mCtx@(fCtx, matchVars)) = {- traceFuncRet ["synSmpTerm", sho
         Ctx.lookupRefType x γ
     let tp' = selfification x tp
         isBuildin = x `elem` [ttTmName, ffTmName, unitTmName]
-        isConstr =  not . null $ Ctx.lookupDC x γ 
+        isConstr =  not . null $ Ctx.lookupDC x γ
         isRefFunc = not . null $ Ctx.lookupDef x γ
         isRef = isConstr && not isBuildin || isRefFunc
         isLocal = not isRef
@@ -356,7 +362,7 @@ synSmpTerm γ r (f, mCtx@(fCtx, matchVars)) = {- traceFuncRet ["synSmpTerm", sho
   -- (S-App)
   App (Var g) rs -> do
     (ArrType tpArgs' ret', cqtm_) <- synSmpTermArr γ (Var g)
-    let 
+    let
       cqtm = if (not . null $ Ctx.lookupDef g γ) || isDC g then cqtm_ else packGetF cqtm_
       tp = ArrType tpArgs ret
       tpArgs = tpArgs' ++ tpArgs''
@@ -366,7 +372,7 @@ synSmpTerm γ r (f, mCtx@(fCtx, matchVars)) = {- traceFuncRet ["synSmpTerm", sho
         go smpRef = ([], smpRef)
     -- infer types for/translate the arguments
     cqTmTps <- mapM (\ri -> synSmpTerm γ ri (f, mCtx)) rs
-    let 
+    let
       tpArgNames = map fst tpArgs
       (rTps, cqtms') = unzip cqTmTps
 
@@ -376,12 +382,12 @@ synSmpTerm γ r (f, mCtx@(fCtx, matchVars)) = {- traceFuncRet ["synSmpTerm", sho
       cqArgs = {- (if length tpArgNames < length rs then trace (g ++":: "++show tp++" applied to "++show rs++", tpArgs: " ++ show tpArgs ++ ", tpArgNames: "++show tpArgNames) else id) $ -} zip tpArgNames cqTps
 
     -- figure out the Coq substitutions required
-    
+
     (cqSubsts, cqSubstTps) <- substCqArgs cqArgs cqtms'
     let
       substitute :: Suable a Coq.CoqTerm => a -> a
       substitute = subst cqSubsts
-    
+
     -- Apply the substitutions to the Coq types and terms and insert the required casts
       sbstArgs = map (\(_, rt) -> substitute rt) args
       cqtms = zipWith3 (\tm need have -> Coq.SubCast need have tm $ Coq.ProofHole Nothing) cqtms' sbstArgs cqSubstTps
@@ -391,12 +397,12 @@ synSmpTerm γ r (f, mCtx@(fCtx, matchVars)) = {- traceFuncRet ["synSmpTerm", sho
     (substs, _) <- substArgs (take (length rs) tpArgs) rs -- ^ only take first (length rs) many tpArgs for the case of partial applications
     let returnTp = {- trace (unwords ["\n\tThe function application:\n", show (App (Var g) rs), "\nrTps:", show rTps, "\ncqtms':", show cqtms', "\nargs:", show args, "\ncqTps:", show cqTps, "\ncqArgs:", show cqArgs, "\ncqSubsts:", show cqSubsts, "\nsbstArgs:", show sbstArgs, "\ncqtms", show cqtms]) $ -} substInRefType substs ret
 
-    let 
+    let
         indVars = concatMap snd matchVars
         mainInductVariableO = safeHead [x | x <- indVars, Var x `elem` rs]
         rRts = zip rs cqtmTps
-        remainingRs = 
-          takeWhile (\case (Var x, (_,_)) -> x `elem` takeWhile ((/= mainInductVariableO) . Just) (reverse indVars) || x `notElem` indVars; _ -> False) rRts 
+        remainingRs =
+          takeWhile (\case (Var x, (_,_)) -> x `elem` takeWhile ((/= mainInductVariableO) . Just) (reverse indVars) || x `notElem` indVars; _ -> False) rRts
           ++ dropUntil (\case (Var x,(_,_)) -> Just x == mainInductVariableO; _ -> False) rRts
         nonInductiveArgs = [(rT,tp) | (tm, (rT,tp)) <- remainingRs, tm `notElem` map Var (dropUntil ((==mainInductVariableO) . Just) $ reverse indVars)]
         ihHyp = case mainInductVariableO of
@@ -410,7 +416,7 @@ synSmpTerm γ r (f, mCtx@(fCtx, matchVars)) = {- traceFuncRet ["synSmpTerm", sho
           Nothing -> 0
           Just mainIndVar | mainIndVar `elem` map fst matchVars -> 0
           Just mainIndVar -> if any (\case (App _ ys) | any (containsNotEqual mainIndVar) ys -> True; _ -> False) fCtx then 1 else 0
-        argsWithOracle = replicate (numAntes + 1) oracle ++ concatMap (\(arg,argTp) -> argPair arg argTp) nonInductiveArgs
+        argsWithOracle = replicate (numAntes + 1) oracle ++ concatMap (uncurry argPair) nonInductiveArgs
         argPair arg argTp = case argTp of
           Coq.Pack{} -> [arg]
           _ -> [projectTm arg, oracle]
@@ -512,7 +518,7 @@ bopTypes =
 
 -- | Translation of (Sub) for an expression
 transSub :: Ctx.TypingCtx -> RefType -> RefType -> Coq.CoqTerm -> Coq.CoqTerm
-transSub γ from to tm = 
+transSub γ from to tm =
   {- if fromT == toT -- this check is superfluous, redundant cast will be removed by the printer
     then tm
     else-} Coq.SubCast toT fromT tm (Coq.ProofHole Nothing)
@@ -654,7 +660,7 @@ transReflDefinition γ f arrTp e tacs = do
           Coq.Destruct condT cases -> Cond condT $ map (\(c,(pat,caseExpr)) -> (c,pat,indBranches ihs caseExpr)) cases
           -- Coq.Destruct condT [("true", (Coq.ConjDestrPat [], thenET)), ("false", (Coq.ConjDestrPat [], elseET))] -> Cond condT (indBranches ihs thenET) (indBranches ihs elseET)
           _ -> Finish (concatMap getIHAppls ihs) ihs where
-            getIHAppls ih = fromMaybe [] $ find (not . null) 
+            getIHAppls ih = fromMaybe [] $ find (not . null)
               [[(ih, wit:ts) | Coq.App (Coq.Var ih') (wit:ts) <- findSubterm (AppPat (TermPat $ Coq.Var ih) (replicate n AnyPat), True) tac, ih' == ih] |  n <- [8, 7..1]]
 
         filterMatchTacs [] = []
@@ -713,7 +719,7 @@ transReflDefinition γ f arrTp e tacs = do
 
       lookupDecl = Coq.Instance (f ++ "_lookup_rel") ["dictionary", "rel", f] [("lookup'", Coq.Def $ f ++ "_rel")]
       getFDecl = Coq.Instance (f ++ "_getF") ["getFunc", relDefName f] [("getF'", Coq.Def f)]
-      Coq.AddHint _ rwLemName _ = refRelRwHint  
+      Coq.AddHint _ rwLemName _ = refRelRwHint
       rwLookupDecl = Coq.Instance (f ++ "_lookup_rw") ["dictionary", "rwLem", f] [("lookup'", Coq.Def rwLemName)]
       firstOrder = all (\case (_, Coq.Subset {}) -> True; _ -> False) xirs
 
@@ -797,7 +803,7 @@ separateBranches ::
   Either TransError [(([LHSimpleTerm], LHSimpleTerm), [LHSimpleTerm], [Id])]
 separateBranches e = {- traceFuncRet ["separateBranches", show e] $ -} separateBranches' (sigmaReduce e)
   where
-    separateBranches' (Let x (BasicTerm cond) (Case (Var x') [("False", [], elseE), ("True", [], thenE)] _)) args | x == x' = do
+    separateBranches' (Let x _ (BasicTerm cond) (Case (Var x') [("False", [], elseE), ("True", [], thenE)] _)) args | x == x' = do
       thenBrs <- map (\(x_,y,z) -> (x_,cond:y,z)) <$> separateBranches' thenE args
       elseBrs <- map (\(x_,y,z) -> (x_,Neg cond:y,z)) <$> separateBranches' elseE args
       return $ thenBrs ++ elseBrs
@@ -840,8 +846,8 @@ branchCtx γ (ci, ys, _) xO (RefType x' (TDat tc) rx) (ArrType args ret) = do
   let -- Bindings for each ys
       bindsYs = zip ys argsSubst
   case xO of
-    Just x -> 
-      let 
+    Just x ->
+      let
         bindX = (x, RefType x' (TDat tc) $ Bop And rx (Bop And rci' req))
         -- req is a equality between x/x' and the pattern
         req = Bop Eq (Var x') (App (Var ci) (map Var ys))
@@ -907,11 +913,11 @@ usedIHs = trace "TODO: define TypedTranslation.usedIHs or remove it." undefined
 
 -- | In a list @ids@ of simple terms, replace the first occurence of the variable @x@ by @c ys@
 replaceVarByConstr :: Id -> (Id, [Id]) -> [LHSimpleTerm] -> Either TransError [LHSimpleTerm]
-replaceVarByConstr x (c, ys) ids = 
+replaceVarByConstr x (c, ys) ids =
   case uncons post of
     Just found -> return $ pre ++ (App (Var c) (map Var ys) : snd found)
     Nothing | any (occurs (IdPat x, True)) ids -> return $ map (sub x (App (Var c) $ map Var ys)) ids
-    Nothing -> 
+    Nothing ->
       Left . TransErr $
         "Match on variable "
           ++ x
@@ -919,13 +925,13 @@ replaceVarByConstr x (c, ys) ids =
     where
       (pre, post) = span (/= Var x) ids
       occurs :: SubtermPattern LHSimpleTerm -> LHSimpleTerm -> Bool
-      occurs = hasMatch 
+      occurs = hasMatch
 
 -- | Create a name for a constructor based on the patterns.
 -- The flag takeVars indicates if we want the variables alone between the constructors
 -- Used with true to create names of IH, and with false to create names for the relation
 nameBranch :: Id -> [LHSimpleTerm] -> [LHSimpleTerm] -> Bool -> Id
-nameBranch f [] [] _ = relDefBranchName f 
+nameBranch f [] [] _ = relDefBranchName f
 nameBranch f antes pats takeVars = {- traceFuncRet ["nameBranch", f, show antes, show pats, show takeVars] $ -} foldl (++) base $ concatMap getConstructor pats ++ map anteSign antes
   where
     getConstructor v = case (v, takeVars) of
@@ -936,7 +942,7 @@ nameBranch f antes pats takeVars = {- traceFuncRet ["nameBranch", f, show antes,
     anteSign (Neg (Neg s)) = anteSign s
     anteSign (Neg _) = "_false"
     anteSign _ = "_true"
-    base = if null antes && all (null . getConstructor) pats then relDefBranchName f else f 
+    base = if null antes && all (null . getConstructor) pats then relDefBranchName f else f
 
 -- | Selfification of variables
 selfification :: Id -> RefType -> RefType
