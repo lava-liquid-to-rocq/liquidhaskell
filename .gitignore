@@ -66,3 +66,12 @@ tmp/
 
 .DS_Store
 docs/mkDocs/site
+
+lava/**/.lia.cache
+lava/coqDeps/*.aux
+lava/coqDeps/*.glob
+lava/coqDeps/*.v.timing
+lava/coqDeps/*.vo
+lava/coqDeps/*.vok
+lava/coqDeps/*.vos
+tests/lava/**/.lia.cache
