@@ -1,6 +1,6 @@
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--ple" @-}
 {-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--lava" @-}
 
 module Benchmark.SoftwareFoundations where
 
@@ -816,3 +816,4 @@ surjective_pairing :: Natprod -> Proof
 surjective_pairing (Pair n m) = trivial
 
 -- 437 SLoc
+

@@ -1,8 +1,8 @@
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--ple" @-}
 {-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--lava" @-}
 
-module Benchmark.MonadList where
+module TranslationTests.MonadList where
 
 {- HLInt ignore -}
 import Language.Haskell.Liquid.ProofCombinators
@@ -68,3 +68,6 @@ associativity Emp f g = trivial
 associativity (C x xs) f g
   =   bind_append (f x) (bind xs f) g ? associativity xs f g
 -}
+
+-- 37 SLOC
+

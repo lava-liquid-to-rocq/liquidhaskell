@@ -1,16 +1,16 @@
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--ple" @-}
 {-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--lava" @-}
 
-module Benchmark.MonadMaybe where
+module Benchmark.PLE.MonadMaybe where
 
 {- HLInt ignore -}
 import Language.Haskell.Liquid.ProofCombinators
-import Prelude hiding (Just, Maybe, Nothing, return)
+import Prelude hiding (Just, Maybe, Nothing)
 
 -- | Monad Laws :
--- | Left identity:   return a >>= f  ≡ f a
--- | Right identity:   m >>= return    ≡ m
+-- | Left identity:   retrn a >>= f  ≡ f a
+-- | Right identity:   m >>= retrn    ≡ m
 
 {-@ data Maybe where
         Nothing :: Maybe
@@ -20,10 +20,10 @@ data Maybe where
   Just :: Int -> Maybe
   deriving (Eq)
 
-{-@ reflect return @-}
-{-@ return :: Int -> Maybe @-}
-return :: Int -> Maybe
-return x = Just x
+{-@ reflect retrn @-}
+{-@ retrn :: Int -> Maybe @-}
+retrn :: Int -> Maybe
+retrn x = Just x
 
 {-@ reflect bind @-}
 {-@ bind :: Maybe -> (Int -> Maybe) -> Maybe @-}
@@ -37,14 +37,14 @@ bind (Just m) f = f m
 
 -- | Left Identity
 
-{-@ left_identity :: x:Int -> f:(Int -> Maybe) -> {v:Proof | bind (return x) f == f x } @-}
+{-@ left_identity :: x:Int -> f:(Int -> Maybe) -> {v:Proof | bind (retrn x) f == f x } @-}
 left_identity :: Int -> (Int -> Maybe) -> Proof
 left_identity x f =
   trivial
 
 -- | Right Identity
 
-{-@ right_identity :: x:Maybe -> {v:Proof | bind x return == x } @-}
+{-@ right_identity :: x:Maybe -> {v:Proof | bind x retrn == x } @-}
 right_identity :: Maybe -> Proof
 right_identity Nothing =
   trivial
@@ -60,3 +60,4 @@ is_Just _        = False
 {-@ from_Just :: xs:{Maybe | is_Just xs } -> Int @-}
 from_Just :: Maybe -> Int
 from_Just (Just x) = x-}
+

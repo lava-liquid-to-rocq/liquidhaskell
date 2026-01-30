@@ -1,11 +1,11 @@
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--reflection" @-}
 {-@ LIQUID "--ple"        @-}
 
 module PLE.MonoidList where
 
-import Prelude hiding (mappend, mempty)
-
 import Language.Haskell.Liquid.ProofCombinators
+import Prelude hiding (mappend, mempty)
 
 -- | Monoid
 -- | mempty-left ∀ x . mappend mempty  x ≡ x
@@ -14,8 +14,8 @@ import Language.Haskell.Liquid.ProofCombinators
 
 {-@ axiomatize mappend @-}
 mappend :: L a -> L a -> L a
-mappend Emp      ys = ys
-mappend (x :::xs) ys = x ::: mappend xs ys
+mappend Emp ys = ys
+mappend (x ::: xs) ys = x ::: mappend xs ys
 
 {-@ axiomatize mempty @-}
 mempty :: L a
@@ -23,31 +23,30 @@ mempty = Emp
 
 mempty_left :: L a -> Proof
 {-@ mempty_left :: x:L a -> { mappend mempty x == x }  @-}
-mempty_left xs
-  =   trivial 
+mempty_left xs =
+  trivial
 
 mempty_right :: L a -> Proof
 {-@ mempty_right :: x:L a -> { mappend x mempty == x}  @-}
-mempty_right Emp
-  = trivial 
-
-mempty_right (x ::: xs)
-  =   mempty_right xs
+mempty_right Emp =
+  trivial
+mempty_right (x ::: xs) =
+  mempty_right xs
 
 {-@ mappend_assoc :: xs:L a -> ys:L a -> zs:L a
                -> {mappend (mappend xs ys) zs == mappend xs (mappend ys zs) } @-}
 mappend_assoc :: L a -> L a -> L a -> Proof
-mappend_assoc Emp ys zs
-  =   trivial 
-
-mappend_assoc (x ::: xs) ys zs
-  =   mappend_assoc xs ys zs
+mappend_assoc Emp ys zs =
+  trivial
+mappend_assoc (x ::: xs) ys zs =
+  mappend_assoc xs ys zs
 
 data L a = Emp | a ::: L a
+
 {- data L [llen] a = Emp | (:::) {x::a, xs:: (L a)} @-}
 
 {-@ measure llen @-}
 llen :: L a -> Int
 {-@ llen :: L a -> Nat @-}
-llen Emp        = 0
+llen Emp = 0
 llen (_ ::: xs) = 1 + llen xs

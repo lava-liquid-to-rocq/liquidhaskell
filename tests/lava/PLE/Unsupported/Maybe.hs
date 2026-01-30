@@ -1,7 +1,10 @@
 -- Unsupported because Maybe is used polymorphically
+--
 {-# LANGUAGE FlexibleContexts #-}
-{-@ LIQUID "--reflection"     @-}
 {-# LANGUAGE IncoherentInstances #-}
+
+{-@ LIQUID "--lava" @-}
+{-@ LIQUID "--reflection"     @-}
 
 module PLE.Maybe where
 

@@ -1,8 +1,8 @@
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--ple" @-}
 {-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--lava" @-}
 
-module Benchmark.MonadId where
+module Benchmark.PLE.MonadId where
 
 {- HLInt ignore -}
 import Language.Haskell.Liquid.ProofCombinators

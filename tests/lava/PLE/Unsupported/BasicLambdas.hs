@@ -1,6 +1,7 @@
 -- Unsupported because of the λs in refinements
 
 {-@ LIQUID "--reflection" @-}
+{-@ LIQUID "--lava" @-}
 
 module PLE.BasicLambdas where
 

@@ -399,7 +399,9 @@ synSmpTerm γ r (f, mCtx@(fCtx, matchVars)) = {- traceFuncRet ["synSmpTerm", sho
           takeWhile (\case (Var x, (_,_)) -> x `elem` takeWhile ((/= mainInductVariableO) . Just) (reverse indVars) || x `notElem` indVars; _ -> False) rRts 
           ++ dropUntil (\case (Var x,(_,_)) -> Just x == mainInductVariableO; _ -> False) rRts
         nonInductiveArgs = [(rT,tp) | (tm, (rT,tp)) <- remainingRs, tm `notElem` map Var (dropUntil ((==mainInductVariableO) . Just) $ reverse indVars)]
-        ihHyp = ihName $ fromJust mainInductVariableO
+        ihHyp = case mainInductVariableO of
+          Just x -> ihName x
+          Nothing -> error $ "No main induct variable: "++show indVars++", "++show rs
         oracle = Coq.PrfTerm Coq.Hole $ Coq.ProofHole (ihName <$> mainInductVariableO)
         containsNotEqual n tm = tm /= Var n && occurs (IdPat n, True) where
           occurs :: SubtermPattern LHSimpleTerm -> Bool

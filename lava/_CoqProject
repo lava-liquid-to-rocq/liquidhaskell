@@ -22,26 +22,22 @@ coqDeps/LiquidPreludeUtil.v
 # manual/Benchmark/SFGradeExample0.v
 # manual/Benchmark/SFGradeExample.v
 
-# out/Benchmark/FoldrUniversal.v
+out/Benchmark/PLE/MonadId.v
+# out/Benchmark/PLE/MonadList.v
+out/Benchmark/PLE/MonadMaybe.v
+out/Benchmark/PLE/MonoidList.v
+out/Benchmark/PLE/MonoidMaybe.v
 
-# out/Benchmark/ApplicativeId.v
-# out/Benchmark/FoldrUniversal.v
-# out/Benchmark/FunctorId.v
-# out/Benchmark/FunctorList.v
-# out/Benchmark/FunctorMaybe.v
-out/Benchmark/MonadId.v
-# out/Benchmark/MonadList.v
-# out/Benchmark/MonadMaybe.v
-# out/Benchmark/MonoidList.v
-# out/Benchmark/MonoidMaybe.v
+out/Benchmark/PLE/Compose.v
+out/Benchmark/PLE/Lists.v
 
 out/Benchmark/RBinsToBins.v
 out/Benchmark/SoftwareFoundations.v
 out/Benchmark/PeanoNats.v
 out/Benchmark/Half.v
-out/Benchmark/GradeExample.v
-out/Benchmark/SafeIndexing.v
 out/Benchmark/Overview.v
 
-# subsumed by PeanoNats
+# subsumed by SoftwareFoundations, Overview, PeanoNats resp.
+# out/Benchmark/GradeExample.v
+# out/Benchmark/SafeIndexing.v
 # out/Benchmark/SubExample.v

@@ -1,6 +1,6 @@
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--ple" @-}
 {-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--lava" @-}
 
 module Benchmark.GradeExample where
 

@@ -1,11 +1,10 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE IncoherentInstances #-}
-
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--ple" @-}
 {-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--lava" @-}
+{-# LANGUAGE IncoherentInstances #-}
 
-module Benchmark.FunctorId where
+module TranslationTests.FunctorId where
 
 {- HLInt ignore -}
 import Language.Haskell.Liquid.ProofCombinators
@@ -56,3 +55,5 @@ fmap_id (Val x) =
 fmap_distrib :: (Int -> Int) -> (Int -> Int) -> Identity -> Proof
 fmap_distrib f g (Val x) =
   trivial
+
+-- 34 SLOC

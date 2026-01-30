@@ -1,21 +1,9 @@
-{-# OPTIONS_GHC -fplugin=Lava #-}
+{-@ LIQUID "--lava" @-}
 
 module PLE.NatInduction where
 
-import GHC.Exts
 import Language.Haskell.Liquid.ProofCombinators
 import Prelude hiding (range, sum)
-
-{-@ embed GHC.Exts.Int as Int @-}
-{-@ embed GHC.Exts.Bool as bool @-}
-{-@ embed GHC.Exts.Int# as Int @-}
-{-@ assume GHC.Exts.I# :: x:Int# -> {v: Int | v = (x :: int) } @-}
-{-@ embed GHC.Exts.Addr# as Str @-}
-{-@ embed GHC.Exts.Word64# as Int @-}
-{-@ assume (+)  :: x:_ -> y:_ -> {v:_ | x + y  = v} @-}
-{-@ assume (-)  :: x:_ -> y:_ -> {v:_ | x - y  = v} @-}
-{-@ assume (<)  :: x:_ -> y:_ -> {v:_ | x < y  = v} @-}
-{-@ assume (==)  :: x:_ -> y:_ -> {v:_ | (x = y)  = v} @-}
 
 {-@ LIQUID "--higherorder" @-}
 {-@ LIQUID "--exactdc" @-}
@@ -47,6 +35,7 @@ baseCase = ()
 godelProp :: Int -> Bool
 godelProp n = n == n
 
+-- clearly ill-defined since p not in scope
 {-@ data PAnd where
      PAnd :: v:{v:Proof | p 0} -> (n:Nat -> {v:Proof | p (n-1)} -> {v:Proof | p n}) -> PAnd @-}
 data PAnd where

@@ -4,6 +4,7 @@
 -- nonlinear-cuts (i.e. they add new cut vars that require qualifiers.) why?
 -- where? switch off non-lin-cuts in higher-order mode?
 
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--reflection"      @-}
 {-@ LIQUID "--ple-local" @-}
 

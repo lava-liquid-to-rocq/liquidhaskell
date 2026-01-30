@@ -1,13 +1,9 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--reflection" @-}
 {-@ LIQUID "--ple"        @-}
-{-# OPTIONS_GHC -fplugin=Lava #-}
+{-# LANGUAGE FlexibleContexts #-}
 
-module PLE.Append where
-
-import GHC.Exts
-{-@ embed GHC.Exts.Int as Int @-}
-{-@ embed GHC.Exts.Bool as bool @-}
+module TranslationTests.Append where
 
 import Language.Haskell.Liquid.ProofCombinators
 import Prelude hiding (concatMap, map)
@@ -61,4 +57,13 @@ prop_concatMap :: (Int -> L (L)) -> L -> Proof
 prop_concatMap _ Emp = trivial
 prop_concatMap f (App x xs) = prop_concatMap f xs -}
 
-data L = Emp | App Int L
+{-@ data L where
+        Emp :: L
+        App :: Int -> L -> L @-}
+data L where
+  Emp :: L
+  App :: Int -> L -> L
+  deriving (Eq)
+
+-- 37 SLOC
+

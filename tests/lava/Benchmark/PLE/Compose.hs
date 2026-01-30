@@ -1,20 +1,8 @@
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--reflection" @-}
 {-@ LIQUID "--ple"        @-}
-{-# OPTIONS_GHC -fplugin=Lava #-}
 
-module PLE.Compose where
-
-import GHC.Exts
-{-@ embed GHC.Exts.Int as Int @-}
-{-@ embed GHC.Exts.Bool as bool @-}
-{-@ embed GHC.Exts.Int# as Int @-}
-{-@ assume GHC.Exts.I# :: x:Int# -> {v: Int | v = (x :: int) } @-}
-{-@ embed GHC.Exts.Addr# as Str @-}
-{-@ embed GHC.Exts.Word64# as Int @-}
-{-@ assume (+)  :: x:_ -> y:_ -> {v:_ | x + y  = v} @-}
-{-@ assume (-)  :: x:_ -> y:_ -> {v:_ | x - y  = v} @-}
-{-@ assume (<)  :: x:_ -> y:_ -> {v:_ | x < y  = v} @-}
-{-@ assume (==)  :: x:_ -> y:_ -> {v:_ | (x = y)  = v} @-}
+module Benchmark.PLE.Compose where
 
 import Language.Haskell.Liquid.ProofCombinators
 import Prelude hiding (map)
@@ -33,3 +21,5 @@ prop1 f g x = trivial
           -> {v: Proof | compose f g x == compose f g x } @-}
 prop2 :: (Int -> Int) -> (Int -> Int) -> Int -> Proof
 prop2 f g x = trivial
+
+-- 12 SLOC

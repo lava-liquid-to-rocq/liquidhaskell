@@ -1,8 +1,8 @@
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--ple" @-}
 {-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--lava" @-}
 
-module Benchmark.MonoidMaybe where
+module Benchmark.PLE.MonoidMaybe where
 
 import Language.Haskell.Liquid.ProofCombinators
 import Prelude hiding (Just, Maybe, Nothing, mappend, mempty)
@@ -53,3 +53,4 @@ mappend_assoc Nothing (Just y) z =
   trivial
 mappend_assoc Nothing Nothing z =
   trivial
+

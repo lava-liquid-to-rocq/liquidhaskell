@@ -39,12 +39,17 @@ To build Lava, you can use either Cabal or Stack (both installed through GHCup)
 by running `cabal build` or `stack build`.
 Documentation is generated through `cabal haddock` or `stack haddock`.
 
-## Benchmarks
+## Examples and Benchmarks
 
-The benchmarks are in the folder [`lhExamples`](lhExamples).
+The examples are in the folder [`lhExamples`](lhExamples).
 To translate them to Rocq, use `cabal bench` or `stack bench`.
 Their outputs are in the [`out`](out) folder, and have the extension `.v`.
+Those examples in the [`Benchmark`](Benchmark) subfolder translate to Rocq files, 
+whoose proof obligations can all be proven automatically. 
+The examples in the [`TranslationTests`](TranslationTests) subfolder can be sucssfully translated,
+but not all their proof obligation are proven automatically.
 To compile (and check proofs of) all the files, use `make rocq` from the root of the project.
+To both translate the examples and check their translations use `make` and to additionally build the source documentation use `make all`.
 
 ### Adding benchmarks
 

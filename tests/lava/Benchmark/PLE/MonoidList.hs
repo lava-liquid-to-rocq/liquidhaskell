@@ -1,8 +1,8 @@
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--ple" @-}
 {-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--lava" @-}
 
-module Benchmark.MonoidList where
+module Benchmark.PLE.MonoidList where
 
 import Language.Haskell.Liquid.ProofCombinators
 import Prelude hiding (mappend, mempty)
@@ -50,3 +50,4 @@ mappend_assoc Emp ys zs =
   trivial
 mappend_assoc (C x xs) ys zs =
   mappend_assoc xs ys zs
+

@@ -1,11 +1,10 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE IncoherentInstances #-}
-
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--ple" @-}
 {-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--lava" @-}
+{-# LANGUAGE IncoherentInstances #-}
 
-module Benchmark.ApplicativeId where
+module TranslationTests.ApplicativeId where
 
 {- HLInt ignore -}
 import Language.Haskell.Liquid.ProofCombinators
@@ -129,3 +128,6 @@ interchange :: IdentityF -> Int -> Proof
   @-}
 interchange (ValF f) x =
   trivial
+
+-- 87 SLOC
+

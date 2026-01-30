@@ -1,0 +1,10 @@
+File							SLOC
+Append						37
+ApplicativeId			87
+ApplicativeMaybe	109
+FoldrUniversal		37
+FunctorId					34
+FunctorList				41
+FunctorMaybe			37
+MonadList					37
+Total							419

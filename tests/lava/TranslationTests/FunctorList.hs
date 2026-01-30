@@ -1,11 +1,10 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE IncoherentInstances #-}
-
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--ple" @-}
 {-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--lava" @-}
+{-# LANGUAGE IncoherentInstances #-}
 
-module Benchmark.FunctorList where
+module TranslationTests.FunctorList where
 
 {- HLInt ignore -}
 import Language.Haskell.Liquid.ProofCombinators
@@ -65,3 +64,6 @@ fmap_distrib f g N =
   trivial
 fmap_distrib f g (C x xs) =
   fmap_distrib f g xs
+
+-- 41 SLOC
+

@@ -1,5 +1,5 @@
-{-@ LIQUID "--ple" @-}
 {-@ LIQUID "--lava" @-}
+{-@ LIQUID "--ple" @-}
 
 module Benchmark.RBinsToBins where
 

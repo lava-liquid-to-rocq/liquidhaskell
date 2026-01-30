@@ -1,5 +1,6 @@
 -- Unsupported because of the non strictly structural recursion (worth trying with Equations)
 
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--higherorder"     @-}
 {-@ LIQUID "--ple" @-}
 

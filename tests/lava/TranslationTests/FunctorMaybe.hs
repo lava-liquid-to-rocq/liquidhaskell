@@ -1,11 +1,10 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE IncoherentInstances #-}
-
+{-@ LIQUID "--lava" @-}
 {-@ LIQUID "--ple" @-}
 {-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--lava" @-}
+{-# LANGUAGE IncoherentInstances #-}
 
-module Benchmark.FunctorMaybe where
+module TranslationTests.FunctorMaybe where
 
 {- HLInt ignore -}
 import Language.Haskell.Liquid.ProofCombinators
@@ -61,3 +60,6 @@ fmap_id (Just _) = trivial
 fmap_distrib :: (Int -> Int) -> (Int -> Int) -> Maybe -> Proof
 fmap_distrib _ _ Nothing = trivial
 fmap_distrib f g (Just x) = trivial
+
+-- 37 SLOC
+

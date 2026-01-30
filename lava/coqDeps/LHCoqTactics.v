@@ -619,6 +619,17 @@ Ltac axiomatize_next_term :=
     end) then fail else first [axProjTm T | axHOAppProjTm T]
   end; simpl_proj.
 
+Ltac axiomatize_ho_term :=
+  repeat rewrite fix_notation' in *; 
+  match goal with
+  | |- ?g => first [axHOAppProjTm g]
+  | [h:?T |- ?g] => tryif (match T with
+    (* in case the hypothesis is from a previous axiomatization *)
+    | ⌊ _ -⌋ = _ => idtac
+    | _ => fail
+    end) then fail else first [axHOAppProjTm T]
+  end; simpl_proj.
+
 (* replace projections of refined terms in hypothesis or goal by unrefined variables axiomatized using the graph relations *)
 Ltac axiomatize_terms := tryif (repeat_or_fail axiomatize_next_term) then idtac else fail "No terms to axiomatize".
 
@@ -1157,19 +1168,48 @@ Ltac instantiate_hyp :=
 
 Ltac instantiate_hyps := repeat_or_fail instantiate_hyp.
 
+Lemma instantiate_frel_res: forall {argTps} {uargTps:UArgListT} {z:projectsArgListT argTps uargTps}
+  {T: Type} {p: forall (args: ArgList argTps), T -> Prop}
+  {g: forall (args:ArgList argTps), {v:T | p args v} }
+  {frel: UArgList uargTps -> T -> Prop}
+  (p:forall (w:T), Prop) {uargs: UArgList uargTps}
+  (f_frel : forall (args : ArgList argTps) (v : T), ⌊ g args _⌋ = v <->
+    frel (prArgList args uargTps z) v)
+  (args_r: {args:ArgList argTps | prArgList args uargTps z = uargs})
+  (prf: forall (w:T), frel uargs w -> p w),
+  exists (w:T), frel uargs w /\ p w.
+Proof.
+  intros.
+  destruct args_r as [args argsRw].
+  pose ⌊ g args _⌋ as w.
+  exists w.
+  split;
+  [|refine (prf w _)];
+  rewrite <- argsRw;
+  now rewrite <- f_frel0.
+Qed.
+
+Ltac synthesize_args :=
+  repeat (match goal with
+  | |- {args: ArgList {v:?tp | ?q} ::RT ?tlt | prArgList args (_ ::UT ?tlut) (conj _ (fun _ => ?ztl)) = ?x_u ::U ?utl} => 
+    let hd := fresh "arg_" in
+    let rc := fresh "rc" in
+    refine (let hd : {v:tp | q} := (ltac:(refine (exist _ x_u _); timeout 5 quicksolve)) in _);
+    enough {args: ArgList (tlt hd) | prArgList args tlut ztl = utl} as rc by (
+      refine (exist _ (hd ::R ⌊ rc -⌋) _); cbn; now rewrite ⌈ rc ⌉)
+  | |- {args: ArgList nilRT | prArgList args nilUT I = nilU} =>
+    refine (exist _ nilR eq_refl)
+  end).
+
 Ltac instantiate_goal := 
   match goal with
     | |- exists (z:Z), _ => instantiate_lia_goal
     | [h: ?f_rel_ap ?v |- exists (w:?tp), (?f_rel_ap w) /\ ?p ] => 
       isRelAppl f_rel_ap; 
-      let temp := fresh "temp" in
-      assert (forall (w:tp), p -> f_rel_ap w) as temp by intuition; idtac "instanciating the existential in the goal with " v;
-      exists v; clear temp
-    | [h: ?f_rel_ap ?v |- exists (v:?tp) (_:?f_rel_ap v), ?p ] => 
-      isRelAppl f_rel_ap; 
+      idtac "instanciating the existential in the goal with " v;
       exists v; 
-      idtac "instanciating the existential variable in the goal with " v
-    | [h: ?f_rel_ap ?v |- exists (v:?tp) (_:_), ?f_rel_ap v ] => 
+      split; [assumption|]
+    | [h: ?f_rel_ap ?v |- exists (w:?tp) (_:_), ?f_rel_ap w ] => 
       isRelAppl f_rel_ap;
       exists v; 
       idtac "instanciating the existential variable at the end of the goal with " v
@@ -1181,6 +1221,10 @@ Ltac instantiate_goal :=
       tryif (isVar res) then try subst res else idtac
     | |- exists (v:?tp), ?ConstrApp ?res = ?ConstrApp v /\ ?q =>
       exists (res); split; [reflexivity|]
+    | [f_frel : (forall (args : ArgList ?argTps) (v : ?tp), ⌊ ?f args _⌋ = v <->
+      ?frel (prArgList args ?uargTps _) v) |- exists (w:?tp), ?frel ?uargs w /\ ?p] => 
+       refine (instantiate_frel_res (fun w => p) f_frel _ _);
+       [try synthesize_args|intros ? ?]
     | _ => fail "Goal doesn't contain existentially quantified variables we can instantiate"
   end.
 
@@ -1780,6 +1824,7 @@ Ltac existence_lemma_quicksolve f :=
 
   (* unfold definition in goal *)
   (* cbn; *) first [ timeout 4 cbn | unfold f; repeat progress autorewrite with fix_notation_hints];
+  repeat axiomatize_ho_term;
   repeat progress (simpl_proj; apply_ifs); try timeout 4 quicksolve.
   
 
@@ -1938,7 +1983,7 @@ Ltac f__f_rel_ex_body :=
   repeat destruct_disjs; repeat progress autorewrite with int_rel_back;
   try pack_goal_rewriting; 
   try subst resVal;
-  try quicksolve;
+  try timeout 20 quicksolve;
 
   (* cleanup context, to aid finding witnesses later on *)
   (* repeat lia_preprocessor_step; try (quick_simpl; fast_done); *)
@@ -1946,14 +1991,14 @@ Ltac f__f_rel_ex_body :=
   (* repeat concat_either (instantiate_hyp) (specialize_hyps); *)
 
   (* solve/delay these variables *)
-  try first [instantiate_goal | eager_instantiate_goal];
+  repeat first [instantiate_goal | eager_instantiate_goal];
 
   (* try repeating those backwards reasoning steps *)
   repeat (
     goal_rewriting;
     progress autorewrite with f_rel_back; repeat shape_based;
     try split_hyps; try invert_all_axiomatizations;
-    try first [instantiate_goal | eager_instantiate_goal];
+    repeat first [instantiate_goal | eager_instantiate_goal];
     autounfold with get_rel_db in *
   );
 

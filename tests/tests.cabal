@@ -2665,24 +2665,23 @@ executable benchmark-lava
       buildable:      False
     ghc-options: -fforce-recomp
     other-modules:
-                       Benchmark.ApplicativeId
-                    ,  Benchmark.FoldrUniversal
-                    ,  Benchmark.FunctorId
-                    ,  Benchmark.FunctorList
-                    ,  Benchmark.FunctorMaybe
-                    ,  Benchmark.MonadId
-                    ,  Benchmark.MonadList
-                    ,  Benchmark.MonadMaybe
-                    ,  Benchmark.MonoidList
-                    ,  Benchmark.MonoidMaybe
-                    ,  Benchmark.GradeExample
-                    ,  Benchmark.Half
-                    ,  Benchmark.SubExample
-                    ,  Benchmark.SafeIndexing
-                    ,  Benchmark.Overview
-                    ,  Benchmark.PeanoNats
-                    ,  Benchmark.RBinsToBins
-                    ,  Benchmark.SoftwareFoundations
+                    , TranslationTests.Append
+                    , TranslationTests.ApplicativeId
+                    , TranslationTests.ApplicativeMaybe
+                    , TranslationTests.FoldrUniversal
+                    , TranslationTests.FunctorId
+                    , TranslationTests.FunctorList
+                    , TranslationTests.FunctorMaybe
+                    , TranslationTests.MonadList
+                    , Benchmark.GradeExample
+                    , Benchmark.Half
+                    , Benchmark.SubExample
+                    , Benchmark.SafeIndexing
+                    , Benchmark.Overview
+                    , Benchmark.PeanoNats
+                    , Benchmark.RBinsToBins
+                    , Benchmark.SoftwareFoundations
+                    -- , Todo.Lambdas
     build-depends:    base
                     , liquid-prelude
                     -- , containers

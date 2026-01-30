@@ -830,7 +830,7 @@ instance PrettyPrintable CoqTactic where
     AssertTerm h tm (Just ih) -> "assert _ as " ++ h ++ " by " ++ showP (Concat [Refine tm, Clear ih, Oracle])
     Intros pats -> "intros " ++ unwords (map show pats)
     Revert xs -> "revert " ++ unwords xs
-    GeneralizeDependent xs -> intercalate "; " $ map (\x -> "try generalize " ++ subsetWitnessNm x ++ "; generalize dependent " ++x) xs
+    GeneralizeDependent xs -> intercalate "; " $ map (\x -> "try revert " ++ subsetWitnessNm x ++ "; generalize dependent " ++x) xs
     SpecializeIH ih _ _ _ _ y _ newIh -> unwords ["specTac", ih, showP y] ++ maybe "" (" as " ++) newIh
     Specialize hyp ts -> "specialize (" ++ hyp ++ concatMap ((" " ++) . showP) ts ++ ")"
     Clear hyp -> "clear " ++ hyp
