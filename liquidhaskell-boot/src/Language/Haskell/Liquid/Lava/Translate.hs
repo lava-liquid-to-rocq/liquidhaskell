@@ -57,12 +57,12 @@ parseFile ::
   -- | Complete file name
   String ->
   IO ([InternalLH.LHDecl], ([InternalLH.LHDecl], Id, Id))
-parseFile writeFlag sinfo arg = do
+parseFile writeFlag sinfo filename = do
   -- \| Step 1: Setting up the environment
   workingPath <- getCurrentDirectory
   let moduleId = takeWhile (not . isSpace) $ moduleNameString (s_moduleName sinfo)
   let modulename = last $ split '.' moduleId
-  let examplesFolder = getSrcFolder moduleId arg workingPath
+  let examplesFolder = getSrcFolder moduleId filename workingPath
 
   -- \| Step 2: Get information from LH:
   let (src, vars, decls, binds, specs) = B.first (filter (not . isIgnoredBind)) $ getBindsAndSpecs moduleId sinfo
@@ -88,7 +88,7 @@ parseFile writeFlag sinfo arg = do
   let imports = zipWith InternalLH.Import importNames importedDecls
 
   -- \| Step 3: Do the translation to ECoq
-  putStrLn $ "Input file: " ++ arg
+  putStrLn $ "Input file: " ++ filename
 
   -- Thanks to sinfo, this will also produce declarations from this rather than from the imported modules
   _ <- concat <$> mapM (translateFile False sinfo) importedSourceFiles
@@ -98,7 +98,7 @@ parseFile writeFlag sinfo arg = do
       ilhSource :: [InternalLH.LHDecl]
       ilhSource = sortedImports ++ topologicalSort (dataDecls ++ defDecls)
 
-      outputFolder = getOutputFolder moduleId arg workingPath
+      outputFolder = getOutputFolder moduleId filename workingPath
 
   when hasImports $ putStrLn ("Imported external files: " ++ intercalate ", " importedSourceFiles)
 
@@ -203,9 +203,9 @@ getOutputFolder moduleId filename workingPath = outputFolder
     modulePrefixes = init $ split '.' moduleId
 
     exampleFolderPath = getSrcPath moduleId filename workingPath
-    implementationFolder = intercalate "/" . init $ exampleFolderPath
+    implementationFolder = intercalate "/" . init . init $ exampleFolderPath
     subfolder = concatMap (++ "/") modulePrefixes
-    outputFolder = implementationFolder ++ "/out/" ++ subfolder
+    outputFolder = implementationFolder ++ "/lava/out/" ++ subfolder
 
 -- TODO: gsAllImps does not exist anymore (since commit 99f6d787b15e63bbc4b939a950d8babce97469cd)
 -- maybe use allImports instead of Specs.gsAllImps (see Plugin.hs)

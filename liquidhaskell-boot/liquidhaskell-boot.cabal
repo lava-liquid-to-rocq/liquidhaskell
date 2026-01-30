@@ -72,7 +72,7 @@ library
                       Language.Haskell.Liquid.GHC.Plugin
                       Language.Haskell.Liquid.GHC.Plugin.Tutorial
                       Language.Haskell.Liquid.Lava.Translate
-		      Language.Haskell.Liquid.LHNameResolution
+                      Language.Haskell.Liquid.LHNameResolution
                       Language.Haskell.Liquid.Liquid
                       Language.Haskell.Liquid.Measure
                       Language.Haskell.Liquid.Misc
