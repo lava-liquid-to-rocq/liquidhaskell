@@ -76,3 +76,4 @@ lava/coqDeps/*.vok
 lava/coqDeps/*.vos
 tests/lava/**/.lia.cache
 lava/out/*
+lava/*CoqMakefile*
