@@ -19,6 +19,9 @@ coqDeps/LHCoqTactics.v
 coqDeps/LiquidPreludeUtil.v
 -R out Output
 
+-I out/Benchmark
+out/Benchmark
+
 # manual/Benchmark/SFGradeExample0.v
 # manual/Benchmark/SFGradeExample.v
 
