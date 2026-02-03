@@ -79,5 +79,7 @@ lava/out/Todo
 lava/out/PLE
 lava/out/*.log
 lava/out/**/*.ilh
+lava/out/**/.*.aux
+lava/out/**/*.timing
 lava/out/TranslationTests
 tests/lava/**/.lia.cache

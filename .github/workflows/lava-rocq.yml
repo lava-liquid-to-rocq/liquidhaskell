@@ -30,7 +30,7 @@ jobs:
       - name: Install Opam
         run: sudo apt-get update -y -q; sudo apt-get install -y -q opam time coreutils
       - name: Setup Opam
-        run: opam init --compiler=5.2.0 -y; eval $(opam env)
+        run: opam init --compiler=4.14.1 -y; eval $(opam env)
       - name: Cache Opam dependencies
         uses: actions/cache@v3
         id: opam
