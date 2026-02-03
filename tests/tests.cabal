@@ -2666,10 +2666,11 @@ executable benchmark-lava
     main-is:          Main.hs
     if !flag(benchmark-lava) && flag(stack)
       buildable:      False
-    -- ghc-options: -fforce-recomp
+    ghc-options: -fforce-recomp
     other-modules:
                       TranslationTests.Append
                     , TranslationTests.ApplicativeId
+                    , TranslationTests.ApplicativeList
                     , TranslationTests.ApplicativeMaybe
                     , TranslationTests.FoldrUniversal
                     , TranslationTests.FunctorId
@@ -2678,13 +2679,44 @@ executable benchmark-lava
                     , TranslationTests.MonadList
                     , Benchmark.GradeExample
                     , Benchmark.Half
-                    , Benchmark.SubExample
-                    , Benchmark.SafeIndexing
                     , Benchmark.Overview
                     , Benchmark.PeanoNats
                     , Benchmark.RBinsToBins
+                    , Benchmark.SafeIndexing
                     , Benchmark.SoftwareFoundations
-                    -- , Todo.Lambdas
+		    , Benchmark.PLE.Compose
+		    , Benchmark.PLE.Lists
+		    , Benchmark.PLE.MonadId
+		    , Benchmark.PLE.MonadMaybe
+		    , Benchmark.PLE.MonoidList
+		    , Benchmark.PLE.MonoidMaybe
+                    , Todo.Lambdas
+    build-depends:    base
+                    , liquid-prelude
+                    -- , containers
+                    , liquidhaskell
+                    , lava
+    hs-source-dirs:   app
+                    , lava
+    default-extensions: GADTs
+
+flag benchmark-lava-ple
+     default: False
+
+executable benchmark-lava-ple
+    import:           common-ghc-options
+    main-is:          Main.hs
+    if !flag(benchmark-lava-ple) && flag(stack)
+      buildable:      False
+    ghc-options: -fforce-recomp
+    other-modules:
+                    , PLE.Euclide
+                    , PLE.Fibonacci
+                    , PLE.MapFusion
+                    , PLE.NatInduction
+                    , PLE.Overview
+                    , PLE.OverviewListInfix
+                    , PLE.Peano
     build-depends:    base
                     , liquid-prelude
                     -- , containers

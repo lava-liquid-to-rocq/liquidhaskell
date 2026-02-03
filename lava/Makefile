@@ -10,7 +10,7 @@ CoqMakefile: Makefile _CoqProject
 	$(COQBIN)coq_makefile TIMED = 1 TIMING = 1 -f _CoqProject -o CoqMakefile # since the profiler is not working correctly we can't use it here: -arg -profile-ltac
 
 rocq: CoqMakefile
-	$(MAKE) clean
+	# $(MAKE) clean
 	$(MAKE) pretty-timed --no-print-directory -f CoqMakefile
 	cp -f time-of-build-pretty.log out/time-of-build-pretty.log
 
