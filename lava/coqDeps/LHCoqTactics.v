@@ -1168,39 +1168,6 @@ Ltac instantiate_hyp :=
 
 Ltac instantiate_hyps := repeat_or_fail instantiate_hyp.
 
-Lemma instantiate_frel_res: forall {argTps} {uargTps:UArgListT} {z:projectsArgListT argTps uargTps}
-  {T: Type} {p: forall (args: ArgList argTps), T -> Prop}
-  {g: forall (args:ArgList argTps), {v:T | p args v} }
-  {frel: UArgList uargTps -> T -> Prop}
-  (p:forall (w:T), Prop) {uargs: UArgList uargTps}
-  (f_frel : forall (args : ArgList argTps) (v : T), ⌊ g args _⌋ = v <->
-    frel (prArgList args uargTps z) v)
-  (args_r: {args:ArgList argTps | prArgList args uargTps z = uargs})
-  (prf: forall (w:T), frel uargs w -> p w),
-  exists (w:T), frel uargs w /\ p w.
-Proof.
-  intros.
-  destruct args_r as [args argsRw].
-  pose ⌊ g args _⌋ as w.
-  exists w.
-  split;
-  [|refine (prf w _)];
-  rewrite <- argsRw;
-  now rewrite <- f_frel0.
-Qed.
-
-Ltac synthesize_args :=
-  repeat (match goal with
-  | |- {args: ArgList {v:?tp | ?q} ::RT ?tlt | prArgList args (_ ::UT ?tlut) (conj _ (fun _ => ?ztl)) = ?x_u ::U ?utl} => 
-    let hd := fresh "arg_" in
-    let rc := fresh "rc" in
-    refine (let hd : {v:tp | q} := (ltac:(refine (exist _ x_u _); timeout 5 quicksolve)) in _);
-    enough {args: ArgList (tlt hd) | prArgList args tlut ztl = utl} as rc by (
-      refine (exist _ (hd ::R ⌊ rc -⌋) _); cbn; now rewrite ⌈ rc ⌉)
-  | |- {args: ArgList nilRT | prArgList args nilUT I = nilU} =>
-    refine (exist _ nilR eq_refl)
-  end).
-
 Ltac instantiate_goal := 
   match goal with
     | |- exists (z:Z), _ => instantiate_lia_goal

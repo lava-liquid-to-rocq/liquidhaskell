@@ -126,6 +126,7 @@ mkUPackName = "mkUPack"
 refProjName = "refinement_proj"
 packProjName = "packPr_proj"
 packInstanceName f = f ++ "Pack"
+uPackWfName = "uPack_wf"
 {- ORMOLU_ENABLE -}
 
 -- * Translating a refined data type to Coq
@@ -236,7 +237,7 @@ transRefTC decls' tc constrs = unrefTCDecl : (eqDecl : eqReflLem : eqReflHint : 
             argReqs ((_, Subset x _ r), _) = [ref]
               where
                 ref = replaceSubterm (IdPat x, True) (Var $ indPatVarName x) r
-            argReqs ((_, Pack {}), _) = [TT] -- TODO: add required conditions
+            argReqs ((f, Pack {}), _) = [App (Def uPackWfName) [Var f]] -- TODO: add required conditions
     tm = (tmV, Subset v unrefTC $ And (wfVar v) (App (Var p) [Var v]))
     wfLem = mkCoqLemma (wfLemName tc) [((p, Arrow unrefTC (Sort PropSort)), True), (tm, False)] (Prop $ App (Def $ wfTCName tc) [Project $ Var tmV]) [destructSubsetArg tmV, Oracle]
 

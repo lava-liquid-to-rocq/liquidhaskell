@@ -107,8 +107,8 @@ transType modId intCont specTp = case specTp of
   RFun f _ arg ret ref -> {- traceFuncRet ["transType", transVarName f, showP funT, showP refT] $ -} ILH.RefType (transVarName modId f) funT refT
     where
       x = transVarName modId f
-      funT = mkFun x arg ret
-      ILH.Pi (x', _) _ = funT
+      (piArgs@(x', _), piRet) = mkFun x arg ret
+      funT = ILH.Pi piArgs piRet
       -- ToDo: Come up with a cleaner more self-contained way to do this. Maybe add foralls to LHFormulas and use them here
       -- ugly workaround: replaces variable s with x from function argument, this will later be universally quantified
       refT = transRef x' ref
@@ -150,8 +150,8 @@ transType modId intCont specTp = case specTp of
     -- MKUreft (F.Reft (s, tm)) is the representation of {s:_ | tm}
     transRefType (MkUReft (F.Reft (s, tm)) _) = (s, runReader (transExp modId tm) intCont)
     transTp = ILH.argTp . transType modId intCont
-    mkFun :: Id -> SpecType -> SpecType -> ILH.LHType
-    mkFun x arg ret = ILH.Pi (defaultBind argTS) (transType modId intCont ret)
+    mkFun :: Id -> SpecType -> SpecType -> ((Id, ILH.RefType), ILH.RefType)
+    mkFun x arg ret = (defaultBind argTS, transType modId intCont ret)
       where
         (ILH.RefType x' aT xp') = transType modId intCont arg
         argTS = ILH.RefType x aT (sub x' (ILH.Var x) xp')
@@ -188,7 +188,7 @@ internal modId = internal_aux
 -- > transExpr(if e1 then e2 else e3) = (e1 && e2) || (not e1 && e3)
 -- > transExpr(or [e1,…,en])= ||_{ei} trans(ei)
 transExp :: Id -> F.Expr -> Reader InternalCont ILH.LHSimpleTerm
-transExp modId term = transExpr term
+transExp modId trm = transExpr trm
   where
     transExpr :: F.Expr -> Reader InternalCont ILH.LHSimpleTerm
     transExpr term =

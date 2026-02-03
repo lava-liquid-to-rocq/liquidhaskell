@@ -10,6 +10,9 @@ CABAL=cabal
 CABALI=$(CABAL) install
 CABALP=$(CABAL) install --enable-library-profiling
 
+EXT := *.vo *.vok *.vos *.glob *.aux *.v.timing
+GHCO := *.o *.hi *.dyn_o *.dyn_hi
+
 # to deal with cabal sandboxes using dist/dist-sandbox-xxxxxx/build/test/test
 # TASTY=find dist -type f -name test | head -n1
 TASTY=./dist/build/test/test
@@ -110,3 +113,43 @@ tags:
 	# hasktags -c src/
 	# hasktags -e src/
 
+timeTranslation: dist
+	$(MAKE) cleanTrans
+	# time stack exec --rts-options -t -- ghc tests/lava/Benchmark/FoldrUniversal.hs
+	time cabal exec -- ghc -fplugin=LiquidHaskell tests/lava/Benchmark/Overview.hs
+	time stack exec --rts-options -t -- ghc tests/lava/Benchmark/PeanoNats.hs
+	time stack exec --rts-options -t -- ghc tests/lava/Benchmark/SoftwareFoundations.hs
+	time stack exec --rts-options -t -- ghc tests/lava/Benchmark/RBinsToBins.hs
+	time stack exec --rts-options -t -- ghc tests/lava/Benchmark/PLE/MonadId.hs
+	time stack exec --rts-options -t -- ghc tests/lava/Benchmark/PLE/MonadMaybe.hs
+	time stack exec --rts-options -t -- ghc tests/lava/Benchmark/PLE/MonoidList.hs
+	time stack exec --rts-options -t -- ghc tests/lava/Benchmark/PLE/MonoidMaybe.hs
+	time stack exec --rts-options -t -- ghc tests/lava/Benchmark/PLE/Lists.hs
+	time stack exec --rts-options -t -- ghc tests/lava/Benchmark/PLE/Compose.hs
+	time stack exec --rts-options -t -- ghc tests/lava/TranslationTests/Append.hs
+	time stack exec --rts-options -t -- ghc tests/lava/TranslationTests/ApplicativeId.hs
+	time stack exec --rts-options -t -- ghc tests/lava/TranslationTests/ApplicativeMaybe.hs
+	time stack exec --rts-options -t -- ghc tests/lava/TranslationTests/FoldrUniversal.hs
+	time stack exec --rts-options -t -- ghc tests/lava/TranslationTests/FunctorId.hs
+	time stack exec --rts-options -t -- ghc tests/lava/TranslationTests/FunctorList.hs
+	time stack exec --rts-options -t -- ghc tests/lava/TranslationTests/FunctorMaybe.hs
+	time stack exec --rts-options -t -- ghc tests/lava/TranslationTests/MonadList.hs
+
+translation: dist
+	clear && time cabal run tests:benchmark-lava
+
+cleanLava:
+	cd dist-newstyle/build/x86_64-linux/ghc-9.12.2/liquidhaskell-boot-0.9.12.2.1/opt/build/Language/Haskell/Liquid/Lava && rm $(GHCO) || echo ""
+	cd dist-newstyle/build/x86_64-linux/ghc-9.12.2/lava-0.9.12.2.1/opt/build/Lava && rm $(GHCO) || echo ""
+
+cleanTrans: 
+	for i in $(EXT); do find tests/lava -name "$$i" -delete; done
+
+CoqMakefile: Makefile lava/_CoqProject
+	cd lava && $(COQBIN)coq_makefile TIMED = 1 TIMING = 1 -f _CoqProject -o CoqMakefile # since the profiler is not working correctly we can't use it here: -arg -profile-ltac
+
+rocq: CoqMakefile
+	cd lava && $(MAKE) pretty-timed --no-print-directory -f CoqMakefile && cp -f time-of-build-pretty.log out/time-of-build-pretty.log
+	
+lava: cleanTrans translation rocq
+	echo "Lava ran sucessfully on all benchmarks."
