@@ -31,6 +31,7 @@ where
 
 import Control.Monad (foldM)
 import Data.Bifunctor (second)
+import Debug.Trace (trace)
 import Lava.CoqUtil (relDefName)
 import Lava.InternalLH as ILH
 import Lava.PaperUtils
@@ -128,6 +129,8 @@ lookupRefType x γ =
   case lookup x γ of
     Just (ΓVar (ArrType [] tp)) -> Just tp
     Just (ΓDef (ArrType [] tp)) -> Just tp
+    Just (ΓVar tp) -> trace ("Found ArrType where RefType was expected for " ++ x) $ Just (ILH.arrToPi tp)
+    Just (ΓDef tp) -> trace ("Found ArrType where RefType was expected for " ++ x) $ Just (ILH.arrToPi tp)
     _ -> case lookupDC x γ of
       Just (ArrType [] tp) -> Just tp
       _ -> Nothing

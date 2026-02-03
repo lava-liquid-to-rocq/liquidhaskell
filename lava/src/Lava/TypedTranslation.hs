@@ -336,7 +336,7 @@ synSmpTerm γ r (f, mCtx@(fCtx, matchVars)) = {- traceFuncRet ["synSmpTerm", sho
   -- (S-Var)
   Var x -> do
     tp <-
-      maybeToEither (SynErr $ "Variable or constructor " ++ show x ++ " not bound in context with a simple refinement type.") $
+      maybeToEither (SynErr $ "Variable or constructor " ++ show x ++ " not bound in context with a simple refinement type in the translation of " ++ f ++ ".") $
         Ctx.lookupRefType x γ
     let tp' = selfification x tp
         isBuildin = x `elem` [ttTmName, ffTmName, unitTmName]

@@ -164,7 +164,18 @@ builtinDCs = [ttTm, ffTm, unitTm]
 
 builtinTCs = [boolTp, unitTp]
 
--- TODO: Definition of values, maybe add an arity to data constructors
+-- * Functions on the grammar
+
+-- Transformes an ArrType into a Pi
+-- FIX: we should merge ArrType and RefType (necessary for polymorphism anyway)
+-- and get rid of this
+arrToPi :: ArrType -> RefType
+arrToPi (ArrType [] ret) = ret
+arrToPi (ArrType args ret) = RefType "_" (go args) ttTm
+  where
+    go :: [(Id, RefType)] -> LHType
+    go [arg] = Pi arg ret
+    go (arg : args') = Pi arg (RefType "_" (go args') ttTm)
 
 -- * Printer for the grammar
 

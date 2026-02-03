@@ -2684,12 +2684,12 @@ executable benchmark-lava
                     , Benchmark.RBinsToBins
                     , Benchmark.SafeIndexing
                     , Benchmark.SoftwareFoundations
-		    , Benchmark.PLE.Compose
-		    , Benchmark.PLE.Lists
-		    , Benchmark.PLE.MonadId
-		    , Benchmark.PLE.MonadMaybe
-		    , Benchmark.PLE.MonoidList
-		    , Benchmark.PLE.MonoidMaybe
+                    , Benchmark.PLE.Compose
+                    , Benchmark.PLE.Lists
+                    , Benchmark.PLE.MonadId
+                    , Benchmark.PLE.MonadMaybe
+                    , Benchmark.PLE.MonoidList
+                    , Benchmark.PLE.MonoidMaybe
                     , Todo.Lambdas
     build-depends:    base
                     , liquid-prelude

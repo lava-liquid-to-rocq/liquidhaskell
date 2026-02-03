@@ -313,4 +313,3 @@ prop_append_neutralF2 NF2 =
   trivial
 prop_append_neutralF2 (CF2 x xs) =
   prop_append_neutralF2 xs
-
