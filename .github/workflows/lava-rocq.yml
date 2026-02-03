@@ -1,0 +1,67 @@
+name: Rocq CI for Lava output
+
+on:
+  push:
+    branches:
+      - lava
+  pull_request:
+    branches:
+      - '**'
+
+
+# Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  
+permissions:
+  contents: write   
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+    # the OS must be GNU/Linux to be able to use the docker-coq-action
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install Opam
+        run: sudo apt-get update -y -q; sudo apt-get install -y -q opam time coreutils
+      - name: Setup Opam
+        run: opam init --compiler=5.2.0 -y; eval $(opam env)
+      - name: Cache Opam dependencies
+        uses: actions/cache@v3
+        id: opam
+        with:
+          path: ~/.opam
+          key: ${{ runner.OS }}-opam-cache-${{ hashFiles('*/lib/coq/**/*.v') }}
+          restore-keys: ${{ runner.OS }}-opam-cache-
+
+      - name: Add opam repos and pin packages
+        working-directory: ./lava
+        run: |
+          opam pin add coq 9.0.0 -y
+          opam repo add coq-released https://coq.inria.fr/opam/released
+          opam repo add coq-extra-dev https://coq.inria.fr/opam/extra-dev
+          opam update -y; eval $(opam env)
+          opam pin add -n -y -k path lava .
+      - name: Setup Rocq
+        working-directory: ./lava
+        run: |
+          opam install --confirm-level=unsafe-yes -j 2 lava --deps-only
+      - name: Run Rocq on examples
+        working-directory: ./lava
+        run: |
+          eval $(opam env)
+          coq_makefile --help || echo "coq_makefile not installed"
+          make rocq | tee "out/build.log"
+      
+      - name: Push checked output files
+        uses: s0/git-publish-subdir-action@develop
+        env:
+          REPO: self
+          BRANCH: out
+          FOLDER: out
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
