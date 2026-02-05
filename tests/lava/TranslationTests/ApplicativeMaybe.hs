@@ -15,12 +15,12 @@ import Prelude hiding (Just, Maybe, Nothing, fmap, id, pure, seq)
 -- | homomorphism  pure f <*> pure x = pure (f x)
 -- | interchange   u <*> pure y = pure ($ y) <*> u
 
-{-@ data Maybe where
-      Nothing :: Maybe
-      Just :: Int -> Maybe @-}
-data Maybe where
-  Nothing :: Maybe
-  Just :: Int -> Maybe
+{-@ data MaybeInt  where
+      Nothing :: MaybeInt 
+      Just :: Int -> MaybeInt  @-}
+data MaybeInt  where
+  Nothing :: MaybeInt 
+  Just :: Int -> MaybeInt 
   deriving (Eq)
 
 {-@ data MaybeF where
@@ -52,8 +52,8 @@ data MaybeF3 where
   JustF3 :: ((Int -> Int) -> (Int -> Int) -> Int -> Int) -> MaybeF3
 
 {-@ reflect pure @-}
-{-@ pure :: Int -> Maybe @-}
-pure :: Int -> Maybe
+{-@ pure :: Int -> MaybeInt @-}
+pure :: Int -> MaybeInt
 pure x = Just x
 
 {-@ reflect pureF @-}
@@ -72,14 +72,14 @@ pureF3 :: ((Int -> Int) -> (Int -> Int) -> Int -> Int) -> MaybeF3
 pureF3 f = JustF3 f
 
 {-@ reflect seq @-}
-{-@ seq :: MaybeF -> Maybe -> Maybe @-}
-seq :: MaybeF -> Maybe -> Maybe
+{-@ seq :: MaybeF -> MaybeInt -> MaybeInt @-}
+seq :: MaybeF -> MaybeInt -> MaybeInt
 seq (JustF f) (Just x) = Just (f x)
 seq _ _ = Nothing
 
 {-@ reflect seqF @-}
-{-@ seqF :: MaybeF1 -> MaybeF -> Maybe @-}
-seqF :: MaybeF1 -> MaybeF -> Maybe
+{-@ seqF :: MaybeF1 -> MaybeF -> MaybeInt @-}
+seqF :: MaybeF1 -> MaybeF -> MaybeInt
 seqF (JustF1 f) (JustF x) = Just (f x)
 seqF _ _ = Nothing
 
@@ -110,10 +110,10 @@ idollar x f = f x
 compose :: (Int -> Int) -> (Int -> Int) -> Int -> Int
 compose f g x = f (g x)
 
--- | Maybe
+-- | MaybeInt
 
-{-@ identity :: x:Maybe -> { seq (pureF id) x == x } @-}
-identity :: Maybe -> Proof
+{-@ identity :: x:MaybeInt -> { seq (pureF id) x == x } @-}
+identity :: MaybeInt -> Proof
 identity Nothing = trivial
 identity (Just _) = trivial
 
@@ -121,9 +121,9 @@ identity (Just _) = trivial
 
 {-@ composition :: x:MaybeF
                 -> y:MaybeF
-                -> z:Maybe
+                -> z:MaybeInt
                 -> { (seq (seqF1 (seqF2 (pureF3 compose) x) y) z) == seq x (seq y z) } @-}
-composition :: MaybeF -> MaybeF -> Maybe -> Proof
+composition :: MaybeF -> MaybeF -> MaybeInt -> Proof
 composition NothingF _ _ =
   trivial
 composition _ NothingF _ =

@@ -1,43 +1,6 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive Maybe_u : Set := 
-	 | Nothing_u: Maybe_u. 
-Fixpoint Maybe_eq (x: Maybe_u) (y: Maybe_u): bool := 
-	match (x, y) with (Nothing_u, Nothing_u) => true end. 
-Definition Maybe_eq_refl: (forall (x: Maybe_u) , is_true (Maybe_eq x x)). 
-Proof. 
-	eq_refl. 
-Qed. 
-#[global] Hint Resolve Maybe_eq_refl : eq_hint_db.
-Definition Maybe_eqb_eq: (forall (s: Maybe_u) (t: Maybe_u) , (is_true (Maybe_eq s t)) -> (s = t)). 
-Proof. 
-	eqb_eq_lem. 
-Qed. 
-#[global] Hint Resolve Maybe_eqb_eq : eq_hint_db.
-#[global] Instance leibnitz_eq_Maybe : LeibnitzEqB := { 
-	equalB' := Maybe_eq;
-	refl' := Maybe_eq_refl;
-	eqb_eq' := Maybe_eqb_eq
-}.
-Fixpoint Maybe_wf (x: Maybe_u): Prop := 
-	match x with Nothing_u => True end. 
-Theorem Maybe_wf_ref [p: Maybe_u -> Prop] (tm: {v: Maybe_u | (Maybe_wf v) /\ (p v)}): Maybe_wf (⌊ tm -⌋). 
-Proof. 
-	destruct tm as [tm tm_p]. 
-	solver. 
-Qed. 
-Global Notation Maybe := {x: Maybe_u | (Maybe_wf x) /\ True}. 
-Definition Nothing_lem: (Maybe_wf Nothing_u) /\ True. 
-Proof. 
-	repeat first [split; solver]. 
-Defined. 
-Definition Nothing: Maybe := 
-	exist _ Nothing_u Nothing_lem. 
-#[global] Hint Resolve Maybe_wf_ref : wf_constr_db.
-#[global] Hint Unfold Maybe_wf : wf_constr_db.
-#[global] Hint Resolve Maybe_eq : ref_constr_db.
-#[global] Hint Unfold Nothing : ref_constr_db.
 Inductive L_u : Set := 
 	 | C_u: Z -> (L_u -> L_u)
 	 | Emp_u: L_u. 
@@ -206,7 +169,7 @@ Defined.
 Definition length (lq_tmp0: L): {VV: Z | gebZ_rel VV 0 true}. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
-	induction lq_tmp0 as [(*C*) ds_d2kO xs IH_xs | (*Emp*) ]. 
+	induction lq_tmp0 as [(*C*) ds_d2kL xs IH_xs | (*Emp*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
 		((exist (fun (x_1: Z) => True) 1 (ltac: (solver))) +Z (subsumptionCast Z (fun (x_2: Z) => True) (IH_xs (ltac: (try clear IH_xs; 
@@ -218,7 +181,7 @@ Proof.
 Defined. 
 Inductive length_rel : (L_u -> (Z -> Prop)) := 
 	 | length_Emp: length_rel Emp_u 0
-	 | length_C: (forall ds_d2kO xs , forall (lengthres: Z), (length_rel xs lengthres) -> (forall (addZres: Z), (addZ_rel 1 lengthres addZres) -> (length_rel (C_u ds_d2kO xs) addZres))). 
+	 | length_C: (forall ds_d2kL xs , forall (lengthres: Z), (length_rel xs lengthres) -> (forall (addZres: Z), (addZ_rel 1 lengthres addZres) -> (length_rel (C_u ds_d2kL xs) addZres))). 
 #[global] Hint Constructors length_rel : core_hint_db.
 #[global] Instance length_lookup_rel : dictionary rel length := { 
 	lookup' := length_rel
@@ -228,7 +191,7 @@ Inductive length_rel : (L_u -> (Z -> Prop)) :=
 }.
 Definition length_rel_funct [lq_tmp0: L_u]: (forall (VV: Z) (VV': Z) (H: length_rel lq_tmp0 VV) (K: length_rel lq_tmp0 VV') , VV = VV'). 
 Proof. 
-	induction lq_tmp0 as [(*C*) ds_d2kO xs IH_xs | (*Emp*) ]; 
+	induction lq_tmp0 as [(*C*) ds_d2kL xs IH_xs | (*Emp*) ]; 
 	intros ; 
 	rel_functionhood_body. 
 Qed. 
@@ -238,7 +201,7 @@ Proof.
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite length_Emp_lem : f_rel_back.
-Theorem length_C_lem (ds_d2kO: _) (xs: _) (addZres: Z): (length_rel (C_u ds_d2kO xs) addZres) <-> (exists (lengthres: Z), (length_rel xs lengthres) /\ (addZ_rel 1 lengthres addZres)). 
+Theorem length_C_lem (ds_d2kL: _) (xs: _) (addZres: Z): (length_rel (C_u ds_d2kL xs) addZres) <-> (exists (lengthres: Z), (length_rel xs lengthres) /\ (addZ_rel 1 lengthres addZres)). 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
@@ -246,7 +209,7 @@ Qed.
 Theorem length_rel_ex (lq_tmp0: L_u) (lq_tmp0_p: (L_wf lq_tmp0) /\ True): length_rel lq_tmp0 (⌊ length (exist _ lq_tmp0 lq_tmp0_p) -⌋). 
 Proof. 
 	existence_lemma_pre length; 
-	induction lq_tmp0 as [(*C*) ds_d2kO xs IH_xs | (*Emp*) ]; 
+	induction lq_tmp0 as [(*C*) ds_d2kL xs IH_xs | (*Emp*) ]; 
 	intros ; 
 	[fix_notations; 
 	pose proof (IH_xs (ltac: (try clear IH_xs; 

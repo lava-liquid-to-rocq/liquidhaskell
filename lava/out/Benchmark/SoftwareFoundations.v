@@ -1210,15 +1210,15 @@ Definition Bits (VV: SFBit) (VV_: SFBit) (VV__: SFBit) (VV___: SFBit): Nibble :=
 Definition allzero (lq_tmp0: Nibble): SFBool. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
-	induction lq_tmp0 as [(*Bits*) ds_d4tI ds_d4tJ ds_d4tK ds_d4tL]. 
+	induction lq_tmp0 as [(*Bits*) ds_d4tF ds_d4tG ds_d4tH ds_d4tI]. 
 	  - intros . 
-		induction ds_d4tI as [(*B0*)  | (*B1*) ]. 
+		induction ds_d4tF as [(*B0*)  | (*B1*) ]. 
 		  -- intros . 
-			induction ds_d4tJ as [(*B0*)  | (*B1*) ]. 
+			induction ds_d4tG as [(*B0*)  | (*B1*) ]. 
 			  --- intros . 
-				induction ds_d4tK as [(*B0*)  | (*B1*) ]. 
+				induction ds_d4tH as [(*B0*)  | (*B1*) ]. 
 				  ---- intros . 
-					induction ds_d4tL as [(*B0*)  | (*B1*) ]. 
+					induction ds_d4tI as [(*B0*)  | (*B1*) ]. 
 					  ----- intros . 
 						refine (subsumptionCast _ _ SFTrue _); 
 						solver.  
@@ -1847,7 +1847,7 @@ Proof.
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d4tf IH_ds_d4tf]. 
+	induction n as [(*O*)  | (*S*) ds_d4tc IH_ds_d4tc]. 
 	  - intros . 
 		refine (subsumptionCast _ _ O _); 
 		solver.  
@@ -1856,19 +1856,19 @@ Proof.
 		  -- intros . 
 			refine (subsumptionCast _ _ 
 		(S 
-		(exist (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) ds_d4tf (ltac: (solver)))) _); 
+		(exist (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) ds_d4tc (ltac: (solver)))) _); 
 			solver.  
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(IH_ds_d4tf (ltac: (try clear IH_ds_d4tf; 
-	solver)) m' (ltac: (try clear IH_ds_d4tf; 
+		(IH_ds_d4tc (ltac: (try clear IH_ds_d4tc; 
+	solver)) m' (ltac: (try clear IH_ds_d4tc; 
 	solver))) _); 
 			solver.   
 Defined. 
 Inductive minus_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) := 
 	 | minus_O: (forall m , minus_rel O_u m O_u)
-	 | minus_S_O: (forall ds_d4tf , minus_rel (S_u ds_d4tf) O_u (S_u ds_d4tf))
-	 | minus_S_S: (forall ds_d4tf m' , forall (minusres: MyNat_u), (minus_rel ds_d4tf m' minusres) -> (minus_rel (S_u ds_d4tf) (S_u m') minusres)). 
+	 | minus_S_O: (forall ds_d4tc , minus_rel (S_u ds_d4tc) O_u (S_u ds_d4tc))
+	 | minus_S_S: (forall ds_d4tc m' , forall (minusres: MyNat_u), (minus_rel ds_d4tc m' minusres) -> (minus_rel (S_u ds_d4tc) (S_u m') minusres)). 
 #[global] Hint Constructors minus_rel : core_hint_db.
 #[global] Instance minus_lookup_rel : dictionary rel minus := { 
 	lookup' := minus_rel
@@ -1879,7 +1879,7 @@ Inductive minus_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) :=
 Definition minus_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: minus_rel n m VV) (K: minus_rel n m VV') , VV = VV'). 
 Proof. 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d4tf IH_ds_d4tf]; 
+	induction n as [(*O*)  | (*S*) ds_d4tc IH_ds_d4tc]; 
 	intros ; 
 	[| 
 	induction m as [(*O*)  | (*S*) m' IH_m']; 
@@ -1892,12 +1892,12 @@ Proof.
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite minus_O_lem : f_rel_back.
-Theorem minus_S_O_lem (ds_d4tf: _): (minus_rel (S_u ds_d4tf) O_u (S_u ds_d4tf)) <-> True. 
+Theorem minus_S_O_lem (ds_d4tc: _): (minus_rel (S_u ds_d4tc) O_u (S_u ds_d4tc)) <-> True. 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite minus_S_O_lem : f_rel_back.
-Theorem minus_S_S_lem (ds_d4tf: _) (m': _) (minusres: MyNat_u) (h_43612209: minus_rel ds_d4tf m' minusres): (minus_rel (S_u ds_d4tf) (S_u m') minusres) <-> True. 
+Theorem minus_S_S_lem (ds_d4tc: _) (m': _) (minusres: MyNat_u) (h_43612209: minus_rel ds_d4tc m' minusres): (minus_rel (S_u ds_d4tc) (S_u m') minusres) <-> True. 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
@@ -1906,18 +1906,18 @@ Theorem minus_rel_ex (n: MyNat_u) (m: MyNat_u) (n_p: (MyNat_wf n) /\ True) (m_p:
 Proof. 
 	existence_lemma_pre minus; 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d4tf IH_ds_d4tf]; 
+	induction n as [(*O*)  | (*S*) ds_d4tc IH_ds_d4tc]; 
 	intros ; 
 	[fix_notations| 
 	induction m as [(*O*)  | (*S*) m' IH_m']; 
 	intros ; 
 	[fix_notations; 
-	try clear IH_ds_d4tf| 
+	try clear IH_ds_d4tc| 
 	fix_notations; 
-	pose proof (IH_ds_d4tf (ltac: (try clear IH_ds_d4tf; 
-	solver)) m' (ltac: (try clear IH_ds_d4tf; 
-	solver))) as IH_51437233; 
-	try clear IH_ds_d4tf; 
+	pose proof (IH_ds_d4tc (ltac: (try clear IH_ds_d4tc; 
+	solver)) m' (ltac: (try clear IH_ds_d4tc; 
+	solver))) as IH_73996143; 
+	try clear IH_ds_d4tc; 
 	try clear IH_m']]; 
 	existence_lemma_quicksolve minus; 
 	f__f_rel_ex_body; 
@@ -1972,12 +1972,12 @@ Defined.
 Definition minustwo (lq_tmp0: MyNat): MyNat. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
-	induction lq_tmp0 as [(*O*)  | (*S*) ds_d4tF IH_ds_d4tF]. 
+	induction lq_tmp0 as [(*O*)  | (*S*) ds_d4tC IH_ds_d4tC]. 
 	  - intros . 
 		refine (subsumptionCast _ _ O _); 
 		solver.  
 	  - intros . 
-		induction ds_d4tF as [(*O*)  | (*S*) n' IH_n']. 
+		induction ds_d4tC as [(*O*)  | (*S*) n' IH_n']. 
 		  -- intros . 
 			refine (subsumptionCast _ _ O _); 
 			solver.  
@@ -2478,7 +2478,7 @@ Defined.
 Definition plus_1_neq_0 (n: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ one -⌋) plusres) -> (plusres <> O_u)}}. 
 Proof. 
 	destruct n as [n n_p]. 
-	induction n as [(*O*)  | (*S*) ds_d4t0 IH_ds_d4t0]. 
+	induction n as [(*O*)  | (*S*) ds_d4sX IH_ds_d4sX]. 
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
@@ -3627,43 +3627,6 @@ Definition Plus: Modifier :=
 #[global] Hint Unfold Minus : ref_constr_db.
 #[global] Hint Unfold Natural : ref_constr_db.
 #[global] Hint Unfold Plus : ref_constr_db.
-Inductive Maybe_u : Set := 
-	 | Nothing_u: Maybe_u. 
-Fixpoint Maybe_eq (x: Maybe_u) (y: Maybe_u): bool := 
-	match (x, y) with (Nothing_u, Nothing_u) => true end. 
-Definition Maybe_eq_refl: (forall (x: Maybe_u) , is_true (Maybe_eq x x)). 
-Proof. 
-	eq_refl. 
-Qed. 
-#[global] Hint Resolve Maybe_eq_refl : eq_hint_db.
-Definition Maybe_eqb_eq: (forall (s: Maybe_u) (t: Maybe_u) , (is_true (Maybe_eq s t)) -> (s = t)). 
-Proof. 
-	eqb_eq_lem. 
-Qed. 
-#[global] Hint Resolve Maybe_eqb_eq : eq_hint_db.
-#[global] Instance leibnitz_eq_Maybe : LeibnitzEqB := { 
-	equalB' := Maybe_eq;
-	refl' := Maybe_eq_refl;
-	eqb_eq' := Maybe_eqb_eq
-}.
-Fixpoint Maybe_wf (x: Maybe_u): Prop := 
-	match x with Nothing_u => True end. 
-Theorem Maybe_wf_ref [p: Maybe_u -> Prop] (tm: {v: Maybe_u | (Maybe_wf v) /\ (p v)}): Maybe_wf (⌊ tm -⌋). 
-Proof. 
-	destruct tm as [tm tm_p]. 
-	solver. 
-Qed. 
-Global Notation Maybe := {x: Maybe_u | (Maybe_wf x) /\ True}. 
-Definition Nothing_lem: (Maybe_wf Nothing_u) /\ True. 
-Proof. 
-	repeat first [split; solver]. 
-Defined. 
-Definition Nothing: Maybe := 
-	exist _ Nothing_u Nothing_lem. 
-#[global] Hint Resolve Maybe_wf_ref : wf_constr_db.
-#[global] Hint Unfold Maybe_wf : wf_constr_db.
-#[global] Hint Resolve Maybe_eq : ref_constr_db.
-#[global] Hint Unfold Nothing : ref_constr_db.
 Inductive Letter_u : Set := 
 	 | A_u: Letter_u
 	 | B_u: Letter_u
@@ -5073,12 +5036,12 @@ Definition White: Color :=
 Definition isred (c: Color): SFBool. 
 Proof. 
 	destruct c as [c c_p]. 
-	induction c as [(*Black*)  | (*Primary*) ds_d4tR | (*White*) ]. 
+	induction c as [(*Black*)  | (*Primary*) ds_d4tO | (*White*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ SFFalse _); 
 		solver.  
 	  - intros . 
-		induction ds_d4tR as [(*Blue*)  | (*Green*)  | (*Red*) ]. 
+		induction ds_d4tO as [(*Blue*)  | (*Green*)  | (*Red*) ]. 
 		  -- intros . 
 			refine (subsumptionCast _ _ SFFalse _); 
 			solver.  

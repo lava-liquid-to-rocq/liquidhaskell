@@ -54,43 +54,6 @@ Definition Plus: Modifier :=
 #[global] Hint Unfold Minus : ref_constr_db.
 #[global] Hint Unfold Natural : ref_constr_db.
 #[global] Hint Unfold Plus : ref_constr_db.
-Inductive Maybe_u : Set := 
-	 | Nothing_u: Maybe_u. 
-Fixpoint Maybe_eq (x: Maybe_u) (y: Maybe_u): bool := 
-	match (x, y) with (Nothing_u, Nothing_u) => true end. 
-Definition Maybe_eq_refl: (forall (x: Maybe_u) , is_true (Maybe_eq x x)). 
-Proof. 
-	eq_refl. 
-Qed. 
-#[global] Hint Resolve Maybe_eq_refl : eq_hint_db.
-Definition Maybe_eqb_eq: (forall (s: Maybe_u) (t: Maybe_u) , (is_true (Maybe_eq s t)) -> (s = t)). 
-Proof. 
-	eqb_eq_lem. 
-Qed. 
-#[global] Hint Resolve Maybe_eqb_eq : eq_hint_db.
-#[global] Instance leibnitz_eq_Maybe : LeibnitzEqB := { 
-	equalB' := Maybe_eq;
-	refl' := Maybe_eq_refl;
-	eqb_eq' := Maybe_eqb_eq
-}.
-Fixpoint Maybe_wf (x: Maybe_u): Prop := 
-	match x with Nothing_u => True end. 
-Theorem Maybe_wf_ref [p: Maybe_u -> Prop] (tm: {v: Maybe_u | (Maybe_wf v) /\ (p v)}): Maybe_wf (⌊ tm -⌋). 
-Proof. 
-	destruct tm as [tm tm_p]. 
-	solver. 
-Qed. 
-Global Notation Maybe := {x: Maybe_u | (Maybe_wf x) /\ True}. 
-Definition Nothing_lem: (Maybe_wf Nothing_u) /\ True. 
-Proof. 
-	repeat first [split; solver]. 
-Defined. 
-Definition Nothing: Maybe := 
-	exist _ Nothing_u Nothing_lem. 
-#[global] Hint Resolve Maybe_wf_ref : wf_constr_db.
-#[global] Hint Unfold Maybe_wf : wf_constr_db.
-#[global] Hint Resolve Maybe_eq : ref_constr_db.
-#[global] Hint Unfold Nothing : ref_constr_db.
 Inductive Letter_u : Set := 
 	 | A_u: Letter_u
 	 | B_u: Letter_u

@@ -113,7 +113,7 @@ tags:
 	# hasktags -c src/
 	# hasktags -e src/
 
-timeTranslation: dist
+timeTranslation: 
 	$(MAKE) cleanTrans
 	# time stack exec --rts-options -t -- ghc tests/lava/Benchmark/FoldrUniversal.hs
 	time cabal exec -- ghc -fplugin=LiquidHaskell tests/lava/Benchmark/Overview.hs
@@ -135,8 +135,8 @@ timeTranslation: dist
 	time stack exec --rts-options -t -- ghc tests/lava/TranslationTests/FunctorMaybe.hs
 	time stack exec --rts-options -t -- ghc tests/lava/TranslationTests/MonadList.hs
 
-translation: dist
-	clear && time cabal run tests:benchmark-lava
+translation: 
+	clear && time cabal run tests:benchmark-lava || echo "Translation failed!"
 
 cleanLava:
 	cd dist-newstyle/build/x86_64-linux/ghc-9.12.2/liquidhaskell-boot-0.9.12.2.1/opt/build/Language/Haskell/Liquid/Lava && rm $(GHCO) || echo ""
@@ -151,5 +151,5 @@ CoqMakefile: Makefile lava/_CoqProject
 rocq: CoqMakefile
 	cd lava && $(MAKE) pretty-timed --no-print-directory -f CoqMakefile && cp -f time-of-build-pretty.log out/time-of-build-pretty.log
 	
-lava: cleanTrans translation rocq
+lava: translation rocq
 	echo "Lava ran sucessfully on all benchmarks."

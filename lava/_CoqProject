@@ -19,20 +19,18 @@ coqDeps/LHCoqTactics.v
 coqDeps/LiquidPreludeUtil.v
 -R out Output
 
--I out/Benchmark
-out/Benchmark
-
 # manual/Benchmark/SFGradeExample0.v
 # manual/Benchmark/SFGradeExample.v
 
+out/Benchmark/PLE/MonadMaybe.v
 out/Benchmark/PLE/MonadId.v
 # # out/Benchmark/PLE/MonadList.v
-out/Benchmark/PLE/MonadMaybe.v
 out/Benchmark/PLE/MonoidList.v
 out/Benchmark/PLE/MonoidMaybe.v
 #
 out/Benchmark/PLE/Compose.v
 out/Benchmark/PLE/Lists.v
+#
 #
 out/Benchmark/RBinsToBins.v
 out/Benchmark/SoftwareFoundations.v

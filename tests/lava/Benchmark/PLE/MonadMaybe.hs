@@ -6,28 +6,28 @@ module Benchmark.PLE.MonadMaybe where
 
 {- HLInt ignore -}
 import Language.Haskell.Liquid.ProofCombinators
-import Prelude hiding (Just, Maybe, Nothing)
+import Prelude hiding (Maybe, Just, Nothing)
 
 -- | Monad Laws :
 -- | Left identity:   retrn a >>= f  ≡ f a
 -- | Right identity:   m >>= retrn    ≡ m
 
-{-@ data Maybe where
-        Nothing :: Maybe
-        Just :: Int -> Maybe @-}
-data Maybe where
-  Nothing :: Maybe
-  Just :: Int -> Maybe
+{-@ data MaybeInt where
+        Nothing :: MaybeInt
+        Just :: Int -> MaybeInt @-}
+data MaybeInt where
+  Nothing :: MaybeInt
+  Just :: Int -> MaybeInt
   deriving (Eq)
 
 {-@ reflect retrn @-}
-{-@ retrn :: Int -> Maybe @-}
-retrn :: Int -> Maybe
+{-@ retrn :: Int -> MaybeInt @-}
+retrn :: Int -> MaybeInt
 retrn x = Just x
 
 {-@ reflect bind @-}
-{-@ bind :: Maybe -> (Int -> Maybe) -> Maybe @-}
-bind :: Maybe -> (Int -> Maybe) -> Maybe
+{-@ bind :: MaybeInt -> (Int -> MaybeInt) -> MaybeInt @-}
+bind :: MaybeInt -> (Int -> MaybeInt) -> MaybeInt
 bind Nothing _ = Nothing
 bind (Just m) f = f m
 
@@ -37,27 +37,27 @@ bind (Just m) f = f m
 
 -- | Left Identity
 
-{-@ left_identity :: x:Int -> f:(Int -> Maybe) -> {v:Proof | bind (retrn x) f == f x } @-}
-left_identity :: Int -> (Int -> Maybe) -> Proof
+{-@ left_identity :: x:Int -> f:(Int -> MaybeInt) -> {v:Proof | bind (retrn x) f == f x } @-}
+left_identity :: Int -> (Int -> MaybeInt) -> Proof
 left_identity x f =
   trivial
 
 -- | Right Identity
 
-{-@ right_identity :: x:Maybe -> {v:Proof | bind x retrn == x } @-}
-right_identity :: Maybe -> Proof
+{-@ right_identity :: x:MaybeInt -> {v:Proof | bind x retrn == x } @-}
+right_identity :: MaybeInt -> Proof
 right_identity Nothing =
   trivial
 right_identity (Just x) =
   trivial
 
 {-{-@ reflect is_Just @-}
-{-@ is_Just:: Maybe -> Bool @-}
-is_Just :: Maybe -> Bool
+{-@ is_Just:: MaybeInt -> Bool @-}
+is_Just :: MaybeInt -> Bool
 is_Just (Just _) = True
 is_Just _        = False
 
-{-@ from_Just :: xs:{Maybe | is_Just xs } -> Int @-}
-from_Just :: Maybe -> Int
+{-@ from_Just :: xs:{MaybeInt | is_Just xs } -> Int @-}
+from_Just :: MaybeInt -> Int
 from_Just (Just x) = x-}
 

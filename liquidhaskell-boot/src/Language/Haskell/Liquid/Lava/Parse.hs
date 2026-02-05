@@ -47,7 +47,7 @@ parseToSpecPair modId (v, F.Loc _ _ spec) = (stripLegalName modId $ show (varNam
 
 -- | Parse refined type constructors into LH type constructors
 parsePData :: Id -> PData -> [LHDecl]
-parsePData modId (cs, typConstrs) = {-trace ("parseData \n("++show ((map parseToSpecPair cs) !! 1)++")\n \n("++show (head typConstrs)++")") $-} map mkData (filter (not . isBuiltinDatatype) typeNames)
+parsePData modId (cs, typConstrs) = {- trace ("parsePData " ++ modId ++ "\n("++show constrs++", "++show typConstrs++")") $ -} map mkData (filter (not . isBuiltinDatatype) typeNames)
   where
     -- translate each branch
     constrs :: [(Id, ArrType)]

@@ -1,43 +1,6 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive Maybe_u : Set := 
-	 | Nothing_u: Maybe_u. 
-Fixpoint Maybe_eq (x: Maybe_u) (y: Maybe_u): bool := 
-	match (x, y) with (Nothing_u, Nothing_u) => true end. 
-Definition Maybe_eq_refl: (forall (x: Maybe_u) , is_true (Maybe_eq x x)). 
-Proof. 
-	eq_refl. 
-Qed. 
-#[global] Hint Resolve Maybe_eq_refl : eq_hint_db.
-Definition Maybe_eqb_eq: (forall (s: Maybe_u) (t: Maybe_u) , (is_true (Maybe_eq s t)) -> (s = t)). 
-Proof. 
-	eqb_eq_lem. 
-Qed. 
-#[global] Hint Resolve Maybe_eqb_eq : eq_hint_db.
-#[global] Instance leibnitz_eq_Maybe : LeibnitzEqB := { 
-	equalB' := Maybe_eq;
-	refl' := Maybe_eq_refl;
-	eqb_eq' := Maybe_eqb_eq
-}.
-Fixpoint Maybe_wf (x: Maybe_u): Prop := 
-	match x with Nothing_u => True end. 
-Theorem Maybe_wf_ref [p: Maybe_u -> Prop] (tm: {v: Maybe_u | (Maybe_wf v) /\ (p v)}): Maybe_wf (⌊ tm -⌋). 
-Proof. 
-	destruct tm as [tm tm_p]. 
-	solver. 
-Qed. 
-Global Notation Maybe := {x: Maybe_u | (Maybe_wf x) /\ True}. 
-Definition Nothing_lem: (Maybe_wf Nothing_u) /\ True. 
-Proof. 
-	repeat first [split; solver]. 
-Defined. 
-Definition Nothing: Maybe := 
-	exist _ Nothing_u Nothing_lem. 
-#[global] Hint Resolve Maybe_wf_ref : wf_constr_db.
-#[global] Hint Unfold Maybe_wf : wf_constr_db.
-#[global] Hint Resolve Maybe_eq : ref_constr_db.
-#[global] Hint Unfold Nothing : ref_constr_db.
 Inductive IList_u : Set := 
 	 | Cons_u: Z -> (IList_u -> IList_u)
 	 | Nil_u: IList_u. 
@@ -91,7 +54,7 @@ Defined.
 Definition llen (l: IList): {v: Z | gebZ_rel v 0 true}. 
 Proof. 
 	destruct l as [l l_p]. 
-	induction l as [(*Cons*) ds_d3wh l' IH_l' | (*Nil*) ]. 
+	induction l as [(*Cons*) ds_d3we l' IH_l' | (*Nil*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
 		((subsumptionCast Z (fun (x_1: Z) => True) (IH_l' (ltac: (try clear IH_l'; 
@@ -102,7 +65,7 @@ Proof.
 		solver.  
 Defined. 
 Inductive llen_rel : (IList_u -> (Z -> Prop)) := 
-	 | llen_Cons: (forall ds_d3wh l' , forall (llenres: Z), (llen_rel l' llenres) -> (forall (addZres: Z), (addZ_rel llenres 1 addZres) -> (llen_rel (Cons_u ds_d3wh l') addZres)))
+	 | llen_Cons: (forall ds_d3we l' , forall (llenres: Z), (llen_rel l' llenres) -> (forall (addZres: Z), (addZ_rel llenres 1 addZres) -> (llen_rel (Cons_u ds_d3we l') addZres)))
 	 | llen_Nil: llen_rel Nil_u 0. 
 #[global] Hint Constructors llen_rel : core_hint_db.
 #[global] Instance llen_lookup_rel : dictionary rel llen := { 
@@ -113,12 +76,12 @@ Inductive llen_rel : (IList_u -> (Z -> Prop)) :=
 }.
 Definition llen_rel_funct [l: IList_u]: (forall (v: Z) (v': Z) (H: llen_rel l v) (K: llen_rel l v') , v = v'). 
 Proof. 
-	induction l as [(*Cons*) ds_d3wh l' IH_l' | (*Nil*) ]; 
+	induction l as [(*Cons*) ds_d3we l' IH_l' | (*Nil*) ]; 
 	intros ; 
 	rel_functionhood_body. 
 Qed. 
 #[global] Hint Resolve llen_rel_funct : f_rel_funct_db.
-Theorem llen_Cons_lem (ds_d3wh: _) (l': _) (addZres: Z): (llen_rel (Cons_u ds_d3wh l') addZres) <-> (exists (llenres: Z), (llen_rel l' llenres) /\ (addZ_rel llenres 1 addZres)). 
+Theorem llen_Cons_lem (ds_d3we: _) (l': _) (addZres: Z): (llen_rel (Cons_u ds_d3we l') addZres) <-> (exists (llenres: Z), (llen_rel l' llenres) /\ (addZ_rel llenres 1 addZres)). 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
@@ -131,7 +94,7 @@ Qed.
 Theorem llen_rel_ex (l: IList_u) (l_p: (IList_wf l) /\ True): llen_rel l (⌊ llen (exist _ l l_p) -⌋). 
 Proof. 
 	existence_lemma_pre llen; 
-	induction l as [(*Cons*) ds_d3wh l' IH_l' | (*Nil*) ]; 
+	induction l as [(*Cons*) ds_d3we l' IH_l' | (*Nil*) ]; 
 	intros ; 
 	[fix_notations; 
 	pose proof (IH_l' (ltac: (try clear IH_l'; 

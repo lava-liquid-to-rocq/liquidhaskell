@@ -14,17 +14,17 @@ import Prelude hiding (Just, Maybe, Nothing, fmap, id)
 -- | fmap-id fmap id ≡ id
 -- | fmap-distrib ∀ g h . fmap (g ◦ h) ≡ fmap g ◦ fmap h
 
-{-@ data Maybe where
-        Nothing :: Maybe
-        Just :: Int -> Maybe @-}
-data Maybe where
-  Nothing :: Maybe
-  Just :: Int -> Maybe
+{-@ data MaybeInt where
+        Nothing :: MaybeInt
+        Just :: Int -> MaybeInt @-}
+data MaybeInt where
+  Nothing :: MaybeInt
+  Just :: Int -> MaybeInt
   deriving (Eq)
 
 {-@ reflect fmap @-}
-{-@ fmap :: (Int -> Int) -> Maybe -> Maybe @-}
-fmap :: (Int -> Int) -> Maybe -> Maybe
+{-@ fmap :: (Int -> Int) -> MaybeInt -> MaybeInt @-}
+fmap :: (Int -> Int) -> MaybeInt -> MaybeInt
 fmap _ Nothing = Nothing
 fmap f (Just x) = Just (f x)
 
@@ -34,8 +34,8 @@ id :: Int -> Int
 id x = x
 
 {-@ reflect idM @-}
-{-@ idM:: Maybe -> Maybe @-}
-idM :: Maybe -> Maybe
+{-@ idM:: MaybeInt -> MaybeInt @-}
+idM :: MaybeInt -> MaybeInt
 idM x = x
 
 {-@ reflect compose @-}
@@ -44,20 +44,20 @@ compose :: (Int -> Int) -> (Int -> Int) -> Int -> Int
 compose f g x = f (g x)
 
 {-@ reflect composeM @-}
-{-@ composeM :: (Maybe -> Maybe) -> (Maybe -> Maybe) -> Maybe -> Maybe @-}
-composeM :: (Maybe -> Maybe) -> (Maybe -> Maybe) -> Maybe -> Maybe
+{-@ composeM :: (MaybeInt -> MaybeInt) -> (MaybeInt -> MaybeInt) -> MaybeInt -> MaybeInt @-}
+composeM :: (MaybeInt -> MaybeInt) -> (MaybeInt -> MaybeInt) -> MaybeInt -> MaybeInt
 composeM f g x = f (g x)
 
-{-@ fmap_id :: xs:Maybe -> { fmap id xs == idM xs } @-}
-fmap_id :: Maybe -> Proof
+{-@ fmap_id :: xs:MaybeInt -> { fmap id xs == idM xs } @-}
+fmap_id :: MaybeInt -> Proof
 fmap_id Nothing = trivial
 fmap_id (Just _) = trivial
 
 -- | Distribution
 
-{-@ fmap_distrib :: f:(Int -> Int) -> g:(Int -> Int) -> xs:Maybe
+{-@ fmap_distrib :: f:(Int -> Int) -> g:(Int -> Int) -> xs:MaybeInt
                -> {v:Proof | fmap  (compose f g) xs == (composeM (fmap f) (fmap g)) (xs) } @-}
-fmap_distrib :: (Int -> Int) -> (Int -> Int) -> Maybe -> Proof
+fmap_distrib :: (Int -> Int) -> (Int -> Int) -> MaybeInt -> Proof
 fmap_distrib _ _ Nothing = trivial
 fmap_distrib f g (Just x) = trivial
 

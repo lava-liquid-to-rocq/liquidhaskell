@@ -257,7 +257,7 @@ Proof.
 			refine (exist _ false _); 
 			solver.   
 	  - intros . 
-		induction n as [(*Suc*) lq_anf7205759403792805261 IH_lq_anf7205759403792805261 | (*Zero*) ]. 
+		induction n as [(*Suc*) lq_anf7205759403792805258 IH_lq_anf7205759403792805258 | (*Zero*) ]. 
 		  -- intros . 
 			refine (exist _ false _); 
 			solver.  
@@ -267,7 +267,7 @@ Proof.
 Defined. 
 Inductive eqN_rel : (Nats_u -> (Nats_u -> (bool -> Prop))) := 
 	 | eqN_Zero_Zero: eqN_rel Zero_u Zero_u true
-	 | eqN_Zero_Suc: (forall lq_anf7205759403792805261 , eqN_rel Zero_u (Suc_u lq_anf7205759403792805261) false)
+	 | eqN_Zero_Suc: (forall lq_anf7205759403792805258 , eqN_rel Zero_u (Suc_u lq_anf7205759403792805258) false)
 	 | eqN_Suc_Zero: (forall m , eqN_rel (Suc_u m) Zero_u false)
 	 | eqN_Suc_Suc: (forall m n , forall (eqNres: bool), (eqN_rel m n eqNres) -> (eqN_rel (Suc_u m) (Suc_u n) eqNres)). 
 #[global] Hint Constructors eqN_rel : core_hint_db.
@@ -284,7 +284,7 @@ Proof.
 	intros ; 
 	[induction n as [(*Suc*) n IH_n | (*Zero*) ]; 
 	intros | 
-	induction n as [(*Suc*) lq_anf7205759403792805261 IH_lq_anf7205759403792805261 | (*Zero*) ]; 
+	induction n as [(*Suc*) lq_anf7205759403792805258 IH_lq_anf7205759403792805258 | (*Zero*) ]; 
 	intros ]; 
 	rel_functionhood_body. 
 Qed. 
@@ -294,7 +294,7 @@ Proof.
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite eqN_Zero_Zero_lem : f_rel_back.
-Theorem eqN_Zero_Suc_lem (lq_anf7205759403792805261: _): (eqN_rel Zero_u (Suc_u lq_anf7205759403792805261) false) <-> True. 
+Theorem eqN_Zero_Suc_lem (lq_anf7205759403792805258: _): (eqN_rel Zero_u (Suc_u lq_anf7205759403792805258) false) <-> True. 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
@@ -325,10 +325,10 @@ Proof.
 	try clear IH_n| 
 	fix_notations; 
 	try clear IH_m]| 
-	induction n as [(*Suc*) lq_anf7205759403792805261 IH_lq_anf7205759403792805261 | (*Zero*) ]; 
+	induction n as [(*Suc*) lq_anf7205759403792805258 IH_lq_anf7205759403792805258 | (*Zero*) ]; 
 	intros ; 
 	[fix_notations; 
-	try clear IH_lq_anf7205759403792805261| 
+	try clear IH_lq_anf7205759403792805258| 
 	fix_notations]]; 
 	existence_lemma_quicksolve eqN; 
 	f__f_rel_ex_body; 
@@ -535,7 +535,7 @@ Proof.
 		(exist (fun (n: Nats_u) => ((Nats_wf n) /\ True)) m (ltac: (solver)))) _); 
 			solver.   
 	  - intros . 
-		induction n as [(*Suc*) lq_anf7205759403792805277 IH_lq_anf7205759403792805277 | (*Zero*) ]. 
+		induction n as [(*Suc*) lq_anf7205759403792805274 IH_lq_anf7205759403792805274 | (*Zero*) ]. 
 		  -- intros . 
 			intros ; 
 			exfalso; 
@@ -562,7 +562,7 @@ Proof.
 	intros ; 
 	[induction n as [(*Suc*) n IH_n | (*Zero*) ]; 
 	intros | 
-	induction n as [(*Suc*) lq_anf7205759403792805277 IH_lq_anf7205759403792805277 | (*Zero*) ]; 
+	induction n as [(*Suc*) lq_anf7205759403792805274 IH_lq_anf7205759403792805274 | (*Zero*) ]; 
 	intros ]; 
 	rel_functionhood_body. 
 Qed. 
@@ -598,10 +598,10 @@ Proof.
 	try clear IH_n| 
 	fix_notations; 
 	try clear IH_m]| 
-	induction n as [(*Suc*) lq_anf7205759403792805277 IH_lq_anf7205759403792805277 | (*Zero*) ]; 
+	induction n as [(*Suc*) lq_anf7205759403792805274 IH_lq_anf7205759403792805274 | (*Zero*) ]; 
 	intros ; 
 	[fix_notations; 
-	try clear IH_lq_anf7205759403792805277| 
+	try clear IH_lq_anf7205759403792805274| 
 	fix_notations]]; 
 	existence_lemma_quicksolve PeanoNats__sub; 
 	f__f_rel_ex_body; 
@@ -955,40 +955,3 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve two_rel_mk : f_rel_funct_db.
-Inductive Maybe_u : Set := 
-	 | Nothing_u: Maybe_u. 
-Fixpoint Maybe_eq (x: Maybe_u) (y: Maybe_u): bool := 
-	match (x, y) with (Nothing_u, Nothing_u) => true end. 
-Definition Maybe_eq_refl: (forall (x: Maybe_u) , is_true (Maybe_eq x x)). 
-Proof. 
-	eq_refl. 
-Qed. 
-#[global] Hint Resolve Maybe_eq_refl : eq_hint_db.
-Definition Maybe_eqb_eq: (forall (s: Maybe_u) (t: Maybe_u) , (is_true (Maybe_eq s t)) -> (s = t)). 
-Proof. 
-	eqb_eq_lem. 
-Qed. 
-#[global] Hint Resolve Maybe_eqb_eq : eq_hint_db.
-#[global] Instance leibnitz_eq_Maybe : LeibnitzEqB := { 
-	equalB' := Maybe_eq;
-	refl' := Maybe_eq_refl;
-	eqb_eq' := Maybe_eqb_eq
-}.
-Fixpoint Maybe_wf (x: Maybe_u): Prop := 
-	match x with Nothing_u => True end. 
-Theorem Maybe_wf_ref [p: Maybe_u -> Prop] (tm: {v: Maybe_u | (Maybe_wf v) /\ (p v)}): Maybe_wf (⌊ tm -⌋). 
-Proof. 
-	destruct tm as [tm tm_p]. 
-	solver. 
-Qed. 
-Global Notation Maybe := {x: Maybe_u | (Maybe_wf x) /\ True}. 
-Definition Nothing_lem: (Maybe_wf Nothing_u) /\ True. 
-Proof. 
-	repeat first [split; solver]. 
-Defined. 
-Definition Nothing: Maybe := 
-	exist _ Nothing_u Nothing_lem. 
-#[global] Hint Resolve Maybe_wf_ref : wf_constr_db.
-#[global] Hint Unfold Maybe_wf : wf_constr_db.
-#[global] Hint Resolve Maybe_eq : ref_constr_db.
-#[global] Hint Unfold Nothing : ref_constr_db.

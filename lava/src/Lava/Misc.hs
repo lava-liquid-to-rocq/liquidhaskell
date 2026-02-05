@@ -39,7 +39,7 @@ illegalNames = ["Z", "N", "sub"]
 
 -- | Whether a String is a built-in datatype
 isBuiltinDatatype :: String -> Bool
-isBuiltinDatatype tc = tc == "[]" || isTuple tc
+isBuiltinDatatype tc = tc == "[]" || tc == "Maybe" || isTuple tc
   where
     isTuple ('(' : ',' : s) = isTuple' s
     isTuple _ = False
