@@ -83,3 +83,7 @@ lava/out/**/.*.aux
 lava/out/**/*.timing
 lava/out/TranslationTests
 tests/lava/**/.lia.cache
+
+lava/out/Benchmark/*.v
+lava/out/Benchmark/PLE/*.v
+lava/out/TranslationTests/PLE/*.v

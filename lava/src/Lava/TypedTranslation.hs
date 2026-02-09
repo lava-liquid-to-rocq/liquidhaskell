@@ -224,7 +224,12 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
           return (tpx, tacs1)
     γ' <- Ctx.insertRefType (x, tpx) γ
     tacs2 <- checkTerm γ' e2 tp (f, mCtx)
-    return $ Coq.Assert x (trRefType γ tpx) (Coq.Concat tacs1) : tacs2
+    case tpx of
+      RefType xT xTp@Pi{} xR -> return $ Coq.Assert g gTp (Coq.Concat tacs1) : assertF : tacs2 where
+        gTp = trRefType γ tpx
+        g = "f_" ++ hashName gTp
+        assertF = Coq.Custom $ "unshelve refine (let " ++ x ++ " : ltac:(buildPackG_spec " ++ g ++ ") := (ltac:(fun_to_pack " ++ g ++ ")) in _)"
+      _ -> return $ Coq.Assert x (trRefType γ tpx) (Coq.Concat tacs1) : tacs2
     -- C-Lam
   Lambda x bdy -> case tp of
     RefType _ (Pi (x', xTp') codom) _ -> do

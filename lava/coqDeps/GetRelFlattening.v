@@ -518,6 +518,7 @@ Ltac synthesize_args :=
     refine (exist _ nilR eq_refl)
   end).
 
+
 Definition packPr_proj {argTps: ArgListT} {uargTps:UArgListT} {z:projectsArgListT argTps uargTps} 
   {T:Type} {p: forall (xs:ArgList argTps), T -> Prop}: 
   (@Pack argTps uargTps z T p) -> (@uPack uargTps T) := fun pack => {| rel_u:=pack.(frel); funct_u:=pack.(funct) |}.
@@ -1323,6 +1324,7 @@ Ltac returnRefTp f :=
     exact (forall (v:T), Prop)
   | {v:?T | ?pApp v} => exact (forall (v:T), Prop)
   end).
+
 Ltac returnRef f :=
   let fApp := fresh "fApp" in
   let temp := fresh "temp" in
@@ -1339,6 +1341,7 @@ Ltac returnRef f :=
     exact (fun (v:T) => p)
   | {v:?T | ?pApp v} => exact (fun (v:T) => pApp v)
   end).
+
 Global Ltac buildArgTps f :=
   let fApp := fresh "fApp" in
   let temp := fresh "temp" in
@@ -1349,6 +1352,29 @@ Global Ltac buildArgTps f :=
     refine (consArgsT _ X' (ltac:(synthesizePrInstance)) _);
     let x := fresh "x_" in
     refine (fun (x:X') => _);
+    pose fApp as temp;
+    subst fApp;
+    pose (temp x) as fApp; subst temp
+  | {_:?T | _} => exact noArgsT
+  end).
+
+Global Ltac buildUArgTpsF f :=
+  let fApp := fresh "fApp" in
+  let temp := fresh "temp" in
+  pose f as fApp;
+  repeat (
+  match type of fApp with
+  | forall (x:{v:?X | _}), _ => 
+    refine (consUArgsT X _);
+    let x := fresh "x_" in
+    refine (fun (x:X) => _);
+    pose fApp as temp;
+    subst fApp;
+    pose (temp x) as fApp; subst temp
+  | forall (x:@Pack ?xArgTps ?xUArgTps ?z ?T ?p), _ => 
+    refine (consUArgsT (uPack xUArgTps T) _);
+    let x := fresh "x_" in
+    refine (fun (x:(uPack xUArgTps T)) => _);
     pose fApp as temp;
     subst fApp;
     pose (temp x) as fApp; subst temp
@@ -1411,7 +1437,7 @@ Global Ltac buildUArgTps rel :=
       pose retTp as res
     end).
 
-Ltac buildPackG_spec F Rel :=
+Ltac buildPackG_spec F :=
   let z := fresh "z" in
   let Z := fresh "Z" in
   let PZTp := fresh "PZTp" in
@@ -1419,12 +1445,32 @@ Ltac buildPackG_spec F Rel :=
   let p := fresh "p" in
   let argTps := fresh "argTps" in
   let uargTps := fresh "uargTps" in
-  refine (let uargTps: UArgListT := ltac:(buildUArgTps Rel) in _);
+  refine (let uargTps: UArgListT := ltac:(buildUArgTpsF F) in _);
   refine (let argTps : ArgListT := ltac:(buildArgTps F) in _);
   refine (let z: projectsArgListT argTps uargTps := ltac:(mkProjectsArgListTG argTps uargTps) in _);
   refine (let PZTp : Type := ltac:(returnRefTp F) in _); simpl in PZTp;
   refine (let PZ : PZTp := ltac:(subst PZTp; returnRef F) in _);
-  refine (let Z: Type := ltac:(returnUTp Rel) in _); 
+  refine (let Z: Type := ltac:(returnUTpPZTp PZTp) in _); 
+  simpl in *;
+  refine (let p: forall (args: ArgList argTps), Z -> Prop := fun args v => ltac:(flattenP PZ args v) in _);
+  simpl in p;
+  exact (@Pack argTps uargTps z Z p).
+
+
+Ltac buildPackG_spec' F :=
+  let z := fresh "z" in
+  let Z := fresh "Z" in
+  let PZTp := fresh "PZTp" in
+  let PZ := fresh "PZ" in
+  let p := fresh "p" in
+  let argTps := fresh "argTps" in
+  let uargTps := fresh "uargTps" in
+  refine (let uargTps: UArgListT := ltac:(buildUArgTpsF F) in _);
+  refine (let argTps : ArgListT := ltac:(buildArgTps F) in _);
+  refine (let z: projectsArgListT argTps uargTps := ltac:(mkProjectsArgListTG argTps uargTps) in _);
+  refine (let PZTp : Type := ltac:(returnRefTp F) in _); simpl in PZTp;
+  refine (let PZ : PZTp := ltac:(subst PZTp; returnRef F) in _);
+  refine (let Z: Type := ltac:(returnUTpPZTp PZTp) in _); 
   simpl in *;
   refine (let p: forall (args: ArgList argTps), Z -> Prop := fun args v => ltac:(flattenP PZ args v) in _);
   simpl in p;
@@ -1456,7 +1502,7 @@ Global Ltac buildPackG_ F Rel F_Rel Funct :=
   refine (let z: projectsArgListT argTps uargTps := ltac:(mkProjectsArgListTG argTps uargTps) in _);
   refine (let PZTp : Type := ltac:(returnRefTp F) in _); simpl in PZTp;
   refine (let PZ : PZTp := ltac:(subst PZTp; returnRef F) in _);
-  refine (let Z: Type := ltac:(returnUTp Rel) in _); simpl in *;
+  refine (let Z: Type := ltac:(returnUTpPZTp PZTp) in _); simpl in *;
   refine (let p: forall (args: ArgList argTps), Z -> Prop := fun args v => ltac:(flattenP PZ args v) in _);
   refine (let pack_f : forall (args:ArgList argTps), {v:Z | p args v} := 
   ltac:(intros args; unfold p;
@@ -1652,7 +1698,7 @@ Global Ltac fun_to_pack F :=
   let pack_f := fresh "pack_f" in
   let pack_rel := fresh "pack_rel" in
   refine (let argTps : ArgListT := ltac:(buildArgTps F) in _);
-  refine (let uargTps : UArgListT := _ in _);
+  refine (let uargTps : UArgListT := ltac:(buildUArgTpsF F) in _);
   refine (let z: projectsArgListT argTps uargTps := ltac:(mkProjectsArgListTG argTps uargTps) in _);
   refine (let PZTp : Type := ltac:(returnRefTp F) in _); simpl in PZTp;
   refine (let Z : Type := ltac:(returnUTpPZTp PZTp) in _);
@@ -1679,7 +1725,7 @@ Variable Rel: X -> Z -> Prop.
 Variable F_Rel: forall (x:X') (v:Z), proj1_sig (F x) = v <-> Rel (PX.(proj) x) v.
 Variable Funct: forall (x:X) (v v':Z), Rel x v -> Rel x v' -> v = v'.
 
-Definition buildPack1_ : ltac:(buildPackG_spec F Rel).
+Definition buildPack1_ : ltac:(buildPackG_spec F).
 Proof.
   buildPackG_ F Rel F_Rel Funct.
 Defined.
@@ -1692,7 +1738,7 @@ Proof.
   clear F_Rel.
   fun_to_rel F Z.
 Defined.
-Definition unreflectedPack1: ltac:(buildPackG_spec F Rel).
+Definition unreflectedPack1: ltac:(buildPackG_spec F).
 Proof.
   fun_to_pack F.
 Defined.
@@ -1712,7 +1758,7 @@ Variable Rel: X -> Y -> Z -> Prop.
 Variable F_Rel: forall (x:X') (y:Y' x) (v:Z), proj1_sig (F x y) = v <-> Rel (PX.(proj) x) ((PY x).(proj) y) v.
 Variable Funct: forall (x:X) (y:Y) (v v':Z), Rel x y v -> Rel x y v' -> v = v'.
 
-Definition buildPack2_ : ltac:(buildPackG_spec F Rel).
+Definition buildPack2_ : ltac:(buildPackG_spec F).
 Proof.
   buildPackG_ F Rel F_Rel Funct.
 Defined.
@@ -1725,7 +1771,7 @@ Proof.
   clear F_Rel.
   fun_to_rel F Z.
 Defined.
-Definition unreflectedPack2: ltac:(buildPackG_spec F Rel).
+Definition unreflectedPack2: ltac:(buildPackG_spec F).
 Proof.
   fun_to_pack F.
 Defined.
@@ -1744,7 +1790,7 @@ Variable Funct: forall (x:X) (y:X) (v v':Z), Rel x y v -> Rel x y v' -> v = v'.
 
 Definition buildPack2'_spec : Type.
 Proof.
-  buildPackG_spec F Rel.
+  buildPackG_spec F.
 Defined.
 Definition buildPack2' : buildPack2'_spec.
 Proof.
@@ -1782,7 +1828,7 @@ Variable F_Rel: forall (x:X') (y:Y' x) (z:Z' x y) (v:T), proj1_sig (F x y z) = v
   Rel (PX.(proj) x) ((PY x).(proj) y) ((PZ x y).(proj) z) v.
 Variable Funct: forall (x:X) (y:Y) (z:Z) (v v':T), Rel x y z v -> Rel x y z v' -> v = v'.
 
-Definition buildPack3_ : (ltac:(buildPackG_spec F Rel)).
+Definition buildPack3_ : (ltac:(buildPackG_spec F)).
 Proof.
   buildPackG_ F Rel F_Rel Funct.
 Defined.
@@ -1795,7 +1841,7 @@ Proof.
   clear F_Rel.
   fun_to_rel F T.
 Defined.
-Definition unreflectedPack3: ltac:(buildPackG_spec F Rel).
+Definition unreflectedPack3: ltac:(buildPackG_spec F).
 Proof.
   fun_to_pack F.
 Defined.
@@ -1822,7 +1868,7 @@ Variable F_Rel: forall (w:W') (x:X' w) (y:Y' w x) (z:Z' w x y) (v:T), proj1_sig 
   Rel (PW.(proj) w) ((PX w).(proj) x) ((PY w x).(proj) y) ((PZ w x y).(proj) z) v.
 Variable Funct: forall (w:W) (x:X) (y:Y) (z:Z) (v v':T), Rel w x y z v -> Rel w x y z v' -> v = v'.
 
-Definition buildPack4_ : (ltac:(buildPackG_spec F Rel)).
+Definition buildPack4_ : (ltac:(buildPackG_spec F)).
 Proof.
   buildPackG_ F Rel F_Rel Funct.
 Defined.
@@ -1835,7 +1881,7 @@ Proof.
   clear F_Rel.
   fun_to_rel F T.
 Defined.
-Definition unreflectedPack4: ltac:(buildPackG_spec F Rel).
+Definition unreflectedPack4: ltac:(buildPackG_spec F).
 Proof.
   fun_to_pack F.
 Defined.

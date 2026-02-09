@@ -244,19 +244,19 @@ trRefTypeAux argTp inSpec γ rt0@(RefType x0 tp0 r0) = case tp0 of
   Pi (x, RefType x' xTp xRef) ret@(RefType y yTp yRef) ->
     if argTp
       then
-        {-traceFuncRet ["trRefTypeAux", show argTp, show inSpec, "...", show rt0] $ -} toPack ((x, xTpT) : xsT) (trRefTypeAux False True γ finalRet)
+        {-traceFuncRet ["trRefTypeAux", show argTp, show inSpec, "...", show rt0] $ -} toPack ((x, xTpT) : xsT) (trRefTypeAux False inSpec γ finalRet)
       else
         foldl
-          (\rt (Coq.Subset y yTp py) -> Coq.FAType (y, Coq.Subset y yTp py) rt)
-          (trRefTypeAux False True γ ret)
-          (map (\(y, RefType y0 yTp py) -> trRefTypeAux False True γ (RefType y yTp (sub y0 (Var y) py))) xRTps)
+          (\rt (Coq.Subset y yTp py) -> Coq.FAType (y, Coq.Subset y yTp py) (if inSpec then rt else sub y (Coq.Project (Coq.Var y)) rt))
+          (trRefTypeAux False inSpec γ ret)
+          (map (\(y, RefType y0 yTp py) -> trRefTypeAux False inSpec γ (RefType y yTp (sub y0 (Var y) py))) xRTps)
     where
-      xTpT = trRefTypeAux False True γ (RefType x xTp (sub x' (Var x) xRef))
+      xTpT = trRefTypeAux False inSpec γ (RefType x xTp (sub x' (Var x) xRef))
       (xs, finalRet) = unapplyPi ret
       xsT :: [(Id, Coq.RocqType)]
       xsT = map (uncurry transRT) xs
 
-      transRT y (RefType y0 yTp py) = (y, trRefTypeAux False True γ (RefType y yTp (sub y0 (Var y) py)))
+      transRT y (RefType y0 yTp py) = (y, trRefTypeAux False inSpec γ (RefType y yTp (sub y0 (Var y) py)))
       fixProjs tm = foldr (\y -> replaceSubterm (TermPat (Coq.Project (Coq.Def y)), True) (Coq.Var y)) tm boundVars
   where
     (xRTps, ret@(RefType x _ _)) = unapplyPi rt0

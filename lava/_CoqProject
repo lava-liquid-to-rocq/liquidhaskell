@@ -29,6 +29,7 @@ out/Benchmark/PLE/MonoidList.v
 out/Benchmark/PLE/MonoidMaybe.v
 #
 out/Benchmark/PLE/Compose.v
+out/Benchmark/PLE/Lambdas.v
 out/Benchmark/PLE/Lists.v
 #
 #

@@ -2,7 +2,7 @@
 -- {-@ LIQUID "--reflection" @-}
 {-@ LIQUID "--lava" @-}
 
-module Todo.Lambdas where
+module Benchmark.PLE.Lambdas where
 
 -- import Language.Haskell.Liquid.ProofCombinators
 
