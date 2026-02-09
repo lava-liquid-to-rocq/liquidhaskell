@@ -1456,26 +1456,6 @@ Ltac buildPackG_spec F :=
   simpl in p;
   exact (@Pack argTps uargTps z Z p).
 
-
-Ltac buildPackG_spec' F :=
-  let z := fresh "z" in
-  let Z := fresh "Z" in
-  let PZTp := fresh "PZTp" in
-  let PZ := fresh "PZ" in
-  let p := fresh "p" in
-  let argTps := fresh "argTps" in
-  let uargTps := fresh "uargTps" in
-  refine (let uargTps: UArgListT := ltac:(buildUArgTpsF F) in _);
-  refine (let argTps : ArgListT := ltac:(buildArgTps F) in _);
-  refine (let z: projectsArgListT argTps uargTps := ltac:(mkProjectsArgListTG argTps uargTps) in _);
-  refine (let PZTp : Type := ltac:(returnRefTp F) in _); simpl in PZTp;
-  refine (let PZ : PZTp := ltac:(subst PZTp; returnRef F) in _);
-  refine (let Z: Type := ltac:(returnUTpPZTp PZTp) in _); 
-  simpl in *;
-  refine (let p: forall (args: ArgList argTps), Z -> Prop := fun args v => ltac:(flattenP PZ args v) in _);
-  simpl in p;
-  exact (@Pack argTps uargTps z Z p).
-
 Global Lemma exist_inj {A:Type} {p:A} (x y:{v:A|v=p} ): x = y.
 Proof.
   destruct x as [x ->], y as [y ->]. reflexivity.
