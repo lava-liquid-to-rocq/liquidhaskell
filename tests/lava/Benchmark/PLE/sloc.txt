@@ -1,8 +1,0 @@
-File				SLOC
-Compose			12
-Lists				29
-MonadId			19
-MonadMaybe	26
-MonoidList	33
-MonoidMaybe	36
-Total				155

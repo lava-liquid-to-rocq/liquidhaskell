@@ -1,3 +1,0 @@
--- Stitch test file
-revapp = \x:Int. \y:Int->Int. y x;
-plus1  = \x:Int. x + 1

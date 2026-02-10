@@ -1,0 +1,26 @@
+     Time |   Peak Mem | File Name                           
+-------------------------------------------------------------
+91m51.95s | 5630744 ko | Total Time / Peak Mem               
+-------------------------------------------------------------
+37m33.25s | 1534180 ko | out/Benchmark/Overview.vo           
+33m43.11s | 5630744 ko | out/Benchmark/SoftwareFoundations.vo
+15m21.96s | 1694724 ko | out/Benchmark/PeanoNats.vo          
+ 1m53.54s |  755248 ko | out/Benchmark/PLE/Compose.vo        
+ 0m50.74s |  586332 ko | out/Benchmark/PLE/MonadMaybe.vo     
+ 0m39.35s |  556132 ko | out/Benchmark/PLE/MonadId.vo        
+ 0m34.06s |  509728 ko | out/Benchmark/PLE/MonoidList.vo     
+ 0m31.29s |  524628 ko | out/Benchmark/PLE/Lists.vo          
+ 0m15.56s |  468492 ko | out/Benchmark/PLE/MonoidMaybe.vo    
+ 0m06.71s |  526804 ko | coqDeps/LiquidPreludeUtil.vo        
+ 0m06.66s |  534452 ko | coqDeps/LHCoqTactics.vo             
+ 0m06.59s |  536620 ko | coqDeps/GetRelFlattening.vo         
+ 0m04.92s |  443636 ko | out/Benchmark/RBinsToBins.vo        
+ 0m00.82s |  435144 ko | coqDeps/TacticUtils.vo              
+ 0m00.76s |  432732 ko | coqDeps/QuickTacs.vo                
+ 0m00.69s |  431652 ko | coqDeps/SubsumptionTacs.vo          
+ 0m00.68s |  430864 ko | coqDeps/LiquidPrelude.vo            
+ 0m00.47s |  436416 ko | out/Benchmark/PLE/Lambdas.vo        
+ 0m00.29s |  424220 ko | coqDeps/Equality.vo                 
+ 0m00.27s |  421080 ko | coqDeps/Snipe.vo                    
+ 0m00.21s |  387268 ko | coqDeps/BoolTacs.vo                 
+ 0m00.02s |   73080 ko | coqDeps/PairLists.vo                
