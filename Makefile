@@ -149,7 +149,7 @@ CoqMakefile: Makefile lava/_CoqProject
 	cd lava && $(COQBIN)coq_makefile TIMED = 1 TIMING = 1 -f _CoqProject -o CoqMakefile # since the profiler is not working correctly we can't use it here: -arg -profile-ltac
 
 rocq: CoqMakefile
-	cd lava && rm -r out && $(MAKE) pretty-timed --no-print-directory -f CoqMakefile && cp time-of-build-pretty.log "verificationTime/time-of-build-pretty-$(date -Iseconds).log"
+	cd lava && $(MAKE) clean && $(MAKE) pretty-timed --no-print-directory -f CoqMakefile && cp time-of-build-pretty.log "verificationTime/time-of-build-pretty-$(date -Iseconds).log"
 	
 lava: translation rocq
 	echo "Lava ran sucessfully on all benchmarks."

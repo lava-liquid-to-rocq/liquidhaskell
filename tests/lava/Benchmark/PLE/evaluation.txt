@@ -1,8 +1,9 @@
 File				LH sloc		Rocq sloc		translation time		verification time
 Compose			12				82					0.14								3m15.50s
+Lambdas			10				28					0.06								0m00.81s
 Lists				29				265					0.10								0m54.76s
 MonadId			19				197					0.13								1m10.59s
 MonadMaybe	26				219					0.18								1m26.05s
 MonoidList	33				248					0.13								0m59.15s
 MonoidMaybe	36				235					0.15								0m25.83s
-Total				155				1246				0.83								8m11.88s
+Total				165				1274				0.89								8m12.69s
