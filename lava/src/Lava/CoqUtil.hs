@@ -132,14 +132,14 @@ uPackWfName = "uPack_wf"
 -- * Translating a refined data type to Coq
 
 -- | elaborate a refined inductive data type from ECoq to an unrefined data type, a well-formedness predicate, some utility definitions and pseudo-constructors in ECoq
-transRefTC :: [CoqDecl] -> Id -> [CoqConstr] -> [CoqDecl]
+transRefTC :: [Decl] -> Id -> [CoqConstr] -> [Decl]
 transRefTC decls' tc constrs = unrefTCDecl : (eqDecl : eqReflLem : eqReflHint : eqbEqLem : eqbEqLemHint : eqbInstanceDecl : tcRefDecls ++ constrDecls ++ constrWfDecls ++ hints) -- ++[rectThm, indThm]
   where
     decls = decls' ++ [unrefTCDecl, TCDecl tc constrs]
     unrefConstr (Constr c tp) = Constr (unrefinedConstrName c) (unrefRocqType tp)
     unrefTCDecl = CoqInductive (unrefinedTCName tc) [] (Sort SetSort) $ map unrefConstr constrs
 
-    mkIntDecl :: Id -> [((Id, RocqType), Bool)] -> RocqType -> Either [CoqTactic] CoqTerm -> CoqDecl
+    mkIntDecl :: Id -> [((Id, RocqType), Bool)] -> RocqType -> Either [CoqTactic] CoqTerm -> Decl
     mkIntDecl g args ret def = Definition g args ret defBody Transparent
       where
         defBody = case def of
@@ -169,7 +169,7 @@ transRefTC decls' tc constrs = unrefTCDecl : (eqDecl : eqReflLem : eqReflHint : 
     wfVar var = App (Def $ wfTCName tc) [Var var]
 
     -- Fixpoint definition of equality of two inductives
-    eqDecl :: CoqDecl
+    eqDecl :: Decl
     eqDecl = Fix (tcEqName tc) [(("x", unrefTC), False), (("y", unrefTC), False)] boolTp matchExp
       where
         matchExp = Match [Var "x", Var "y"] Nothing (map (mkConstrEqBranch . unrefConstr) constrs ++ [defaultBranch | length constrs > 1])
@@ -188,7 +188,7 @@ transRefTC decls' tc constrs = unrefTCDecl : (eqDecl : eqReflLem : eqReflHint : 
               )
         defaultBranch = ([("_", []), ("_", [])], bfalse)
 
-    eqReflLem :: CoqDecl
+    eqReflLem :: Decl
     eqReflLem =
       mkCoqLemma
         (eqReflLemName tc)
@@ -198,7 +198,7 @@ transRefTC decls' tc constrs = unrefTCDecl : (eqDecl : eqReflLem : eqReflHint : 
 
     eqReflHint = AddHint ResolveHint (eqReflLemName tc) EqHintDb
 
-    eqbEqLem :: CoqDecl
+    eqbEqLem :: Decl
     eqbEqLem =
       mkCoqLemma
         (eqEqbEqLemName tc)
@@ -212,7 +212,7 @@ transRefTC decls' tc constrs = unrefTCDecl : (eqDecl : eqReflLem : eqReflHint : 
 
     eqbEqLemHint = AddHint ResolveHint (eqEqbEqLemName tc) EqHintDb
 
-    eqbInstanceDecl :: CoqDecl
+    eqbInstanceDecl :: Decl
     eqbInstanceDecl = Instance (leibnitzInstanceName tc) ["LeibnitzEqB"] [("equalB'", Def $ tcEqName tc), ("refl'", Def $ eqReflLemName tc), ("eqb_eq'", Def $ eqEqbEqLemName tc)]
 
     wfDecl =
@@ -243,7 +243,7 @@ transRefTC decls' tc constrs = unrefTCDecl : (eqDecl : eqReflLem : eqReflHint : 
 
     refTcDecl = CoqNewType tc (Subset indVar (TC tc []) (And (App (Def $ wfTCName tc) [Var indVar]) TT))
 
-    mkPseudoConstr :: CoqConstr -> [CoqDecl]
+    mkPseudoConstr :: CoqConstr -> [Decl]
     mkPseudoConstr (Constr c cTp) = [argLem, mkIntDecl c (map (,False) args) ret (Right existTm)]
       where
         (args, ret@(Subset x _ xRef)) = matchFunctionType [c] cTp
@@ -366,7 +366,7 @@ mkInductiveSkeleton uArgs indBrs specIhs = {- traceFuncRet ["mkInductiveSkeleton
             yBranches = map (second (,[]) . fst) brs
 
 -- | Generates various utility lemmata and hints after the declaration marking a reflected definition opaque
-mkReflAuxDecls :: Id -> (Id, RocqType) -> [(Id, RocqType)] -> [(Id, RocqType)] -> [CoqTerm] -> [(Id, RocqType)] -> IndTree -> [CoqDecl]
+mkReflAuxDecls :: Id -> (Id, RocqType) -> [(Id, RocqType)] -> [(Id, RocqType)] -> [CoqTerm] -> [(Id, RocqType)] -> IndTree -> [Decl]
 mkReflAuxDecls f retArg rArgs uArgs conds branches indBrs =
   {- trace (unwords ["mkReflAuxDecls", f, show retArg, show rArgs, show uArgs, show conds, show branches, show indBrs]) $ -}
   [exLem, exLemHint, refRelRwLem, refRelRwHint, refRelRwAuxHint, refRelMkLem, refRelMkLemHint]
@@ -410,7 +410,7 @@ mkReflAuxDecls f retArg rArgs uArgs conds branches indBrs =
             ]
         ]
 
-    relConstrLemmas :: [CoqDecl]
+    relConstrLemmas :: [Decl]
     relConstrLemmas = mkRelBranchLemmas args retArgU univArgs univAxs conds' branches
       where
         matchAxs :: CoqTerm -> ([(Id, RocqType, RocqType)], CoqTerm)
@@ -440,7 +440,7 @@ mkReflAuxDecls f retArg rArgs uArgs conds branches indBrs =
         rfRetArg : rfArgs = retArg : rArgs
         pack = toPack rfArgs (snd rfRetArg)
 
-mkRelBranchLemmas :: [(Id, RocqType)] -> (Id, RocqType) -> [(Id, RocqType)] -> [(Id, RocqType)] -> [CoqTerm] -> [(Id, RocqType)] -> [CoqDecl]
+mkRelBranchLemmas :: [(Id, RocqType)] -> (Id, RocqType) -> [(Id, RocqType)] -> [(Id, RocqType)] -> [CoqTerm] -> [(Id, RocqType)] -> [Decl]
 mkRelBranchLemmas args retArg univArgs univAxs conds branches = {- traceFuncRet ["mkRelBranchLemmas", show args, show retArg, show univArgs, show univAxs, show conds, show branches] $ -} map mkBackwardsReasoningLemma univVarsClasses
   where
     -- \| a list of branches with the (nested) implication in the result unfolded into a list of antecedents and a final consequent
@@ -561,7 +561,7 @@ mkRelBranchLemmas args retArg univArgs univAxs conds branches = {- traceFuncRet 
         -- \| univVarBranches with branches of same result shape "merged" into one equivalence class
         cls = [(univRes, [(sbst, br) | (univRes', sbst, br) <- mergedUnivBrs, univRes' == univRes]) | univRes <- nub $ map fst3 mergedUnivBrs]
 
-    mkBackwardsReasoningLemma :: (CoqTerm, [([(Id, Id)], (Id, [(Id, RocqType)], [CoqTerm], CoqTerm))]) -> CoqDecl
+    mkBackwardsReasoningLemma :: (CoqTerm, [([(Id, Id)], (Id, [(Id, RocqType)], [CoqTerm], CoqTerm))]) -> Decl
     mkBackwardsReasoningLemma (univRes, branchs) =
       {- traceFuncRet ["mkBackwardsReasoningLemma", show (univRes, branchs), show conds] $ -}
       Definition
@@ -695,7 +695,7 @@ mkConcat t1 t2 = Concat $ t ++ [t2]
     notOracle Oracle {} = False
     notOracle _ = True
 
-lookupTc :: Id -> [CoqDecl] -> Maybe CoqTermTC
+lookupTc :: Id -> [Decl] -> Maybe CoqTermTC
 lookupTc a [] = trace ("Cannot find " ++ a ++ " in decls. ") Nothing
 lookupTc a (d : tl) = case d of
   TCDecl a' constrs -> if a == a' {-trace ("Found ind data declaration: "++a) $-} then Just (InductiveData a' constrs) else lookupTc a tl
@@ -719,7 +719,7 @@ projectTm tm = case tm of
   other -> Project other
 
 -- | projects a refined ECoq 'CoqTerm' to its unrefined value, projects applications of a refined constructor to applications of the unrefined version of the constructor to the projections of its arguments
-projTm :: [CoqDecl] -> CoqTerm -> CoqTerm
+projTm :: [Decl] -> CoqTerm -> CoqTerm
 projTm decls tm = case tm of
   (Cr c) | isJust (stripSuffixO (unrefinedConstrName "") c) -> Cr c
   Def c | isJust $ lookupTermBind c filteredDecls -> Cr (unrefinedConstrName c)
@@ -752,7 +752,7 @@ unrefRocqType (Pack argTps uargTps z t q) = UPack uargTps t
 unrefRocqType Hole = Hole
 
 -- TODO: why is it different for TCDecl and CoqInductive?
-lookupTermBind :: Id -> [CoqDecl] -> Maybe (Id, RocqType)
+lookupTermBind :: Id -> [Decl] -> Maybe (Id, RocqType)
 lookupTermBind _ [] = Nothing
 lookupTermBind n decls@(_ : _) = {- trace (unwords ["lookupTermBind", n, "..."]) $ -} go decls
   where
@@ -770,7 +770,7 @@ lookupTermBind n decls@(_ : _) = {- trace (unwords ["lookupTermBind", n, "..."])
       Just specs -> Just specs
       Nothing -> go tl
 
-isInductTp :: [CoqDecl] -> Id -> Bool
+isInductTp :: [Decl] -> Id -> Bool
 isInductTp decls a = isJust indTp || isJust builtinIndTp
   where
     indTp = a `lookupTc` decls

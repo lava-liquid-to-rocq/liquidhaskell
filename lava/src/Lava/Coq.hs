@@ -27,7 +27,7 @@ module Lava.Coq
     CoqModule (..),
 
     -- ** Declaration-level grammar
-    CoqDecl (..),
+    Decl (..),
     DefBody (..),
     CoqTermTC (..),
     CoqConstr (..),
@@ -138,7 +138,7 @@ coqBuiltinInductDataTypes =
 -- | A named ECoq module containing some declarations
 --
 -- > M ::= Module x. D* End x.
-data CoqModule = CoqModule Id [CoqDecl] deriving (Eq, Data)
+data CoqModule = CoqModule Id [Decl] deriving (Eq, Data)
 
 -- | Declarations
 --
@@ -153,7 +153,7 @@ data CoqModule = CoqModule Id [CoqDecl] deriving (Eq, Data)
 -- >     | idef
 -- >     | CoqInductive tc (x:tp)* : k := (| c: ∀(y:tp)*, tp)*.
 -- >     | Transparent x. | Opaque x.
-data CoqDecl
+data Decl
   = -- Stuff we have that is missing in Rocq, but should potentially be there
 
     -- | A declaration of an inductive data type
@@ -323,11 +323,12 @@ data CoqTerm
   | App CoqTerm [CoqTerm]
   | Lambda Id RocqType CoqTerm
   | Project CoqTerm
+  | Proj2sig CoqTerm
   | SubCast RocqType RocqType CoqTerm ProofTerm
   | Exist {cRefPred :: CoqTerm, cExistTerm :: CoqTerm, cExistPrf :: ProofTerm}
   | Match [CoqTerm] (Maybe Id) [([(Id, [Id])], CoqTerm)]
   | Ite CoqTerm CoqTerm CoqTerm
-  | Let Id CoqTerm CoqTerm
+  | Let Id (Maybe RocqType) CoqTerm CoqTerm
   | Undefined
   | TermHole
   | PrfTerm Goal ProofTerm
@@ -385,6 +386,7 @@ data CoqTactic
   | Replace CoqTerm CoqTerm CoqTactic (Maybe Id)
   | Assert {assHypName :: Id, assClaim :: Goal, assPrf :: CoqTactic}
   | AssertTerm Id CoqTerm (Maybe Id)
+  | AssertTacs Id RocqType [CoqTactic]
   | Intros [CoqIntroPat]
   | Revert [Id]
   | GeneralizeDependent [Id]
@@ -446,7 +448,7 @@ instance Show CoqConstr where
 instance Show CoqTermTC where
   show (InductiveData n constrs) = "Inductive " ++ n ++ ": Set := " ++ intercalate " | " (map show constrs)
 
-instance Show CoqDecl where
+instance Show Decl where
   show (TCDecl n constrs) = "Inductive " ++ n ++ ": Set := " ++ intercalate " | " (map show constrs)
   show (Definition f args ret body vis) = header ++ bdy
     where
@@ -640,7 +642,8 @@ instance Show CoqTerm where
     Exist p t z -> "exist " ++ showP p ++ " " ++ showP t ++ " " ++ showP z
     Match ts _ cases -> "match " ++ addParens (intercalate ", " (map show ts)) ++ " with " ++ intercalate " | " (map ((\(x, y) -> x ++ " => " ++ y) . bimap (addParens . intercalate ", " . map (\(c, args) -> unwords (c : args))) showP) cases) ++ " end"
     Ite r s t -> "if " ++ show r ++ " then " ++ show s ++ " else " ++ showP t
-    Let x s t -> "let " ++ x ++ " := " ++ show s ++ " in " ++ showP t
+    Let x tp s t ->
+      "let " ++ maybe x (\tp' -> "(" ++ x ++ ": " ++ show tp' ++ ")") tp ++ " := " ++ show s ++ " in " ++ showP t
     Undefined -> "undefined"
     InstanceProjection inst field -> showP inst ++".("++field++")"
     InlineInstance fields -> "{| " ++ intercalate "; " (map (\(field, val) -> field ++ " := " ++ show val) fields) ++ " |}"
@@ -905,9 +908,9 @@ instance AppSuable CoqTerm CoqTerm where
         matches = concatMap (findSubterm pat) ts ++ concatMap (findSubterm pat . snd) cases
         func r = Match (map (replaceSubterm pat r) ts) idO (mapSnd (replaceSubterm pat r) cases)
     Ite r s t -> recurseFindAndRepl3 pat Ite r s t
-    Let y _ _ | isSubsId (Var y) -> error $ "nameclash between supposedly free variable in substitution and new variable name in pattern: " ++ showSubst
+    Let y _ _ _ | isSubsId (Var y) -> error $ "nameclash between supposedly free variable in substitution and new variable name in pattern: " ++ showSubst
     -- \| if we have a substitution of a variable shadowed by the let ignore the entire body of the let
-    Let y s t -> recurseFindAndRepl pat (\u -> Let y u t) s
+    Let y tp s t -> recurseFindAndRepl pat (\u -> Let y tp u t) s
     PrfTerm r z -> recurseFindAndRepl2 pat PrfTerm r z
     IsTrue b -> recurseFindAndRepl pat IsTrue b
     Forall args _ | capturedIn args -> unchanged
@@ -1088,7 +1091,7 @@ instance Suable (Id, RocqType) CoqTerm where
 
 -- * Other misc instance definitions and functions
 
-instance Binder CoqDecl where
+instance Binder Decl where
   bindName d = case d of
     TCDecl tc _ -> tc
     Fix n _ _ _ -> n

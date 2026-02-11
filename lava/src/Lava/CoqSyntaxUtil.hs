@@ -23,10 +23,10 @@ getUPackFunctName = "getUPackFunct"
 
 -- * Wrappers for Rocq terms
 
-mkCoqLemma :: Id -> [((Id, RocqType), Bool)] -> RocqType -> [CoqTactic] -> CoqDecl
+mkCoqLemma :: Id -> [((Id, RocqType), Bool)] -> RocqType -> [CoqTactic] -> Decl
 mkCoqLemma f args ret tacs = Definition f args ret (ProofBody tacs) Opaque
 
-mkCoqTheorem :: Id -> [((Id, RocqType), Bool)] -> CoqTerm -> [CoqTactic] -> CoqDecl
+mkCoqTheorem :: Id -> [((Id, RocqType), Bool)] -> CoqTerm -> [CoqTactic] -> Decl
 mkCoqTheorem f args ret = mkCoqLemma f args (Prop ret)
 
 -- | Wrapper for Forall, defined as id for empty argument list
@@ -201,4 +201,3 @@ upackGetRel upack = App (Def getUPackRelName) [upack]
 
 upackGetFunct :: CoqTerm -> CoqTerm
 upackGetFunct upack = App (Def getUPackFunctName) [upack]
-

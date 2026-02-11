@@ -1,31 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 
 -- | ILH typing contexts
-module Lava.TypingContext
-  ( TypingCtx,
-    Image (..),
-    empty,
-    initial,
-    notMember,
-    Lava.TypingContext.map,
-    insertRefType,
-    lookupRefType,
-    insertArrType,
-    insertRelType,
-    insertHOArgs,
-    lookupArrType,
-    insertTC,
-    lookupTC,
-    lookupDC,
-    lookupDef,
-    lookupRel,
-    insertDecls,
-    lookupDecls,
-    toList,
-    replace,
-    showCtx,
-  )
-where
+module Lava.TypingContext where
 
 -- import qualified Data.Map.Strict as Map
 

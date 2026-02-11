@@ -21,16 +21,20 @@ source-repository head
 library
   exposed-modules:
       Lava
+      Lava.Calculus
       Lava.Coq
       Lava.CoqPrinter
       Lava.CoqSyntaxUtil
       Lava.CoqUtil
+      Lava.Declaration
       Lava.InternalLH
       Lava.LH
       Lava.Misc
       Lava.PaperUtils
+      Lava.Translation
       Lava.TypedTranslation
       Lava.TypingContext
+      Lava.TypingEnvironment
       Lava.UntypedTranslations
       Lava.Util
   other-modules:

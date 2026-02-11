@@ -36,7 +36,7 @@ import Lava.Util -- (Id, freshVar, mapSnd, thd3, sub, fromJust, safeHead)
 type MatchCtx = ([LHSimpleTerm], [(Id, [Id])])
 
 -- | Entrypoint
-translateTyping :: [ILH.LHDecl] -> Either TransError [Coq.CoqDecl]
+translateTyping :: [ILH.LHDecl] -> Either TransError [Coq.Decl]
 -- We forget the typing context return by wfDecls as we have the full list of declarations
 translateTyping decls = snd <$> wfDecls Ctx.initial decls
 
@@ -77,9 +77,9 @@ wfModule :: Ctx.TypingCtx -> LHModule -> Either TransError (Ctx.TypingCtx, Coq.C
 wfModule γ (LHModule x decls) = second (Coq.CoqModule x) <$> wfDecls γ decls
 
 -- | Well-formedness of a list of declarations (auxiliary function)
-wfDecls :: Ctx.TypingCtx -> [LHDecl] -> Either TransError (Ctx.TypingCtx, [Coq.CoqDecl])
+wfDecls :: Ctx.TypingCtx -> [LHDecl] -> Either TransError (Ctx.TypingCtx, [Coq.Decl])
 wfDecls = wfDeclsAux
-wfDeclsAux :: Ctx.TypingCtx -> [LHDecl] -> Either TransError (Ctx.TypingCtx, [Coq.CoqDecl])
+wfDeclsAux :: Ctx.TypingCtx -> [LHDecl] -> Either TransError (Ctx.TypingCtx, [Coq.Decl])
 wfDeclsAux γ [] = return (γ, [])
 wfDeclsAux γ (d : decls') = do
   (γ', d') <- wfDecl γ d
@@ -89,7 +89,7 @@ wfDeclsAux γ (d : decls') = do
 
 -- | Well-formedness of declarations
 -- We also return the updated context, so that we can use it for the next declarations in the program
-wfDecl :: Ctx.TypingCtx -> LHDecl -> Either TransError (Ctx.TypingCtx, [Coq.CoqDecl])
+wfDecl :: Ctx.TypingCtx -> LHDecl -> Either TransError (Ctx.TypingCtx, [Coq.Decl])
 wfDecl γ decl =
   case decl of
     Import x decls ->
@@ -535,7 +535,7 @@ transSub γ from to tm =
 -- ** Declarations
 
 -- | Translation of a data declaration
-transDataDecl :: Ctx.TypingCtx -> Id -> [(Id, ArrType)] -> [Coq.CoqDecl]
+transDataDecl :: Ctx.TypingCtx -> Id -> [(Id, ArrType)] -> [Coq.Decl]
 transDataDecl γ tc alts = transRefTC [] tc (map (uncurry Coq.Constr) $ mapSnd (trArrType γ) alts)
 
 {- CR: I really don't understand what is going on here -- and in any case there are things missing -- so I'm just using the refined inductive data types of ECoq here, for now
@@ -559,7 +559,7 @@ where
 -}
 
 -- | Translation of an unreflected definition
-transDefinition :: Ctx.TypingCtx -> Id -> ArrType -> [Coq.CoqTactic] -> [Coq.CoqDecl]
+transDefinition :: Ctx.TypingCtx -> Id -> ArrType -> [Coq.CoqTactic] -> [Coq.Decl]
 transDefinition γ f tp tacs =
   [Coq.Definition f (map (,False) args) ret (Coq.ProofBody $ destructs ++ cleanInductions (usedIHs tacs) tacs) Coq.Transparent]
   where
@@ -570,7 +570,7 @@ transDefinition γ f tp tacs =
 -- *** Reflected definitions
 
 -- | Translation of a reflected definition
-transReflDefinition :: Ctx.TypingCtx -> Id -> ArrType -> LHTerm -> [Coq.CoqTactic] -> Either TransError [Coq.CoqDecl]
+transReflDefinition :: Ctx.TypingCtx -> Id -> ArrType -> LHTerm -> [Coq.CoqTactic] -> Either TransError [Coq.Decl]
 transReflDefinition γ f arrTp e tacs = do
   -- Expression splitted into its branches
   sepBranches <- separateBranches e (map (Var . fst) (argsTps arrTp))
@@ -738,7 +738,7 @@ transReflDefinition γ f arrTp e tacs = do
       ++ (if firstOrder then packInstances else [])
 
 -- | Create the inductive Prop relation for f
-createRelation :: Id -> ArrType -> [Coq.CoqConstr] -> Coq.CoqDecl
+createRelation :: Id -> ArrType -> [Coq.CoqConstr] -> Coq.Decl
 createRelation f tp = Coq.CoqInductive (relDefName f) [] (concatProp $ utrArrType tp)
   where
     -- Add Prop as a type of the relation
