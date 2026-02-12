@@ -320,7 +320,12 @@ toPack xTs_ (Subset z' zTp_ pz_) = {- traceFuncRet ["toPack", show xTs, show (Su
     p = mkLam xTs (Lambda z' zTp pz)
     argsNm = "x_" ++ hashName argTps
     v = "v_" ++ argsNm
-    p_ = Lambda argsNm (ArgumentList argTps) (Lambda v zTp (PrfTerm Hole (ByTac . Custom $ unwords ["flattenP", showP p, argsNm, v])))
+    p_ = Lambda argsNm (ArgumentList argTps) (Lambda v zTp pBdy)
+    pBdy = case pz of
+      -- TT -> TT
+      -- And (App (Def wf) [Var z']) TT -> And (App (Def wf) [Var v]) TT
+      -- _ | all (\(x,_) -> not $ hasMatch (TermPat (Var x), True) pz) xTs -> sub z' (Var v) pz
+      _ -> PrfTerm Hole (ByTac . Custom $ unwords ["flattenP", showP p, argsNm, v])
 
 toUPack :: [RocqType] -> RocqType -> RocqType
 toUPack [] tp = tp

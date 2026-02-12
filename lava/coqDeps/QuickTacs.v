@@ -669,7 +669,7 @@ Ltac lia_simpl_step := first [progress autounfold with lia_unfold get_rel_db in 
 Ltac lia_simpl := repeat lia_simpl_step.
 Ltac quick_cleanup := simpl_ref_constr; 
   simpl_proj; apply_ifs; 
-  tryif lia_simpl then (lia_simpl; simpl_proj) else idtac.
+  try (lia_simpl; simpl_proj).
 Ltac quick_simpl := quick_cleanup;  repeat shape_based.
 
 Ltac cleanup_hints := match goal with

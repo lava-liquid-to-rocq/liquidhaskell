@@ -23,10 +23,10 @@ Inductive UArgList: UArgListT -> Type :=
       UArgList (consUArgsT X tlT).
 
 Ltac synthesizePrInstance := quicksolve.
-Global Notation "X ::UT tl" := (consUArgsT X tl) (at level 1).
-Global Notation "X' ::RT tl" := (consArgsT _ X' _ tl) (at level 1).
-Global Notation "x ::R tl" := (@consArgs _ _ _ x _ tl) (at level 1).
-Global Notation "x ::U tl" := (@consUArgs _ x _ tl) (at level 1).
+Global Notation "X ::UT tl" := (consUArgsT X tl) (at level 2, right associativity).
+Global Notation "X' ::RT tl" := (consArgsT _ X' _ tl) (at level 2, right associativity).
+Global Notation "x ::R tl" := (@consArgs _ _ _ x _ tl) (at level 2, right associativity).
+Global Notation "x ::U tl" := (@consUArgs _ x _ tl) (at level 2, right associativity).
 Global Notation nilUT := noUArgsT.
 Global Notation nilU := noUArgs.
 Global Notation nilRT := noArgsT.
@@ -1286,7 +1286,17 @@ Ltac hyps_of_tp tp already Res :=
     end).
 
 Global Ltac flattenP P args v :=
-  try (
+  match P with
+  | (fun _ _ => ?tp) => exact tp
+  | (fun _ _ _ => ?tp) => exact tp
+  | (fun _ _ _ _ => ?tp) => exact tp
+  | (fun _ _ _ _ _ => ?tp) => exact tp
+  | (fun _ => (fun x => ?wf x /\ True)) => exact (wf v /\ True)
+  | (fun _ _ => (fun x => ?wf x /\ True)) => exact (wf v /\ True)
+  | (fun _ _ _ => (fun x => ?wf x /\ True)) => exact (wf v /\ True)
+  | (fun _ _ _ _ => (fun x => ?wf x /\ True)) => exact (wf v /\ True)
+  | (fun _ _ _ _ _ => (fun x => ?wf x /\ True)) => exact (wf v /\ True)
+  | _ => try (
   isVar P; 
   match type of P with
   | ?pTp => subst pTp
@@ -1294,7 +1304,8 @@ Global Ltac flattenP P args v :=
   let pz := fresh "pz" in
   pose P as pz;
   uncons_rw_app_all pz args;
-  exact (pz v).
+  exact (pz v)
+  end.
 
 Goal forall (X X':Type) (PX: X' ⤖ X) (Z:Type) (PZ: forall (x:X'), Z -> Prop) 
   (F: forall (x:X'), {v:Z|PZ x v}) (x1 x2: X'), Z -> Prop.
@@ -1768,23 +1779,23 @@ Variable Rel: X -> X -> Z -> Prop.
 Variable F_Rel: forall (x:X') (y:X') (v:Z), proj1_sig (F x y) = v <-> Rel (PX.(proj) x) (PX.(proj) y) v.
 Variable Funct: forall (x:X) (y:X) (v v':Z), Rel x y v -> Rel x y v' -> v = v'.
 
-Definition buildPack2'_spec : Type.
+Definition buildPack2__spec : Type.
 Proof.
   buildPackG_spec F.
 Defined.
-Definition buildPack2' : buildPack2'_spec.
+Definition buildPack2__ : buildPack2__spec.
 Proof.
   buildPackG_ F Rel F_Rel Funct.
 Defined.
-Definition buildUPack2'_spec : Type.
+Definition buildUPack2__spec : Type.
 Proof.
   buildUPackG_spec Rel.
 Defined.
-Definition buildUPack2' : buildUPack2'_spec.
+Definition buildUPack2_ : buildUPack2__spec.
 Proof. 
   buildUPackG Rel Funct. 
 Defined.
-Definition unreflectedRel2' : X -> X -> Z -> Prop.
+Definition unreflectedRel2_ : X -> X -> Z -> Prop.
 Proof.
   clear F_Rel.
   fun_to_rel F Z.
@@ -1868,6 +1879,241 @@ Defined.
 End GenericTest4.
 Global Notation buildPack4 F Rel F_Rel Rel_Funct:= (buildPack4_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ F Rel F_Rel Rel_Funct).
 
+Ltac buildSemiGenericPack F Rel F_Rel Funct :=
+  unshelve refine {| f:=_; frel:=_; f_frel:=_; funct:=_ |};
+  [ intros args; 
+    try clear F_Rel;
+    uncons_rw_app_all F args;
+    refine F
+  | intros uargs v;
+    let rel := fresh "relAp" in
+    pose Rel as rel;
+    unucons_rw_app_all rel uargs;
+    apply (rel v)
+  | simpl; intros args v;
+    uncons_rw_all args;
+    repeat match goal with
+    | |- _ <-> (let (x, u) := ?hdTl in _) eq_refl => 
+      let rw := fresh "temp" in
+      destruct hdTl eqn:rw;
+      simpl in rw;
+      inversion_clear rw
+    end;
+    now rewrite F_Rel
+  | intros uargs v v' H K;
+    unucons_rw_app_all Funct uargs;
+    symmetry; apply Funct; now assumption].
+
+Section SemiGenericTest1.
+(* Converting from a generic binary function with relation and properties to a Pack *)
+Variable X X':Type.
+Variable PX: X' ⤖ X.
+Variable Z:Type.
+Variable PZ: Z -> Prop.
+Variable F: forall (x:X'), {v:Z|PZ v}.
+Variable Rel: X -> Z -> Prop.
+Variable F_Rel: forall (x:X') (v:Z), proj1_sig (F x) = v <-> Rel (PX.(proj) x) v.
+Variable Funct: forall (x:X) (v v':Z), Rel x v -> Rel x v' -> v = v'.
+
+Definition buildPack1'_ : @Pack (X' ::RT (fun (x: X') => nilRT)) (X ::UT nilUT) (ltac: 
+  (mkProjectsArgListTG (X' ::RT (fun (x: X') => nilRT)) (X ::UT nilUT))) Z (fun _ => PZ).
+Proof.
+  buildSemiGenericPack F Rel F_Rel Funct.
+Defined.
+End SemiGenericTest1. 
+Global Notation buildPack1' F Rel F_Rel Rel_Funct:= (buildPack1'_ _ _ _ _ _ F Rel F_Rel Rel_Funct).
+Section SemiGenericTest2.
+(* Converting from a generic binary function with relation and properties to a Pack *)
+Variable X X':Type.
+Variable PX: X' ⤖ X.
+Variable Y:Type.
+Variable Y': forall (x:X'), Type.
+Variable PY: forall (x:X'), (Y' x) ⤖ Y.
+Variable Z:Type.
+Variable PZ: Z -> Prop.
+Variable F: forall (x:X') (y:Y' x), {v:Z|PZ v}.
+Variable Rel: X -> Y -> Z -> Prop.
+Variable F_Rel: forall (x:X') (y:Y' x) (v:Z), proj1_sig (F x y) = v <-> Rel (PX.(proj) x) ((PY x).(proj) y) v.
+Variable Funct: forall (x:X) (y:Y) (v v':Z), Rel x y v -> Rel x y v' -> v = v'.
+
+Definition buildPack2'_ : @Pack 
+  (X' ::RT (fun (x: X') => (Y' x) ::RT (fun _ => nilRT))) 
+  (X ::UT Y ::UT nilUT) 
+  (ltac: (mkProjectsArgListTG 
+  (X' ::RT (fun (x: X') => (Y' x) ::RT (fun _ => nilRT))) 
+  (X ::UT Y ::UT nilUT))) Z (fun _ => PZ).
+Proof.
+  buildSemiGenericPack F Rel F_Rel Funct.
+Defined.
+End SemiGenericTest2. 
+Global Notation buildPack2' F Rel F_Rel Rel_Funct:= (buildPack2'_ _ _ _ _ _ _ _ _ F Rel F_Rel Rel_Funct).
+Section SemiGenericTest3.
+(* Converting from a generic binary function with relation and properties to a Pack *)
+Variable X X':Type.
+Variable PX: X' ⤖ X.
+Variable Y:Type.
+Variable Y': forall (x:X'), Type.
+Variable PY: forall (x:X'), (Y' x) ⤖ Y.
+Variable Z:Type.
+Variable Z': forall (x:X') (y:Y' x), Type.
+Variable PZ: forall (x:X') (y:Y' x), (Z' x y) ⤖ Z.
+Variable T: Type.
+Variable PT: T -> Prop.
+Variable F: forall (x:X') (y:Y' x) (z:Z' x y), {v:T| PT v}.
+Variable Rel: X -> Y -> Z -> T -> Prop.
+Variable F_Rel: forall (x:X') (y:Y' x) (z:Z' x y) (v:T), proj1_sig (F x y z) = v <-> 
+  Rel (PX.(proj) x) ((PY x).(proj) y) ((PZ x y).(proj) z) v.
+Variable Funct: forall (x:X) (y:Y) (z:Z) (v v':T), Rel x y z v -> Rel x y z v' -> v = v'.
+
+Definition buildPack3'_ : @Pack 
+  (X' ::RT (fun x => (Y' x) ::RT (fun y => (Z' x y) ::RT (fun _ => nilRT)))) 
+  (X ::UT Y ::UT Z ::UT nilUT) 
+  (ltac: (mkProjectsArgListTG 
+  (X' ::RT (fun x => (Y' x) ::RT (fun y => (Z' x y) ::RT (fun _ => nilRT)))) 
+  (X ::UT Y ::UT Z ::UT nilUT))) T (fun _ => PT).
+Proof.
+  buildSemiGenericPack F Rel F_Rel Funct.
+Defined.
+End SemiGenericTest3.
+Global Notation buildPack3' F Rel F_Rel Rel_Funct:= (buildPack3'_ _ _ _ _ _ _ _ _ _ _ _ F Rel F_Rel Rel_Funct).
+Section SemiGenericTest4.
+(* Converting from a generic binary function with relation and properties to a Pack *)
+Variable W W':Type.
+Variable PW: W' ⤖ W.
+Variable X:Type.
+Variable X': forall (w:W'), Type.
+Variable PX: forall (w:W'), (X' w) ⤖ X.
+Variable Y:Type.
+Variable Y': forall (w:W') (x:X' w), Type.
+Variable PY: forall (w:W') (x:X' w), (Y' w x) ⤖ Y.
+Variable Z:Type.
+Variable Z': forall (w:W') (x:X' w) (y:Y' w x), Type.
+Variable PZ: forall (w:W') (x:X' w) (y:Y' w x), (Z' w x y) ⤖ Z.
+Variable T: Type.
+Variable PT: T -> Prop.
+Variable F: forall (w:W') (x:X' w) (y:Y' w x) (z:Z' w x y), {v:T|PT v}.
+Variable Rel: W -> X -> Y -> Z -> T -> Prop.
+Variable F_Rel: forall (w:W') (x:X' w) (y:Y' w x) (z:Z' w x y) (v:T), proj1_sig (F w x y z) = v <-> 
+  Rel (PW.(proj) w) ((PX w).(proj) x) ((PY w x).(proj) y) ((PZ w x y).(proj) z) v.
+Variable Funct: forall (w:W) (x:X) (y:Y) (z:Z) (v v':T), Rel w x y z v -> Rel w x y z v' -> v = v'.
+
+Definition buildPack4'_ : @Pack 
+  (W' ::RT (fun w => (X' w) ::RT (fun x => (Y' w x) ::RT (fun y => (Z' w x y) ::RT (fun _ => nilRT))))) 
+  (W ::UT X ::UT Y ::UT Z ::UT nilUT) 
+  (ltac: (mkProjectsArgListTG 
+  (W' ::RT (fun w => (X' w) ::RT (fun x => (Y' w x) ::RT (fun y => (Z' w x y) ::RT (fun _ => nilRT))))) 
+  (W ::UT X ::UT Y ::UT Z ::UT nilUT))) T (fun _ => PT).
+Proof.
+  buildSemiGenericPack F Rel F_Rel Funct.
+Defined.
+End SemiGenericTest4.
+Global Notation buildPack4' F Rel F_Rel Rel_Funct:= (buildPack4'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ F Rel F_Rel Rel_Funct).
+
+Section IndepTypedGenericTest1.
+(* Converting from a generic binary function with relation and properties to a Pack *)
+Variable X X':Type.
+Variable PX: X' ⤖ X.
+Variable Z:Type.
+Variable PZ: Z -> Prop.
+Variable F: X' -> {v:Z|PZ v}.
+Variable Rel: X -> Z -> Prop.
+Variable F_Rel: forall (x:X') (v:Z), proj1_sig (F x) = v <-> Rel (PX.(proj) x) v.
+Variable Funct: forall (x:X) (v v':Z), Rel x v -> Rel x v' -> v = v'.
+
+Definition buildPack1''_ : @Pack (X' ::RT (fun _ => nilRT)) (X ::UT nilUT) (ltac: 
+  (mkProjectsArgListTG (X' ::RT (fun _ => nilRT)) (X ::UT nilUT))) Z (fun _ => PZ).
+Proof.
+  buildSemiGenericPack F Rel F_Rel Funct.
+Defined.
+End IndepTypedGenericTest1. 
+Global Notation buildPack1'' F Rel F_Rel Rel_Funct:= (buildPack1''_ _ _ _ _ _ F Rel F_Rel Rel_Funct).
+Section IndepTypedGenericTest2.
+(* Converting from a generic binary function with relation and properties to a Pack *)
+Variable X X':Type.
+Variable PX: X' ⤖ X.
+Variable Y:Type.
+Variable Y': Type.
+Variable PY: Y' ⤖ Y.
+Variable Z:Type.
+Variable PZ: Z -> Prop.
+Variable F: X' -> Y' -> {v:Z|PZ v}.
+Variable Rel: X -> Y -> Z -> Prop.
+Variable F_Rel: forall (x:X') (y:Y') (v:Z), proj1_sig (F x y) = v <-> Rel (PX.(proj) x) (PY.(proj) y) v.
+Variable Funct: forall (x:X) (y:Y) (v v':Z), Rel x y v -> Rel x y v' -> v = v'.
+
+Definition buildPack2''_ : @Pack 
+  (X' ::RT (fun _ => Y' ::RT (fun _ => nilRT))) 
+  (X ::UT Y ::UT nilUT) 
+  (ltac: (mkProjectsArgListTG 
+  (X' ::RT (fun _ => Y' ::RT (fun _ => nilRT))) 
+  (X ::UT Y ::UT nilUT))) Z (fun _ => PZ).
+Proof.
+  buildSemiGenericPack F Rel F_Rel Funct.
+Defined.
+End IndepTypedGenericTest2. 
+Global Notation buildPack2'' F Rel F_Rel Rel_Funct:= (buildPack2''_ _ _ _ _ _ _ _ _ F Rel F_Rel Rel_Funct).
+Section IndepTypedGenericTest3.
+(* Converting from a generic binary function with relation and properties to a Pack *)
+Variable X X':Type.
+Variable PX: X' ⤖ X.
+Variable Y:Type.
+Variable Y': Type.
+Variable PY: Y' ⤖ Y.
+Variable Z:Type.
+Variable Z': Type.
+Variable PZ: Z' ⤖ Z.
+Variable T: Type.
+Variable PT: T -> Prop.
+Variable F: X' -> Y' -> Z' -> {v:T| PT v}.
+Variable Rel: X -> Y -> Z -> T -> Prop.
+Variable F_Rel: forall (x:X') (y:Y') (z:Z') (v:T), proj1_sig (F x y z) = v <-> 
+  Rel (PX.(proj) x) (PY.(proj) y) (PZ.(proj) z) v.
+Variable Funct: forall (x:X) (y:Y) (z:Z) (v v':T), Rel x y z v -> Rel x y z v' -> v = v'.
+
+Definition buildPack3''_ : @Pack 
+  (X' ::RT (fun _ => Y' ::RT (fun _ => Z' ::RT (fun _ => nilRT)))) 
+  (X ::UT Y ::UT Z ::UT nilUT) 
+  (ltac: (mkProjectsArgListTG 
+  (X' ::RT (fun _ => Y' ::RT (fun _ => Z' ::RT (fun _ => nilRT)))) 
+  (X ::UT Y ::UT Z ::UT nilUT))) T (fun _ => PT).
+Proof.
+  buildSemiGenericPack F Rel F_Rel Funct.
+Defined.
+End IndepTypedGenericTest3.
+Global Notation buildPack3'' F Rel F_Rel Rel_Funct:= (buildPack3''_ _ _ _ _ _ _ _ _ _ _ _ F Rel F_Rel Rel_Funct).
+Section IndepTypedGenericTest4.
+(* Converting from a generic binary function with relation and properties to a Pack *)
+Variable W W':Type.
+Variable PW: W' ⤖ W.
+Variable X:Type.
+Variable X': Type.
+Variable PX: X' ⤖ X.
+Variable Y:Type.
+Variable Y': Type.
+Variable PY: Y' ⤖ Y.
+Variable Z:Type.
+Variable Z': Type.
+Variable PZ: Z' ⤖ Z.
+Variable T: Type.
+Variable PT: T -> Prop.
+Variable F: W' -> X' -> Y' -> Z' -> {v:T|PT v}.
+Variable Rel: W -> X -> Y -> Z -> T -> Prop.
+Variable F_Rel: forall (w:W') (x:X') (y:Y') (z:Z') (v:T), proj1_sig (F w x y z) = v <-> 
+  Rel (PW.(proj) w) (PX.(proj) x) (PY.(proj) y) (PZ.(proj) z) v.
+Variable Funct: forall (w:W) (x:X) (y:Y) (z:Z) (v v':T), Rel w x y z v -> Rel w x y z v' -> v = v'.
+
+Definition buildPack4''_ : @Pack 
+  (W' ::RT (fun _ => X' ::RT (fun _ => Y' ::RT (fun _ => Z' ::RT (fun _ => nilRT))))) 
+  (W ::UT X ::UT Y ::UT Z ::UT nilUT) 
+  (ltac: (mkProjectsArgListTG 
+  (W' ::RT (fun _ => X' ::RT (fun _ => Y' ::RT (fun _ => Z' ::RT (fun _ => nilRT))))) 
+  (W ::UT X ::UT Y ::UT Z ::UT nilUT))) T (fun _ => PT).
+Proof.
+  buildSemiGenericPack F Rel F_Rel Funct.
+Defined.
+End IndepTypedGenericTest4.
+Global Notation buildPack4'' F Rel F_Rel Rel_Funct:= (buildPack4''_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ F Rel F_Rel Rel_Funct).
+
 Global Definition refinement_proj_unapply {A:Type} {p:A -> Prop} (tm: {v:A|p v}):
   proj1_sig tm = refinement_proj.(proj) tm := eq_refl.
 
@@ -1876,52 +2122,92 @@ Global Ltac buildPackG F Rel F_Rel Funct :=
   match type of F_Rel with
   | forall x1 v, ⌊ ?f x1 -⌋ = v <-> ?rel _ v =>
     first [
+      now apply (buildPack1'' F Rel F_Rel Funct) |
+      now apply (buildPack1' F Rel F_Rel Funct) |
       now apply (buildPack1 F Rel F_Rel Funct) |
       assert (forall x1 v, ⌊ f x1 -⌋ = v <-> rel (proj x1) v) as cor by
         (apply F_Rel);
-      apply (buildPack1 F Rel cor Funct)]
+      first [
+        apply (buildPack1'' F Rel cor Funct) | 
+        apply (buildPack1' F Rel cor Funct) | 
+        apply (buildPack1 F Rel cor Funct)]]
   | forall x1 x2 v, ⌊ ?f x1 x2 -⌋ = v <-> ?rel _ _ v =>
     first [
-      now apply (buildPack1 F Rel F_Rel Funct) |
+      now apply (buildPack2'' F Rel F_Rel Funct) |
+      now apply (buildPack2' F Rel F_Rel Funct) |
+      now apply (buildPack2 F Rel F_Rel Funct) |
       assert (forall x1 x2 v, ⌊ f x1 x2 -⌋ = v <-> rel (proj x1) (proj x2) v) as cor by
       (apply F_Rel);
-    apply (buildPack2 F Rel cor Funct)]
+    first [
+      apply (buildPack2'' F Rel cor Funct)
+    | apply (buildPack2' F Rel cor Funct)
+    | apply (buildPack2 F Rel cor Funct)]]
   | forall x1 x2 x3 v, ⌊ ?f x1 x2 x3 -⌋ = v <-> ?rel _ _ _ v =>
     first [
-      now apply (buildPack1 F Rel F_Rel Funct) |
+      now apply (buildPack3'' F Rel F_Rel Funct) |
+      now apply (buildPack3' F Rel F_Rel Funct) |
+      now apply (buildPack3 F Rel F_Rel Funct) |
       assert (forall x1 x2 x3 v, ⌊ f x1 x2 x3 -⌋ = v <-> rel (proj x1) (proj x2) (proj x3) v) as cor by
       (apply F_Rel);
-    apply (buildPack3 F Rel cor Funct)]
+    first [
+      apply (buildPack3'' F Rel cor Funct)
+    | apply (buildPack3' F Rel cor Funct)
+    | apply (buildPack3 F Rel cor Funct)]]
   | forall x1 x2 x3 x4 v, ⌊ ?f x1 x2 x3 x4 -⌋ = v <-> ?rel _ _ _ _ v =>
     first [
-      now apply (buildPack1 F Rel F_Rel Funct) |
+      now apply (buildPack4'' F Rel F_Rel Funct) |
+      now apply (buildPack4' F Rel F_Rel Funct) |
+      now apply (buildPack4 F Rel F_Rel Funct) |
       assert (forall x1 x2 x3 x4 v, ⌊ f x1 x2 x3 x4 -⌋ = v <-> rel (proj x1) (proj x2) (proj x3) (proj x4) v) as cor by
       (apply F_Rel);
-    apply (buildPack4 F Rel cor Funct)]
+    first [
+      apply (buildPack4'' F Rel cor Funct)
+    | apply (buildPack4' F Rel cor Funct)
+    | apply (buildPack4 F Rel cor Funct)]]
   | forall x1 v, proj1_sig (?f x1) = v <-> ?rel _ v =>
     first [
+      now apply (buildPack1'' F Rel F_Rel Funct) |
+      now apply (buildPack1' F Rel F_Rel Funct) |
       now apply (buildPack1 F Rel F_Rel Funct) |
       assert (forall x1 v, proj1_sig (f x1) = v <-> rel (proj x1) v) as cor by
         (apply F_Rel);
-      apply (buildPack1 F Rel cor Funct)]
+      first [
+      apply (buildPack1'' F Rel cor Funct)
+    | apply (buildPack1' F Rel cor Funct)
+    | apply (buildPack1 F Rel cor Funct)]]
   | forall x1 x2 v, proj1_sig (?f x1 x2) = v <-> ?rel _ _ v =>
     first [
-      now apply (buildPack1 F Rel F_Rel Funct) |
+      now apply (buildPack2'' F Rel F_Rel Funct) |
+      now apply (buildPack2' F Rel F_Rel Funct) |
+      now apply (buildPack2 F Rel F_Rel Funct) |
       assert (forall x1 x2 v, proj1_sig (f x1 x2) = v <-> rel (proj x1) (proj x2) v) as cor by
       (apply F_Rel);
-    apply (buildPack2 F Rel cor Funct)]
+    first [
+      apply (buildPack2'' F Rel cor Funct)
+    | apply (buildPack2' F Rel cor Funct)
+    | apply (buildPack2 F Rel cor Funct)]]
   | forall x1 x2 x3 v, proj1_sig (?f x1 x2 x3) = v <-> ?rel _ _ _ v =>
     first [
-      now apply (buildPack1 F Rel F_Rel Funct) |
+      now apply (buildPack3'' F Rel F_Rel Funct) |
+      now apply (buildPack3' F Rel F_Rel Funct) |
+      now apply (buildPack3 F Rel F_Rel Funct) |
       assert (forall x1 x2 x3 v, proj1_sig (f x1 x2 x3) = v <-> rel (proj x1) (proj x2) (proj x3) v) as cor by
       (apply F_Rel);
-    apply (buildPack3 F Rel cor Funct)]
+    first [
+      apply (buildPack3'' F Rel cor Funct)
+    | apply (buildPack3' F Rel cor Funct)
+    | apply (buildPack3 F Rel cor Funct)]]
   | forall x1 x2 x3 x4 v, proj1_sig (?f x1 x2 x3 x4) = v <-> ?rel _ _ _ _ v =>
     first [
-      now apply (buildPack1 F Rel F_Rel Funct) |
+      now apply (buildPack4'' F Rel F_Rel Funct) |
+      now apply (buildPack4' F Rel F_Rel Funct) |
+      now apply (buildPack4 F Rel F_Rel Funct) |
       assert (forall x1 x2 x3 x4 v, proj1_sig (f x1 x2 x3 x4) = v <-> rel (proj x1) (proj x2) (proj x3) (proj x4) v) as cor by
       (apply F_Rel);
-    apply (buildPack4 F Rel cor Funct)]
+    first [
+      apply (buildPack4'' F Rel cor Funct)
+    | apply (buildPack4' F Rel cor Funct)
+    | apply (buildPack4 F Rel cor Funct)]]
   | _ => 
     let F_ := fresh "F" in
     let Rel_ := fresh "Rel" in
@@ -1931,5 +2217,7 @@ Global Ltac buildPackG F Rel F_Rel Funct :=
     pose Rel as Rel_;
     pose F_Rel as F_Rel_;
     pose Funct as Funct_;
-    buildPackG_ F_ Rel_ F_Rel_ Funct_
+    first [
+      buildSemiGenericPack F_ Rel_ F_Rel_ Funct_ | 
+      buildPackG_ F_ Rel_ F_Rel_ Funct_ ]
   end.

@@ -9,8 +9,8 @@ import Language.Haskell.Liquid.ProofCombinators
 import Prelude hiding (return)
 
 -- | Monad Laws :
--- | Left identity:   return a >>= f  ≡ f a
--- | Right identity:   m >>= return    ≡ m
+-- | Left identity:   retrn a >>= f  ≡ f a
+-- | Right identity:   m >>= retrn    ≡ m
 
 {-@ data L where
         Emp :: L
@@ -20,10 +20,10 @@ data L where
   C :: Int -> L -> L
   deriving (Eq)
 
-{-@ reflect return @-}
-{-@ return :: Int -> L @-}
-return :: Int -> L
-return x = C x Emp
+{-@ reflect retrn @-}
+{-@ retrn :: Int -> L @-}
+retrn :: Int -> L
+retrn x = C x Emp
 
 {-@ reflect bind @-}
 {-@ bind :: L -> (Int -> L) -> L @-}
@@ -39,14 +39,14 @@ append (C x xs) ys = C x (append xs ys)
 
 -- | Left Identity
 
-{-@ left_identity :: x:Int -> f:(Int -> L) -> { bind (return x) f == f x } @-}
+{-@ left_identity :: x:Int -> f:(Int -> L) -> { bind (retrn x) f == f x } @-}
 left_identity :: Int -> (Int -> L) -> Proof
 left_identity x f =
   prop_append_neutral (f x)
 
 -- | Right Identity
 
-{-@ right_identity :: x:L -> { bind x return == x } @-}
+{-@ right_identity :: x:L -> { bind x retrn == x } @-}
 right_identity :: L -> Proof
 right_identity Emp =
   trivial

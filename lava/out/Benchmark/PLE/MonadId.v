@@ -41,6 +41,7 @@ Definition Val (n: {n: Z | True}): Identity :=
 Definition compose (vx: Identity) (f: (@Pack ({x: Z | True} ::RT (fun (x: {x: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({x: Z | True} ::RT (fun (x: {x: Z | True}) => nilRT)) (Z ::UT nilUT))) Identity_u (fun (x_35415358: (ArgList {x: Z | True} ::RT (fun (x: {x: Z | True}) => nilRT))) => (fun (v_x_35415358: Identity_u) => (ltac: (flattenP (fun (x: {x: Z | True}) => (fun (VV: Identity_u) => ((Identity_wf VV) /\ True))) x_35415358 v_x_35415358)))))): Identity. 
 Proof. 
 	destruct vx as [vx vx_p]. 
+	simpl in f. 
 	try revert f_p; generalize dependent f; 
 	induction vx as [(*Val*) x]. 
 	  - intros . 
@@ -181,6 +182,7 @@ Defined.
 Definition leftIdentity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Identity_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Identity_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: Identity_u) => ((Identity_wf VV) /\ True))) x_86410777 v_x_86410777)))))): {{forall (retrnres: Identity_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (composeres: Identity_u), (compose_rel retrnres (packProj f) composeres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (composeres == fres)))}}. 
 Proof. 
 	destruct x as [x x_p]. 
+	simpl in f. 
 	refine (exist _ unit _); 
 	solver. 
 Defined. 

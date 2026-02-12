@@ -364,7 +364,7 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve eqN_rel_mk : f_rel_funct_db.
-#[global] Instance eqNPack : (@Pack (Nats ::RT (fun (m_r: Nats) => (Nats ::RT (fun (n_r: Nats) => nilRT)))) (Nats_u ::UT (Nats_u ::UT nilUT)) (ltac: (mkProjectsArgListTG (Nats ::RT (fun (m_r: Nats) => (Nats ::RT (fun (n_r: Nats) => nilRT)))) (Nats_u ::UT (Nats_u ::UT nilUT)))) bool (fun (x_44523598: (ArgList Nats ::RT (fun (m_r: Nats) => (Nats ::RT (fun (n_r: Nats) => nilRT))))) => (fun (v_x_44523598: bool) => (ltac: (flattenP (fun (m_r: Nats) => (fun (n_r: Nats) => (fun (VV: bool) => True))) x_44523598 v_x_44523598))))).
+#[global] Instance eqNPack : (@Pack (Nats ::RT (fun (m_r: Nats) => (Nats ::RT (fun (n_r: Nats) => nilRT)))) (Nats_u ::UT (Nats_u ::UT nilUT)) (ltac: (mkProjectsArgListTG (Nats ::RT (fun (m_r: Nats) => (Nats ::RT (fun (n_r: Nats) => nilRT)))) (Nats_u ::UT (Nats_u ::UT nilUT)))) bool (fun (x_44523598: (ArgList Nats ::RT (fun (m_r: Nats) => (Nats ::RT (fun (n_r: Nats) => nilRT))))) => (fun (v_x_44523598: bool) => True))).
 Proof. 
 	buildPackG eqN eqN_rel eqN__eqN_rel eqN_rel_funct. 
 Defined.
@@ -511,7 +511,7 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve geqN_rel_mk : f_rel_funct_db.
-#[global] Instance geqNPack : (@Pack (Nats ::RT (fun (m_r: Nats) => (Nats ::RT (fun (n_r: Nats) => nilRT)))) (Nats_u ::UT (Nats_u ::UT nilUT)) (ltac: (mkProjectsArgListTG (Nats ::RT (fun (m_r: Nats) => (Nats ::RT (fun (n_r: Nats) => nilRT)))) (Nats_u ::UT (Nats_u ::UT nilUT)))) bool (fun (x_44523598: (ArgList Nats ::RT (fun (m_r: Nats) => (Nats ::RT (fun (n_r: Nats) => nilRT))))) => (fun (v_x_44523598: bool) => (ltac: (flattenP (fun (m_r: Nats) => (fun (n_r: Nats) => (fun (VV: bool) => True))) x_44523598 v_x_44523598))))).
+#[global] Instance geqNPack : (@Pack (Nats ::RT (fun (m_r: Nats) => (Nats ::RT (fun (n_r: Nats) => nilRT)))) (Nats_u ::UT (Nats_u ::UT nilUT)) (ltac: (mkProjectsArgListTG (Nats ::RT (fun (m_r: Nats) => (Nats ::RT (fun (n_r: Nats) => nilRT)))) (Nats_u ::UT (Nats_u ::UT nilUT)))) bool (fun (x_44523598: (ArgList Nats ::RT (fun (m_r: Nats) => (Nats ::RT (fun (n_r: Nats) => nilRT))))) => (fun (v_x_44523598: bool) => True))).
 Proof. 
 	buildPackG geqN geqN_rel geqN__geqN_rel geqN_rel_funct. 
 Defined.

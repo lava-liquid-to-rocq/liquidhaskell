@@ -49,6 +49,7 @@ Definition Nothing: MaybeInt :=
 Definition bind (lq_tmp0: MaybeInt) (lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) MaybeInt_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: MaybeInt_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: MaybeInt_u) => ((MaybeInt_wf VV) /\ True))) x_61572807 v_x_61572807)))))): MaybeInt. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
+	simpl in lq_tmp1. 
 	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
 	induction lq_tmp0 as [(*Just*) m | (*Nothing*) ]. 
 	  - intros . 
@@ -200,6 +201,7 @@ Defined.
 Definition left_identity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) MaybeInt_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: MaybeInt_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: MaybeInt_u) => ((MaybeInt_wf VV) /\ True))) x_86410777 v_x_86410777)))))): {{forall (retrnres: MaybeInt_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (bindres: MaybeInt_u), (bind_rel retrnres (packProj f) bindres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (bindres == fres)))}}. 
 Proof. 
 	destruct x as [x x_p]. 
+	simpl in f. 
 	refine (exist _ unit _); 
 	solver. 
 Defined. 

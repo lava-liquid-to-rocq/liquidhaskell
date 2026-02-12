@@ -336,6 +336,8 @@ Defined.
 Definition identity_fn_applied_twice (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (@Pack (SFBool ::RT (fun (x: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (x: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) Unit (fun (x_46217927: (ArgList SFBool ::RT (fun (x: SFBool) => nilRT))) => (fun (v_x_46217927: Unit) => (ltac: (flattenP (fun (x: SFBool) => (fun (VV: Unit) => (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (fres = (⌊ x -⌋))))) x_46217927 v_x_46217927)))))) (b: SFBool): {{forall (fres: _), ((getPackRel f) (⌊ b -⌋) fres) -> (forall (f_res_2: _), ((getPackRel f) fres f_res_2) -> (f_res_2 = (⌊ b -⌋)))}}. 
 Proof. 
 	destruct b as [b b_p]. 
+	simpl in f. 
+	simpl in h. 
 	pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_39899679. 
 	fix_notations. 
 	fix_notations. 
@@ -929,7 +931,7 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve bin_to_nat_rel_mk : f_rel_funct_db.
-#[global] Instance bin_to_natPack : (@Pack (SFBin ::RT (fun (m_r: SFBin) => nilRT)) (SFBin_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBin ::RT (fun (m_r: SFBin) => nilRT)) (SFBin_u ::UT nilUT))) Z (fun (x_33798464: (ArgList SFBin ::RT (fun (m_r: SFBin) => nilRT))) => (fun (v_x_33798464: Z) => (ltac: (flattenP (fun (m_r: SFBin) => (fun (VV: Z) => True)) x_33798464 v_x_33798464))))).
+#[global] Instance bin_to_natPack : (@Pack (SFBin ::RT (fun (m_r: SFBin) => nilRT)) (SFBin_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBin ::RT (fun (m_r: SFBin) => nilRT)) (SFBin_u ::UT nilUT))) Z (fun (x_33798464: (ArgList SFBin ::RT (fun (m_r: SFBin) => nilRT))) => (fun (v_x_33798464: Z) => True))).
 Proof. 
 	buildPackG bin_to_nat bin_to_nat_rel bin_to_nat__bin_to_nat_rel bin_to_nat_rel_funct. 
 Defined.

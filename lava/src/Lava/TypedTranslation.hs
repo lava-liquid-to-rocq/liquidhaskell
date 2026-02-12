@@ -565,6 +565,8 @@ transDefinition γ f tp tacs =
   where
     argsNames = map fst $ filter ((\case Pi{} -> False; _ -> True) . argTp . snd) (argsTps tp) -- = map fst args
     destructs = map (\x -> Coq.DestructSubsetTerm (Coq.Var x) (Coq.ConjDestrPat [Coq.SingleIdPat x, Coq.SingleIdPat $ subsetWitnessNm x])) argsNames
+    -- hoArgsNames = map fst $ filter ((\case Pi{} -> True; _ -> False) . argTp . snd) (argsTps tp) -- = map fst args
+    -- simpls = map (Coq.Simpl . Just) hoArgsNames
     (args, ret) = matchFunctionType [] $ trArrType γ tp
 
 -- *** Reflected definitions

@@ -134,7 +134,7 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve even_rel_mk : f_rel_funct_db.
-#[global] Instance evenPack : (@Pack (Nats ::RT (fun (n_r: Nats) => nilRT)) (Nats_u ::UT nilUT) (ltac: (mkProjectsArgListTG (Nats ::RT (fun (n_r: Nats) => nilRT)) (Nats_u ::UT nilUT))) bool (fun (x_13547772: (ArgList Nats ::RT (fun (n_r: Nats) => nilRT))) => (fun (v_x_13547772: bool) => (ltac: (flattenP (fun (n_r: Nats) => (fun (VV: bool) => True)) x_13547772 v_x_13547772))))).
+#[global] Instance evenPack : (@Pack (Nats ::RT (fun (n_r: Nats) => nilRT)) (Nats_u ::UT nilUT) (ltac: (mkProjectsArgListTG (Nats ::RT (fun (n_r: Nats) => nilRT)) (Nats_u ::UT nilUT))) bool (fun (x_13547772: (ArgList Nats ::RT (fun (n_r: Nats) => nilRT))) => (fun (v_x_13547772: bool) => True))).
 Proof. 
 	buildPackG even even_rel even__even_rel even_rel_funct. 
 Defined.
