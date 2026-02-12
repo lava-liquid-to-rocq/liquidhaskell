@@ -57,11 +57,12 @@ jobs:
           eval $(opam env)
           coq_makefile --help || echo "coq_makefile not installed"
           make rocq | tee "out/build.log"
+          cp time-of-build-pretty.log out/time-of-build-pretty.log
       
       - name: Push checked output files
         uses: s0/git-publish-subdir-action@develop
         env:
           REPO: self
           BRANCH: out
-          FOLDER: out
+          FOLDER: lava/out
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
