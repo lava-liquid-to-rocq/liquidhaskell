@@ -850,7 +850,7 @@ Proof.
   reflexivity.
 Qed.
 
-Definition subPack {argTps: ArgListT} {T:Type} {p: forall x:ArgList argTps, T -> Prop}
+#[global] Instance subPack {argTps: ArgListT} {T:Type} {p: forall x:ArgList argTps, T -> Prop}
   {argTps': ArgListT} {q: forall x:ArgList argTps', T -> Prop}
   {uargTps:UArgListT} {z:projectsArgListT argTps uargTps} {z':projectsArgListT argTps' uargTps}
   (fpack: @Pack argTps uargTps z T p) (castX: SubArgList argTps' argTps)
@@ -858,6 +858,22 @@ Definition subPack {argTps: ArgListT} {T:Type} {p: forall x:ArgList argTps, T ->
     {v:T | q args v} ↼ (fpack.(f) (subCastArgList castX args))):
    (@Pack argTps' uargTps z' T q) ↼ fpack :=
   {| genSubCast := SubPack_cast fpack castX castT; cast_pr := SubPack_cast_pr fpack castX castT |}.
+
+#[global] Instance trivSubPack {argTps: ArgListT} {T:Type} {p: forall x:ArgList argTps, T -> Prop}
+  {uargTps:UArgListT} {z:projectsArgListT argTps uargTps} {z':projectsArgListT argTps uargTps}
+  (fpack: @Pack argTps uargTps z T p):
+   (@Pack argTps uargTps z T p) ↼ fpack :=
+  {| genSubCast := fpack; cast_pr := eq_refl |}.
+Ltac mkSubCast argTps' z' p castX castT := match type of p with
+  | @Pack ?argTps _ _ _ _ =>
+    let test := fresh "test" in
+    assert (argTps = argTps') as test by (exact (eq_refl argTps));
+    clear test;
+    exact (trivSubPack p)
+  | _ => exact (@subPack _ _ _ argTps' _ _ _ z' p castX castT)
+  end.
+
+Notation subCastPack argTps' z' p castX castT := ((ltac:(mkSubCast argTps' z' p castX castT))).(genSubCast).
 
 Fixpoint getPackF_spec {argTps:ArgListT}: forall {T: Type} {p: forall (args: ArgList argTps), T -> Prop}, Type :=
   match argTps with

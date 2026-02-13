@@ -2,7 +2,7 @@
 {-@ LIQUID "--ple" @-}
 {-@ LIQUID "--reflection" @-}
 
-module TranslationTests.MonadList where
+module Benchmark.PLE.MonadList where
 
 {- HLInt ignore -}
 import Language.Haskell.Liquid.ProofCombinators

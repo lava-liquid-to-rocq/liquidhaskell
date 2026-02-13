@@ -3,7 +3,7 @@
 {-@ LIQUID "--ple"        @-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module TranslationTests.Append where
+module Benchmark.PLE.Append where
 
 import Language.Haskell.Liquid.ProofCombinators
 import Prelude hiding (concatMap, map)

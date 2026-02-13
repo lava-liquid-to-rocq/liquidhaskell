@@ -1610,6 +1610,22 @@ Create HintDb rel_ax_db.
 
 (* Preprocessor steps utilizing the oracle tactic internally *)
 Ltac lia_preprocessor_step := match goal with 
+  | |- SubArgList noArgsT noArgsT => exact noArgsSub
+  | |- SubArgList (@consArgsT ?X ?X' ?prX ?argsT) (@consArgsT ?X ?X' _ ?argsT) =>
+    let x_ := fresh "x_" in
+    assert X' as x_;
+    assert X' as x_;
+    [match goal with
+    | [args: ArgList (consArgsT X X' _ argsT) |- _] => 
+      let res := fresh "res" in
+      pose proof (uncons args) as [res _];
+      exact res
+    | |- {v:Z | True} => refine (exist _ 0 I)
+    | |- _ => quicksolve
+    end
+    |]; unshelve refine (consArgsSub X X' X' prX prX argsT argsT 
+      (fun x => {| genSubCast := x; cast_pr := eq_refl (prX.(proj) x) |}) x_ _);
+    try intro
   | |- proj _ = ?v => isVar v; unfold proj
   | |- (?c = true /\ _) \/ (?c = false /\ _) => 
     let H := fresh "H" in

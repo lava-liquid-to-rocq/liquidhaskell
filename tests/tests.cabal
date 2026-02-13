@@ -2668,14 +2668,15 @@ executable benchmark-lava
       buildable:      False
     ghc-options: -fforce-recomp
     other-modules:
-                    Benchmark.PLE.Compose
+                    Benchmark.PLE.Append
+                    , Benchmark.PLE.Compose
                     , Benchmark.PLE.Lambdas
                     , Benchmark.PLE.Lists
                     , Benchmark.PLE.MonadId
                     , Benchmark.PLE.MonadMaybe
+                    , Benchmark.PLE.MonadList
                     , Benchmark.PLE.MonoidList
                     , Benchmark.PLE.MonoidMaybe
-                    , TranslationTests.Append
                     , TranslationTests.ApplicativeId
                     , TranslationTests.ApplicativeList
                     , TranslationTests.ApplicativeMaybe
@@ -2683,7 +2684,6 @@ executable benchmark-lava
                     , TranslationTests.FunctorId
                     , TranslationTests.FunctorList
                     , TranslationTests.FunctorMaybe
-                    , TranslationTests.MonadList
                     , Benchmark.GradeExample
                     , Benchmark.Half
                     , Benchmark.Overview

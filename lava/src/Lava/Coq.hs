@@ -70,6 +70,7 @@ module Lava.Coq
     packName,
     projPackName,
     subsetWitnessNm,
+    funToPackName,
     
     -- | argList related stuff
     ArgList (..),
@@ -103,6 +104,9 @@ packName = "@Pack"
 upackName :: Id
 upackName = "@uPack"
 projPackName = "packProj"
+funToPackName = "fun_to_pack"
+
+properPackSubsumption = False
 
 subsetWitnessNm x = x ++ "_p"
 
@@ -635,7 +639,12 @@ instance Show CoqTerm where
     SubCast need have t _ | need == have && need /= Hole -> show t
     SubCast Hole _ t z -> addParens $ unwords ["subsumptionCast", "_", "_", formatLong $ showP t, formatLong $ showP z]
     SubCast (Subset n b need) (Subset _ a _) t z | a == b -> addParens $ unwords ["subsumptionCast", formatLong $ showP a, formatLong $ showP (Lambda n a need), formatLong $ showP t, formatLong $ showP z]
-    SubCast to from t z -> addParens $ unwords ["subCast", formatLong $ showP from, formatLong $ showP to, formatLong $ showP t, formatLong $ showP z]
+    SubCast to@Subset{} from t z -> addParens $ unwords ["subCast", formatLong $ showP from, formatLong $ showP to, formatLong $ showP t, formatLong $ showP z]
+    SubCast to@(Pack argTps _ z _ _) from t _ -> if properPackSubsumption then addParens $ unwords ["subCastPack", formatLong $ showP argTps, formatLong $ showP z, t', showP (TermWitness TermHole), showP (TermWitness TermHole)] else t'
+      where
+        t' = case from of
+          Pack{} -> formatLong $ showP t
+          _ -> formatLong . showP . PrfTerm Hole . ByTac . Custom $ funToPackName ++ " " ++showP t
     -- SubCast a b t p -> "subsumptionCast "++showP a++" "++showP b++" "++showP t++" "++showP p
     Exist p t z -> "exist " ++ showP p ++ " " ++ showP t ++ " " ++ showP z
     Match ts _ cases -> "match " ++ addParens (intercalate ", " (map show ts)) ++ " with " ++ intercalate " | " (map ((\(x, y) -> x ++ " => " ++ y) . bimap (addParens . intercalate ", " . map (\(c, args) -> unwords (c : args))) showP) cases) ++ " end"

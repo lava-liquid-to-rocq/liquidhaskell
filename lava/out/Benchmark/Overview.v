@@ -333,7 +333,6 @@ Defined.
 Definition applyToFirst (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (y: Z) => (ltbZ_rel 5 y true))) x_86410777 v_x_86410777)))))) (xs: {xs: IList_u | (IList_wf xs) /\ (forall (llenres: Z), (llen_rel xs llenres) -> (llenres <> 0))}): {v: Z | forall (getres: Z), (get_rel (⌊ xs -⌋) 0 getres) -> (forall (fres: _), ((getPackRel f) getres fres) -> (v == fres))}. 
 Proof. 
 	destruct xs as [xs xs_p]. 
-	simpl in f. 
 	try revert f_p; generalize dependent f; 
 	induction xs as [(*Cons*) x l' IH_l' | (*Nil*) ]. 
 	  - intros . 

@@ -56,14 +56,25 @@ fmap_id (C x xs) =
   fmap_id (xs)
 
 -- | Distribution
+{-@ reflect distrib_left_hand @-}
+{-@ distrib_left_hand:: f:(Int -> Int) -> g:(Int -> Int) -> xs:L
+               -> L @-}
+distrib_left_hand :: (Int->Int) -> (Int->Int) -> L -> L      
+distrib_left_hand f g xs = fmap (compose f g) xs
+
+{-@ reflect distrib_right_hand @-}
+{-@ distrib_right_hand:: f:(Int -> Int) -> g:(Int -> Int) -> xs:L
+               -> L @-}
+distrib_right_hand :: (Int->Int) -> (Int->Int) -> L -> L
+distrib_right_hand f g xs = (composeL (fmap f) (fmap g)) xs
 
 {-@ fmap_distrib :: f:(Int -> Int) -> g:(Int -> Int) -> xs:L
-               -> {v:Proof | fmap  (compose f g) xs == (composeL (fmap f) (fmap g)) (xs) } @-}
+               -> {v:Proof | distrib_left_hand f g xs == distrib_right_hand f g xs } @-}
 fmap_distrib :: (Int -> Int) -> (Int -> Int) -> L -> Proof
 fmap_distrib f g N =
   trivial
 fmap_distrib f g (C x xs) =
   fmap_distrib f g xs
 
--- 41 SLOC
+-- 44 SLOC
 

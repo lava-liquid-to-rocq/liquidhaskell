@@ -52,7 +52,7 @@ utrSmpTermGeneric :: Ctx.TypingCtx -> LHSimpleTerm -> Bool -> ([(Id, Coq.RocqTyp
 utrSmpTermGeneric γ r = {- traceFuncRet ["utrSmpTermGeneric", "...", showP r] $ -} utrSmpTermGenericAux γ (extractApps [] r)
 
 utrSmpTermGenericAux :: Ctx.TypingCtx -> ([(LHSimpleTerm, Id)], LHSimpleTerm) -> Bool -> ([(Id, Coq.RocqType, (Id, [Coq.CoqTerm]))], Coq.CoqTerm)
-utrSmpTermGenericAux γ (φ, r_core) isUnrefined = {- traceFuncRet ["utrSmpTermGenericAux", showP γ, showP φ, showP r_core, showP isUnrefined] $ -} (map createForalls φ, utrSmpTerm fs r_core)
+utrSmpTermGenericAux γ (φ, r_core) isUnrefined = {-traceFuncRet ["utrSmpTermGenericAux", "...", showP φ, showP r_core, showP isUnrefined] $ -} (map createForalls φ, utrSmpTerm fs r_core)
   where
     relMap = constructMap γ
     fs = fetchFuncts γ
@@ -77,9 +77,8 @@ utrSmpTermGenericAux γ (φ, r_core) isUnrefined = {- traceFuncRet ["utrSmpTermG
                     if g `elem` fs
                       then ltacTerm $ Coq.Concat [Coq.Pose "Rel" (Coq.Def $ relDefName g), Coq.Pose "Funct" (Coq.Def $ funcHoodLemName g), Coq.Custom "buildUPackG Rel Funct"]
                       -- Coq.InlineInstance [(upackRelName, Coq.Def $ relDefName g), (upackFunctName, Coq.Def $ funcHoodLemName g)]
-                      else Coq.App (Coq.Def Coq.projPackName) [Coq.Var g]
+                      else if isUnrefined then Coq.Var g else Coq.App (Coq.Def Coq.projPackName) [Coq.Var g]
                     where
-                      castOp = if g `elem` fs then mkUPackName else Coq.projPackName
                   _ -> utrSmpTerm fs tm
                 _ -> utrSmpTerm fs tm
           args' = zipWith transArg [1 ..] args
