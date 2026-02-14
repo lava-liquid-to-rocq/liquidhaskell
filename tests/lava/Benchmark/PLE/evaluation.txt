@@ -1,9 +1,11 @@
 File				LH sloc		Rocq sloc		translation time		verification time
-Compose			12				82					0.14								3m15.50s
-Lambdas			10				28					0.06								0m00.81s
-Lists				29				265					0.10								0m54.76s
-MonadId			19				197					0.13								1m10.59s
-MonadMaybe	26				219					0.18								1m26.05s
-MonoidList	33				248					0.13								0m59.15s
-MonoidMaybe	36				235					0.15								0m25.83s
-Total				165				1274				0.89								8m12.69s
+Append			37				375					0.18								2m33.47s
+Compose			12				82					0.14								0m14.02s
+Lambdas			10				28					0.06								0m00.52s
+Lists				29				265					0.10								0m25.78s
+MonadId			19				197					0.13								0m07.02s
+MonadMaybe	26				219					0.18								0m12.61s
+MonadList		37				345					0.12								1m04.60s
+MonoidList	33				248					0.13								0m26.70s
+MonoidMaybe	36				235					0.15								0m12.26s
+Total				239				1994				1.19								5m18s
