@@ -8,11 +8,14 @@
 coqDeps/BoolTacs.v
 coqDeps/PairLists.v
 coqDeps/Snipe.v
+coqDeps/EqualityInterface.v
 coqDeps/Equality.v
+coqDeps/LiquidPreludeInterface.v
 coqDeps/LiquidPrelude.v
 coqDeps/SubsumptionTacs.v
 coqDeps/QuickTacs.v
 coqDeps/TacticUtils.v
+coqDeps/GetRelInterface.v
 coqDeps/GetRelFlattening.v
 coqDeps/LHCoqTactics.v
 

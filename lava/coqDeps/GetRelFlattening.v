@@ -1,39 +1,9 @@
 Require Import Logic.FunctionalExtensionality.
-Load TacticUtils.
+Load GetRelInterface.
 
-(* This file contains the function packs and other higher-order stuff *)
-
-(** Typeclass for functions *)
-
-Inductive UArgListT : Type :=
-  | noUArgsT: UArgListT
-  | consUArgsT (X:Type) (tl:UArgListT): UArgListT.
-Inductive ArgListT : Type := 
-  | noArgsT : ArgListT
-  | consArgsT (X X':Type): (X' ⤖ X) -> (forall (x:X'), ArgListT) -> ArgListT.
-
-
-Inductive ArgList: ArgListT -> Type :=
-  | noArgs: ArgList noArgsT
-  | consArgs {X X':Type} {prX: X' ⤖ X} (x:X') {tlT: forall (x:X'), ArgListT} (tl: ArgList (tlT x)): 
-      ArgList (consArgsT X X' prX tlT).
-Inductive UArgList: UArgListT -> Type :=
-  | noUArgs: UArgList noUArgsT
-  | consUArgs {X:Type} (x:X) {tlT: UArgListT} (tl:UArgList tlT):
-      UArgList (consUArgsT X tlT).
-
-Ltac synthesizePrInstance := quicksolve.
-Global Notation "X ::UT tl" := (consUArgsT X tl) (at level 2, right associativity).
-Global Notation "X' ::RT tl" := (consArgsT _ X' _ tl) (at level 2, right associativity).
-Global Notation "x ::R tl" := (@consArgs _ _ _ x _ tl) (at level 2, right associativity).
-Global Notation "x ::U tl" := (@consUArgs _ x _ tl) (at level 2, right associativity).
-Global Notation nilUT := noUArgsT.
-Global Notation nilU := noUArgs.
-Global Notation nilRT := noArgsT.
-Global Notation nilR := noArgs.
+(* This file contains the instances and definitions for packs *)
 
 (* Since destruct and inversion cannot handle ArgLists correctly *)
-
 Lemma existT_inj {A:Type} {P:A->Type} (x:A) (p q:P x):
   existT P x p = existT P x q -> p = q.
 Proof.
@@ -363,37 +333,6 @@ Proof.
   reflexivity.
 Qed.
 
-Fixpoint projectsArgListT (args:ArgListT) (uargs:UArgListT): Prop.
-Proof.
-  destruct args.
-  - destruct uargs.
-    + exact True.
-    + exact False.
-  - destruct uargs.
-    + exact False.
-    + exact (X = X0 /\ forall (x:X'), projectsArgListT (a x) uargs).
-Defined. 
-
-Fixpoint prArgListT {argTps: ArgListT} (args:ArgList argTps): UArgListT.
-Proof.
-  destruct args.
-  - exact noUArgsT.
-  - exact (consUArgsT X (prArgListT (tlT x) args)).
-Defined.
-
-Fixpoint prArgList {argTps: ArgListT} (args:ArgList argTps) (uargTps:UArgListT): 
-  projectsArgListT argTps uargTps -> UArgList uargTps.
-Proof.
-intros p.
-destruct args.
-- destruct uargTps.
-  + exact noUArgs.
-  + exfalso. apply p.
-- destruct uargTps.
-  + exfalso. apply p.
-  + destruct p as [<- p].
-    refine ((prX.(proj) x) ::U (prArgList (tlT x) args uargTps (p x))).
-Defined.
 Definition projectsArgListCons {X X' prX} {argTps': forall (x':X'), ArgListT} 
   (x':X') (uargTps':UArgListT)
   (z:projectsArgListT (@consArgsT X X' prX argTps') (consUArgsT X uargTps')):
@@ -457,33 +396,6 @@ Qed.
 #[global] Instance gprArgList {argTps: ArgListT} {uargTps:UArgListT} {p:projectsArgListT argTps uargTps}: 
   (ArgList argTps) ⤖ (UArgList uargTps) := 
   {| proj:=fun args => prArgList args uargTps p; po:=gprArgList_po |}.
-
-Class Pack (argTps:ArgListT) {uargTps:UArgListT} {z:projectsArgListT argTps uargTps}
-  (T: Type) (p: forall (args: ArgList argTps), T -> Prop) := {
-  f (args:ArgList argTps): {v:T | p args v};
-  frel (uargs: UArgList uargTps) (v:T): Prop;
-  f_frel (args:ArgList argTps) (v:T): proj1_sig (f args) = v <-> frel (prArgList args uargTps z) v;
-  funct (uargs: UArgList uargTps) v v': frel uargs v -> frel uargs v' -> v = v'
-}.
-
-Class uPack (uargTps: UArgListT) (T: Type) := {
-	rel_u (uargs: UArgList uargTps): T -> Prop; (* The graph relation *)
-	funct_u (uargs:UArgList uargTps) (v v':T): rel_u uargs v -> rel_u uargs v' -> v = v'
-}.
-
-Definition uPack_wf (argTps:ArgListT) {uargTps:UArgListT} (z:projectsArgListT argTps uargTps)
-  {T: Type} (p: forall (args: ArgList argTps), T -> Prop)
-  (upack:uPack uargTps T): Prop :=
-  exists (f: forall (args:ArgList argTps), {v:T | p args v}),
-    forall (args:ArgList argTps) (v:T), proj1_sig (f args) = v <-> upack.(rel_u) (prArgList args uargTps z) v.
-
-Ltac uPack_wf :=
-  match goal with
-  | [f_frel : (forall (args : ArgList ?argTps) (v : ?tp), ⌊ ?f args _⌋ = v <->
-      ?frel (prArgList args ?uargTps _) v) |- uPack_wf ?argTps ?z ?p ?upack] => 
-    exists f;
-    exact f_frel
-  end.
 
 Lemma instantiate_frel_res: forall {argTps} {uargTps:UArgListT} {z:projectsArgListT argTps uargTps}
   {T: Type} {p: forall (args: ArgList argTps), T -> Prop}
@@ -630,13 +542,6 @@ Definition mkUPack {argTps: ArgListT} {uargTps:UArgListT} {z:projectsArgListT ar
   (f: forall x:ArgList argTps, {v:T|p x v}) : @uPack uargTps T :=
   ({| rel_u := @get_rel argTps uargTps z T p f; 
              funct_u := get_rel_funct f |}).
-
-Inductive SubArgList: ArgListT -> ArgListT -> Type :=
-  | noArgsSub: SubArgList noArgsT noArgsT
-  | consArgsSub (X X' X'':Type) (prX': X' ⤖ X) (prX'': X'' ⤖ X) (argsT : forall (x:X'), ArgListT) (argsT': forall (x:X''), ArgListT) 
-      (castX: forall (x:X'), X'' ↼ x): forall (_:X'),
-        (forall (x:X'), SubArgList (argsT x) (argsT' (castX x).(genSubCast))) -> 
-          SubArgList (@consArgsT X X' prX' argsT) (@consArgsT X X'' prX'' argsT').
 
 Fixpoint subArgListWf {argTps argTps': ArgListT} (subArgs: SubArgList argTps argTps'):
   forall (v v':UArgListT), projectsArgListT argTps' v -> projectsArgListT argTps v' -> v = v'.
@@ -1369,6 +1274,7 @@ Ltac returnRef f :=
   | {v:?T | ?pApp v} => exact (fun (v:T) => pApp v)
   end).
 
+Ltac synthesizePrInstance := quicksolve.
 Global Ltac buildArgTps f :=
   let fApp := fresh "fApp" in
   let temp := fresh "temp" in
