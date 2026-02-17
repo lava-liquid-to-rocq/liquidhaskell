@@ -62,6 +62,7 @@ module Lava.Coq
     -- | convenience functions to build certain buildin terms and types
     unitTm,
     unitTmName,
+    unitTp,
     btrue,
     btrueTmName,
     bfalse,
@@ -121,6 +122,7 @@ unitTm = Cr unitTmName
 btrue = Cr btrueTmName
 bfalse = Cr bfalseTmName
 boolTp = TC "bool" []
+unitTp = TC "Unit" []
 {- ORMOLU_ENABLE -}
 
 -- | List of builtin CoqInductives like Nat or lists

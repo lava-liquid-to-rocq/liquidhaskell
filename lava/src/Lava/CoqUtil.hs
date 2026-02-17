@@ -306,8 +306,11 @@ constructProj rt = error $ "Unsupported: " ++ show rt
 
 toPack :: [(Id, RocqType)] -> RocqType -> RocqType
 toPack [] tp = error $ "Cannot create pack for non-function type: " ++ show tp
-toPack xTs_ (Subset z' zTp_ pz_) = {- traceFuncRet ["toPack", show xTs, show (Subset z' zTp pz)] $ -} Pack argTps uargTps (argListCorPrf argTps uargTps) zTp p_
+toPack xTs_ (Subset z' zTp_ pz_) = res 
   where
+    res = case zTp_ of
+      _ | zTp_ == unitTp -> mkForallT xTs (Subset z' zTp_ pz)
+      _ -> {- traceFuncRet ["toPack", show xTs, show (Subset z' zTp pz)] $ -} Pack argTps uargTps (argListCorPrf argTps uargTps) zTp p_
     substs = map (\(w, _) -> (removeSuffix "_r" w, projectTm $ Var w)) xTs_
     fixDoubleProj :: (AppSuable a CoqTerm) => a -> a
     fixDoubleProj = replaceSubterms (map (\(w, _) -> ((TermPat (Project (Project (Var w))), True), Project (Var w))) xTs_)

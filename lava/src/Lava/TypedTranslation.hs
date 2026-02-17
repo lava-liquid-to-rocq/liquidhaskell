@@ -369,13 +369,17 @@ synSmpTerm γ r (f, mCtx@(fCtx, matchVars)) = {- traceFuncRet ["synSmpTerm", sho
   App (Var g) rs -> do
     (ArrType tpArgs' ret', cqtm_) <- synSmpTermArr γ (Var g)
     let
-      cqtm = if (not . null $ Ctx.lookupDef g γ) || isDC g then cqtm_ else packGetF cqtm_
+      cqtm = if (not . null $ Ctx.lookupDef g γ) || isDC g || hasUnitRet ret' then cqtm_ else packGetF cqtm_
       tp = ArrType tpArgs ret
       tpArgs = tpArgs' ++ tpArgs''
       (tpArgs'', ret) = go ret' where
         go :: RefType -> ([(Id, RefType)], RefType)
         go (RefType _ (Pi (x,xTp) retx) _) = first ([(x,xTp)] ++) $ go retx
         go smpRef = ([], smpRef)
+      hasUnitRet :: RefType -> Bool
+      hasUnitRet rtp = case argTp rtp of
+        Pi _ ret -> hasUnitRet ret
+        tp -> tp == ILH.unitTp
     -- infer types for/translate the arguments
     cqTmTps <- mapM (\ri -> synSmpTerm γ ri (f, mCtx)) rs
     let
@@ -424,7 +428,9 @@ synSmpTerm γ r (f, mCtx@(fCtx, matchVars)) = {- traceFuncRet ["synSmpTerm", sho
           Just mainIndVar -> if any (\case (App _ ys) | any (containsNotEqual mainIndVar) ys -> True; _ -> False) fCtx then 1 else 0
         argsWithOracle = replicate (numAntes + 1) oracle ++ concatMap (uncurry argPair) nonInductiveArgs
         argPair arg argTp = case argTp of
+          Coq.FAType{} -> [arg]
           Coq.Pack{} -> [arg]
+          Coq.Arrow{} -> [arg]
           _ -> [projectTm arg, oracle]
     return {- . traceFuncRet ["synSmpTerm", "...", showP r, show (f, mCtx), "\nwith rs:", show rs, "\nsbstArgs:", show sbstArgs, "\nrRts:", show rRts, "\nret:", showP ret, "\nreturnTp:", showP returnTp, "\nindVars:", show indVars, "\nmainInductVariableO", showP mainInductVariableO, "\nremainingRs:", show remainingRs, "\nnonInductiveArgs:", show nonInductiveArgs, "\nargsWithOracle:", show argsWithOracle] -} $
       if f /= g -- the call is not recursive

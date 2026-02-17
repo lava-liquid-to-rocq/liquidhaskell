@@ -333,17 +333,17 @@ Proof.
 			refine (exist _ unit _); 
 			solver.   
 Defined. 
-Definition identity_fn_applied_twice (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (@Pack (SFBool ::RT (fun (x: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (x: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) Unit (fun (x_46217927: (ArgList SFBool ::RT (fun (x: SFBool) => nilRT))) => (fun (v_x_46217927: Unit) => (ltac: (flattenP (fun (x: SFBool) => (fun (VV: Unit) => (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (fres = (⌊ x -⌋))))) x_46217927 v_x_46217927)))))) (b: SFBool): {{forall (fres: _), ((getPackRel f) (⌊ b -⌋) fres) -> (forall (f_res_2: _), ((getPackRel f) fres f_res_2) -> (f_res_2 = (⌊ b -⌋)))}}. 
+Definition identity_fn_applied_twice (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (forall (x: SFBool) , {{forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (fres = (⌊ x -⌋))}})) (b: SFBool): {{forall (fres: _), ((getPackRel f) (⌊ b -⌋) fres) -> (forall (f_res_2: _), ((getPackRel f) fres f_res_2) -> (f_res_2 = (⌊ b -⌋)))}}. 
 Proof. 
 	destruct b as [b b_p]. 
 	pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_39899679. 
 	fix_notations. 
 	fix_notations. 
-	pose proof ((getPackF h) 
+	pose proof (h 
 		(exist (fun (x: SFBool_u) => ((SFBool_wf x) /\ True)) b (ltac: (solver)))) as H_42296745. 
 	assert (H_42296745': forall (fres: _), ((getPackRel f) b fres) -> (True /\ (fres == b))) by solver. 
 	fix_notations. 
-	pose proof ((getPackF h) 
+	pose proof (h 
 		(subsumptionCast SFBool_u (fun (x: SFBool_u) => ((SFBool_wf x) /\ True)) 
 		((getPackF f) 
 		(exist (fun (lq_tmp0: SFBool_u) => ((SFBool_wf lq_tmp0) /\ True)) b (ltac: (solver)))) (ltac: (solver)))) as H_49965291; 
