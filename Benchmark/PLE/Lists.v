@@ -169,7 +169,7 @@ Defined.
 Definition length (lq_tmp0: L): {VV: Z | gebZ_rel VV 0 true}. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
-	induction lq_tmp0 as [(*C*) ds_d2yz xs IH_xs | (*Emp*) ]. 
+	induction lq_tmp0 as [(*C*) ds_d2HI xs IH_xs | (*Emp*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
 		((exist (fun (x_1: Z) => True) 1 (ltac: (solver))) +Z (subsumptionCast Z (fun (x_2: Z) => True) (IH_xs (ltac: (try clear IH_xs; 
@@ -181,7 +181,7 @@ Proof.
 Defined. 
 Inductive length_rel : (L_u -> (Z -> Prop)) := 
 	 | length_Emp: length_rel Emp_u 0
-	 | length_C: (forall ds_d2yz xs , forall (lengthres: Z), (length_rel xs lengthres) -> (forall (addZres: Z), (addZ_rel 1 lengthres addZres) -> (length_rel (C_u ds_d2yz xs) addZres))). 
+	 | length_C: (forall ds_d2HI xs , forall (lengthres: Z), (length_rel xs lengthres) -> (forall (addZres: Z), (addZ_rel 1 lengthres addZres) -> (length_rel (C_u ds_d2HI xs) addZres))). 
 #[global] Hint Constructors length_rel : core_hint_db.
 #[global] Instance length_lookup_rel : dictionary rel length := { 
 	lookup' := length_rel
@@ -191,7 +191,7 @@ Inductive length_rel : (L_u -> (Z -> Prop)) :=
 }.
 Definition length_rel_funct [lq_tmp0: L_u]: (forall (VV: Z) (VV': Z) (H: length_rel lq_tmp0 VV) (K: length_rel lq_tmp0 VV') , VV = VV'). 
 Proof. 
-	induction lq_tmp0 as [(*C*) ds_d2yz xs IH_xs | (*Emp*) ]; 
+	induction lq_tmp0 as [(*C*) ds_d2HI xs IH_xs | (*Emp*) ]; 
 	intros ; 
 	rel_functionhood_body. 
 Qed. 
@@ -201,7 +201,7 @@ Proof.
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite length_Emp_lem : f_rel_back.
-Theorem length_C_lem (ds_d2yz: _) (xs: _) (addZres: Z): (length_rel (C_u ds_d2yz xs) addZres) <-> (exists (lengthres: Z), (length_rel xs lengthres) /\ (addZ_rel 1 lengthres addZres)). 
+Theorem length_C_lem (ds_d2HI: _) (xs: _) (addZres: Z): (length_rel (C_u ds_d2HI xs) addZres) <-> (exists (lengthres: Z), (length_rel xs lengthres) /\ (addZ_rel 1 lengthres addZres)). 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
@@ -209,7 +209,7 @@ Qed.
 Theorem length_rel_ex (lq_tmp0: L_u) (lq_tmp0_p: (L_wf lq_tmp0) /\ True): length_rel lq_tmp0 (⌊ length (exist _ lq_tmp0 lq_tmp0_p) -⌋). 
 Proof. 
 	existence_lemma_pre length; 
-	induction lq_tmp0 as [(*C*) ds_d2yz xs IH_xs | (*Emp*) ]; 
+	induction lq_tmp0 as [(*C*) ds_d2HI xs IH_xs | (*Emp*) ]; 
 	intros ; 
 	[fix_notations; 
 	pose proof (IH_xs (ltac: (try clear IH_xs; 

@@ -333,17 +333,17 @@ Proof.
 			refine (exist _ unit _); 
 			solver.   
 Defined. 
-Definition identity_fn_applied_twice (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (@Pack (SFBool ::RT (fun (x: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (x: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) Unit (fun (x_46217927: (ArgList SFBool ::RT (fun (x: SFBool) => nilRT))) => (fun (v_x_46217927: Unit) => (ltac: (flattenP (fun (x: SFBool) => (fun (VV: Unit) => (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (fres = (⌊ x -⌋))))) x_46217927 v_x_46217927)))))) (b: SFBool): {{forall (fres: _), ((getPackRel f) (⌊ b -⌋) fres) -> (forall (f_res_2: _), ((getPackRel f) fres f_res_2) -> (f_res_2 = (⌊ b -⌋)))}}. 
+Definition identity_fn_applied_twice (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (forall (x: SFBool) , {{forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (fres = (⌊ x -⌋))}})) (b: SFBool): {{forall (fres: _), ((getPackRel f) (⌊ b -⌋) fres) -> (forall (f_res_2: _), ((getPackRel f) fres f_res_2) -> (f_res_2 = (⌊ b -⌋)))}}. 
 Proof. 
 	destruct b as [b b_p]. 
 	pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_39899679. 
 	fix_notations. 
 	fix_notations. 
-	pose proof ((getPackF h) 
+	pose proof (h 
 		(exist (fun (x: SFBool_u) => ((SFBool_wf x) /\ True)) b (ltac: (solver)))) as H_42296745. 
 	assert (H_42296745': forall (fres: _), ((getPackRel f) b fres) -> (True /\ (fres == b))) by solver. 
 	fix_notations. 
-	pose proof ((getPackF h) 
+	pose proof (h 
 		(subsumptionCast SFBool_u (fun (x: SFBool_u) => ((SFBool_wf x) /\ True)) 
 		((getPackF f) 
 		(exist (fun (lq_tmp0: SFBool_u) => ((SFBool_wf lq_tmp0) /\ True)) b (ltac: (solver)))) (ltac: (solver)))) as H_49965291; 
@@ -1210,15 +1210,15 @@ Definition Bits (VV: SFBit) (VV_: SFBit) (VV__: SFBit) (VV___: SFBit): Nibble :=
 Definition allzero (lq_tmp0: Nibble): SFBool. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
-	induction lq_tmp0 as [(*Bits*) ds_d4Sj ds_d4Sk ds_d4Sl ds_d4Sm]. 
+	induction lq_tmp0 as [(*Bits*) ds_d51s ds_d51t ds_d51u ds_d51v]. 
 	  - intros . 
-		induction ds_d4Sj as [(*B0*)  | (*B1*) ]. 
+		induction ds_d51s as [(*B0*)  | (*B1*) ]. 
 		  -- intros . 
-			induction ds_d4Sk as [(*B0*)  | (*B1*) ]. 
+			induction ds_d51t as [(*B0*)  | (*B1*) ]. 
 			  --- intros . 
-				induction ds_d4Sl as [(*B0*)  | (*B1*) ]. 
+				induction ds_d51u as [(*B0*)  | (*B1*) ]. 
 				  ---- intros . 
-					induction ds_d4Sm as [(*B0*)  | (*B1*) ]. 
+					induction ds_d51v as [(*B0*)  | (*B1*) ]. 
 					  ----- intros . 
 						refine (subsumptionCast _ _ SFTrue _); 
 						solver.  
@@ -1847,7 +1847,7 @@ Proof.
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d4RQ IH_ds_d4RQ]. 
+	induction n as [(*O*)  | (*S*) ds_d50Z IH_ds_d50Z]. 
 	  - intros . 
 		refine (subsumptionCast _ _ O _); 
 		solver.  
@@ -1856,19 +1856,19 @@ Proof.
 		  -- intros . 
 			refine (subsumptionCast _ _ 
 		(S 
-		(exist (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) ds_d4RQ (ltac: (solver)))) _); 
+		(exist (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) ds_d50Z (ltac: (solver)))) _); 
 			solver.  
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(IH_ds_d4RQ (ltac: (try clear IH_ds_d4RQ; 
-	solver)) m' (ltac: (try clear IH_ds_d4RQ; 
+		(IH_ds_d50Z (ltac: (try clear IH_ds_d50Z; 
+	solver)) m' (ltac: (try clear IH_ds_d50Z; 
 	solver))) _); 
 			solver.   
 Defined. 
 Inductive minus_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) := 
 	 | minus_O: (forall m , minus_rel O_u m O_u)
-	 | minus_S_O: (forall ds_d4RQ , minus_rel (S_u ds_d4RQ) O_u (S_u ds_d4RQ))
-	 | minus_S_S: (forall ds_d4RQ m' , forall (minusres: MyNat_u), (minus_rel ds_d4RQ m' minusres) -> (minus_rel (S_u ds_d4RQ) (S_u m') minusres)). 
+	 | minus_S_O: (forall ds_d50Z , minus_rel (S_u ds_d50Z) O_u (S_u ds_d50Z))
+	 | minus_S_S: (forall ds_d50Z m' , forall (minusres: MyNat_u), (minus_rel ds_d50Z m' minusres) -> (minus_rel (S_u ds_d50Z) (S_u m') minusres)). 
 #[global] Hint Constructors minus_rel : core_hint_db.
 #[global] Instance minus_lookup_rel : dictionary rel minus := { 
 	lookup' := minus_rel
@@ -1879,7 +1879,7 @@ Inductive minus_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) :=
 Definition minus_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: minus_rel n m VV) (K: minus_rel n m VV') , VV = VV'). 
 Proof. 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d4RQ IH_ds_d4RQ]; 
+	induction n as [(*O*)  | (*S*) ds_d50Z IH_ds_d50Z]; 
 	intros ; 
 	[| 
 	induction m as [(*O*)  | (*S*) m' IH_m']; 
@@ -1892,12 +1892,12 @@ Proof.
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite minus_O_lem : f_rel_back.
-Theorem minus_S_O_lem (ds_d4RQ: _): (minus_rel (S_u ds_d4RQ) O_u (S_u ds_d4RQ)) <-> True. 
+Theorem minus_S_O_lem (ds_d50Z: _): (minus_rel (S_u ds_d50Z) O_u (S_u ds_d50Z)) <-> True. 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite minus_S_O_lem : f_rel_back.
-Theorem minus_S_S_lem (ds_d4RQ: _) (m': _) (minusres: MyNat_u) (h_43612209: minus_rel ds_d4RQ m' minusres): (minus_rel (S_u ds_d4RQ) (S_u m') minusres) <-> True. 
+Theorem minus_S_S_lem (ds_d50Z: _) (m': _) (minusres: MyNat_u) (h_43612209: minus_rel ds_d50Z m' minusres): (minus_rel (S_u ds_d50Z) (S_u m') minusres) <-> True. 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
@@ -1906,18 +1906,18 @@ Theorem minus_rel_ex (n: MyNat_u) (m: MyNat_u) (n_p: (MyNat_wf n) /\ True) (m_p:
 Proof. 
 	existence_lemma_pre minus; 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d4RQ IH_ds_d4RQ]; 
+	induction n as [(*O*)  | (*S*) ds_d50Z IH_ds_d50Z]; 
 	intros ; 
 	[fix_notations| 
 	induction m as [(*O*)  | (*S*) m' IH_m']; 
 	intros ; 
 	[fix_notations; 
-	try clear IH_ds_d4RQ| 
+	try clear IH_ds_d50Z| 
 	fix_notations; 
-	pose proof (IH_ds_d4RQ (ltac: (try clear IH_ds_d4RQ; 
-	solver)) m' (ltac: (try clear IH_ds_d4RQ; 
-	solver))) as IH_42422959; 
-	try clear IH_ds_d4RQ; 
+	pose proof (IH_ds_d50Z (ltac: (try clear IH_ds_d50Z; 
+	solver)) m' (ltac: (try clear IH_ds_d50Z; 
+	solver))) as IH_87818427; 
+	try clear IH_ds_d50Z; 
 	try clear IH_m']]; 
 	existence_lemma_quicksolve minus; 
 	f__f_rel_ex_body; 
@@ -1972,12 +1972,12 @@ Defined.
 Definition minustwo (lq_tmp0: MyNat): MyNat. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
-	induction lq_tmp0 as [(*O*)  | (*S*) ds_d4Sg IH_ds_d4Sg]. 
+	induction lq_tmp0 as [(*O*)  | (*S*) ds_d51p IH_ds_d51p]. 
 	  - intros . 
 		refine (subsumptionCast _ _ O _); 
 		solver.  
 	  - intros . 
-		induction ds_d4Sg as [(*O*)  | (*S*) n' IH_n']. 
+		induction ds_d51p as [(*O*)  | (*S*) n' IH_n']. 
 		  -- intros . 
 			refine (subsumptionCast _ _ O _); 
 			solver.  
@@ -2478,7 +2478,7 @@ Defined.
 Definition plus_1_neq_0 (n: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ one -⌋) plusres) -> (plusres <> O_u)}}. 
 Proof. 
 	destruct n as [n n_p]. 
-	induction n as [(*O*)  | (*S*) ds_d4RB IH_ds_d4RB]. 
+	induction n as [(*O*)  | (*S*) ds_d50K IH_ds_d50K]. 
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
@@ -5036,12 +5036,12 @@ Definition White: Color :=
 Definition isred (c: Color): SFBool. 
 Proof. 
 	destruct c as [c c_p]. 
-	induction c as [(*Black*)  | (*Primary*) ds_d4Ss | (*White*) ]. 
+	induction c as [(*Black*)  | (*Primary*) ds_d51B | (*White*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ SFFalse _); 
 		solver.  
 	  - intros . 
-		induction ds_d4Ss as [(*Blue*)  | (*Green*)  | (*Red*) ]. 
+		induction ds_d51B as [(*Blue*)  | (*Green*)  | (*Red*) ]. 
 		  -- intros . 
 			refine (subsumptionCast _ _ SFFalse _); 
 			solver.  
