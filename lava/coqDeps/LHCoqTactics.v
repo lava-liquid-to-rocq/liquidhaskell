@@ -1,4 +1,4 @@
-Load GetRelFlattening.
+Load TacticUtils.
 
 Ltac injectivity_in H := injection H; clear H; intros H.
 
@@ -1108,6 +1108,31 @@ Ltac instantiate_hyp :=
   match goal with
   | [ih: forall (z: Z), addZ_rel ?s ?t z -> _ |- _] => simpl_specialize ih (s + t)
   | [ih: forall (z: Z), subZ_rel ?s ?t z -> _ |- _] => simpl_specialize ih (s - t)
+  | [h: forall (w:?T), ?frel ?uargs w -> ?rtp |- _] => 
+    match goal with
+    | [f_frel : (forall (args : ArgList ?argTps) (v: T), ⌊ ?f args _⌋ = v <->
+    frel (prArgList args ?uargTps _) v) |- _] => 
+      let z := fresh "z" in
+      refine (let z: projectsArgListT argTps uargTps := ltac:(quicksolve) in _);
+      let args := fresh "args" in
+      let args_def := fresh "args_def" in
+      unshelve refine (let args : {args:ArgList argTps | prArgList args uargTps z = uargs} := 
+        ltac:(subst z; synthesize_args) in _); simpl in args; subst z;
+      destruct args as [args args_def];
+      let vRes := fresh "vRes" in
+      pose (exist _ (⌊ f args _⌋) eq_refl) as vRes;
+      let res_def := fresh "res_def" in
+      destruct vRes as [vRes res_def];
+      rewrite (f_frel args) in res_def;
+      match type of res_def with
+      | frel ?tm vRes => 
+        match type of args_def with
+        | ?tm2 = _ => 
+          replace tm with tm2 in res_def by solve_pi_unif_subgoal
+        end
+      end;
+      try rewrite args_def in res_def; try clear args_def args
+    end
   | [ih: forall (w:?T), ?f_rel_ap w -> ?rtp |- _] => 
     isRelAppl f_rel_ap; 
     tryif (match goal with

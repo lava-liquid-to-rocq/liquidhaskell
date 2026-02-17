@@ -225,7 +225,7 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
     γ' <- Ctx.insertRefType (x, tpx) γ
     tacs2 <- checkTerm γ' e2 tp (f, mCtx)
     case tpx of
-      RefType xT xTp@Pi{} xR -> return $ Coq.Assert g gTp (Coq.Concat tacs1) : assertF : tacs2 where
+      RefType xT xTp@Pi{} xR | not (hasUnitRet tpx) -> return $ Coq.Assert g gTp (Coq.Concat tacs1) : assertF : tacs2 where
         gTp = trRefType γ tpx
         g = "f_" ++ hashName gTp
         assertF = Coq.Custom $ "unshelve refine (let " ++ x ++ " : ltac:(buildPackG_spec " ++ g ++ ") := (ltac:("++ Coq.funToPackName ++ " " ++ g ++ ")) in _)"
@@ -965,3 +965,8 @@ selfification y (RefType z a r') = RefType y a $ sub z (Var y) r' -- RefType z a
 -- | Trivial refinement of a builtin type
 trivialRefTp :: LHType -> RefType
 trivialRefTp a = RefType "VV" a (Var "true")
+
+hasUnitRet :: RefType -> Bool
+hasUnitRet rtp = case argTp rtp of
+  Pi _ ret -> hasUnitRet ret
+  tp -> tp == ILH.unitTp

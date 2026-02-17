@@ -2677,10 +2677,10 @@ executable benchmark-lava
                     , Benchmark.PLE.MonadList
                     , Benchmark.PLE.MonoidList
                     , Benchmark.PLE.MonoidMaybe
+                    , Benchmark.PLE.FoldrUniversal
                     , TranslationTests.ApplicativeId
                     , TranslationTests.ApplicativeList
                     , TranslationTests.ApplicativeMaybe
-                    , TranslationTests.FoldrUniversal
                     , TranslationTests.FunctorId
                     , TranslationTests.FunctorList
                     , TranslationTests.FunctorMaybe

@@ -4,7 +4,7 @@
 
 -- | Universal property of foldr a la Zombie
 -- | cite : http://www.seas.upenn.edu/~sweirich/papers/congruence-extended.pdf
-module TranslationTests.FoldrUniversal where
+module Benchmark.PLE.FoldrUniversal where
 
 import Language.Haskell.Liquid.ProofCombinators
 import Prelude hiding (foldr)

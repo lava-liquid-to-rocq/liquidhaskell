@@ -14,9 +14,10 @@ coqDeps/LiquidPreludeInterface.v
 coqDeps/LiquidPrelude.v
 coqDeps/SubsumptionTacs.v
 coqDeps/QuickTacs.v
-coqDeps/TacticUtils.v
+coqDeps/SimpleTacticUtils.v
 coqDeps/GetRelInterface.v
 coqDeps/GetRelFlattening.v
+coqDeps/TacticUtils.v
 coqDeps/LHCoqTactics.v
 
 coqDeps/LiquidPreludeUtil.v
@@ -35,6 +36,7 @@ out/Benchmark/PLE/Append.v
 out/Benchmark/PLE/Compose.v
 out/Benchmark/PLE/Lambdas.v
 out/Benchmark/PLE/Lists.v
+out/Benchmark/PLE/FoldrUniversal.v
 #
 #
 out/Benchmark/RBinsToBins.v
@@ -46,8 +48,6 @@ out/Benchmark/Overview.v
 #out/TranslationTests/FunctorId.v
 #out/TranslationTests/FunctorMaybe.v
 #out/TranslationTests/FunctorList.v
-
-#out/TranslationTests/FoldrUniversal.v
 
 # subsumed by SoftwareFoundations, Overview, PeanoNats resp.
 # out/Benchmark/GradeExample.v

@@ -54,7 +54,7 @@ Defined.
 Definition llen (l: IList): {v: Z | gebZ_rel v 0 true}. 
 Proof. 
 	destruct l as [l l_p]. 
-	induction l as [(*Cons*) ds_d3US l' IH_l' | (*Nil*) ]. 
+	induction l as [(*Cons*) ds_d441 l' IH_l' | (*Nil*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
 		((subsumptionCast Z (fun (x_1: Z) => True) (IH_l' (ltac: (try clear IH_l'; 
@@ -65,7 +65,7 @@ Proof.
 		solver.  
 Defined. 
 Inductive llen_rel : (IList_u -> (Z -> Prop)) := 
-	 | llen_Cons: (forall ds_d3US l' , forall (llenres: Z), (llen_rel l' llenres) -> (forall (addZres: Z), (addZ_rel llenres 1 addZres) -> (llen_rel (Cons_u ds_d3US l') addZres)))
+	 | llen_Cons: (forall ds_d441 l' , forall (llenres: Z), (llen_rel l' llenres) -> (forall (addZres: Z), (addZ_rel llenres 1 addZres) -> (llen_rel (Cons_u ds_d441 l') addZres)))
 	 | llen_Nil: llen_rel Nil_u 0. 
 #[global] Hint Constructors llen_rel : core_hint_db.
 #[global] Instance llen_lookup_rel : dictionary rel llen := { 
@@ -76,12 +76,12 @@ Inductive llen_rel : (IList_u -> (Z -> Prop)) :=
 }.
 Definition llen_rel_funct [l: IList_u]: (forall (v: Z) (v': Z) (H: llen_rel l v) (K: llen_rel l v') , v = v'). 
 Proof. 
-	induction l as [(*Cons*) ds_d3US l' IH_l' | (*Nil*) ]; 
+	induction l as [(*Cons*) ds_d441 l' IH_l' | (*Nil*) ]; 
 	intros ; 
 	rel_functionhood_body. 
 Qed. 
 #[global] Hint Resolve llen_rel_funct : f_rel_funct_db.
-Theorem llen_Cons_lem (ds_d3US: _) (l': _) (addZres: Z): (llen_rel (Cons_u ds_d3US l') addZres) <-> (exists (llenres: Z), (llen_rel l' llenres) /\ (addZ_rel llenres 1 addZres)). 
+Theorem llen_Cons_lem (ds_d441: _) (l': _) (addZres: Z): (llen_rel (Cons_u ds_d441 l') addZres) <-> (exists (llenres: Z), (llen_rel l' llenres) /\ (addZ_rel llenres 1 addZres)). 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
@@ -94,7 +94,7 @@ Qed.
 Theorem llen_rel_ex (l: IList_u) (l_p: (IList_wf l) /\ True): llen_rel l (⌊ llen (exist _ l l_p) -⌋). 
 Proof. 
 	existence_lemma_pre llen; 
-	induction l as [(*Cons*) ds_d3US l' IH_l' | (*Nil*) ]; 
+	induction l as [(*Cons*) ds_d441 l' IH_l' | (*Nil*) ]; 
 	intros ; 
 	[fix_notations; 
 	pose proof (IH_l' (ltac: (try clear IH_l'; 
