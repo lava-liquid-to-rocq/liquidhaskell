@@ -51,14 +51,14 @@ showForall (("_", t) : tl) ret = show t ++ "->" ++ showForall tl ret
 showForall args ret = addParens $ argsS ++ show ret
   where
     argsS = if null args then "" else "forall " ++ concatMap (\(x, t) -> addParens (showArg x t) ++ " ") args ++ ", "
-    showArg x tp = addParens (x ++ (if show tp == "_" then "" else (": " ++ show tp)))
+    showArg x tp = addParens (x ++ (if show tp == "_" then "" else ": " ++ show tp))
 
 showP :: (Show a) => a -> String
 showP = addParens . show
 
 mkDistinct :: [(Id, a)] -> [(Id, a)]
 mkDistinct [] = []
-mkDistinct ((x, xData) : tl) = (x, xData) : (mkDistinct (mapFst (\y -> if y == x then y ++ "_" else y) tl))
+mkDistinct ((x, xData) : tl) = (x, xData) : mkDistinct (mapFst (\y -> if y == x then y ++ "_" else y) tl)
 
 removeSuffix :: (Eq a) => [a] -> [a] -> [a]
 removeSuffix suffix orig = reverse $ removePrefix (reverse suffix) (reverse orig)

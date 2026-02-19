@@ -257,7 +257,7 @@ Proof.
 			refine (exist _ false _); 
 			solver.   
 	  - intros . 
-		induction n as [(*Suc*) lq_anf7205759403792807353 IH_lq_anf7205759403792807353 | (*Zero*) ]. 
+		induction n as [(*Suc*) lq_anf7205759403792809413 IH_lq_anf7205759403792809413 | (*Zero*) ]. 
 		  -- intros . 
 			refine (exist _ false _); 
 			solver.  
@@ -267,7 +267,7 @@ Proof.
 Defined. 
 Inductive eqN_rel : (Nats_u -> (Nats_u -> (bool -> Prop))) := 
 	 | eqN_Zero_Zero: eqN_rel Zero_u Zero_u true
-	 | eqN_Zero_Suc: (forall lq_anf7205759403792807353 , eqN_rel Zero_u (Suc_u lq_anf7205759403792807353) false)
+	 | eqN_Zero_Suc: (forall lq_anf7205759403792809413 , eqN_rel Zero_u (Suc_u lq_anf7205759403792809413) false)
 	 | eqN_Suc_Zero: (forall m , eqN_rel (Suc_u m) Zero_u false)
 	 | eqN_Suc_Suc: (forall m n , forall (eqNres: bool), (eqN_rel m n eqNres) -> (eqN_rel (Suc_u m) (Suc_u n) eqNres)). 
 #[global] Hint Constructors eqN_rel : core_hint_db.
@@ -284,7 +284,7 @@ Proof.
 	intros ; 
 	[induction n as [(*Suc*) n IH_n | (*Zero*) ]; 
 	intros | 
-	induction n as [(*Suc*) lq_anf7205759403792807353 IH_lq_anf7205759403792807353 | (*Zero*) ]; 
+	induction n as [(*Suc*) lq_anf7205759403792809413 IH_lq_anf7205759403792809413 | (*Zero*) ]; 
 	intros ]; 
 	rel_functionhood_body. 
 Qed. 
@@ -294,7 +294,7 @@ Proof.
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite eqN_Zero_Zero_lem : f_rel_back.
-Theorem eqN_Zero_Suc_lem (lq_anf7205759403792807353: _): (eqN_rel Zero_u (Suc_u lq_anf7205759403792807353) false) <-> True. 
+Theorem eqN_Zero_Suc_lem (lq_anf7205759403792809413: _): (eqN_rel Zero_u (Suc_u lq_anf7205759403792809413) false) <-> True. 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
@@ -325,10 +325,10 @@ Proof.
 	try clear IH_n| 
 	fix_notations; 
 	try clear IH_m]| 
-	induction n as [(*Suc*) lq_anf7205759403792807353 IH_lq_anf7205759403792807353 | (*Zero*) ]; 
+	induction n as [(*Suc*) lq_anf7205759403792809413 IH_lq_anf7205759403792809413 | (*Zero*) ]; 
 	intros ; 
 	[fix_notations; 
-	try clear IH_lq_anf7205759403792807353| 
+	try clear IH_lq_anf7205759403792809413| 
 	fix_notations]]; 
 	existence_lemma_quicksolve eqN; 
 	f__f_rel_ex_body; 
@@ -535,7 +535,7 @@ Proof.
 		(exist (fun (n: Nats_u) => ((Nats_wf n) /\ True)) m (ltac: (solver)))) _); 
 			solver.   
 	  - intros . 
-		induction n as [(*Suc*) lq_anf7205759403792807369 IH_lq_anf7205759403792807369 | (*Zero*) ]. 
+		induction n as [(*Suc*) lq_anf7205759403792809429 IH_lq_anf7205759403792809429 | (*Zero*) ]. 
 		  -- intros . 
 			intros ; 
 			exfalso; 
@@ -562,7 +562,7 @@ Proof.
 	intros ; 
 	[induction n as [(*Suc*) n IH_n | (*Zero*) ]; 
 	intros | 
-	induction n as [(*Suc*) lq_anf7205759403792807369 IH_lq_anf7205759403792807369 | (*Zero*) ]; 
+	induction n as [(*Suc*) lq_anf7205759403792809429 IH_lq_anf7205759403792809429 | (*Zero*) ]; 
 	intros ]; 
 	rel_functionhood_body. 
 Qed. 
@@ -598,10 +598,10 @@ Proof.
 	try clear IH_n| 
 	fix_notations; 
 	try clear IH_m]| 
-	induction n as [(*Suc*) lq_anf7205759403792807369 IH_lq_anf7205759403792807369 | (*Zero*) ]; 
+	induction n as [(*Suc*) lq_anf7205759403792809429 IH_lq_anf7205759403792809429 | (*Zero*) ]; 
 	intros ; 
 	[fix_notations; 
-	try clear IH_lq_anf7205759403792807369| 
+	try clear IH_lq_anf7205759403792809429| 
 	fix_notations]]; 
 	existence_lemma_quicksolve PeanoNats__sub; 
 	f__f_rel_ex_body; 

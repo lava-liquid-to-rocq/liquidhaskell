@@ -1505,7 +1505,7 @@ Ltac retCast tm := unshelve retCast' tm; try (oracle).
 (** Custom tactics **)
 
 Ltac rel_functionhood_body := 
-quick_simpl; 
+  quick_simpl; 
   try unpack;
   (* invert hypotheses H and K *)
   match goal with
@@ -1514,8 +1514,13 @@ quick_simpl;
     | [K: ?relApp' ?x' |- _] => isVar x'; assert_fails (eq_fail H K); (* found hypothesis K *)
       strong_inversion H; strong_inversion K; try quicksolve
     end
-  end; try now unify_vars;
-  try inversion_specialization; try cleanup; try oracle.
+  end; 
+  first [
+    solve [ now unify_vars ]
+  | progress unfold rel_u in *; try unpack_all; 
+    solve [ now unify_vars ]
+  ].
+  (* try inversion_specialization; try cleanup; try oracle*)
 
 (* Tactic to prove the functionhood lemma for the graph relations *)
 Ltac rel_functionhood indVars :=
