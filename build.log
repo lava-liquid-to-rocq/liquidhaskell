@@ -21,9 +21,9 @@ Warning: Loading Stdlib without prefix is deprecated.
 Use "From Stdlib Require Bool" or the deprecated "From Coq Require Bool"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/BoolTacs.vo (real: 0.29, user: 0.23, sys: 0.05, mem: 388452 ko)
+coqDeps/BoolTacs.vo (real: 0.30, user: 0.22, sys: 0.07, mem: 387872 ko)
 ROCQ compile coqDeps/PairLists.v
-coqDeps/PairLists.vo (real: 0.06, user: 0.03, sys: 0.02, mem: 72492 ko)
+coqDeps/PairLists.vo (real: 0.06, user: 0.03, sys: 0.02, mem: 72152 ko)
 ROCQ compile coqDeps/Snipe.v
 File "./coqDeps/Snipe.v", line 5, characters 15-19:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -47,7 +47,7 @@ File "./coqDeps/Snipe.v", line 9, characters 0-35:
 Warning: Use of “Require” inside a module is fragile. It is not recommended
 to use this functionality in finished proof scripts.
 [require-in-module,fragile,default]
-coqDeps/Snipe.vo (real: 0.33, user: 0.26, sys: 0.07, mem: 420964 ko)
+coqDeps/Snipe.vo (real: 0.36, user: 0.29, sys: 0.06, mem: 421168 ko)
 ROCQ compile coqDeps/EqualityInterface.v
 File "./coqDeps/EqualityInterface.v", line 5, characters 15-21:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -73,7 +73,7 @@ Use "From Stdlib Require Bool.Bool"
 or the deprecated "From Coq Require Bool.Bool"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/EqualityInterface.vo (real: 0.25, user: 0.18, sys: 0.06, mem: 338212 ko)
+coqDeps/EqualityInterface.vo (real: 0.26, user: 0.20, sys: 0.05, mem: 337176 ko)
 ROCQ compile coqDeps/Equality.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/EqualityInterface.v", line 5, characters 15-21:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -99,7 +99,7 @@ Use "From Stdlib Require Bool.Bool"
 or the deprecated "From Coq Require Bool.Bool"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/Equality.vo (real: 0.35, user: 0.28, sys: 0.07, mem: 423188 ko)
+coqDeps/Equality.vo (real: 0.38, user: 0.31, sys: 0.07, mem: 423020 ko)
 ROCQ compile coqDeps/LiquidPreludeInterface.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/EqualityInterface.v", line 5, characters 15-21:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -174,7 +174,7 @@ Warning: Loading Stdlib without prefix is deprecated.
 Use "From Stdlib Require Floats" or the deprecated "From Coq Require Floats"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/LiquidPreludeInterface.vo (real: 0.40, user: 0.33, sys: 0.07, mem: 423440 ko)
+coqDeps/LiquidPreludeInterface.vo (real: 0.43, user: 0.35, sys: 0.07, mem: 423620 ko)
 ROCQ compile coqDeps/LiquidPrelude.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/EqualityInterface.v", line 5, characters 15-21:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -249,7 +249,7 @@ Warning: Loading Stdlib without prefix is deprecated.
 Use "From Stdlib Require Floats" or the deprecated "From Coq Require Floats"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/LiquidPrelude.vo (real: 0.75, user: 0.69, sys: 0.06, mem: 432488 ko)
+coqDeps/LiquidPrelude.vo (real: 0.79, user: 0.71, sys: 0.07, mem: 431388 ko)
 ROCQ compile coqDeps/SubsumptionTacs.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/EqualityInterface.v", line 5, characters 15-21:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -324,7 +324,7 @@ Warning: Loading Stdlib without prefix is deprecated.
 Use "From Stdlib Require Floats" or the deprecated "From Coq Require Floats"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/SubsumptionTacs.vo (real: 0.76, user: 0.70, sys: 0.06, mem: 429896 ko)
+coqDeps/SubsumptionTacs.vo (real: 0.80, user: 0.73, sys: 0.06, mem: 431588 ko)
 ROCQ compile coqDeps/QuickTacs.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/EqualityInterface.v", line 5, characters 15-21:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -405,7 +405,7 @@ Use "From Stdlib Require Logic.ProofIrrelevanceFacts"
 or the deprecated "From Coq Require Logic.ProofIrrelevanceFacts"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/QuickTacs.vo (real: 0.85, user: 0.77, sys: 0.07, mem: 435616 ko)
+coqDeps/QuickTacs.vo (real: 0.88, user: 0.81, sys: 0.07, mem: 435592 ko)
 ROCQ compile coqDeps/SimpleTacticUtils.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/EqualityInterface.v", line 5, characters 15-21:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -486,7 +486,7 @@ Use "From Stdlib Require Logic.ProofIrrelevanceFacts"
 or the deprecated "From Coq Require Logic.ProofIrrelevanceFacts"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/SimpleTacticUtils.vo (real: 0.83, user: 0.76, sys: 0.07, mem: 432852 ko)
+coqDeps/SimpleTacticUtils.vo (real: 0.88, user: 0.81, sys: 0.07, mem: 434092 ko)
 ROCQ compile coqDeps/GetRelInterface.v
 File "./coqDeps/GetRelInterface.v", line 1, characters 15-45:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -573,7 +573,7 @@ Use "From Stdlib Require Logic.ProofIrrelevanceFacts"
 or the deprecated "From Coq Require Logic.ProofIrrelevanceFacts"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/GetRelInterface.vo (real: 0.89, user: 0.81, sys: 0.07, mem: 435868 ko)
+coqDeps/GetRelInterface.vo (real: 0.94, user: 0.86, sys: 0.07, mem: 435000 ko)
 ROCQ compile coqDeps/GetRelFlattening.v
 File "./coqDeps/GetRelFlattening.v", line 1, characters 15-45:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -675,7 +675,7 @@ it will not be used for printing. [non-reversible-notation,parsing,default]
 File "./coqDeps/GetRelFlattening.v", line 810, characters 0-73:
 Warning: This notation contains Ltac expressions:
 it will not be used for printing. [non-reversible-notation,parsing,default]
-coqDeps/GetRelFlattening.vo (real: 8.07, user: 7.98, sys: 0.09, mem: 565044 ko)
+coqDeps/GetRelFlattening.vo (real: 8.43, user: 8.32, sys: 0.10, mem: 564468 ko)
 ROCQ compile coqDeps/TacticUtils.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/GetRelFlattening.v", line 1, characters 15-45:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -777,7 +777,7 @@ it will not be used for printing. [non-reversible-notation,parsing,default]
 File "./coqDeps/TacticUtils.v", line 1, characters 0-22:
 Warning: This notation contains Ltac expressions:
 it will not be used for printing. [non-reversible-notation,parsing,default]
-coqDeps/TacticUtils.vo (real: 8.15, user: 8.06, sys: 0.08, mem: 563176 ko)
+coqDeps/TacticUtils.vo (real: 8.42, user: 8.33, sys: 0.09, mem: 563232 ko)
 ROCQ compile coqDeps/LHCoqTactics.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/GetRelFlattening.v", line 1, characters 15-45:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -884,7 +884,7 @@ Warning: Loading Stdlib without prefix is deprecated.
 Use "From Stdlib Require Bool" or the deprecated "From Coq Require Bool"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/LHCoqTactics.vo (real: 8.24, user: 8.14, sys: 0.09, mem: 561016 ko)
+coqDeps/LHCoqTactics.vo (real: 8.34, user: 8.22, sys: 0.11, mem: 561084 ko)
 ROCQ compile coqDeps/LiquidPreludeUtil.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/GetRelFlattening.v", line 1, characters 15-45:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -1005,7 +1005,467 @@ disable this warning.
 File "./coqDeps/LiquidPreludeUtil.v", line 165, characters 0-63:
 Warning: This notation contains Ltac expressions:
 it will not be used for printing. [non-reversible-notation,parsing,default]
-coqDeps/LiquidPreludeUtil.vo (real: 8.13, user: 8.03, sys: 0.09, mem: 557324 ko)
+coqDeps/LiquidPreludeUtil.vo (real: 8.36, user: 8.25, sys: 0.10, mem: 556916 ko)
+ROCQ compile out/Benchmark/PLE/Append.v
+Removed redundant hypothesis H0
+Starting proof of existence lemma for the reflected function  flip . 
+A witness for the refined term  tm  is already present as hypothesis  y_p
+ not asserting another. 
+y_p
+x_p
+Unified axiomatized variables z and VV . 
+File "./out/Benchmark/PLE/Append.v", line 71, characters 0-153:
+Warning: Not a truly recursive fixpoint. [non-recursive,fixpoints,default]
+running generalize dependent  H
+running generalize dependent  t
+File "./out/Benchmark/PLE/Append.v", line 88, characters 0-83:
+Warning: Not a truly recursive fixpoint. [non-recursive,fixpoints,default]
+running generalize dependent  H
+running generalize dependent  t
+Specializing  IHt  with (simple) proof term in nested induction 
+Removed redundant hypothesis H2
+Starting proof of existence lemma for the reflected function  geqN . 
+Unified axiomatized variables b and VV . 
+running generalize dependent  H
+running generalize dependent  t
+Specializing  IHt  with (simple) proof term in nested induction 
+Removed redundant hypothesis h_68853692
+Starting proof of existence lemma for the reflected function  length2 . 
+Unified axiomatized variables n and VV . 
+running generalize dependent  H
+running generalize dependent  t
+Specializing  IHt  with (simple) proof term in nested induction 
+File "./out/Benchmark/PLE/Append.v", line 460, characters 0-158:
+Warning: Not a truly recursive fixpoint. [non-recursive,fixpoints,default]
+running generalize dependent  H
+running generalize dependent  t
+File "./out/Benchmark/PLE/Append.v", line 477, characters 0-127:
+Warning: Not a truly recursive fixpoint. [non-recursive,fixpoints,default]
+Creating partial applications for  IH_l
+Removed redundant hypothesis IH_p
+Creating partial applications for  IH_l
+Removed redundant hypothesis IH_p
+p_p
+Removed trivial hypothesis H2
+Removed redundant hypothesis h_86920335
+Starting proof of existence lemma for the reflected function  append . 
+Unified axiomatized variables l and VV . 
+Specializing  IH_lq_anf7205759403792803678  with simple proof term 
+Removed redundant hypothesis xs_p
+Created new witness  wit_1  for  (L_wf ys /\ True)
+Created new witness  wit_2  for 
+((L_wf lq_anf7205759403792803678 /\ True) /\ True)
+Unified axiomatized variables Emp_u and u . 
+Removed redundant hypothesis ys_p
+Removed redundant hypothesis H
+Specializing  IH_lq_anf7205759403792803669  with simple proof term 
+Removed redundant hypothesis xs_p
+Created new witness  wit_1  for  (L_wf ys /\ True)
+Created new witness  wit_2  for 
+((L_wf lq_anf7205759403792803669 /\ True) /\ True)
+Unified axiomatized variables Emp_u and u . 
+Removed redundant hypothesis ys_p
+Removed redundant hypothesis H
+Unified axiomatized variables lq_tmp0res and lq_tmp0res0 . 
+Unified axiomatized variables concatMapres and concatMapres0 . 
+Unified axiomatized variables appendres and appendres0 . 
+Starting proof of existence lemma for the reflected function  concatMap . 
+File "./out/Benchmark/PLE/Append.v", line 711, characters 1-364:
+Warning: Collision between bound variables of name a
+[variable-collision,ltac,default]
+File "./out/Benchmark/PLE/Append.v", line 711, characters 1-364:
+Warning: Collision between bound variables of name a
+[variable-collision,ltac,default]
+File "./out/Benchmark/PLE/Append.v", line 711, characters 1-364:
+Warning: Collision between bound variables of name a
+[variable-collision,ltac,default]
+File "./out/Benchmark/PLE/Append.v", line 711, characters 1-364:
+Warning: Collision between bound variables of name a
+[variable-collision,ltac,default]
+File "./out/Benchmark/PLE/Append.v", line 711, characters 1-364:
+Warning: Collision between bound variables of name a
+[variable-collision,ltac,default]
+File "./out/Benchmark/PLE/Append.v", line 711, characters 1-364:
+Warning: Collision between bound variables of name a
+[variable-collision,ltac,default]
+File "./out/Benchmark/PLE/Append.v", line 711, characters 1-364:
+Warning: Collision between bound variables of name a
+[variable-collision,ltac,default]
+File "./out/Benchmark/PLE/Append.v", line 711, characters 1-364:
+Warning: Collision between bound variables of name a
+[variable-collision,ltac,default]
+File "./out/Benchmark/PLE/Append.v", line 711, characters 1-364:
+Warning: Collision between bound variables of name a
+[variable-collision,ltac,default]
+File "./out/Benchmark/PLE/Append.v", line 711, characters 1-364:
+Warning: Collision between bound variables of name a
+[variable-collision,ltac,default]
+File "./out/Benchmark/PLE/Append.v", line 711, characters 1-364:
+Warning: Collision between bound variables of name a
+[variable-collision,ltac,default]
+File "./out/Benchmark/PLE/Append.v", line 711, characters 1-364:
+Warning: Collision between bound variables of name a
+[variable-collision,ltac,default]
+The rewrite lemma  f_frel : 
+(forall
+   (args : ArgList {_ : Z | True} ::RT (fun _ : {_ : Z | True} => nilRT))
+   (v : L_u),
+ ⌊ f args _⌋ = v <->
+ frel
+   (prArgList args Z ::UT nilUT (conj eq_refl (fun _ : {_ : Z | True} => I)))
+   v)
+ that needs to be used to change axiomatization of a variable from the refined to the unrefined world. 
+Function  f  has arity >5 and arguments 
+((exist (fun _ : Z => True) x
+    (and_ind (fun (_ : L_wf xs /\ True) (_ : True) => I) (conj l lq_tmp3_p)))
+ ::R nilR _::_ _nil)
+. 
+res_wit0
+Created new witness  wit_  for  (L_wf xs /\ True)
+Unified axiomatized variables l and VV . 
+Removed redundant hypothesis h_59309786
+Starting proof of existence lemma for the reflected function  l2_pr1 . 
+Unified axiomatized variables l0 and VV . 
+Removed redundant hypothesis h_15598697
+Starting proof of existence lemma for the reflected function  l2_pr2 . 
+Unified axiomatized variables l0 and VV . 
+Removed redundant hypothesis h_57695211
+Starting proof of existence lemma for the reflected function  length . 
+Unified axiomatized variables n and VV . 
+Specializing  IH_l  with simple proof term 
+Removed redundant hypothesis Hr
+Inverted the axiomatization  H2 :  (length_rel l2_pr1res lengthres) .
+Inverted the axiomatization  H1 : 
+(l2_pr1_rel (App2_u ds_d2yT l) (App_u ds_d2zk xs)) .
+Inverted the axiomatization  H0 : 
+(length2_rel (App2_u (MkPair_u ds_d2zk ds_d2z3) l) length2res) .
+Axiomatization  H7 :  (length2_rel l length2res0)  of variable  length2res0
+ is used to specialize  H . 
+Axiomatization  H5 :  (l2_pr1_rel l xs)  of variable  xs
+ is used to specialize  H . 
+Axiomatization  H4 :  (length_rel xs lengthres0)  of variable  lengthres0
+ is used to specialize  H . 
+Axiomatization  H7 :  (length2_rel l length2res0)  of variable  length2res0
+ is used to specialize  e . 
+Axiomatization  H5 :  (l2_pr1_rel l xs)  of variable  xs
+ is used to specialize  e . 
+Axiomatization  H4 :  (length_rel xs lengthres0)  of variable  lengthres0
+ is used to specialize  e . 
+Removed redundant hypothesis e
+Inverted the axiomatization  H1 :  (length_rel l2_pr1res lengthres) .
+Inverted the axiomatization  H0 :  (l2_pr1_rel Emp2_u Emp_u) .
+Inverted the axiomatization  H :  (length2_rel Emp2_u length2res) .
+Specializing  IH_l  with simple proof term 
+Removed redundant hypothesis Hr
+Inverted the axiomatization  H2 :  (length_rel l2_pr2res lengthres) .
+Inverted the axiomatization  H1 : 
+(l2_pr2_rel (App2_u ds_d2yR l) (App_u ds_d2zk xs)) .
+Inverted the axiomatization  H0 : 
+(length2_rel (App2_u (MkPair_u ds_d2yY ds_d2zk) l) length2res) .
+Axiomatization  H7 :  (length2_rel l length2res0)  of variable  length2res0
+ is used to specialize  H . 
+Axiomatization  H5 :  (l2_pr2_rel l xs)  of variable  xs
+ is used to specialize  H . 
+Axiomatization  H4 :  (length_rel xs lengthres0)  of variable  lengthres0
+ is used to specialize  H . 
+Axiomatization  H7 :  (length2_rel l length2res0)  of variable  length2res0
+ is used to specialize  e . 
+Axiomatization  H5 :  (l2_pr2_rel l xs)  of variable  xs
+ is used to specialize  e . 
+Axiomatization  H4 :  (length_rel xs lengthres0)  of variable  lengthres0
+ is used to specialize  e . 
+Removed redundant hypothesis e
+Inverted the axiomatization  H1 :  (length_rel l2_pr2res lengthres) .
+Inverted the axiomatization  H0 :  (l2_pr2_rel Emp2_u Emp_u) .
+Inverted the axiomatization  H :  (length2_rel Emp2_u length2res) .
+Removed redundant hypothesis h_40663038
+Removed redundant hypothesis h_88923566
+Starting proof of existence lemma for the reflected function  map . 
+res_wit
+Unified axiomatized variables l and VV . 
+Axiomatization  H6 : 
+(map_rel {| rel_u := frel; funct_u := funct |} xs mapres0)  of variable 
+mapres0  is used to specialize  H . 
+Specializing  IH_xs  with simple proof term 
+Removed redundant hypothesis H3
+Inverted the axiomatization  H2 :  (length_rel (App_u x xs) length_res_2) .
+Inverted the axiomatization  H1 : 
+(length_rel (App_u lq_tmp0res mapres0) lengthres) .
+Axiomatization  H5 :  (length_rel mapres0 lengthres1)  of variable 
+lengthres1  is used to specialize  H . 
+Axiomatization  H7 :  (length_rel xs lengthres0)  of variable  lengthres0
+ is used to specialize  H . 
+Unified axiomatized variables lengthres and length_res_2 . 
+Inverted the axiomatization  H1 :  (length_rel Emp_u length_res_2) .
+Unified axiomatized variables reverseres and reverseres0 . 
+Unified axiomatized variables appendres and appendres0 . 
+Starting proof of existence lemma for the reflected function  reverse . 
+Created new witness  wit_  for  (L_wf xs /\ True)
+Unified axiomatized variables l0 and VV . 
+Created new witness  wit_  for  (L_wf xs /\ True)
+Directly specialized  p_p  with easily synthesizable term. 
+Specializing  IH_xs  with simple proof term 
+Removed redundant hypothesis h_81657627
+Starting proof of existence lemma for the reflected function  take . 
+Unified axiomatized variables l0 and VV . 
+Directly specialized  l_p  with easily synthesizable term. 
+Inverted the axiomatization  l_p : 
+(geqN_rel (Suc_u n) (Suc_u lengthres) true) .
+Specializing  IH_n  with simple proof term 
+Removed redundant hypothesis n_p
+Inverted the axiomatization  H0 :  (take_rel (Suc_u n) (App_u x xs) takeres)
+.
+Axiomatization  H7 :  (take_rel n xs takeres0)  of variable  takeres0
+ is used to specialize  H . 
+Directly specialized  l_p  with easily synthesizable term. 
+Specializing  IH_n  with simple proof term 
+Removed redundant hypothesis n_p
+Inverted the axiomatization  H :  (take_rel (Suc_u n) Emp_u takeres) .
+Inverted the axiomatization  l_p :  (geqN_rel (Suc_u n) Zero_u true) .
+Created new witness  wit_0  for 
+((L_wf lq_anf7205759403792803802 /\ True) /\ True)
+Unified axiomatized variables v and u . 
+Inverted the axiomatization  up : 
+(length_rel (App_u lq_anf7205759403792803801 lq_anf7205759403792803802) u) .
+Directly specialized  l_p  with easily synthesizable term. 
+Inverted the axiomatization  H :  (take_rel Zero_u Emp_u takeres) .
+Inverted the axiomatization  l_p :  (geqN_rel Zero_u Zero_u true) .
+Removed redundant hypothesis h_30299140
+Starting proof of existence lemma for the reflected function  zip . 
+Unified axiomatized variables l and VV . 
+Directly specialized  l_p  with easily synthesizable term. 
+Directly specialized  m_p  with easily synthesizable term. 
+Specializing  IH_n  with simple proof term 
+Removed redundant hypothesis n_p
+Inverted the axiomatization  H1 :  (length2_rel zipres length2res) .
+Inverted the axiomatization  H0 : 
+(zip_rel (App_u x xs) (App_u y ys) (App2_u ds_d2zh xs0)) .
+Axiomatization  H6 :  (zip_rel xs ys xs0)  of variable  xs0
+ is used to specialize  H . 
+Axiomatization  H5 :  (length2_rel xs0 length2res0)  of variable  length2res0
+ is used to specialize  H . 
+Directly specialized  H2  with easily synthesizable term. 
+Specializing  IH_xs  with proof term
+Specializing  IH_n  with simple proof term 
+Directly specialized  l_p  with easily synthesizable term. 
+Specializing  IH_n  with simple proof term 
+Created new witness  wit_0  for  (L_wf m /\ True)
+Unified axiomatized variables Zero_u and u . 
+Removed redundant hypothesis H1
+Inverted the axiomatization  v_p :  (length_rel m Zero_u) .
+Created new witness  wit_0  for 
+((L_wf lq_anf7205759403792803733 /\ True) /\ True)
+Specializing  IH_lq_anf7205759403792803733  with proof term
+Unified axiomatized variables Zero_u and u . 
+Removed redundant hypothesis H0
+Removed redundant hypothesis H
+Directly specialized  l_p  with easily synthesizable term. 
+Removed trivial hypothesis l_p
+Created new witness  wit_0  for 
+((L_wf lq_anf7205759403792803731 /\ True) /\ True)
+Specializing  IH_lq_anf7205759403792803731  with proof term
+Unified axiomatized variables Zero_u and u . 
+Removed redundant hypothesis H1
+Removed redundant hypothesis l_p
+Directly specialized  m_p  with easily synthesizable term. 
+Removed trivial hypothesis m_p
+Inverted the axiomatization  H0 :  (length2_rel zipres length2res) .
+Inverted the axiomatization  H :  (zip_rel Emp_u Emp_u Emp2_u) .
+Directly specialized  l_p  with easily synthesizable term. 
+Directly specialized  m_p  with easily synthesizable term. 
+Specializing  IH_n  with simple proof term 
+Inverted the axiomatization  H1 :  (length2_rel zipres length2res) .
+Inverted the axiomatization  H0 : 
+(zip_rel (App_u x xs) (App_u y ys) (App2_u ds_d2zh xs0)) .
+Axiomatization  H6 :  (zip_rel xs ys xs0)  of variable  xs0
+ is used to specialize  H . 
+Axiomatization  H5 :  (length2_rel xs0 length2res0)  of variable  length2res0
+ is used to specialize  H . 
+Directly specialized  H2  with easily synthesizable term. 
+Specializing  IH_xs  with proof term
+Specializing  IH_n  with simple proof term 
+Directly specialized  l_p  with easily synthesizable term. 
+Specializing  IH_n  with simple proof term 
+Created new witness  wit_0  for  (L_wf m /\ True)
+Unified axiomatized variables Zero_u and u . 
+Removed redundant hypothesis H1
+Inverted the axiomatization  v_p :  (length_rel m Zero_u) .
+Created new witness  wit_0  for 
+((L_wf lq_anf7205759403792803754 /\ True) /\ True)
+Specializing  IH_lq_anf7205759403792803754  with proof term
+Unified axiomatized variables Zero_u and u . 
+Removed redundant hypothesis H0
+Removed redundant hypothesis H
+Directly specialized  l_p  with easily synthesizable term. 
+Removed trivial hypothesis l_p
+Created new witness  wit_0  for 
+((L_wf lq_anf7205759403792803752 /\ True) /\ True)
+Specializing  IH_lq_anf7205759403792803752  with proof term
+Unified axiomatized variables Zero_u and u . 
+Removed redundant hypothesis H1
+Removed redundant hypothesis l_p
+Directly specialized  m_p  with easily synthesizable term. 
+Removed trivial hypothesis m_p
+Inverted the axiomatization  H0 :  (length2_rel zipres length2res) .
+Inverted the axiomatization  H :  (zip_rel Emp_u Emp_u Emp2_u) .
+Removed redundant hypothesis h_63896734
+Removed redundant hypothesis h_45534364
+Starting proof of existence lemma for the reflected function  zipWith . 
+res_wit
+Unified axiomatized variables l0 and VV . 
+Specializing  IH_ys  with simple proof term 
+Specializing  IH_xs  with simple proof term 
+Removed redundant hypothesis l_p
+Removed redundant hypothesis m_p
+Inverted the axiomatization  H4 : 
+(take_rel length_res_2 (App_u x xs) take_res_2) .
+Inverted the axiomatization  H3 :  (length_rel (App_u y ys) (Suc_u n)) .
+Inverted the axiomatization  H2 :  (take_rel lengthres (App_u y ys) takeres)
+.
+Inverted the axiomatization  H5 : 
+(zip_rel (App_u x takeres0) (App_u y takeres1) zip_res_2) .
+Inverted the axiomatization  H1 :  (length_rel (App_u x xs) (Suc_u n0)) .
+Inverted the axiomatization  H0 :  (zip_rel (App_u x xs) (App_u y ys) zipres)
+.
+Axiomatization  H10 :  (zip_rel xs ys zipres1)  of variable  zipres1
+ is used to specialize  H . 
+Axiomatization  H3 :  (length_rel xs n0)  of variable  n0
+ is used to specialize  H . 
+Axiomatization  H11 :  (take_rel n0 ys takeres1)  of variable  takeres1
+ is used to specialize  H . 
+Axiomatization  H8 :  (length_rel ys n)  of variable  n
+ is used to specialize  H . 
+Axiomatization  H12 :  (take_rel n xs takeres0)  of variable  takeres0
+ is used to specialize  H . 
+Axiomatization  H13 :  (zip_rel takeres0 takeres1 zipres0)  of variable 
+zipres0  is used to specialize  H . 
+Specializing  IH_xs  with simple proof term 
+Removed redundant hypothesis l_p
+Inverted the axiomatization  H3 : 
+(take_rel length_res_2 (App_u x xs) take_res_2) .
+Inverted the axiomatization  H4 :  (zip_rel Emp_u takeres zip_res_2) .
+Inverted the axiomatization  H2 :  (length_rel Emp_u Zero_u) .
+Inverted the axiomatization  H1 :  (take_rel lengthres Emp_u takeres) .
+Inverted the axiomatization  H0 :  (length_rel (App_u x xs) (Suc_u n)) .
+Inverted the axiomatization  H :  (zip_rel (App_u x xs) Emp_u zipres) .
+Inverted the axiomatization  H4 :  (zip_rel take_res_2 takeres zip_res_2) .
+Inverted the axiomatization  H1 :  (take_rel lengthres m takeres) .
+Inverted the axiomatization  H0 :  (length_rel Emp_u Zero_u) .
+Inverted the axiomatization  H :  (zip_rel Emp_u m zipres) .
+out/Benchmark/PLE/Append.vo (real: 620.73, user: 619.93, sys: 0.72, mem: 704492 ko)
+ROCQ compile out/Benchmark/PLE/Lists.v
+running generalize dependent  H
+running generalize dependent  t
+Specializing  IHt  with (simple) proof term in nested induction 
+Removed trivial hypothesis H2
+Removed redundant hypothesis h_86920335
+Starting proof of existence lemma for the reflected function  append . 
+Unified axiomatized variables l and VV . 
+Inverted the axiomatization  H0 :  (append_rel appendres Emp_u append_res_2)
+.
+Inverted the axiomatization  H :  (append_rel (C_u 1 Emp_u) Emp_u (C_u x xs))
+.
+Inverted the axiomatization  H4 :  (append_rel Emp_u Emp_u xs) .
+Inverted the axiomatization  H1 :  (append_rel Emp_u Emp_u appendres0) .
+Inverted the axiomatization  H0 :  (append_rel appendres Emp_u append_res_2)
+.
+Inverted the axiomatization  H : 
+(append_rel (C_u 1 (C_u 2 Emp_u)) Emp_u (C_u x xs)) .
+Inverted the axiomatization  H4 :  (append_rel (C_u 2 Emp_u) Emp_u xs) .
+Inverted the axiomatization  H5 :  (append_rel Emp_u Emp_u appendres) .
+Inverted the axiomatization  H1 : 
+(append_rel (C_u 2 Emp_u) Emp_u appendres0) .
+Inverted the axiomatization  H4 :  (append_rel Emp_u Emp_u appendres) .
+Inverted the axiomatization  H0 :  (append_rel appendres Emp_u append_res_2)
+.
+Inverted the axiomatization  H : 
+(append_rel (C_u 1 (C_u 2 (C_u 3 Emp_u))) Emp_u (C_u x xs)) .
+Inverted the axiomatization  H4 : 
+(append_rel (C_u 2 (C_u 3 Emp_u)) Emp_u xs) .
+Inverted the axiomatization  H5 :  (append_rel (C_u 3 Emp_u) Emp_u appendres)
+.
+Inverted the axiomatization  H4 :  (append_rel Emp_u Emp_u appendres1) .
+Inverted the axiomatization  H1 : 
+(append_rel (C_u 2 (C_u 3 Emp_u)) Emp_u appendres0) .
+Inverted the axiomatization  H4 :  (append_rel (C_u 3 Emp_u) Emp_u appendres)
+.
+Inverted the axiomatization  H3 :  (append_rel Emp_u Emp_u appendres0) .
+Creating partial applications for  IH_xs
+Removed redundant hypothesis res_wit
+Starting proof of existence lemma for the reflected function  length . 
+Created new witness  wit_  for  (L_wf xs /\ True)
+Sucessfully inverted  IH_55394889
+Sucessfully inverted  IH_55394889
+instanciating the existential in the goal with 
+⌊ length
+    (exist (fun x : L_u => L_wf x /\ True) xs
+       (conj (wf_C_VV_ (wf_C_VV_ (conj l lq_tmp0_p))) I)) -⌋
+Sucessfully inverted  IH_55394889
+Sucessfully inverted  IH_55394889
+Unified axiomatized variables z and VV . 
+Inverted the axiomatization  H0 :  (append_rel appendres zs append_res_2) .
+Inverted the axiomatization  H :  (append_rel (C_u x xs) ys (C_u x0 xs0)) .
+Unified axiomatized variables append_res_3 and xs0 . 
+Unified axiomatized variables append_res_4 and appendres0 . 
+out/Benchmark/PLE/Lists.vo (real: 29.80, user: 29.69, sys: 0.10, mem: 512396 ko)
+ROCQ compile out/Benchmark/PLE/Compose.v
+Unified axiomatized variables lq_tmp3res and lq_tmp3res0 . 
+Unified axiomatized variables lq_tmp3res and lq_tmp3res0 . 
+Unified axiomatized variables lq_tmp0res and lq_tmp0res0 . 
+Starting proof of existence lemma for the reflected function  compose . 
+A witness for the refined term  tm  is already present as hypothesis 
+lq_tmp6_p  not asserting another. 
+lq_tmp6_p
+A witness for the refined term  tm  is already present as hypothesis 
+lq_tmp6_p  not asserting another. 
+lq_tmp6_p
+Unified axiomatized variables z and VV . 
+Unified axiomatized variables gres and lq_tmp3res . 
+Unified axiomatized variables fres and lq_tmp0res . 
+out/Benchmark/PLE/Compose.vo (real: 15.47, user: 15.39, sys: 0.07, mem: 465436 ko)
+ROCQ compile out/Benchmark/PLE/Lambdas.v
+out/Benchmark/PLE/Lambdas.vo (real: 0.59, user: 0.52, sys: 0.06, mem: 437504 ko)
+ROCQ compile out/Benchmark/PLE/FoldrUniversal.v
+running generalize dependent  H
+running generalize dependent  t
+Specializing  IHt  with (simple) proof term in nested induction 
+Unified axiomatized variables lq_tmp3res and lq_tmp3res0 . 
+Unified axiomatized variables lq_tmp3res and lq_tmp3res0 . 
+Unified axiomatized variables lq_tmp0res and lq_tmp0res0 . 
+Starting proof of existence lemma for the reflected function  compose . 
+res_wit
+A witness for the refined term  tm  is already present as hypothesis  res_wit
+ not asserting another. 
+res_wit
+Unified axiomatized variables z and VV . 
+Unified axiomatized variables foldrres and foldrres0 . 
+Unified axiomatized variables lq_tmp0res and lq_tmp0res0 . 
+Removed trivial hypothesis H3
+Starting proof of existence lemma for the reflected function  foldr . 
+A witness for the refined term  tm  is already present as hypothesis 
+lq_tmp4_p  not asserting another. 
+lq_tmp4_p
+A witness for the refined term  tm  is already present as hypothesis 
+lq_tmp4_p  not asserting another. 
+lq_tmp4_p
+Created new witness  wit_  for  (L_wf xs /\ True)
+Unified axiomatized variables z and VV . 
+Axiomatization  H0 :  (frel (C_u x xs) ::U nilU hres)  of variable  hres
+ is used to specialize  H . 
+Specializing  IH_xs  with simple proof term 
+Removed redundant hypothesis H2
+Axiomatization  res_def :  (frel xs ::U nilU vRes)  of variable  vRes
+ is used to specialize  H . 
+Axiomatization  res_def :  (frel xs ::U nilU vRes)  of variable  vRes
+ is used to specialize  H_49944768 . 
+Axiomatization  H6 : 
+(foldr_rel {| rel_u := frel0; funct_u := funct0 |} e xs foldrres0)
+ of variable  foldrres0  is used to specialize  H_49944768 . 
+Axiomatization  H8 :  (frel0 x ::U foldrres0 ::U nilU lq_tmp0res)
+ of variable  lq_tmp0res  is used to specialize  H . 
+Axiomatization  H :  (frel Emp_u ::U nilU hres)  of variable  hres
+ is used to specialize  base_p . 
+out/Benchmark/PLE/FoldrUniversal.vo (real: 108.69, user: 108.56, sys: 0.11, mem: 654008 ko)
 ROCQ compile out/Benchmark/PLE/MonadMaybe.v
 File "./out/Benchmark/PLE/MonadMaybe.v", line 7, characters 0-183:
 Warning: Not a truly recursive fixpoint. [non-recursive,fixpoints,default]
@@ -1024,7 +1484,7 @@ Inverted the axiomatization  H0 :
 Inverted the axiomatization  H :  (retrn_rel x (Just_u m)) .
 Unified axiomatized variables lq_tmp1res and fres . 
 Inverted the axiomatization  H1 :  (retrn_rel x lq_tmp1res) .
-out/Benchmark/PLE/MonadMaybe.vo (real: 14.35, user: 14.27, sys: 0.07, mem: 470564 ko)
+out/Benchmark/PLE/MonadMaybe.vo (real: 14.52, user: 14.44, sys: 0.07, mem: 469776 ko)
 ROCQ compile out/Benchmark/PLE/MonadId.v
 File "./out/Benchmark/PLE/MonadId.v", line 6, characters 0-130:
 Warning: Not a truly recursive fixpoint. [non-recursive,fixpoints,default]
@@ -1043,7 +1503,7 @@ Unified axiomatized variables i and VV .
 Inverted the axiomatization  H :  (retrn_rel x (Val_u x0)) .
 Unified axiomatized variables fres0 and fres . 
 Inverted the axiomatization  H1 :  (retrn_rel x fres) .
-out/Benchmark/PLE/MonadId.vo (real: 8.24, user: 8.16, sys: 0.07, mem: 456752 ko)
+out/Benchmark/PLE/MonadId.vo (real: 8.32, user: 8.24, sys: 0.08, mem: 454984 ko)
 ROCQ compile out/Benchmark/PLE/MonadList.v
 running generalize dependent  H
 running generalize dependent  t
@@ -1251,7 +1711,7 @@ Inverted the axiomatization  H7 :  (append_rel lq_tmp1res bindres0 appendres)
 .
 Inverted the axiomatization  H :  (append_rel xs bindres0 appendres0) .
 Inverted the axiomatization  H4 :  (retrn_rel x (C_u x1 Emp_u)) .
-out/Benchmark/PLE/MonadList.vo (real: 73.06, user: 72.91, sys: 0.13, mem: 617408 ko)
+out/Benchmark/PLE/MonadList.vo (real: 69.17, user: 69.02, sys: 0.13, mem: 604576 ko)
 ROCQ compile out/Benchmark/PLE/MonoidList.v
 running generalize dependent  H
 running generalize dependent  t
@@ -1296,7 +1756,7 @@ Removed trivial hypothesis H
 Inverted the axiomatization  up :  (mempty_rel u) .
 Inverted the axiomatization  H :  (mappend_rel Emp_u Emp_u mappendres) .
 Removed redundant hypothesis x_p
-out/Benchmark/PLE/MonoidList.vo (real: 32.17, user: 32.05, sys: 0.12, mem: 502228 ko)
+out/Benchmark/PLE/MonoidList.vo (real: 32.52, user: 32.39, sys: 0.12, mem: 503140 ko)
 ROCQ compile out/Benchmark/PLE/MonoidMaybe.v
 File "./out/Benchmark/PLE/MonoidMaybe.v", line 7, characters 0-183:
 Warning: Not a truly recursive fixpoint. [non-recursive,fixpoints,default]
@@ -1339,244 +1799,7 @@ Inverted the axiomatization  up :  (mempty_rel u) .
 Inverted the axiomatization  H : 
 (mappend_rel Nothing_u Nothing_u mappendres) .
 Removed redundant hypothesis x_p
-out/Benchmark/PLE/MonoidMaybe.vo (real: 14.96, user: 14.87, sys: 0.08, mem: 469684 ko)
-ROCQ compile out/Benchmark/PLE/Append.v
-running generalize dependent  H
-running generalize dependent  t
-Specializing  IHt  with (simple) proof term in nested induction 
-Removed trivial hypothesis H2
-Removed redundant hypothesis h_86920335
-Starting proof of existence lemma for the reflected function  append . 
-Unified axiomatized variables l and VV . 
-Unified axiomatized variables lq_tmp0res and lq_tmp0res0 . 
-Unified axiomatized variables concatMapres and concatMapres0 . 
-Unified axiomatized variables appendres and appendres0 . 
-Starting proof of existence lemma for the reflected function  concatMap . 
-File "./out/Benchmark/PLE/Append.v", line 198, characters 1-364:
-Warning: Collision between bound variables of name a
-[variable-collision,ltac,default]
-File "./out/Benchmark/PLE/Append.v", line 198, characters 1-364:
-Warning: Collision between bound variables of name a
-[variable-collision,ltac,default]
-File "./out/Benchmark/PLE/Append.v", line 198, characters 1-364:
-Warning: Collision between bound variables of name a
-[variable-collision,ltac,default]
-File "./out/Benchmark/PLE/Append.v", line 198, characters 1-364:
-Warning: Collision between bound variables of name a
-[variable-collision,ltac,default]
-File "./out/Benchmark/PLE/Append.v", line 198, characters 1-364:
-Warning: Collision between bound variables of name a
-[variable-collision,ltac,default]
-File "./out/Benchmark/PLE/Append.v", line 198, characters 1-364:
-Warning: Collision between bound variables of name a
-[variable-collision,ltac,default]
-File "./out/Benchmark/PLE/Append.v", line 198, characters 1-364:
-Warning: Collision between bound variables of name a
-[variable-collision,ltac,default]
-File "./out/Benchmark/PLE/Append.v", line 198, characters 1-364:
-Warning: Collision between bound variables of name a
-[variable-collision,ltac,default]
-File "./out/Benchmark/PLE/Append.v", line 198, characters 1-364:
-Warning: Collision between bound variables of name a
-[variable-collision,ltac,default]
-File "./out/Benchmark/PLE/Append.v", line 198, characters 1-364:
-Warning: Collision between bound variables of name a
-[variable-collision,ltac,default]
-File "./out/Benchmark/PLE/Append.v", line 198, characters 1-364:
-Warning: Collision between bound variables of name a
-[variable-collision,ltac,default]
-File "./out/Benchmark/PLE/Append.v", line 198, characters 1-364:
-Warning: Collision between bound variables of name a
-[variable-collision,ltac,default]
-The rewrite lemma  f_frel : 
-(forall
-   (args : ArgList {_ : Z | True} ::RT (fun _ : {_ : Z | True} => nilRT))
-   (v : L_u),
- ⌊ f args _⌋ = v <->
- frel
-   (prArgList args Z ::UT nilUT (conj eq_refl (fun _ : {_ : Z | True} => I)))
-   v)
- that needs to be used to change axiomatization of a variable from the refined to the unrefined world. 
-Function  f  has arity >5 and arguments 
-((exist (fun _ : Z => True) x
-    (and_ind (fun (_ : L_wf xs /\ True) (_ : True) => I) (conj l lq_tmp3_p)))
- ::R nilR _::_ _nil)
-. 
-res_wit0
-Created new witness  wit_  for  (L_wf xs /\ True)
-Unified axiomatized variables l and VV . 
-Removed redundant hypothesis h_40663038
-Removed redundant hypothesis h_88923566
-Starting proof of existence lemma for the reflected function  map . 
-res_wit
-Unified axiomatized variables l and VV . 
-Specializing  IH_xs  with simple proof term 
-Removed redundant hypothesis xs_p
-Inverted the axiomatization  H0 : 
-(append_rel (App_u ds_d2kz xs) Emp_u appendres) .
-Axiomatization  H6 :  (append_rel xs Emp_u appendres0)  of variable 
-appendres0  is used to specialize  H . 
-Axiomatization  H6 :  (append_rel xs Emp_u appendres0)  of variable 
-appendres0  is used to specialize  e . 
-Removed trivial hypothesis e
-Inverted the axiomatization  H :  (append_rel Emp_u Emp_u appendres) .
-Specializing  IH_xs  with simple proof term 
-Removed redundant hypothesis xs_p
-Inverted the axiomatization  H3 : 
-(append_rel (App_u x xs) append_res_3 append_res_4) .
-Inverted the axiomatization  H1 :  (append_rel appendres zs append_res_2) .
-Inverted the axiomatization  H0 : 
-(append_rel (App_u x xs) ys (App_u x0 xs0)) .
-Axiomatization  H7 :  (append_rel xs ys xs0)  of variable  xs0
- is used to specialize  H . 
-Axiomatization  H3 :  (append_rel xs0 zs appendres1)  of variable  appendres1
- is used to specialize  H . 
-Axiomatization  H2 :  (append_rel ys zs append_res_3)  of variable 
-append_res_3  is used to specialize  H . 
-Axiomatization  H9 :  (append_rel xs append_res_3 appendres0)  of variable 
-appendres0  is used to specialize  H . 
-Inverted the axiomatization  H2 : 
-(append_rel Emp_u append_res_3 append_res_4) .
-Inverted the axiomatization  H :  (append_rel Emp_u ys appendres) .
-Unified axiomatized variables append_res_2 and append_res_3 . 
-Specializing  IH_xs  with simple proof term 
-Removed redundant hypothesis H5
-Inverted the axiomatization  H4 : 
-(append_rel (App_u lq_tmp0res mapres0) map_res_2 append_res_2) .
-Inverted the axiomatization  H1 : 
-(map_rel {| rel_u := frel; funct_u := funct |} appendres mapres) .
-Inverted the axiomatization  H0 : 
-(append_rel (App_u ds_d2ku xs) ys (App_u x xs0)) .
-Unified axiomatized variables lq_tmp0res and lq_tmp0res0 . 
-Axiomatization  H9 :  (append_rel xs ys xs0)  of variable  xs0
- is used to specialize  H . 
-Axiomatization  H4 : 
-(map_rel {| rel_u := frel; funct_u := funct |} xs0 mapres1)  of variable 
-mapres1  is used to specialize  H . 
-Axiomatization  H2 : 
-(map_rel {| rel_u := frel; funct_u := funct |} ys map_res_2)  of variable 
-map_res_2  is used to specialize  H . 
-Axiomatization  H8 : 
-(map_rel {| rel_u := frel; funct_u := funct |} xs mapres0)  of variable 
-mapres0  is used to specialize  H . 
-Axiomatization  H11 :  (append_rel mapres0 map_res_2 appendres0)
- of variable  appendres0  is used to specialize  H . 
-Inverted the axiomatization  H3 :  (append_rel Emp_u map_res_2 append_res_2)
-.
-Inverted the axiomatization  H :  (append_rel Emp_u ys appendres) .
-Unified axiomatized variables mapres and map_res_2 . 
-out/Benchmark/PLE/Append.vo (real: 171.27, user: 171.04, sys: 0.20, mem: 653604 ko)
-ROCQ compile out/Benchmark/PLE/Compose.v
-Unified axiomatized variables lq_tmp3res and lq_tmp3res0 . 
-Unified axiomatized variables lq_tmp0res and lq_tmp0res0 . 
-Starting proof of existence lemma for the reflected function  compose . 
-A witness for the refined term  tm  is already present as hypothesis 
-lq_tmp6_p  not asserting another. 
-lq_tmp6_p
-A witness for the refined term  tm  is already present as hypothesis 
-lq_tmp6_p  not asserting another. 
-lq_tmp6_p
-Unified axiomatized variables z and VV . 
-Unified axiomatized variables gres and lq_tmp3res . 
-Unified axiomatized variables fres and lq_tmp0res . 
-out/Benchmark/PLE/Compose.vo (real: 16.01, user: 15.95, sys: 0.06, mem: 465728 ko)
-ROCQ compile out/Benchmark/PLE/Lambdas.v
-out/Benchmark/PLE/Lambdas.vo (real: 0.51, user: 0.44, sys: 0.06, mem: 437972 ko)
-ROCQ compile out/Benchmark/PLE/Lists.v
-running generalize dependent  H
-running generalize dependent  t
-Specializing  IHt  with (simple) proof term in nested induction 
-Removed trivial hypothesis H2
-Removed redundant hypothesis h_86920335
-Starting proof of existence lemma for the reflected function  append . 
-Unified axiomatized variables l and VV . 
-Inverted the axiomatization  H0 :  (append_rel appendres Emp_u append_res_2)
-.
-Inverted the axiomatization  H :  (append_rel (C_u 1 Emp_u) Emp_u (C_u x xs))
-.
-Inverted the axiomatization  H4 :  (append_rel Emp_u Emp_u xs) .
-Inverted the axiomatization  H1 :  (append_rel Emp_u Emp_u appendres0) .
-Inverted the axiomatization  H0 :  (append_rel appendres Emp_u append_res_2)
-.
-Inverted the axiomatization  H : 
-(append_rel (C_u 1 (C_u 2 Emp_u)) Emp_u (C_u x xs)) .
-Inverted the axiomatization  H4 :  (append_rel (C_u 2 Emp_u) Emp_u xs) .
-Inverted the axiomatization  H5 :  (append_rel Emp_u Emp_u appendres) .
-Inverted the axiomatization  H1 : 
-(append_rel (C_u 2 Emp_u) Emp_u appendres0) .
-Inverted the axiomatization  H4 :  (append_rel Emp_u Emp_u appendres) .
-Inverted the axiomatization  H0 :  (append_rel appendres Emp_u append_res_2)
-.
-Inverted the axiomatization  H : 
-(append_rel (C_u 1 (C_u 2 (C_u 3 Emp_u))) Emp_u (C_u x xs)) .
-Inverted the axiomatization  H4 : 
-(append_rel (C_u 2 (C_u 3 Emp_u)) Emp_u xs) .
-Inverted the axiomatization  H5 :  (append_rel (C_u 3 Emp_u) Emp_u appendres)
-.
-Inverted the axiomatization  H4 :  (append_rel Emp_u Emp_u appendres1) .
-Inverted the axiomatization  H1 : 
-(append_rel (C_u 2 (C_u 3 Emp_u)) Emp_u appendres0) .
-Inverted the axiomatization  H4 :  (append_rel (C_u 3 Emp_u) Emp_u appendres)
-.
-Inverted the axiomatization  H3 :  (append_rel Emp_u Emp_u appendres0) .
-Creating partial applications for  IH_xs
-Removed redundant hypothesis res_wit
-Starting proof of existence lemma for the reflected function  length . 
-Created new witness  wit_  for  (L_wf xs /\ True)
-Sucessfully inverted  IH_55394889
-Sucessfully inverted  IH_55394889
-instanciating the existential in the goal with 
-⌊ length
-    (exist (fun x : L_u => L_wf x /\ True) xs
-       (conj (wf_C_VV_ (wf_C_VV_ (conj l lq_tmp0_p))) I)) -⌋
-Sucessfully inverted  IH_55394889
-Sucessfully inverted  IH_55394889
-Unified axiomatized variables z and VV . 
-Inverted the axiomatization  H0 :  (append_rel appendres zs append_res_2) .
-Inverted the axiomatization  H :  (append_rel (C_u x xs) ys (C_u x0 xs0)) .
-Unified axiomatized variables append_res_3 and xs0 . 
-Unified axiomatized variables append_res_4 and appendres0 . 
-out/Benchmark/PLE/Lists.vo (real: 29.12, user: 29.01, sys: 0.10, mem: 510160 ko)
-ROCQ compile out/Benchmark/PLE/FoldrUniversal.v
-running generalize dependent  H
-running generalize dependent  t
-Specializing  IHt  with (simple) proof term in nested induction 
-Unified axiomatized variables lq_tmp3res and lq_tmp3res0 . 
-Unified axiomatized variables lq_tmp0res and lq_tmp0res0 . 
-Starting proof of existence lemma for the reflected function  compose . 
-res_wit
-A witness for the refined term  tm  is already present as hypothesis  res_wit
- not asserting another. 
-res_wit
-Unified axiomatized variables z and VV . 
-Unified axiomatized variables foldrres and foldrres0 . 
-Unified axiomatized variables lq_tmp0res and lq_tmp0res0 . 
-Removed trivial hypothesis H3
-Starting proof of existence lemma for the reflected function  foldr . 
-A witness for the refined term  tm  is already present as hypothesis 
-lq_tmp4_p  not asserting another. 
-lq_tmp4_p
-A witness for the refined term  tm  is already present as hypothesis 
-lq_tmp4_p  not asserting another. 
-lq_tmp4_p
-Created new witness  wit_  for  (L_wf xs /\ True)
-Unified axiomatized variables z and VV . 
-Axiomatization  H0 :  (frel (C_u x xs) ::U nilU hres)  of variable  hres
- is used to specialize  H . 
-Specializing  IH_xs  with simple proof term 
-Removed redundant hypothesis H2
-Axiomatization  res_def :  (frel xs ::U nilU vRes)  of variable  vRes
- is used to specialize  H . 
-Axiomatization  res_def :  (frel xs ::U nilU vRes)  of variable  vRes
- is used to specialize  H_49944768 . 
-Axiomatization  H6 : 
-(foldr_rel {| rel_u := frel0; funct_u := funct0 |} e xs foldrres0)
- of variable  foldrres0  is used to specialize  H_49944768 . 
-Axiomatization  H8 :  (frel0 x ::U foldrres0 ::U nilU lq_tmp0res)
- of variable  lq_tmp0res  is used to specialize  H . 
-Axiomatization  H :  (frel Emp_u ::U nilU hres)  of variable  hres
- is used to specialize  base_p . 
-out/Benchmark/PLE/FoldrUniversal.vo (real: 108.72, user: 108.59, sys: 0.10, mem: 635436 ko)
+out/Benchmark/PLE/MonoidMaybe.vo (real: 14.94, user: 14.84, sys: 0.09, mem: 469892 ko)
 ROCQ compile out/Benchmark/RBinsToBins.v
 running generalize dependent  H
 running generalize dependent  t
@@ -1590,7 +1813,7 @@ Specializing  IHt  with (simple) proof term in nested induction
 Specializing  IHt  with (simple) proof term in nested induction 
 Specializing  IHt  with (simple) proof term in nested induction 
 Specializing  IHt  with (simple) proof term in nested induction 
-out/Benchmark/RBinsToBins.vo (real: 4.80, user: 4.72, sys: 0.07, mem: 439780 ko)
+out/Benchmark/RBinsToBins.vo (real: 4.82, user: 4.75, sys: 0.07, mem: 440472 ko)
 ROCQ compile out/Benchmark/SoftwareFoundations.v
 File "./out/Benchmark/SoftwareFoundations.v", line 7, characters 0-160:
 Warning: Not a truly recursive fixpoint. [non-recursive,fixpoints,default]
@@ -1720,12 +1943,9 @@ Specializing  IHt  with (simple) proof term in nested induction
 Specializing  IHt  with (simple) proof term in nested induction 
 Unified axiomatized variables bin_to_natres and bin_to_natres0 . 
 Unified axiomatized variables multZres and multZres0 . 
-Inverted the axiomatization  H4 :  (multZ_rel 2 bin_to_natres0 multZres0) .
 Unified axiomatized variables bin_to_natres and bin_to_natres0 . 
 Unified axiomatized variables multZres and multZres0 . 
 Unified axiomatized variables addZres and addZres0 . 
-Inverted the axiomatization  H6 :  (addZ_rel 1 multZres0 addZres0) .
-Inverted the axiomatization  H5 :  (multZ_rel 2 bin_to_natres0 multZres0) .
 Starting proof of existence lemma for the reflected function  bin_to_nat . 
 Created new witness  wit_  for  (SFBin_wf m' /\ True)
 Created new witness  wit_  for  (SFBin_wf m' /\ True)
@@ -1907,8 +2127,6 @@ Created new witness  wit_0  for  (MyNat_wf n' /\ True)
 Unified axiomatized variables m0 and VV . 
 Unified axiomatized variables factorialres and factorialres0 . 
 Unified axiomatized variables multres and multres0 . 
-Inverted the axiomatization  H4 :  (mult_rel (S_u n') factorialres0 multres0)
-.
 Starting proof of existence lemma for the reflected function  factorial . 
 Created new witness  wit_  for  (MyNat_wf n' /\ True)
 Unified axiomatized variables m and VV . 
@@ -2252,13 +2470,9 @@ running generalize dependent  t
 File "./out/Benchmark/SoftwareFoundations.v", line 3836, characters 0-139:
 Warning: Not a truly recursive fixpoint. [non-recursive,fixpoints,default]
 Unified axiomatized variables lower_letterres and lower_letterres0 . 
-Inverted the axiomatization  H1 :  (lower_letter_rel A_u lower_letterres0) .
 Unified axiomatized variables lower_letterres and lower_letterres0 . 
-Inverted the axiomatization  H1 :  (lower_letter_rel B_u lower_letterres0) .
 Unified axiomatized variables lower_letterres and lower_letterres0 . 
-Inverted the axiomatization  H1 :  (lower_letter_rel C_u lower_letterres0) .
 Unified axiomatized variables lower_letterres and lower_letterres0 . 
-Inverted the axiomatization  H1 :  (lower_letter_rel D_u lower_letterres0) .
 Removed redundant hypothesis h_86531359
 Removed redundant hypothesis h_84928990
 Removed redundant hypothesis h_61781460
@@ -2271,22 +2485,14 @@ Unified axiomatized variables lower_grade_res_3 and lower_grade_res_1 .
 Removed redundant hypothesis H2
 Removed redundant hypothesis H1
 Removed redundant hypothesis H0
-Inverted the axiomatization  H8 :  (ltbZ_rel late_days 21 false) .
-Inverted the axiomatization  H7 :  (ltbZ_rel late_days 17 false) .
-Inverted the axiomatization  H6 :  (ltbZ_rel late_days 9 false) .
 Unified axiomatized variables lower_graderes and lower_graderes0 . 
 Unified axiomatized variables lower_grade_res_2 and lower_grade_res_0 . 
 Removed redundant hypothesis H2
 Removed redundant hypothesis H1
 Removed redundant hypothesis H0
-Inverted the axiomatization  H7 :  (ltbZ_rel late_days 21 true) .
-Inverted the axiomatization  H6 :  (ltbZ_rel late_days 17 false) .
-Inverted the axiomatization  H5 :  (ltbZ_rel late_days 9 false) .
 Unified axiomatized variables lower_graderes and lower_graderes0 . 
 Removed redundant hypothesis H1
 Removed redundant hypothesis H0
-Inverted the axiomatization  H4 :  (ltbZ_rel late_days 17 true) .
-Inverted the axiomatization  H3 :  (ltbZ_rel late_days 9 false) .
 Picking left branch as the right one is contradictory
 Picking left branch as the right one is contradictory
 Picking left branch as the right one is contradictory
@@ -2415,7 +2621,7 @@ File "./out/Benchmark/SoftwareFoundations.v", line 5004, characters 0-135:
 Warning: Not a truly recursive fixpoint. [non-recursive,fixpoints,default]
 Starting proof of existence lemma for the reflected function  monochrome . 
 Unified axiomatized variables s and VV . 
-out/Benchmark/SoftwareFoundations.vo (real: 533.28, user: 532.34, sys: 0.88, mem: 780228 ko)
+out/Benchmark/SoftwareFoundations.vo (real: 472.38, user: 471.48, sys: 0.83, mem: 781704 ko)
 ROCQ compile out/Benchmark/PeanoNats.v
 running generalize dependent  H
 running generalize dependent  t
@@ -2648,7 +2854,7 @@ Inverted the axiomatization  H :  (eqN_rel Zero_u Zero_u true) .
 Removed redundant hypothesis m_p
 Starting proof of existence lemma for the reflected function  two . 
 Unified axiomatized variables n and VV . 
-out/Benchmark/PeanoNats.vo (real: 911.24, user: 910.51, sys: 0.64, mem: 1616212 ko)
+out/Benchmark/PeanoNats.vo (real: 924.98, user: 924.12, sys: 0.76, mem: 1783736 ko)
 ROCQ compile out/Benchmark/Overview.v
 running generalize dependent  H
 running generalize dependent  t
@@ -3245,38 +3451,38 @@ Removed redundant hypothesis xs_p
 Unified axiomatized variables getres and get_res_2 . 
 Inverted the axiomatization  up :  (llen_rel xs u) .
 Inverted the axiomatization  H1 :  (addZ_rel llenres 1 addZres) .
-out/Benchmark/Overview.vo (real: 2030.56, user: 2029.38, sys: 0.99, mem: 1720880 ko)
+out/Benchmark/Overview.vo (real: 2070.59, user: 2069.31, sys: 1.05, mem: 1659380 ko)
      Time |   Peak Mem | File Name                           
 -------------------------------------------------------------
-66m21.49s | 1720880 ko | Total Time / Peak Mem               
+73m41.12s | 1783736 ko | Total Time / Peak Mem               
 -------------------------------------------------------------
-33m49.38s | 1720880 ko | out/Benchmark/Overview.vo           
-15m10.51s | 1616212 ko | out/Benchmark/PeanoNats.vo          
- 8m52.34s |  780228 ko | out/Benchmark/SoftwareFoundations.vo
- 2m51.04s |  653604 ko | out/Benchmark/PLE/Append.vo         
- 1m48.59s |  635436 ko | out/Benchmark/PLE/FoldrUniversal.vo 
- 1m12.91s |  617408 ko | out/Benchmark/PLE/MonadList.vo      
- 0m32.05s |  502228 ko | out/Benchmark/PLE/MonoidList.vo     
- 0m29.01s |  510160 ko | out/Benchmark/PLE/Lists.vo          
- 0m15.95s |  465728 ko | out/Benchmark/PLE/Compose.vo        
- 0m14.87s |  469684 ko | out/Benchmark/PLE/MonoidMaybe.vo    
- 0m14.27s |  470564 ko | out/Benchmark/PLE/MonadMaybe.vo     
- 0m08.16s |  456752 ko | out/Benchmark/PLE/MonadId.vo        
- 0m08.14s |  561016 ko | coqDeps/LHCoqTactics.vo             
- 0m08.06s |  563176 ko | coqDeps/TacticUtils.vo              
- 0m08.03s |  557324 ko | coqDeps/LiquidPreludeUtil.vo        
- 0m07.98s |  565044 ko | coqDeps/GetRelFlattening.vo         
- 0m04.72s |  439780 ko | out/Benchmark/RBinsToBins.vo        
- 0m00.81s |  435868 ko | coqDeps/GetRelInterface.vo          
- 0m00.77s |  435616 ko | coqDeps/QuickTacs.vo                
- 0m00.76s |  432852 ko | coqDeps/SimpleTacticUtils.vo        
- 0m00.70s |  429896 ko | coqDeps/SubsumptionTacs.vo          
- 0m00.69s |  432488 ko | coqDeps/LiquidPrelude.vo            
- 0m00.44s |  437972 ko | out/Benchmark/PLE/Lambdas.vo        
- 0m00.33s |  423440 ko | coqDeps/LiquidPreludeInterface.vo   
- 0m00.28s |  423188 ko | coqDeps/Equality.vo                 
- 0m00.26s |  420964 ko | coqDeps/Snipe.vo                    
- 0m00.23s |  388452 ko | coqDeps/BoolTacs.vo                 
- 0m00.18s |  338212 ko | coqDeps/EqualityInterface.vo        
- 0m00.03s |   72492 ko | coqDeps/PairLists.vo                
+34m29.31s | 1659380 ko | out/Benchmark/Overview.vo           
+15m24.12s | 1783736 ko | out/Benchmark/PeanoNats.vo          
+10m19.93s |  704492 ko | out/Benchmark/PLE/Append.vo         
+ 7m51.48s |  781704 ko | out/Benchmark/SoftwareFoundations.vo
+ 1m48.56s |  654008 ko | out/Benchmark/PLE/FoldrUniversal.vo 
+ 1m09.02s |  604576 ko | out/Benchmark/PLE/MonadList.vo      
+ 0m32.39s |  503140 ko | out/Benchmark/PLE/MonoidList.vo     
+ 0m29.69s |  512396 ko | out/Benchmark/PLE/Lists.vo          
+ 0m15.39s |  465436 ko | out/Benchmark/PLE/Compose.vo        
+ 0m14.84s |  469892 ko | out/Benchmark/PLE/MonoidMaybe.vo    
+ 0m14.44s |  469776 ko | out/Benchmark/PLE/MonadMaybe.vo     
+ 0m08.33s |  563232 ko | coqDeps/TacticUtils.vo              
+ 0m08.32s |  564468 ko | coqDeps/GetRelFlattening.vo         
+ 0m08.25s |  556916 ko | coqDeps/LiquidPreludeUtil.vo        
+ 0m08.24s |  454984 ko | out/Benchmark/PLE/MonadId.vo        
+ 0m08.22s |  561084 ko | coqDeps/LHCoqTactics.vo             
+ 0m04.75s |  440472 ko | out/Benchmark/RBinsToBins.vo        
+ 0m00.86s |  435000 ko | coqDeps/GetRelInterface.vo          
+ 0m00.81s |  435592 ko | coqDeps/QuickTacs.vo                
+ 0m00.81s |  434092 ko | coqDeps/SimpleTacticUtils.vo        
+ 0m00.73s |  431588 ko | coqDeps/SubsumptionTacs.vo          
+ 0m00.71s |  431388 ko | coqDeps/LiquidPrelude.vo            
+ 0m00.52s |  437504 ko | out/Benchmark/PLE/Lambdas.vo        
+ 0m00.35s |  423620 ko | coqDeps/LiquidPreludeInterface.vo   
+ 0m00.31s |  423020 ko | coqDeps/Equality.vo                 
+ 0m00.29s |  421168 ko | coqDeps/Snipe.vo                    
+ 0m00.22s |  387872 ko | coqDeps/BoolTacs.vo                 
+ 0m00.20s |  337176 ko | coqDeps/EqualityInterface.vo        
+ 0m00.03s |   72152 ko | coqDeps/PairLists.vo                
 cp -f time-of-build-pretty.log out/time-of-build-pretty.log

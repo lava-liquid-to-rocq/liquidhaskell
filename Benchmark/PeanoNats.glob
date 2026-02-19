@@ -1,4 +1,4 @@
-DIGEST ea8a7f6c5316e1fb017e6fd1a1817cc0
+DIGEST 5745c40b3834949d45453bdd34942cd5
 FOutput.Benchmark.PeanoNats
 R28:44 coqDeps.LiquidPreludeUtil <> <> lib
 ind 99:104 <> Nats_u
@@ -1058,11 +1058,11 @@ R10567:10573 Output.Benchmark.PeanoNats <> eqN_rel:126 ind
 R10589:10592 Corelib.Init.Datatypes <> true constr
 R10582:10587 Output.Benchmark.PeanoNats <> Zero_u constr
 R10575:10580 Output.Benchmark.PeanoNats <> Zero_u constr
-binder 10620:10644 <> lq_anf7205759403792807353:128
+binder 10620:10644 <> lq_anf7205759403792809413:128
 R10648:10654 Output.Benchmark.PeanoNats <> eqN_rel:126 ind
 R10697:10701 Corelib.Init.Datatypes <> false constr
 R10664:10668 Output.Benchmark.PeanoNats <> Suc_u constr
-R10670:10694 Output.Benchmark.PeanoNats <> lq_anf7205759403792807353:128 var
+R10670:10694 Output.Benchmark.PeanoNats <> lq_anf7205759403792809413:128 var
 R10656:10661 Output.Benchmark.PeanoNats <> Zero_u constr
 binder 10730:10730 <> m:129
 R10734:10740 Output.Benchmark.PeanoNats <> eqN_rel:126 ind
@@ -1134,13 +1134,13 @@ R11645:11648 Corelib.Init.Logic <> True ind
 R11673:11676 coqDeps.LiquidPreludeUtil <> _nil def
 R11710:11726 Output.Benchmark.PeanoNats <> eqN_Zero_Zero_lem thm
 prf 11750:11765 <> eqN_Zero_Suc_lem
-binder 11768:11792 <> lq_anf7205759403792807353:139
+binder 11768:11792 <> lq_anf7205759403792809413:139
 R11799:11799 Corelib.Init.Logic <> ::type_scope:x_'<->'_x not
 R11854:11859 Corelib.Init.Logic <> ::type_scope:x_'<->'_x not
 R11800:11806 Output.Benchmark.PeanoNats <> eqN_rel ind
 R11808:11813 Output.Benchmark.PeanoNats <> Zero_u constr
 R11816:11820 Output.Benchmark.PeanoNats <> Suc_u constr
-R11822:11846 Output.Benchmark.PeanoNats <> lq_anf7205759403792807353:139 var
+R11822:11846 Output.Benchmark.PeanoNats <> lq_anf7205759403792809413:139 var
 R11849:11853 Corelib.Init.Datatypes <> false constr
 R11860:11863 Corelib.Init.Logic <> True ind
 R11888:11891 coqDeps.LiquidPreludeUtil <> _nil def

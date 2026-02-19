@@ -229,8 +229,8 @@ Proof.
 		fix_notations. 
 		refine (subsumptionCast _ _ 
 		(step (exist (fun (x: Z) => True) x (ltac: (solver))) 
-		(exist (fun (xs: L_u) => ((L_wf xs) /\ True)) xs (ltac: (solver)))) _).
-    solver.  
+		(exist (fun (xs: L_u) => ((L_wf xs) /\ True)) xs (ltac: (solver)))) _); 
+		solver.  
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  

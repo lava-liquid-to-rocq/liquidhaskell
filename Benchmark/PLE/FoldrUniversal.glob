@@ -1,4 +1,4 @@
-DIGEST 733d97f228d1f0e0093feab690d2f1ed
+DIGEST 43f6dc2f2f6d6bd0e6678380f413b934
 FOutput.Benchmark.PLE.FoldrUniversal
 R28:44 coqDeps.LiquidPreludeUtil <> <> lib
 ind 99:101 <> L_u
@@ -2893,7 +2893,7 @@ R22234:22238 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
 R22227:22230 Output.Benchmark.PLE.FoldrUniversal <> L_wf def
 R22232:22233 Output.Benchmark.PLE.FoldrUniversal <> xs:472 var
 R22239:22242 Corelib.Init.Logic <> True ind
-R22311:22315 Corelib.Init.Specif <> exist constr
-R22319:22322 coqDeps.LiquidPreludeUtil <> unit constr
-R22311:22315 Corelib.Init.Specif <> exist constr
-R22319:22322 coqDeps.LiquidPreludeUtil <> unit constr
+R22310:22314 Corelib.Init.Specif <> exist constr
+R22318:22321 coqDeps.LiquidPreludeUtil <> unit constr
+R22310:22314 Corelib.Init.Specif <> exist constr
+R22318:22321 coqDeps.LiquidPreludeUtil <> unit constr
