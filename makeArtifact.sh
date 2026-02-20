@@ -15,4 +15,4 @@
 
 rm -rf lava/out
 
-zip -r artifact.zip extended_paper.pdf cabal.project liquidhaskell.cabal Makefile README.md stack.yaml stack.yaml.lock lava liquid-finfield liquid-fixpoint liquidhaskell-boot liquid-parallel liquid-prelude liquid-vector resources scripts src tests typeclass-tests benchmark-timings
+zip -r artifact.zip extended_paper.pdf cabal.project Setup.hs liquidhaskell.cabal Makefile README.md stack.yaml stack.yaml.lock lava liquid-finfield liquid-fixpoint liquidhaskell-boot liquid-parallel liquid-prelude liquid-vector resources scripts src tests typeclass-tests benchmark-timings
