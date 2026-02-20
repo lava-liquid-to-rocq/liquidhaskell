@@ -2,24 +2,6 @@ Load TacticUtils.
 
 Ltac injectivity_in H := injection H; clear H; intros H.
 
-Ltac ple := simpl in *; try repeat first [ simpl_loop (*| eauto*) | f_equal_ind].
-Ltac split_ple := ple; first [split; split_ple | ple]. (* ple; tryif split then split; split_ple else idtac.*)
-Ltac intros_ple :=
-  split_ple; let H' := fresh "H" in
-  intros H'; try injectivity_in H'; simpl in H'.
-
-(* todo get rid of the simpl branch and instead implement simplification of [.] terms from program *)
-Ltac smt_trivial := simpl in *; first [ fast_done | now simpl_loop | shape_based; smt_trivial | simpl_loop; smt_trivial | exfalso; smt_trivial].
-
-Tactic Notation "smt_now" tactic(t) := first [t; smt_trivial | t].
-
-Tactic Notation "smt_app" constr(th) :=
-  first [apply th | 
-  let tm := fresh "term" in
-  pose th as tm;
-  quick_simpl;
-  first [apply tm | simpl; first [apply tm | simpl_loop; apply tm]]; try subst tm]; smt_trivial.
-
 (* execute the two tactics one after the other and suceed iff at least one of them is sucessful *)
 Tactic Notation "concat_either" tactic(first) tactic(second) :=
   tryif first then try second else second.

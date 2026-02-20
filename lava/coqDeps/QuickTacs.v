@@ -54,13 +54,10 @@ Ltac fast_done :=
     quick_wff_wit (* automatically apply the wff lemmas *)
     | unshelve eassumption
     | symmetry; unshelve eassumption
-    | reflexivity
     | destruct_unit
     | lia (* solve integer arithmetic goals *)
     | congruence (* solve goals in theory of equality and uninterpreted functions *)
     | unshelve intuition (* simplify and apply tauto, a decision procedure for constructive propositional logic *)
-    | autounfold with wff_constr_db get_rel_db (* automatically unfold the wff definitions *)
-    (* | solve [unshelve econstructor; fast_done] *)
     | easy  
   ].
 
