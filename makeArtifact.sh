@@ -14,5 +14,8 @@
 #cd ..
 
 rm -rf lava/out
+rm -f lava/coqDeps/*.vo*
+rm -f lava/coqDeps/*.aux*
+rm -rf lava/.CoqMakefile.d lava/CoqMakefile.conf
 
 zip -r artifact.zip supplementary.pdf cabal.project Setup.hs liquidhaskell.cabal Makefile README.md stack.yaml stack.yaml.lock lava liquid-finfield liquid-fixpoint liquidhaskell-boot liquid-parallel liquid-prelude liquid-vector resources scripts src tests typeclass-tests benchmark-timings
