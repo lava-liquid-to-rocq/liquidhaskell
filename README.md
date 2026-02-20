@@ -1,7 +1,8 @@
 # liquidhaskell
 This repository is a fork of the liquidhaskell repository extending liquidhaskell with the lava tool.
 
-Note that the original liquid haskell code is required to build lava and retains its existing copyrights.
+Note on anonymity:
+The lava directory is the new development and has been anonymized. The rest of the code (required for building) is ported from the liquid haskell open source development and the existing copyrights are maintained.
 
 ## Building the tool
 The tool can be build by running
