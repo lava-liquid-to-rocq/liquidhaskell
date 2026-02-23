@@ -62,7 +62,7 @@ data Expr
     --   for lets in the code, we can always get an annotation, but we also create some for ANF
     Let Id (Maybe RefType) Expr Expr
   | -- | Pattern matching (includes conditionals), with Maybe for optional branches
-    Case Reft [(Id, [Id], Maybe Expr)]
+    Case Reft [(Pattern, Maybe Expr)]
   deriving (Data, Eq)
 
 -- | Simple LH terms including formulas.
@@ -95,11 +95,7 @@ data Reft
 -- | Localization of the variables
 --
 -- loc ::= L | G | Y
-data Localization
-  = Local
-  | Global
-  | Recursive
-  deriving (Data, Eq)
+data Localization = Local | Global | Recursive deriving (Data, Eq)
 
 -- | Builtin binary operators (@op@)
 data Bop
@@ -122,11 +118,12 @@ data Bop
 -- | Binary proof operators
 --
 -- > pop ::= === | =<= | =>=
-data ProofOp
-  = PEq
-  | PLeq
-  | PGeq
-  deriving (Data, Eq)
+data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq)
+
+-- | Patterns
+--
+-- > p ::= x | C p*
+data Pattern = VarPat Id | TCPat Id [Pattern] deriving (Data, Eq)
 
 -- Builtin type and data constructors
 

@@ -14,6 +14,10 @@ module Lava.CoqUtil
     ihName,
     relPostfix,
     relDefBranchName,
+    exLemName,
+    relDefRwLemName,
+    relDefMkLemName,
+    relBranchLemName,
 
     -- * Translating a refined data type to Coq
     transRefTC,
@@ -82,10 +86,10 @@ leibnitzInstanceName tc = "leibnitz_eq_" ++ tc
 relPostfix = "_rel"
 relDefName name = name ++ relPostfix
 relDefThmName name = name ++ "__" ++ relDefName name
+relDefLemName name = relDefThmName name ++ "'"
 relDefRwLemName name = name ++ "__" ++ relDefName name ++ "_rw"
 exLemName name = name ++ relPostfix ++ "_ex"
 relDefMkLemName name = relDefName name ++ "_mk"
-relDefLemName name = name ++ "__" ++ relDefName name ++ "'"
 funcHoodLemName name = relDefName name ++ "_funct"
 relDefBranchName name = name ++ "_def"
 relBranchLemName name = name ++ "_lem"

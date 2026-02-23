@@ -6,7 +6,7 @@ import Data.Bifunctor (second)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil (packGetF)
-import Lava.CoqUtil (packInstanceName, toPack, toUPack)
+import Lava.CoqUtil (funcHoodLemName, packInstanceName, relDefLemName, relDefName, relDefThmName, toPack, toUPack)
 import Lava.Util (hashName)
 
 -- * Generic translations
@@ -15,7 +15,7 @@ import Lava.Util (hashName)
 trBuiltin :: LH.Builtin -> Coq.Builtin
 trBuiltin Integer = Coq.CTInt
 trBuiltin Double = error "Doubles not yet supported in Coq (function Translation.trBuiltin)"
-trBuiltin String = error "Strings not yet supported in Coq (function (Translation.trBuiltin)"
+trBuiltin String = error "Strings not yet supported in Coq (function Translation.trBuiltin)"
 
 -- | Translation of datatypes
 trDC :: Id -> Id
@@ -58,18 +58,20 @@ trPop = undefined
 -- * Unrefined translations
 
 -- | Translation of refinement types
+--   Function TtoU (def 3.1) of the paper
 utrRefType :: LH.RefType -> RocqType
 utrRefType (RefType _ tp _) = trBaseType tp
 utrRefType tp@(ArrType {}) =
   let (args, ret) = arrs tp
    in toUPack (map (utrRefType . snd) args) (utrRefType ret)
 
--- | Translation of refinement types at top level (with arrows)
+-- | Translation of refinement types at top level (with arrows and Prop at the end)
 utrRefTypeTop :: LH.RefType -> RocqType
-utrRefTypeTop tp@(RefType {}) = utrRefType tp
+utrRefTypeTop tp@(RefType {}) = Arrow (utrRefType tp) (Coq.Sort Coq.PropSort)
 utrRefTypeTop (ArrType _ tpx tp) = Coq.Arrow (utrRefType tpx) (utrRefTypeTop tp)
 
 -- | Translation of refinements
+--   Function RtoU (def 3.2) of the paper
 utrReft :: LH.Reft -> Coq.CoqTerm
 utrReft tm0 = case tm0 of
   LH.Var x ar loc -> undefined
@@ -87,12 +89,14 @@ utrReft tm0 = case tm0 of
   LH.Proj tm -> Project (trReft [] tm)
 
 -- | Translation of refinements to propositions
+--   Function RtoP (def 3.4) of the paper
 utrReftProp :: LH.Reft -> Coq.CoqTerm
 utrReftProp = undefined
 
 -- * Refined translations
 
 -- | Translation of refinement types
+--   Function TtoR (def 3.6) of the paper
 trRefType :: LH.RefType -> RocqType
 trRefType (RefType x tp r) =
   Coq.Subset x (trBaseType tp) rT
@@ -112,8 +116,9 @@ trRefTypeTop (ArrType x tpx tp) = Coq.FAType (x, trRefType tpx) (trRefTypeTop tp
 -- | Translation of refinements.
 --   Takes a typing environment (for type constructors)
 --   and the patterns of the arguments as supplementary arguments,
---   to translate applications
-trReft :: [Reft] -> LH.Reft -> Coq.CoqTerm
+--   to translate applications.
+--   Function RtoR (def 3.8) of the paper
+trReft :: [Pattern] -> LH.Reft -> Coq.CoqTerm
 trReft xs tm0 = case tm0 of
   LH.Var x ar Global | ar > 0 -> Coq.Def $ packInstanceName x
   LH.Var x _ _ -> Coq.Var x
@@ -138,8 +143,9 @@ trReft xs tm0 = case tm0 of
           _ -> Coq.App (trReft xs hd) argsT
 
 -- | Translation of expressions as tactics
--- Some other cases might be necessary because of branches coming from Core
-trExprTacs :: [Reft] -> LH.Expr -> [CoqTactic]
+-- Some other cases might be necessary because of branches coming from Core.
+-- Function EtoTac (def 3.7) of the paper
+trExprTacs :: [Pattern] -> LH.Expr -> [CoqTactic]
 trExprTacs xs e0 = case e0 of
   LH.Reft tm -> [Coq.Exact $ trReft xs tm]
   {- LH.Case cond [("False", [], elseE), ("True", [], thenE)] -> do

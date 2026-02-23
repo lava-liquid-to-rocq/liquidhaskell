@@ -1,0 +1,16 @@
+- typing and elaboration
+
+- RV and hypFromAm, then:
+  + unrefined translation of refinement utrReft/RtoU (def 3.2)
+  + RtoP/utrReftProp
+
+- unrefined translation of declarations
+  + creation of the relation graph
+
+- refined translation of declarations
+- refined translation of applications
+- refined translation of case
+
+- translation of ===, =<= and =>=
+
+- use Text instead of strings (with a library)
