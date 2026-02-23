@@ -23,7 +23,6 @@ library
       Lava
       Lava.Calculus
       Lava.Coq
-      Lava.CoqPrinter
       Lava.CoqSyntaxUtil
       Lava.CoqUtil
       Lava.Declaration
