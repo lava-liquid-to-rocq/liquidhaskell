@@ -4,7 +4,7 @@
 -- | This module contains the functions for the translation of declarations
 module Lava.Declaration where
 
-import Data.Bifunctor (first, second)
+import Data.Bifunctor (bimap, first, second)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqUtil -- (exLemName, funcHoodLemName, mkCoqTheorem, packInstanceName, relDefLemName, relDefName, relDefThmName, toPack, toUPack)
@@ -12,6 +12,7 @@ import Lava.Translation
 import Lava.TypingEnvironment as TypEnv hiding (map)
 import Lava.Util (freshVar)
 
+-- | Main function for the translation of declarations
 trDecl :: LH.Decl -> [Coq.Decl]
 trDecl (LH.Data tc alts) = undefined
 trDecl (LH.Definition f tpf e False) = [trDefRefDef f (arrs tpf) e]
@@ -71,6 +72,57 @@ trDefGraphRel f tp e =
   CoqInductive (relDefName f) [] (utrRefTypeTop tp) (map (uncurry Coq.Constr . fst) branches)
   where
     branches = undefined
+
+-- * Functions for the construction of the graph relation
+
+type FunctionPath = ([(Id, Pattern)], [(Reft, Pattern)], Reft)
+
+-- | Creates the function paths of an expression by calling separateBranches:
+-- function paths(e; x1...xn) of the paper (definition B.2)
+functionPaths :: Expr -> [Id] -> [FunctionPath]
+functionPaths e xs = {- map (\(σxs, σp, r) -> (map snd σxs, σp, r)) $ -} separateBranches (zip xs (map VarPat xs)) [] e
+
+-- | Actually create the function paths of an expression: function P from the
+-- paper (definition B.3)
+separateBranches :: [(Id, Pattern)] -> [(Reft, Pattern)] -> Expr -> [FunctionPath]
+separateBranches σxs σp (Reft r) = [(σxs, σp, r)]
+-- TODO: remove this case for if-then-else, but deal with it in the translation
+{- separateBranches σxs σp (LH.Let x _ (Reft cond) (Case (LH.Var x') [("False", [], elseE), ("True", [], thenE)] _)) args | x == x' =
+  let thenBrs = map (\(σxs_t, σp_t, r_t) -> (σxs_t, cond : σp_t, r_t)) $ separateBranches thenE args
+      elseBrs = map (\(σxs_f, σp_f, r_f) -> (σxs_f, LH.Neg cond : σp_f, r_f)) $ separateBranches elseE args
+   in thenBrs ++ elseBrs -}
+separateBranches σxs σp (LH.Let x _ ex e) =
+  let x_br = separateBranches σxs σp ex
+   in concatMap (\(σxs_x, σp_x, r_x) -> separateBranches σxs_x σp_x (subst r_x x ex)) x_br
+separateBranches σxs σp (Case (LH.Var x _ _) branches) = concatMap fbr branches
+  where
+    fbr :: ((Id, [Id]), Maybe Expr) -> [FunctionPath]
+    fbr (pat, Just ebr) =
+      let pat' = patternToApp pat
+       in separateBranches
+            (map (second (subst pat' x)) σxs)
+            (map (bimap (subst pat' x) (subst pat' x)) σp)
+            (subst pat' x ebr)
+    fbr (_, Nothing) = []
+
+{- separateBranches' (Case matchedExpr cases _) args = concat <$> mapM separateBranch cases
+  where
+    -- separateBranch :: (Id, [Id], LHTerm) -> Either TransError [(([LHSimpleTerm], LHSimpleTerm), [LHSimpleTerm], [Id])]
+    separateBranch (c, ys, body) =
+      map (\(destrParams, conds, c_) -> (destrParams, newCond ++ conds, c_ ++ [x | LH.Var x <- [matchedExpr]]))
+        <$> (args' >>= separateBranches' body)
+      where
+        (args', newCond) = case matchedExpr of
+          -- \| add the variable x inside matchedExpr (if any) to the list of matched variables in the branch
+          Var x -> (replaceVarByConstr x (c, ys) args, [])
+          _ -> (Right args, [cond])
+            where
+              cond = case c of
+                "True" -> matchedExpr
+                "False" -> Neg matchedExpr
+                _ -> Bop Eq matchedExpr (App (Var c) (map Var ys))
+separateBranches' Undefined _ = return []
+separateBranches' e' args = singleton . (,[],[]) . (args,) <$> simplifyLHTerm e' -}
 
 -- * Generated lemmas
 

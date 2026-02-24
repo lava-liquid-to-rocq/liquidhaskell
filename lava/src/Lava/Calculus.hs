@@ -1,14 +1,18 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE OrPatterns #-}
 
 -- | Grammars, printer and suable functions for ILH
 module Lava.Calculus where
 
 import Data.Bifunctor (first, second)
 import Data.Data
-import Lava.Util hiding (Id)
-import Prelude hiding (lookup) -- to avoid errors if forgetting Map.lookup
+-- to avoid errors if forgetting Map.lookup
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Lava.Util hiding (Id, sub, subst)
+import Prelude hiding (lookup)
 
 -- * The grammar
 
@@ -62,7 +66,7 @@ data Expr
     --   for lets in the code, we can always get an annotation, but we also create some for ANF
     Let Id (Maybe RefType) Expr Expr
   | -- | Pattern matching (includes conditionals), with Maybe for optional branches
-    Case Reft [(Pattern, Maybe Expr)]
+    Case Reft [((Id, [Id]), Maybe Expr)]
   deriving (Data, Eq)
 
 -- | Simple LH terms including formulas.
@@ -162,6 +166,83 @@ arrs (ArrType x tpx tp) = ((x, tpx) :) `first` arrs tp
 apps :: Reft -> (Reft, [Reft])
 apps (App tm1 tm2) = let (hd, args) = apps tm1 in (hd, args ++ [tm2])
 apps tm = (tm, [])
+
+-- | Returns the application corresponding to the pattern of a case
+-- Since we do not have higher-order constructors, all variables are of arity 0
+patternToApp :: (Id, [Id]) -> Reft
+patternToApp (c, ys) = foldr App (DC c) (map (\y -> Var y 0 Local) ys)
+
+-- * Typeclass related to free variables
+
+class HasVars a where
+  freeVars :: a -> Set Id
+  boundVars :: a -> Set Id
+  subst :: Reft -> Id -> a -> a
+
+instance HasVars Reft where
+  freeVars (Var x _ _) = Set.singleton x
+  freeVars (App hd arg) = freeVars hd `Set.union` freeVars arg
+  freeVars (Bop _ r1 r2) = freeVars r1 `Set.union` freeVars r2
+  freeVars (Neg r) = freeVars r
+  freeVars (StringLit _; IntLit _; FloatLit _; DC _) = Set.empty
+  freeVars (QMark r rh rp) = freeVars r `Set.union` (freeVars rh `Set.union` freeVars rp)
+  freeVars (Pop _ r1 r2) = freeVars r1 `Set.union` freeVars r2
+  freeVars (Sub r _ _) = freeVars r
+  freeVars (Inj r _) = freeVars r
+  freeVars (Proj r) = freeVars r
+
+  boundVars _ = Set.empty
+
+  subst r' x r0 = case r0 of
+    Var y _ _ | y == x -> r'
+    (Var {}; StringLit _; IntLit _; FloatLit _; DC _) -> r0
+    App h arg -> App (subst r' x h) (subst r' x arg)
+    Bop bop r1 r2 -> Bop bop (subst r' x r1) (subst r' x r2)
+    Neg r -> Neg $ subst r' x r
+    QMark r rh rp -> QMark (subst r' x r) (subst r x rh) (subst r x rp)
+    Pop pop r1 r2 -> Pop pop (subst r' x r1) (subst r' x r2)
+    Sub r tps tpt -> Sub (subst r' x r) (subst r' x tps) (subst r' x tpt)
+    Inj r tp -> Inj (subst r' x r) (subst r' x tp)
+    Proj r -> Proj (subst r' x r)
+
+instance HasVars Expr where
+  freeVars (Reft r) = freeVars r
+  freeVars (Let x tp ex e) = Set.unions [maybe Set.empty freeVars tp, freeVars ex, Set.delete x (freeVars e)]
+  freeVars (Case r branches) =
+    freeVars r
+      `Set.union` Set.unions (map (\((c, ys), ebr) -> maybe Set.empty freeVars ebr Set.\\ Set.fromList ys) branches)
+
+  boundVars (Reft r) = Set.empty
+  boundVars (Let x _ ex e) = Set.insert x (boundVars ex `Set.union` boundVars e)
+  boundVars (Case _ branches) = Set.unions (map (Set.fromList . snd . fst) branches)
+
+  subst r x e = case e of
+    Reft re -> Reft $ subst r x re
+    Let y _ _ e'
+      | y `Set.member` freeVars r && x `Set.member` freeVars e' ->
+          error $ "Variable " ++ x ++ " cannot be substituted in " ++ show e ++ " where it is bound."
+    Let y tp ey e' | y == x -> Let y (subst r x <$> tp) (subst r x ey) e'
+    Let y tp ey e' -> Let y (subst r x <$> tp) (subst r x ey) (subst r x e')
+    Case r' branches ->
+      Case (subst r x r') (map substBranch branches)
+      where
+        substBranch ((_, ys), _)
+          | not (Set.fromList ys `Set.disjoint` freeVars r) =
+              error $ "Variable " ++ x ++ " cannot be substituted in " ++ show e ++ " where it is bound."
+        substBranch br@((_, ys), _) | x `elem` ys = br
+        substBranch ((c, ys), ebr) = ((c, ys), subst r x <$> ebr)
+
+instance HasVars RefType where
+  freeVars (RefType x tp r) = Set.delete x (freeVars r)
+  freeVars (ArrType x tpx tp) = freeVars tpx `Set.union` Set.delete x (freeVars tp)
+  boundVars (RefType x tp r) = Set.empty
+  boundVars (ArrType x tpx tp) = Set.insert x (boundVars tpx `Set.union` boundVars tp)
+  subst r x tp = case tp of
+    RefType y _ _ | y == x -> tp
+    RefType y b reft -> RefType y b $ subst r x reft
+    ArrType y _ tp' | y `Set.member` freeVars r && x `Set.member` freeVars tp' -> undefined
+    ArrType y tpx tp' | y == x -> ArrType y (subst r x tpx) tp'
+    ArrType y tpx tp' -> ArrType y (subst r x tpx) (subst r x tp')
 
 -- * Printer for the grammar
 
