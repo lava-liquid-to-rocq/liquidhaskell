@@ -75,6 +75,10 @@ trDefGraphRel f tp e =
 
 -- * Functions for the construction of the graph relation
 
+-- | Represents one path for a function.
+-- The first element contains a map from arguments to their patterns,
+-- the second from additional applications to the patterns for their results (“with”),
+-- the third is the term of the branch, that is always a refinement
 type FunctionPath = ([(Id, Pattern)], [(Reft, Pattern)], Reft)
 
 -- | Creates the function paths of an expression by calling separateBranches:
@@ -82,8 +86,7 @@ type FunctionPath = ([(Id, Pattern)], [(Reft, Pattern)], Reft)
 functionPaths :: Expr -> [Id] -> [FunctionPath]
 functionPaths e xs = {- map (\(σxs, σp, r) -> (map snd σxs, σp, r)) $ -} separateBranches (zip xs (map VarPat xs)) [] e
 
--- | Actually create the function paths of an expression: function P from the
--- paper (definition B.3)
+-- | Actually create the function paths of an expression: function P from the paper (definition B.3)
 separateBranches :: [(Id, Pattern)] -> [(Reft, Pattern)] -> Expr -> [FunctionPath]
 separateBranches σxs σp (Reft r) = [(σxs, σp, r)]
 -- TODO: remove this case for if-then-else, but deal with it in the translation
@@ -91,38 +94,46 @@ separateBranches σxs σp (Reft r) = [(σxs, σp, r)]
   let thenBrs = map (\(σxs_t, σp_t, r_t) -> (σxs_t, cond : σp_t, r_t)) $ separateBranches thenE args
       elseBrs = map (\(σxs_f, σp_f, r_f) -> (σxs_f, LH.Neg cond : σp_f, r_f)) $ separateBranches elseE args
    in thenBrs ++ elseBrs -}
+-- Lets are subsituted away
 separateBranches σxs σp (LH.Let x _ ex e) =
   let x_br = separateBranches σxs σp ex
    in concatMap (\(σxs_x, σp_x, r_x) -> separateBranches σxs_x σp_x (subst r_x x ex)) x_br
-separateBranches σxs σp (Case (LH.Var x _ _) branches) = concatMap fbr branches
+separateBranches σxs σp (Case r branches) =
+  case alreadyMatched of
+    -- if r is matched already
+    Just (DC c, rs) -> maybe [] (separateBranches σxs σp) $ matchBranch (c, rs) cleanBranches
+    Nothing -> case apps r of
+      -- if r is an applied constructor
+      (DC c, rs) -> maybe [] (separateBranches σxs σp) $ matchBranch (c, rs) cleanBranches
+      -- if r is a parameter
+      (LH.Var x _ _, []) -> concatMap (varRecCall x) cleanBranches
+      -- if r is an application or top-level constant
+      _ -> concatMap (\((c, ys), e) -> separateBranches σxs (σp ++ [(r, TCPat c (map VarPat ys))]) e) cleanBranches
   where
-    fbr :: ((Id, [Id]), Maybe Expr) -> [FunctionPath]
-    fbr (pat, Just ebr) =
-      let pat' = patternToApp pat
+    -- Reachable branches only
+    cleanBranches = concatMap (\case (_, Nothing) -> []; (pat, Just x) -> [(pat, x)]) branches
+    -- Returns the pattern to which r is matched if it is already
+    alreadyMatched =
+      apps . patternToReft <$> case r of
+        LH.Var x _ _ -> case lookup x σxs of Just (VarPat y) -> Nothing; pat -> pat
+        _ -> lookup r σp
+    -- Recursive calls for the variable case, substituting the variable everywhere
+    varRecCall :: Id -> ((Id, [Id]), Expr) -> [FunctionPath]
+    varRecCall x (pat, ebr) =
+      let pat' = matchToApp pat
        in separateBranches
             (map (second (subst pat' x)) σxs)
             (map (bimap (subst pat' x) (subst pat' x)) σp)
             (subst pat' x ebr)
-    fbr (_, Nothing) = []
-
-{- separateBranches' (Case matchedExpr cases _) args = concat <$> mapM separateBranch cases
-  where
-    -- separateBranch :: (Id, [Id], LHTerm) -> Either TransError [(([LHSimpleTerm], LHSimpleTerm), [LHSimpleTerm], [Id])]
-    separateBranch (c, ys, body) =
-      map (\(destrParams, conds, c_) -> (destrParams, newCond ++ conds, c_ ++ [x | LH.Var x <- [matchedExpr]]))
-        <$> (args' >>= separateBranches' body)
-      where
-        (args', newCond) = case matchedExpr of
-          -- \| add the variable x inside matchedExpr (if any) to the list of matched variables in the branch
-          Var x -> (replaceVarByConstr x (c, ys) args, [])
-          _ -> (Right args, [cond])
-            where
-              cond = case c of
-                "True" -> matchedExpr
-                "False" -> Neg matchedExpr
-                _ -> Bop Eq matchedExpr (App (Var c) (map Var ys))
-separateBranches' Undefined _ = return []
-separateBranches' e' args = singleton . (,[],[]) . (args,) <$> simplifyLHTerm e' -}
+    -- Given a pattern and a branch, returns the corresponding branch instantiated
+    -- with respect to the arguments of the constructor.
+    -- There should be at most one corresponding branch, so we return only one
+    -- expression even if several branches are found.
+    matchBranch :: (Id, [Reft]) -> [((Id, [Id]), Expr)] -> Maybe Expr
+    matchBranch (c, rs) branches =
+      case filter (\((c', _), _) -> c == c') branches of
+        ((_, ys), e) : _ -> Just $ substs (zip rs ys) e
+        [] -> Nothing
 
 -- * Generated lemmas
 

@@ -169,8 +169,15 @@ apps tm = (tm, [])
 
 -- | Returns the application corresponding to the pattern of a case
 -- Since we do not have higher-order constructors, all variables are of arity 0
-patternToApp :: (Id, [Id]) -> Reft
-patternToApp (c, ys) = foldr App (DC c) (map (\y -> Var y 0 Local) ys)
+matchToApp :: (Id, [Id]) -> Reft
+matchToApp (c, ys) = foldr App (DC c) (map (\y -> Var y 0 Local) ys)
+
+-- | Translates a pattern to a Reft, similar to  matchToApp
+-- This function must not be called on a pattern “x” since this one can be a
+-- higher-order argument
+patternToReft :: Pattern -> Reft
+patternToReft (VarPat x) = Var x 0 Local
+patternToReft (TCPat c pats) = foldr App (DC c) (map patternToReft pats)
 
 -- * Typeclass related to free variables
 
@@ -243,6 +250,10 @@ instance HasVars RefType where
     ArrType y _ tp' | y `Set.member` freeVars r && x `Set.member` freeVars tp' -> undefined
     ArrType y tpx tp' | y == x -> ArrType y (subst r x tpx) tp'
     ArrType y tpx tp' -> ArrType y (subst r x tpx) (subst r x tp')
+
+substs :: (HasVars a) => [(Reft, Id)] -> a -> a
+substs [] x = x
+substs ((r, y) : subs) x = substs subs $ subst r y x
 
 -- * Printer for the grammar
 
