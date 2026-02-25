@@ -7,7 +7,8 @@ module Lava.Declaration where
 import Data.Bifunctor (bimap, first, second)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
-import Lava.CoqUtil -- (exLemName, funcHoodLemName, mkCoqTheorem, packInstanceName, relDefLemName, relDefName, relDefThmName, toPack, toUPack)
+import Lava.CoqSyntaxUtil (mkVarDestrPat, mkVarDestruct)
+import Lava.CoqUtil
 import Lava.Translation
 import Lava.TypingEnvironment as TypEnv hiding (map)
 import Lava.Util (freshVar)
@@ -33,7 +34,7 @@ trDecl (LH.Definition f tpf e True) =
          AddHint RewriteHint (relDefRwLemName f) GraphRelDB,
          AddHint ResolveHint (relDefRwLemName f) RelAxDB,
          Coq.Instance (f ++ "_lookup_rw") ["dictionary", "rwLem", f] [("lookup'", Coq.Def (relDefRwLemName f))],
-         refUnrefLemma' f,
+         refUnrefLemma' f (args, (f_res, ret)),
          Coq.AddHint Coq.RewriteHint (relDefThmName f) Coq.GraphRelDB, -- hints for f__f_rel
          refUnrefLemma f,
          Coq.AddHint Coq.ResolveHint (relDefLemName f) Coq.GraphRelDB, -- hints for f__f_rel'
@@ -62,16 +63,17 @@ trDefRefDef f (args, ret) e = Coq.Definition f argsT (trRefType ret) (ProofBody 
   where
     argsT = map (\(id, arg) -> ((id, trRefType arg), False)) args
     tacs =
-      let destructArgs = map (varDestruct . fst) $ onlyFOArgs args
+      let destructArgs = map (mkVarDestruct . fst) $ onlyFOArgs args
        in -- TODO: maybe use cleanInductions (usedIHs eT) eT
           destructArgs ++ trExprTacs (map (LH.VarPat . fst) args) e
 
 -- | Translation of a definition `f` to the unrefined graph relation `f_rel`
 trDefGraphRel :: Id -> RefType -> Expr -> Coq.Decl
 trDefGraphRel f tp e =
-  CoqInductive (relDefName f) [] (utrRefTypeTop tp) (map (uncurry Coq.Constr . fst) branches)
+  CoqInductive (relDefName f) [] (utrRefTypeTop tp) (map pathConstr paths)
   where
-    branches = undefined
+    paths = functionPaths e (tpArgs tp)
+    pathConstr path = Coq.Constr (namePath f path False) (trPathToConstr f path)
 
 -- * Functions for the construction of the graph relation
 
@@ -134,6 +136,21 @@ separateBranches σxs σp (Case r branches) =
       case filter (\((c', _), _) -> c == c') branches of
         ((_, ys), e) : _ -> Just $ substs (zip rs ys) e
         [] -> Nothing
+
+-- | Translates a function path into a constructor for f_rel
+trPathToConstr :: Id -> FunctionPath -> RocqType
+trPathToConstr f (σxs, σp, e) = undefined -- see createRelationBranch
+
+-- | Create a name for a constructor based on the patterns of the parameters (`pats`)
+-- The flag takeVars indicates if we want the variables alone between the constructors
+-- Used with true to create names of IH, and with false to create names for the relation
+namePath :: Id -> FunctionPath -> Bool -> Id
+namePath f (pats, _, _) takeVars = foldl (++) base $ map getConstructor pats'
+  where
+    pats' = map snd pats
+    getConstructor (VarPat x) = if takeVars then "_" ++ x else ""
+    getConstructor (TCPat c _) = "_" ++ c
+    base = if all (null . getConstructor) pats' then relDefBranchName f else f
 
 -- * Generated lemmas
 
@@ -235,17 +252,6 @@ relConstrLemmas = mkRelBranchLemmas args retArgU univArgs univAxs conds' branche
 
 -- * Utility functions for declarations
 
--- | Create a destruction pattern [x x_p] for the variable x
-varDestrPat :: Id -> CoqDestrPat
-varDestrPat x = Coq.ConjDestrPat [Coq.SingleIdPat x, Coq.SingleIdPat $ subsetWitnessNm x]
-
--- | varDestruct(x) = destruct x as [x x_p].
-varDestruct :: Id -> CoqTactic
-varDestruct x = Coq.DestructSubsetTerm (Coq.Var x) (varDestrPat x)
-
 -- | Filter arguments with a non-arrow refinement type (those that usually need to be destructed)
 onlyFOArgs :: [(Id, RefType)] -> [(Id, RefType)]
-onlyFOArgs args = [(id, tp) | (id, tp) <- args, isFO tp]
-  where
-    isFO (RefType {}) = True
-    isFO (ArrType {}) = False
+onlyFOArgs = filter (\case (_, RefType {}) -> True; (_, ArrType {}) -> False)

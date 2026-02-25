@@ -162,6 +162,10 @@ arrs :: RefType -> ([(Id, RefType)], RefType)
 arrs tp@(RefType {}) = ([], tp)
 arrs (ArrType x tpx tp) = ((x, tpx) :) `first` arrs tp
 
+-- | tpArgs({x_i:R_i|r_i}_{i ≤ n} -> R) = [x_i]_{i ≤ n}
+tpArgs :: RefType -> [Id]
+tpArgs = map fst . fst . arrs
+
 -- | Flattens an application
 apps :: Reft -> (Reft, [Reft])
 apps (App tm1 tm2) = let (hd, args) = apps tm1 in (hd, args ++ [tm2])

@@ -1,3 +1,5 @@
+{-# LANGUAGE OrPatterns #-}
+
 -- | This module contains the main functions of the translation.
 -- Unrefined and refined translations are mutually dependent, so they are all in the same file
 module Lava.Translation where
@@ -6,8 +8,8 @@ import Data.Bifunctor (second)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil (packGetF)
-import Lava.CoqUtil (funcHoodLemName, packInstanceName, relDefLemName, relDefName, relDefThmName, toPack, toUPack)
-import Lava.Util (hashName)
+import Lava.CoqUtil (funcHoodLemName, packInstanceName, relDefLemName, relDefName, relDefThmName, relPostfix, toPack, toUPack)
+import Lava.Util (hashName, isSuffixOf)
 
 -- * Generic translations
 
@@ -57,6 +59,8 @@ trPop = undefined
 
 -- * Unrefined translations
 
+-- ** Main functions
+
 -- | Translation of refinement types
 --   Function TtoU (def 3.1) of the paper
 utrRefType :: LH.RefType -> RocqType
@@ -92,6 +96,74 @@ utrReft tm0 = case tm0 of
 --   Function RtoP (def 3.4) of the paper
 utrReftProp :: LH.Reft -> Coq.CoqTerm
 utrReftProp = undefined
+
+-- ** Utility functions for unrefined translations
+
+-- | List of operators for which we use a graph relation in Rocq,
+-- with the associated name.
+-- In the paper, this is everything except = and ≠
+operatorsWithGraph :: [(LH.Bop, Reft)]
+operatorsWithGraph =
+  [ (LH.Plus, LH.Var "addZ" 2 Global),
+    (LH.Minus, LH.Var "subZ" 2 Global),
+    (LH.Times, LH.Var "multZ" 2 Global),
+    (LH.Div, LH.Var "divZ" 2 Global),
+    (LH.Mod, LH.Var "modZ" 2 Global)
+  ]
+
+-- | Returns an association of each application in the input to a fresh variable and the term where replacements of the applications by the associated variable have been done.
+-- In the list associating terms to variables, the replacements have also been done.
+-- For operators, we only extract the ones in the list operatorsWithGraph
+-- Ex: extractApps ((f 0 1) + (f 0 1) + x) = ([(f 0 1, f_res)], f_res + f_res + x)
+extractApps :: [(Reft, Id)] -> Reft -> ([(Reft, Id)], Reft)
+extractApps env r = case r of
+  -- top-level constant
+  LH.Var x 0 Global -> updateEnv env r
+  (LH.Var {}; StringLit {}; FloatLit {}; IntLit {}; DC {}) -> (env, r)
+  LH.Neg r' -> second LH.Neg $ extractApps env r'
+  LH.Bop bop r1 r2 ->
+    let (env1, r1') = extractApps env r1
+        (env2, r2') = extractApps env1 r2
+     in case lookup bop operatorsWithGraph of
+          Nothing -> (env2, LH.Bop bop r1' r2')
+          Just bopVar -> updateEnv env2 (LH.App (LH.App bopVar r1') r2')
+  LH.App {} -> case apps r of
+    (DC c, args) ->
+      let (env', args') = foldr seqNames (env, []) args
+       in (env', foldr LH.App (LH.DC c) args')
+    -- why is this case necessary?
+    (LH.Var f_rel ar loc, args) | relPostfix `isSuffixOf` f_rel -> (env, r)
+    (LH.Var f ar loc, args) ->
+      let (env', args') = foldr seqNames (env, []) args
+          r' = foldr LH.App (LH.Var f ar loc) args'
+       in updateEnv env' r'
+    (Proj (LH.Var f ar loc), args) ->
+      let (env', args') = foldr seqNames (env, []) args
+          r' = foldr LH.App (Proj (LH.Var f ar loc)) args'
+       in updateEnv env' r'
+    _ -> error $ "LH application " ++ show r ++ " not starting with an identifier."
+  -- We do not extract applications of the subterms we will erase in QMark and Pop
+  QMark r' rh rp -> second (\r'' -> QMark r'' rh rp) $ extractApps env r'
+  Pop pop r1 r2 -> second (Pop pop r1) $ extractApps env r2
+  Inj r' tp -> second (`Inj` tp) $ extractApps env r'
+  Proj r' -> second Proj $ extractApps env r'
+  where
+    seqNames arg (curEnv, curArgs) = second (: curArgs) $ extractApps curEnv arg
+    -- If r is in env, returns its associated variable,
+    -- otherwise creates a fresh variable, update env and returns the variable
+    updateEnv env r = case lookup r env of
+      Just z -> (env, LH.Var z 0 Local)
+      Nothing -> let z = fresh z env in (env ++ [(r, z)], LH.Var z 0 Local)
+    fresh f zs =
+      -- Number of calls to f
+      let nbOfCalls = foldr ((+) . isF) 0 zs
+       in if nbOfCalls == 0
+            then f ++ "res"
+            else f ++ "_res_" ++ show (nbOfCalls + 1)
+      where
+        isF :: (Reft, Id) -> Int
+        isF (LH.App (LH.Var f' _ _) _, _) | f' == f = 1
+        isF _ = 0
 
 -- * Refined translations
 

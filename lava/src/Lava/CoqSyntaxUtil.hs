@@ -85,6 +85,14 @@ mkIsTrue tm = case tm of
           Geqb -> "gebZ_rel"
           Gtb -> "gtbZ_rel"
 
+-- | Create a destruction pattern [x x_p] for the variable x
+mkVarDestrPat :: Id -> CoqDestrPat
+mkVarDestrPat x = ConjDestrPat [SingleIdPat x, SingleIdPat $ subsetWitnessNm x]
+
+-- | mkVarDestruct(x) = destruct x as [x x_p].
+mkVarDestruct :: Id -> CoqTactic
+mkVarDestruct x = DestructSubsetTerm (Var x) (mkVarDestrPat x)
+
 -- * Normalization of arrow types
 
 freshenArgs :: (AppSuable a CoqTerm) => [Id] -> Bool -> ([(Id, RocqType)], a) -> ([(Id, RocqType)], a)
