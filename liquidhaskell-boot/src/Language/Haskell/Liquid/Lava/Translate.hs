@@ -19,7 +19,7 @@ import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
 import Language.Haskell.Liquid.Types.RType (SpecType)
 import qualified Language.Haskell.Liquid.Types.Specs as Specs
 import Language.Haskell.Liquid.Types.Types (AnnInfo (..))
-import Lava.Coq (Decl)
+import qualified Lava.Coq as Coq (Decl)
 import qualified Lava.InternalLH as InternalLH (ArrType, LHDecl (Import))
 import Lava.LH
 import Lava.Misc (isIgnoredBind, stripLegalName)
@@ -120,13 +120,13 @@ translateFile ::
   SrcInfo ->
   -- | Complete file name
   String ->
-  IO [Decl]
+  IO [Coq.Decl]
 translateFile writeFlag sinfo arg = do
   (ilhSource, (imports, outputFolder, modulename)) <- parseFile writeFlag sinfo arg
 
   let hasImports = not $ null imports
 
-      extendedCoqContent :: IO [Decl]
+      extendedCoqContent :: IO [Coq.Decl]
       extendedCoqContent = case translateTyping ilhSource of
         Left err ->
           print err >> return []
