@@ -2,7 +2,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-
 -- | Translation from ILH to Coq via bidirectional typechecking
 module Lava.TypedTranslation
   ( translateTyping,

@@ -26,6 +26,7 @@ library
       Lava.CoqSyntaxUtil
       Lava.CoqUtil
       Lava.Declaration
+      Lava.Elaboration
       Lava.InternalLH
       Lava.LH
       Lava.Misc

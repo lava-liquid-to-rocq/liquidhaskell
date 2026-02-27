@@ -28,7 +28,7 @@ type Id = String
 -- > B ::= Integer | Double | String
 data Builtin = Integer | Double | String deriving (Data, Eq)
 
--- | Bas Types
+-- | Base Types
 --
 -- > A ::= B | TC
 data BaseType = Builtin Builtin | TC Id deriving (Data, Eq)
@@ -190,6 +190,9 @@ class HasVars a where
   boundVars :: a -> Set Id
   subst :: Reft -> Id -> a -> a
 
+  -- | rename the second argument to the first
+  rename :: Id -> Id -> a -> a
+
 instance HasVars Reft where
   freeVars (Var x _ _) = Set.singleton x
   freeVars (App hd arg) = freeVars hd `Set.union` freeVars arg
@@ -210,11 +213,23 @@ instance HasVars Reft where
     App h arg -> App (subst r' x h) (subst r' x arg)
     Bop bop r1 r2 -> Bop bop (subst r' x r1) (subst r' x r2)
     Neg r -> Neg $ subst r' x r
-    QMark r rh rp -> QMark (subst r' x r) (subst r x rh) (subst r x rp)
+    QMark r rh rp -> QMark (subst r' x r) (subst r' x rh) (subst r' x rp)
     Pop pop r1 r2 -> Pop pop (subst r' x r1) (subst r' x r2)
     Sub r tps tpt -> Sub (subst r' x r) (subst r' x tps) (subst r' x tpt)
     Inj r tp -> Inj (subst r' x r) (subst r' x tp)
     Proj r -> Proj (subst r' x r)
+
+  rename new old r0 = case r0 of
+    Var z ar loc | z == old -> Var new ar loc
+    (Var {}; StringLit _; IntLit _; FloatLit _; DC _) -> r0
+    App h arg -> App (rename new old h) (rename new old arg)
+    Bop bop r1 r2 -> Bop bop (rename new old r1) (rename new old r2)
+    Neg r -> Neg $ rename new old r
+    QMark r rh rp -> QMark (rename new old r) (rename new old rh) (rename new old rp)
+    Pop pop r1 r2 -> Pop pop (rename new old r1) (rename new old r2)
+    Sub r tps tpt -> Sub (rename new old r) (rename new old tps) (rename new old tpt)
+    Inj r tp -> Inj (rename new old r) (rename new old tp)
+    Proj r -> Proj (rename new old r)
 
 instance HasVars Expr where
   freeVars (Reft r) = freeVars r
@@ -243,6 +258,22 @@ instance HasVars Expr where
         substBranch br@((_, ys), _) | x `elem` ys = br
         substBranch ((c, ys), ebr) = ((c, ys), subst r x <$> ebr)
 
+  rename new old e = case e of
+    Reft re -> Reft $ rename new old re
+    Let x _ _ e'
+      | x == new && old `Set.member` freeVars e' ->
+          error $ "Variable " ++ old ++ " cannot be renamed as " ++ new ++ " in " ++ show e
+    Let x tp ey e' | x == old -> Let x (rename new old <$> tp) (rename new old ey) e'
+    Let x tp ey e' -> Let x (rename new old <$> tp) (rename new old ey) (rename new old e')
+    Case r' branches ->
+      Case (rename new old r') (map renameBranch branches)
+      where
+        renameBranch ((_, ys), _)
+          | new `Set.member` Set.fromList ys =
+              error $ "Variable " ++ old ++ " cannot be renamed as " ++ new ++ " in " ++ show e
+        renameBranch br@((_, ys), _) | old `elem` ys = br
+        renameBranch ((c, ys), ebr) = ((c, ys), rename new old <$> ebr)
+
 instance HasVars RefType where
   freeVars (RefType x tp r) = Set.delete x (freeVars r)
   freeVars (ArrType x tpx tp) = freeVars tpx `Set.union` Set.delete x (freeVars tp)
@@ -254,10 +285,20 @@ instance HasVars RefType where
     ArrType y _ tp' | y `Set.member` freeVars r && x `Set.member` freeVars tp' -> undefined
     ArrType y tpx tp' | y == x -> ArrType y (subst r x tpx) tp'
     ArrType y tpx tp' -> ArrType y (subst r x tpx) (subst r x tp')
+  rename new old tp = case tp of
+    RefType y _ _ | y == old -> tp
+    RefType y b reft -> RefType y b $ rename new old reft
+    ArrType y _ tp' | y == new && old `Set.member` freeVars tp' -> undefined
+    ArrType y tpx tp' | y == old -> ArrType y (rename new old tpx) tp'
+    ArrType y tpx tp' -> ArrType y (rename new old tpx) (rename new old tp')
 
+-- | Apply a list of substitutions, starting from the right
 substs :: (HasVars a) => [(Reft, Id)] -> a -> a
-substs [] x = x
-substs ((r, y) : subs) x = substs subs $ subst r y x
+substs = flip (foldr (uncurry subst))
+
+-- | Apply a list of renamings, starting from the right
+renames :: (HasVars a) => [(Id, Id)] -> a -> a
+renames = flip (foldr (uncurry rename))
 
 -- * Printer for the grammar
 
