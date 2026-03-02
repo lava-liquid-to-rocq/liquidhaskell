@@ -1,9 +1,10 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
 
 -- | Well-formedness and typing of initial λr terms plus elaboration
 module Lava.Elaboration where
 
-import Control.Monad (foldM)
+import Control.Monad (foldM, when)
 import Data.Either.Extra (maybeToEither)
 import Data.Maybe (fromJust)
 import Lava.Calculus
@@ -52,6 +53,10 @@ mkBopType bop a1 a2 r2 a3 =
 --
 -- T ::= B | TC | T -> T
 data SimpleType = SmpBuiltin Builtin | SmpTC Id | SmpArrow SimpleType SimpleType
+  deriving (Eq)
+
+instance Show SimpleType where
+  show = undefined
 
 -- | Projects a refinement type into a simple type
 refTptoSmpTp :: RefType -> SimpleType
@@ -122,7 +127,10 @@ wfRefType γ (RefType x tp r) =
     TC tc | not (tc `member` γ) -> Left . WfErr $ "Unknown type " ++ tc
     _ -> do
       γ' <- insertLocalVar γ (x, RefType x tp ttTm)
-      RefType x tp <$> smpTpCheck γ' r (SmpTC "Bool")
+      (tp_r, r') <- smpTpCheck γ' r
+      if tp_r == SmpTC boolTpName
+        then return $ RefType x tp r'
+        else Left . WfErr $ "Refinement of type " ++ show (RefType x tp r) ++ " is not boolean"
 -- (E-TFun)
 wfRefType γ (ArrType x tpx tp) = do
   tpx' <- wfRefType γ tpx
@@ -133,39 +141,32 @@ wfRefType γ (ArrType x tpx tp) = do
 -- * Well-formedness of declarations
 
 wfDecls :: TypEnv -> [Decl] -> Either TypeError [Decl]
-wfDecls = undefined
-
-{- wfDecl γ decl =
-  case decl of
-    Import x decls ->
-        -- TODO: see what we do with the second result value declsT, maybe write them into another file
-        do
-          (γ', _) <- wfModule γ (LHModule x decls)
-          return (γ', [Coq.Load x])
-    -- (WF-TC)
-    Data tc alts -> do
-      okBranches <- foldM (\acc (_, arr) -> (&&) acc <$> checkBranches arr) True alts
-      if okBranches
-        then (,transDataDecl γ' tc alts) <$> Ctx.insertTC (tc, alts) γ
-        else Left . WfErr $ "Faulty constructor: " ++ show tc
-      where
-        γ' = (tc, Ctx.ΓTC (mapSnd trivializeRefs alts)) : γ
-        trivializeRefs :: ArrType -> ArrType
-        trivializeRefs (ArrType argTps resTp) = ArrType (mapSnd trivialize argTps) $ trivialize resTp
-        trivialize :: RefType -> RefType
-        trivialize (RefType x tp _) = RefType x tp ttTm
-
-        checkBranches arr =
-          wfArrType γ' arr >> return ((argTp . retTp) arr == TDat tc)
-    -- (WF-Def) and (WF-Refl)
-    Definition f tp@(ArrType args ret) e isRefl -> do
-      γ_ <- Ctx.insertArrType (f, tp) γ
-      γ' <- if isRefl then Ctx.insertRelType (f, tp) γ_ else return γ_
-      γ'' <- foldM (flip Ctx.insertRefType) γ' args
-      tacs <- checkTerm γ'' e ret (f, (map (Var . fst) args, []))
-      if isRefl
-        then (γ',) <$> transReflDefinition γ f tp e tacs
-        else return {- traceFuncRet ["wfDecl", "...", show decl] -} (γ', transDefinition γ f tp tacs) -}
+-- (WF-DTC)
+wfDecls γ (Data tc constrs : decls) = do
+  γ' <- foldM checkBranch γ constrs
+  -- NOTE: Here we used to replace all refinements of the constructors by ttTm in the new context. Why??
+  wfDecls γ' decls
+  where
+    checkBranch :: TypEnv -> (Id, RefType) -> Either TypeError TypEnv
+    checkBranch γi (ci, tpi) = do
+      checkFOandTC tpi
+      tpi' <- wfRefType γi tpi
+      insertDCinTC γi (ci, tpi') tc
+    checkFOandTC :: RefType -> Either TypeError ()
+    checkFOandTC tp =
+      let (args, RefType _ tc' _) = arrs tp
+       in if any ((\case RefType {} -> False; _ -> True) . snd) args
+            then Left . WfErr $ "The constructor type " ++ show tp ++ " is higher-order, which is forbidden"
+            else when (tc' /= TC tc) . Left . WfErr $ "The constructor type " ++ show tp ++ " must return a refinement of " ++ show tc
+-- (WF-DDef)
+wfDecls γ (Definition f tpf e isRefl : decls) = do
+  tpf' <- wfRefType γ tpf
+  γf <- insertRecVar γ (f, tpf')
+  let (args, ret) = arrs tpf'
+  γfargs <- foldM insertLocalVar γf args
+  e' <- checkExpr γfargs e ret
+  decls' <- wfDecls γf decls
+  return $ Definition f tpf e' isRefl : decls'
 
 -- * Type synthesis for refinements
 

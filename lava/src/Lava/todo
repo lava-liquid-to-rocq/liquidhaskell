@@ -1,5 +1,3 @@
-- typing and elaboration
-
 - RV and hypFromAm, then:
   + unrefined translation of refinement utrReft/RtoU (def 3.2)
   + RtoP/utrReftProp
@@ -9,8 +7,6 @@
 - refined translation of applications
 - refined translation of case
 
-- translation of ===, =<= and =>=
+- typing and translation of ===, =<= and =>=
 
 - use Text instead of strings (with a library)
-
-- fix subst et rename, ok de pas substitutuer

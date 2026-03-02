@@ -102,6 +102,9 @@ insertLocalVar γ (x, tp) = insertVar γ (x, Local, tp)
 insertGlobalVar :: TypEnv -> (Id, RefType) -> Either TypeError TypEnv
 insertGlobalVar γ (x, tp) = insertVar γ (x, Global, tp)
 
+insertRecVar :: TypEnv -> (Id, RefType) -> Either TypeError TypEnv
+insertRecVar γ (x, tp) = insertVar γ (x, Recursive, tp)
+
 {- insertHOArgs :: ArrType -> TypEnv -> Either TypeError TypEnv
 insertHOArgs (ArrType argTps _) γ = foldM (flip insert) γ hoArgTps
   where
@@ -110,6 +113,11 @@ insertHOArgs (ArrType argTps _) γ = foldM (flip insert) γ hoArgTps
 
 insertTC :: TypEnv -> (Id, [(Id, RefType)]) -> Either TypeError TypEnv
 insertTC γ (x, alts) = insert γ (x, ΓTC alts)
+
+insertDCinTC :: TypEnv -> (Id, RefType) -> Id -> Either TypeError TypEnv
+insertDCinTC γ constr tc = do
+  γtc <- lookupTC tc γ
+  insert (remove tc γ) (tc, ΓTC $ γtc ++ [constr])
 
 lookupVar :: Id -> TypEnv -> Either TypeError (Localization, RefType)
 lookupVar x γ =
