@@ -69,10 +69,15 @@ utrRefType tp@(ArrType {}) =
   let (args, ret) = arrs tp
    in toUPack (map (utrRefType . snd) args) (utrRefType ret)
 
--- | Translation of refinement types at top level (with arrows and Prop at the end)
+-- | Translation of refinement types at top-level (with arrows)
 utrRefTypeTop :: LH.RefType -> RocqType
-utrRefTypeTop tp@(RefType {}) = Arrow (utrRefType tp) (Coq.Sort Coq.PropSort)
+utrRefTypeTop tp@(RefType {}) = utrRefType tp
 utrRefTypeTop (ArrType _ tpx tp) = Coq.Arrow (utrRefType tpx) (utrRefTypeTop tp)
+
+-- | Translation of refinement types at top level (with arrows and Prop at the end)
+utrRefTypeTopProp :: LH.RefType -> RocqType
+utrRefTypeTopProp tp@(RefType {}) = Arrow (utrRefType tp) (Coq.Sort Coq.PropSort)
+utrRefTypeTopProp (ArrType _ tpx tp) = Coq.Arrow (utrRefType tpx) (utrRefTypeTopProp tp)
 
 -- | Translation of refinements
 --   Function RtoU (def 3.2) of the paper

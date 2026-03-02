@@ -21,6 +21,7 @@ module Lava.CoqUtil
 
     -- * Translating a refined data type to Coq
     transRefTC,
+    tcEqName,
 
     -- * Miscellanious functions
     mkApp,

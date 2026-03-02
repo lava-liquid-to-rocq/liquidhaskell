@@ -17,7 +17,161 @@ import Lava.Util (freshVar)
 
 -- | Main function for the translation of declarations
 trDecl :: LH.Decl -> [Coq.Decl]
-trDecl (LH.Data tc alts) = undefined
+
+-- | An inductive data type gives an unrefined data type, a well-formedness predicate, some utility definitions and pseudo-constructors
+trDecl (LH.Data tc alts) =
+  [ -- Unrefined datatype declaration TC_u
+    unrefTCDecl tc alts,
+    -- Equality for TC_u defined as a fixpoint
+    eqDecl tc alts,
+    eqReflLem,
+    eqReflHint,
+    eqbEqLem,
+    eqbEqLemHint,
+    eqbInstanceDecl
+  ]
+    ++ tcRefDecls
+    ++ constrDecls
+    ++ constrWfDecls
+    ++ hints -- ++[rectThm, indThm]
+  where
+    constrs = map (uncurry Constr . second trRefType) alts
+    decls = [unrefTCDecl tc alts, TCDecl tc constrs]
+    unrefConstr (Constr c tp) = Constr (unrefinedConstrName c) (unrefRocqType tp)
+
+    mkIntDecl :: Id -> [((Id, RocqType), Bool)] -> RocqType -> Either [CoqTactic] CoqTerm -> Coq.Decl
+    mkIntDecl g args ret def = Coq.Definition g args ret defBody Transparent
+      where
+        defBody = case def of
+          Left tacs -> ProofBody tacs
+          Right term -> TermBody term
+
+    xIHs :: [(Id, RocqType)] -> [((Id, RocqType), Bool)]
+    xIHs = map isIHArg
+      where
+        isIHArg arg@(_, rt) = {-trace ("comparing "++tc++" and "++a)-} case rt of
+          Subset _ (Coq.TC st _) _ -> (arg, st == tc)
+          Subset {} -> (arg, False)
+          Pack argTps uargTps z t p -> (arg, False)
+          _ -> error "Found non normalized constructor type in CoqUtils.wfDecl."
+    usedVars = concatMap (\(Constr _ cTp) -> typeArgs cTp) constrs
+    indVar = mkFresh "x" usedVars
+    p = mkFresh "p" (usedVars ++ [indVar])
+    q = mkFresh "q" (usedVars ++ [indVar, p])
+    v = mkFresh "v" (usedVars ++ [indVar, p, q])
+    z = mkFresh "z" (usedVars ++ [indVar, p, q, v])
+    z1 = mkFresh "z1" (usedVars ++ [indVar, p, q, v, z])
+    z2 = mkFresh "z2" (usedVars ++ [indVar, p, q, v, z, z1])
+    tmV = mkFresh "tm" (usedVars ++ [indVar, p, q, v, z, z1, z2])
+
+    unrefTC = Coq.TC tc []
+    unrefTCArg = (indVar, unrefTC)
+    wfVar var = Coq.App (Def $ wfTCName tc) [Coq.Var var]
+
+    eqReflLem :: Coq.Decl
+    eqReflLem =
+      mkCoqLemma
+        (eqReflLemName tc)
+        []
+        (FAType ("x", unrefTC) $ Prop . IsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["x", "x"]))
+        [Custom "eq_refl"]
+
+    eqReflHint = AddHint ResolveHint (eqReflLemName tc) EqHintDb
+
+    eqbEqLem :: Coq.Decl
+    eqbEqLem =
+      mkCoqLemma
+        (eqEqbEqLemName tc)
+        []
+        ( FAType ("s", unrefTC)
+            $ FAType ("t", unrefTC)
+              . Prop
+            $ Coq.Impl (IsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["s", "t"])) (Coq.Bop Coq.Eq (Coq.Var "s") (Coq.Var "t"))
+        )
+        [Custom "eqb_eq_lem"]
+
+    eqbEqLemHint = AddHint ResolveHint (eqEqbEqLemName tc) EqHintDb
+
+    eqbInstanceDecl :: Coq.Decl
+    eqbInstanceDecl = Instance (leibnitzInstanceName tc) ["LeibnitzEqB"] [("equalB'", Def $ tcEqName tc), ("refl'", Def $ eqReflLemName tc), ("eqb_eq'", Def $ eqEqbEqLemName tc)]
+
+    wfDecl =
+      Fix (wfTCName tc) [(unrefTCArg, False)] (Sort PropSort) $
+        Match
+          [Coq.Var indVar]
+          Nothing
+          -- TODO: make something cleaner
+          [ ( [(unrefinedConstrName c, map (indPatVarName . fst) cargs)],
+              mkAnd (getCase cargs ++ [sub vv (Coq.App (Cr $ unrefinedConstrName c) (map (Coq.Var . fst) cargs)) crf])
+            )
+          | (Constr c cTp) <- constrs,
+            let (cargs, Subset vv _ (Coq.And _ crf)) = matchFunctionType [] cTp
+          ]
+      where
+        getCase :: [(Id, RocqType)] -> [CoqTerm]
+        getCase cargs = concatMap argReqs (xIHs cargs')
+          where
+            cargs' = map subArgs cargs
+            subArgs (v, Subset v' vBtp vr) = (v, Subset v vBtp (sub v' (Coq.Var v) vr))
+            subArgs (v, Pack argTps uargTps z t p) = (v, Pack argTps uargTps z t p)
+            argReqs ((_, Subset x _ r), _) = [ref]
+              where
+                ref = replaceSubterm (IdPat x, True) (Coq.Var $ indPatVarName x) r
+            argReqs ((f, Pack {}), _) = [Coq.App (Def uPackWfName) [Coq.Var f]] -- TODO: add required conditions
+    tm = (tmV, Subset v unrefTC $ Coq.And (wfVar v) (Coq.App (Coq.Var p) [Coq.Var v]))
+    wfLem = mkCoqLemma (wfLemName tc) [((p, Arrow unrefTC (Sort PropSort)), True), (tm, False)] (Prop $ Coq.App (Def $ wfTCName tc) [Project $ Coq.Var tmV]) [destructSubsetArg tmV, Oracle]
+
+    refTcDecl = CoqNewType tc (Subset indVar (Coq.TC tc []) (Coq.And (Coq.App (Def $ wfTCName tc) [Coq.Var indVar]) TT))
+
+    mkPseudoConstr :: CoqConstr -> [Coq.Decl]
+    mkPseudoConstr (Constr c cTp) = [argLem, mkIntDecl c (map (,False) args) ret (Right existTm)]
+      where
+        (args, ret@(Subset x _ xRef)) = matchFunctionType [c] cTp
+        retRef = sub x unrefCrAppl xRef
+
+        argPs = map (projTm decls . Coq.Var . fst) args
+        unrefCrAppl = Coq.App (Def $ unrefinedConstrName c) argPs
+
+        existTm = Exist TermHole unrefCrAppl (TermWitness $ Coq.App (Def $ psConstrLemName c) (map (Coq.Var . fst) args))
+        argLem = mkIntDecl (psConstrLemName c) (map (,False) args) (Prop retRef) (Left lemTacs)
+          where
+            lemTacs = [Custom "repeat first [split; solver]"]
+    {- [SplitB [argTacs] [Easy]]
+    argTacs = if null args then Easy else foldr1 (\tac cur -> SplitB [tac] [cur]) argPOPrfs
+    destructData :: [(Id, Bool)]
+    destructData = map getData (xIHs args) where
+      getData ((y, _), b) = (y, b)
+    argPOPrfs = map solvePOs destructData where
+      solvePOs (_, False) = Oracle -- Apply $ Var y
+      solvePOs (y, True) = Apply $ PrfTerm TypeHole (RefWitness $ Var y) -}
+    tcRefDecls = [wfDecl, wfLem, refTcDecl]
+    constrDecls = concatMap mkPseudoConstr constrs
+
+    constrWfDecls = concatMap mkConstrWf constrs
+    mkConstrWf (Constr c cTp) =
+      map mkConstrWfArg (filter (isTC . snd) args)
+      where
+        args = fst $ matchFunctionType [] cTp
+        isTC (Subset _ (Coq.TC a []) _) = tc == a || isInductTp decls' a
+        isTC (Subset {}) = False
+        isTC (Pack {}) = False
+        mkConstrWfArg (x, xTp) = mkIntDecl (constrWfName c x) (map (,True) argPs ++ [((p, Prop ass), False)]) (Prop goal) (Left constrWfPrf)
+          where
+            argPs = mapSnd unrefRocqType args
+            argPTs = map (Coq.Var . fst) args
+            unrefCrAppl = Coq.App (Def $ unrefinedConstrName c) argPTs
+            ass = Coq.App (Def $ wfTCName tc) [unrefCrAppl]
+            Subset _ (Coq.TC a []) _ = xTp
+            goal = Coq.App (Def $ wfTCName a) [Coq.Var x]
+            constrWfPrf = [Easy]
+
+    wfConstrHints = (ResolveHint, wfLemName tc, WfDB) : [(UnfoldHint,,WfDB) (wfTCName tc)]
+    refConstrHints = map (ResolveHint,) (tcEqName tc : map bindName constrWfDecls) ++ map ((UnfoldHint,) . cConstrNm) constrs
+
+    hints = map (uncurry3 AddHint) $ wfConstrHints ++ map (\(kO, n) -> (kO, n, RefConstrDB)) refConstrHints
+
+-- For an unreflected definition, we only generate the refined definition,
+-- if the graph relation is needed, we generate it on the fly
 trDecl (LH.Definition f tpf e False) = [trDefRefDef f tpf e]
 trDecl (LH.Definition f tpf e True) =
   [ trDefRefDef f tpf e, -- f
@@ -73,7 +227,7 @@ trDefRefDef f tpf e = Coq.Definition f argsT (trRefType ret) (ProofBody tacs) Tr
 -- | Translation of a definition `f` to the unrefined graph relation `f_rel`
 trDefGraphRel :: Id -> RefType -> Expr -> Coq.Decl
 trDefGraphRel f tp e =
-  CoqInductive (relDefName f) [] (utrRefTypeTop tp) (map pathConstr paths)
+  CoqInductive (relDefName f) [] (utrRefTypeTopProp tp) (map pathConstr paths)
   where
     paths = functionPaths e (tpArgsArLoc tp)
     pathConstr path = Coq.Constr (namePath f path False) (trPathToConstr f path)
@@ -293,3 +447,35 @@ onlyFOArgs = filter (\case (_, RefType {}) -> True; (_, ArrType {}) -> False)
 -- Used to give the initial patterns on the parameters of a function
 tpArgsArLoc :: RefType -> [Reft]
 tpArgsArLoc = map (\(x, tp) -> LH.Var x (arity tp) Local) . fst . arrs
+
+-- * Terms generated by the tranlation of a datatype
+
+-- | Translates a constructor to an unrefined constructor
+trConstr :: (Id, RefType) -> Coq.CoqConstr
+trConstr (c, tp) = Constr (unrefinedConstrName c) (utrRefTypeTop tp)
+
+-- | Unrefined datatype declaration TC_u
+unrefTCDecl :: Id -> [(Id, RefType)] -> Coq.Decl
+unrefTCDecl tc alts =
+  CoqInductive (unrefinedTCName tc) [] (Sort SetSort) $ map trConstr alts
+
+-- | Fixpoint definition of equality of two inductives
+eqDecl :: Id -> [(Id, RefType)] -> Coq.Decl
+eqDecl tc alts =
+  Fix (tcEqName tc) [(("x", Coq.TC tc []), False), (("y", Coq.TC tc []), False)] Coq.boolTp $
+    Match [Coq.Var "x", Coq.Var "y"] Nothing (map mkConstrEqBranch alts ++ [defaultBranch | length alts > 1])
+  where
+    mkConstrEqBranch :: (Id, RefType) -> ([(Id, [Id])], CoqTerm)
+    mkConstrEqBranch alt@(c, tp) =
+      let c_u = unrefinedConstrName c
+       in ( [(c_u, tpArgs tp), (c_u, map (++ "'") $ tpArgs tp)],
+            foldl (\b (x, tpx) -> Coq.Bop Andb b (mkEq tpx (Coq.Var x) (Coq.Var $ x ++ "'"))) btrue (fst $ arrs tp)
+          )
+    defaultBranch = ([("_", []), ("_", [])], bfalse)
+    -- TODO: we could have an inductive tc' that is not the same one, but for which
+    -- we need to use tc'_eq instead of boolean equality (the best would be to
+    -- overload boolean equality)
+    -- Is it really not possible to expand the boolean equality automatically?
+    mkEq :: RefType -> CoqTerm -> CoqTerm -> CoqTerm
+    mkEq (RefType _ (LH.TC tc') _) x x' | tc' == tc = Coq.App (Def $ tcEqName tc) [x, x']
+    mkEq _ x x' = Coq.Bop EqualB x x'

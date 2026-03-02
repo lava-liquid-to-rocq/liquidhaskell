@@ -1,7 +1,4 @@
-- RV and hypFromAm, then:
-  + unrefined translation of refinement utrReft/RtoU (def 3.2)
-  + RtoP/utrReftProp
-  + creation of the relation graph
+- translation of datatypes
 
 - refined translation of declarations
 - refined translation of applications
