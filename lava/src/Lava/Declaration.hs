@@ -5,6 +5,8 @@
 module Lava.Declaration where
 
 import Data.Bifunctor (bimap, first, second)
+import Data.List ((\\))
+import qualified Data.Set as Set
 import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil (mkVarDestrPat, mkVarDestruct)
@@ -16,9 +18,9 @@ import Lava.Util (freshVar)
 -- | Main function for the translation of declarations
 trDecl :: LH.Decl -> [Coq.Decl]
 trDecl (LH.Data tc alts) = undefined
-trDecl (LH.Definition f tpf e False) = [trDefRefDef f (arrs tpf) e]
+trDecl (LH.Definition f tpf e False) = [trDefRefDef f tpf e]
 trDecl (LH.Definition f tpf e True) =
-  [ trDefRefDef f (arrs tpf) e, -- f
+  [ trDefRefDef f tpf e, -- f
     trDefGraphRel f tpf e, -- f_rel
     AddHint ConstructorsHint (relDefName f) CoreDB, -- hints for f_rel
     Instance (f ++ "_lookup_rel") ["dictionary", "rel", f] [("lookup'", Coq.Def $ f ++ "_rel")],
@@ -58,21 +60,22 @@ trDecl (LH.Definition f tpf e True) =
     f_res = case retT of Coq.Subset v _ _ -> v; _ -> freshVar (map fst argsT)
 
 -- | Translation of a definition `f` to the refined definition `f` (defined with tactics)
-trDefRefDef :: Id -> ([(Id, RefType)], RefType) -> Expr -> Coq.Decl
-trDefRefDef f (args, ret) e = Coq.Definition f argsT (trRefType ret) (ProofBody tacs) Transparent
+trDefRefDef :: Id -> RefType -> Expr -> Coq.Decl
+trDefRefDef f tpf e = Coq.Definition f argsT (trRefType ret) (ProofBody tacs) Transparent
   where
+    (args, ret) = arrs tpf
     argsT = map (\(id, arg) -> ((id, trRefType arg), False)) args
     tacs =
       let destructArgs = map (mkVarDestruct . fst) $ onlyFOArgs args
        in -- TODO: maybe use cleanInductions (usedIHs eT) eT
-          destructArgs ++ trExprTacs (map (LH.VarPat . fst) args) e
+          destructArgs ++ trExprTacs (tpArgsArLoc tpf) e
 
 -- | Translation of a definition `f` to the unrefined graph relation `f_rel`
 trDefGraphRel :: Id -> RefType -> Expr -> Coq.Decl
 trDefGraphRel f tp e =
   CoqInductive (relDefName f) [] (utrRefTypeTop tp) (map pathConstr paths)
   where
-    paths = functionPaths e (tpArgs tp)
+    paths = functionPaths e (tpArgsArLoc tp)
     pathConstr path = Coq.Constr (namePath f path False) (trPathToConstr f path)
 
 -- * Functions for the construction of the graph relation
@@ -81,15 +84,15 @@ trDefGraphRel f tp e =
 -- The first element contains a map from arguments to their patterns,
 -- the second from additional applications to the patterns for their results (“with”),
 -- the third is the term of the branch, that is always a refinement
-type FunctionPath = ([(Id, Pattern)], [(Reft, Pattern)], Reft)
+type FunctionPath = ([(Id, Reft)], [(Reft, Reft)], Reft)
 
 -- | Creates the function paths of an expression by calling separateBranches:
 -- function paths(e; x1...xn) of the paper (definition B.2)
-functionPaths :: Expr -> [Id] -> [FunctionPath]
-functionPaths e xs = {- map (\(σxs, σp, r) -> (map snd σxs, σp, r)) $ -} separateBranches (zip xs (map VarPat xs)) [] e
+functionPaths :: Expr -> [Reft] -> [FunctionPath]
+functionPaths e xs = separateBranches (map (\case x@(LH.Var id _ _) -> (id, x)) xs) [] e
 
 -- | Actually create the function paths of an expression: function P from the paper (definition B.3)
-separateBranches :: [(Id, Pattern)] -> [(Reft, Pattern)] -> Expr -> [FunctionPath]
+separateBranches :: [(Id, Reft)] -> [(Reft, Reft)] -> Expr -> [FunctionPath]
 separateBranches σxs σp (Reft r) = [(σxs, σp, r)]
 -- TODO: remove this case for if-then-else, but deal with it in the translation
 {- separateBranches σxs σp (LH.Let x _ (Reft cond) (Case (LH.Var x') [("False", [], elseE), ("True", [], thenE)] _)) args | x == x' =
@@ -110,14 +113,22 @@ separateBranches σxs σp (Case r branches) =
       -- if r is a parameter
       (LH.Var x _ _, []) -> concatMap (varRecCall x) cleanBranches
       -- if r is an application or top-level constant
-      _ -> concatMap (\((c, ys), e) -> separateBranches σxs (σp ++ [(r, TCPat c (map VarPat ys))]) e) cleanBranches
+      _ ->
+        concatMap
+          ( \((c, ys), e) ->
+              separateBranches
+                σxs
+                (σp ++ [(r, foldl LH.App (LH.DC c) (map (\y -> LH.Var y 0 Local) ys))])
+                e
+          )
+          cleanBranches
   where
     -- Reachable branches only
     cleanBranches = concatMap (\case (_, Nothing) -> []; (pat, Just x) -> [(pat, x)]) branches
     -- Returns the pattern to which r is matched if it is already
     alreadyMatched =
-      apps . patternToReft <$> case r of
-        LH.Var x _ _ -> case lookup x σxs of Just (VarPat y) -> Nothing; pat -> pat
+      apps <$> case r of
+        LH.Var x _ _ -> case lookup x σxs of Just (LH.Var y _ _) -> Nothing; pat -> pat
         _ -> lookup r σp
     -- Recursive calls for the variable case, substituting the variable everywhere
     varRecCall :: Id -> ((Id, [Id]), Expr) -> [FunctionPath]
@@ -137,9 +148,31 @@ separateBranches σxs σp (Case r branches) =
         ((_, ys), e) : _ -> Just $ substs (zip rs ys) e
         [] -> Nothing
 
--- | Translates a function path into a constructor for f_rel
+-- | Translates a function path into a constructor for f_rel.
+-- Function pathInd (def 3.5) of the paper
 trPathToConstr :: Id -> FunctionPath -> RocqType
-trPathToConstr f (σxs, σp, e) = undefined -- see createRelationBranch
+trPathToConstr f (σxs, σp, rf) =
+  Coq.Prop $ mkForallYs argsVars (go σp [])
+  where
+    -- Build forall (y)_{y in ys}, cqtm
+    mkForallYs ys cqtm = foldr (\y -> FATerm (y, Nothing)) cqtm ys
+    -- Variable introduced by destructing the arguments
+    argsVars = Set.toList $ freeVars (map snd σxs) Set.\\ freeVars (map fst σxs)
+    -- Auxiliary function matching on σp. The parameter hs contains hypotheses
+    -- that have already been included
+    go :: [(Reft, Reft)] -> [(Reft, Id)] -> CoqTerm
+    go [] hs =
+      let (hyps_r, r') = extractApps rf
+          currentHyps = hyps_r \\ hs
+          result = Coq.App (Coq.Def $ relDefName f) (map utrReft (map snd σxs ++ [r']))
+       in hypsRV currentHyps result
+    go ((r, rp) : σp') hs =
+      let (hyps_r, r') = extractApps r
+          currentHyps = hyps_r \\ hs
+          foralls = mkForallYs . Set.toList $ freeVars rp
+          equality = Coq.Bop EqProp (utrReft r') (utrReft rp)
+          recCall = go σp' (hs ++ currentHyps)
+       in hypsRV currentHyps . foralls $ Coq.Impl equality recCall
 
 -- | Create a name for a constructor based on the patterns of the parameters (`pats`)
 -- The flag takeVars indicates if we want the variables alone between the constructors
@@ -148,8 +181,8 @@ namePath :: Id -> FunctionPath -> Bool -> Id
 namePath f (pats, _, _) takeVars = foldl (++) base $ map getConstructor pats'
   where
     pats' = map snd pats
-    getConstructor (VarPat x) = if takeVars then "_" ++ x else ""
-    getConstructor (TCPat c _) = "_" ++ c
+    getConstructor (LH.Var x _ _) = if takeVars then "_" ++ x else ""
+    getConstructor (LH.App (DC c) _) = "_" ++ c
     base = if all (null . getConstructor) pats' then relDefBranchName f else f
 
 -- * Generated lemmas
@@ -255,3 +288,8 @@ relConstrLemmas = mkRelBranchLemmas args retArgU univArgs univAxs conds' branche
 -- | Filter arguments with a non-arrow refinement type (those that usually need to be destructed)
 onlyFOArgs :: [(Id, RefType)] -> [(Id, RefType)]
 onlyFOArgs = filter (\case (_, RefType {}) -> True; (_, ArrType {}) -> False)
+
+-- | tpArgsArLoc((x_i:R_i|r_i)_{i ≤ n} -> R) = [Var x_i ar(R_i) Local]_{i ≤ n}
+-- Used to give the initial patterns on the parameters of a function
+tpArgsArLoc :: RefType -> [Reft]
+tpArgsArLoc = map (\(x, tp) -> LH.Var x (arity tp) Local) . fst . arrs

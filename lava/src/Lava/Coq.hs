@@ -255,7 +255,7 @@ data RocqType
   -- | Prop-sorted Rocq Types
   | Prop CoqTerm
   -- | unrefined Packs
-  |  UPack UArgListT RocqType
+  | UPack UArgListT RocqType
   | Pack ArgListT UArgListT CoqTerm RocqType CoqTerm
   | ArgumentList ArgListT
   | Hole

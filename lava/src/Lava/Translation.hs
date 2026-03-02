@@ -217,7 +217,7 @@ trRefTypeTop (ArrType x tpx tp) = Coq.FAType (x, trRefType tpx) (trRefTypeTop tp
 --   and the patterns of the arguments as supplementary arguments,
 --   to translate applications.
 --   Function RtoR (def 3.8) of the paper
-trReft :: [Pattern] -> LH.Reft -> Coq.CoqTerm
+trReft :: [Reft] -> LH.Reft -> Coq.CoqTerm
 trReft xs tm0 = case tm0 of
   LH.Var x ar Global | ar > 0 -> Coq.Def $ packInstanceName x
   LH.Var x _ _ -> Coq.Var x
@@ -244,7 +244,7 @@ trReft xs tm0 = case tm0 of
 -- | Translation of expressions as tactics
 -- Some other cases might be necessary because of branches coming from Core.
 -- Function EtoTac (def 3.7) of the paper
-trExprTacs :: [Pattern] -> LH.Expr -> [CoqTactic]
+trExprTacs :: [Reft] -> LH.Expr -> [CoqTactic]
 trExprTacs xs e0 = case e0 of
   LH.Reft tm -> [Coq.Exact $ trReft xs tm]
   {- LH.Case cond [("False", [], elseE), ("True", [], thenE)] -> do

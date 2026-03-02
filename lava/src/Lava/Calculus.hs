@@ -124,11 +124,6 @@ data Bop
 -- > pop ::= === | =<= | =>=
 data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq)
 
--- | Patterns
---
--- > p ::= x | C p*
-data Pattern = VarPat Id | TCPat Id [Pattern] deriving (Data, Eq)
-
 -- Builtin type and data constructors
 
 {- ORMOLU_DISABLE -}
@@ -162,7 +157,7 @@ arrs :: RefType -> ([(Id, RefType)], RefType)
 arrs tp@(RefType {}) = ([], tp)
 arrs (ArrType x tpx tp) = ((x, tpx) :) `first` arrs tp
 
--- | tpArgs({x_i:R_i|r_i}_{i ≤ n} -> R) = [x_i]_{i ≤ n}
+-- | tpArgs()x_i:R_i|r_i)_{i ≤ n} -> R) = [x_i]_{i ≤ n}
 tpArgs :: RefType -> [Id]
 tpArgs = map fst . fst . arrs
 
@@ -175,13 +170,6 @@ apps tm = (tm, [])
 -- Since we do not have higher-order constructors, all variables are of arity 0
 matchToApp :: (Id, [Id]) -> Reft
 matchToApp (c, ys) = foldr App (DC c) (map (\y -> Var y 0 Local) ys)
-
--- | Translates a pattern to a Reft, similar to  matchToApp
--- This function must not be called on a pattern “x” since this one can be a
--- higher-order argument
-patternToReft :: Pattern -> Reft
-patternToReft (VarPat x) = Var x 0 Local
-patternToReft (TCPat c pats) = foldr App (DC c) (map patternToReft pats)
 
 -- * Typeclass related to free variables
 
@@ -197,7 +185,7 @@ class HasVars a where
   -- | Return the free variables with their arity and localization
   freeVarsArLoc :: a -> Set (Id, (Integer, Localization))
 
-  boundVars :: a -> Set Id
+  {- boundVars :: a -> Set Id -}
 
   -- | subst r x tm is {r/x}tm
   subst :: Reft -> Id -> a -> a
@@ -237,7 +225,7 @@ instance HasVars Reft where
   freeVarsArLoc (Inj r _) = freeVarsArLoc r
   freeVarsArLoc (Proj r) = freeVarsArLoc r
 
-  boundVars _ = Set.empty
+  {- boundVars _ = Set.empty -}
 
   subst r' x r0 = case r0 of
     Var y _ _ | y == x -> r'
@@ -264,9 +252,9 @@ instance HasVars Expr where
         let ysSet = foldr (\y -> Set.insert (y, (0, Local))) Set.empty ys
          in freeVarsArLoc ebr Set.\\ ysSet
 
-  boundVars (Reft r) = Set.empty
+  {- boundVars (Reft r) = Set.empty
   boundVars (Let x _ ex e) = Set.insert x (boundVars ex `Set.union` boundVars e)
-  boundVars (Case _ branches) = Set.unions (map (Set.fromList . snd . fst) branches)
+  boundVars (Case _ branches) = Set.unions (map (Set.fromList . snd . fst) branches) -}
 
   subst r x e = case e of
     Reft re -> Reft $ subst r x re
@@ -286,8 +274,9 @@ instance HasVars Expr where
 instance HasVars RefType where
   freeVarsArLoc (RefType x tp r) = Set.delete (x, (0, Local)) (freeVarsArLoc r)
   freeVarsArLoc (ArrType x tpx tp) = freeVarsArLoc tpx `Set.union` Set.delete (x, (arity tpx, Local)) (freeVarsArLoc tp)
-  boundVars (RefType x tp r) = Set.empty
-  boundVars (ArrType x tpx tp) = Set.insert x (boundVars tpx `Set.union` boundVars tp)
+
+  {- boundVars (RefType x tp r) = Set.empty
+  boundVars (ArrType x tpx tp) = Set.insert x (boundVars tpx `Set.union` boundVars tp) -}
   subst r x tp = case tp of
     RefType y _ _ | y == x -> tp
     RefType y b reft -> RefType y b $ subst r x reft
@@ -296,6 +285,14 @@ instance HasVars RefType where
           error $ "Substitution {" ++ show r ++ "/" ++ x ++ "}(" ++ show tp ++ ") is not sound because of variable capture."
     ArrType y tpx tp' | y == x -> ArrType y (subst r x tpx) tp'
     ArrType y tpx tp' -> ArrType y (subst r x tpx) (subst r x tp')
+
+instance (HasVars a) => HasVars [a] where
+  freeVarsArLoc tms = Set.unions $ map freeVarsArLoc tms
+  subst r x = fmap (subst r x)
+
+instance (HasVars a) => HasVars (Maybe a) where
+  freeVarsArLoc = maybe Set.empty freeVarsArLoc
+  subst r x = fmap (subst r x)
 
 -- * Printer for the grammar
 
