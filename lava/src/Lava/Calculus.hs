@@ -185,25 +185,57 @@ patternToReft (TCPat c pats) = foldr App (DC c) (map patternToReft pats)
 
 -- * Typeclass related to free variables
 
+-- To use Sets with Localization inside
+instance Ord Localization where
+  compare l1 l2 | l1 == l2 = EQ
+  compare Local (Global; Recursive) = LT
+  compare Global Recursive = LT
+  compare Recursive (Global; Local) = GT
+  compare Global Local = GT
+
 class HasVars a where
-  freeVars :: a -> Set Id
+  -- | Return the free variables with their arity and localization
+  freeVarsArLoc :: a -> Set (Id, (Integer, Localization))
+
   boundVars :: a -> Set Id
+
+  -- | subst r x tm is {r/x}tm
   subst :: Reft -> Id -> a -> a
 
-  -- | rename the second argument to the first
-  rename :: Id -> Id -> a -> a
+freeVars :: (HasVars a) => a -> Set Id
+freeVars tm = Set.map fst $ freeVarsArLoc tm
+
+-- | Rename `old` to `new` in `tm`
+rename :: (HasVars a) => Id -> Id -> a -> a
+rename new old tm =
+  let olds = Set.filter ((==) old . fst) $ freeVarsArLoc tm
+   in if Set.size olds == 0
+        then tm
+        else
+          -- We assume a single occurrence of `old` and retrieve its arity and
+          -- localization to build a Var
+          let (_, (ar, loc)) = Set.elemAt 0 olds
+           in subst (Var new ar loc) old tm
+
+-- | Apply a list of renamings, starting from the right
+renames :: (HasVars a) => [(Id, Id)] -> a -> a
+renames = flip (foldr (uncurry rename))
+
+-- | Apply a list of substitutions, starting from the right
+substs :: (HasVars a) => [(Reft, Id)] -> a -> a
+substs = flip (foldr (uncurry subst))
 
 instance HasVars Reft where
-  freeVars (Var x _ _) = Set.singleton x
-  freeVars (App hd arg) = freeVars hd `Set.union` freeVars arg
-  freeVars (Bop _ r1 r2) = freeVars r1 `Set.union` freeVars r2
-  freeVars (Neg r) = freeVars r
-  freeVars (StringLit _; IntLit _; FloatLit _; DC _) = Set.empty
-  freeVars (QMark r rh rp) = freeVars r `Set.union` (freeVars rh `Set.union` freeVars rp)
-  freeVars (Pop _ r1 r2) = freeVars r1 `Set.union` freeVars r2
-  freeVars (Sub r _ _) = freeVars r
-  freeVars (Inj r _) = freeVars r
-  freeVars (Proj r) = freeVars r
+  freeVarsArLoc (Var x ar loc) = Set.singleton (x, (ar, loc))
+  freeVarsArLoc (App hd arg) = freeVarsArLoc hd `Set.union` freeVarsArLoc arg
+  freeVarsArLoc (Bop _ r1 r2) = freeVarsArLoc r1 `Set.union` freeVarsArLoc r2
+  freeVarsArLoc (Neg r) = freeVarsArLoc r
+  freeVarsArLoc (StringLit _; IntLit _; FloatLit _; DC _) = Set.empty
+  freeVarsArLoc (QMark r rh rp) = freeVarsArLoc r `Set.union` (freeVarsArLoc rh `Set.union` freeVarsArLoc rp)
+  freeVarsArLoc (Pop _ r1 r2) = freeVarsArLoc r1 `Set.union` freeVarsArLoc r2
+  freeVarsArLoc (Sub r _ _) = freeVarsArLoc r
+  freeVarsArLoc (Inj r _) = freeVarsArLoc r
+  freeVarsArLoc (Proj r) = freeVarsArLoc r
 
   boundVars _ = Set.empty
 
@@ -219,24 +251,18 @@ instance HasVars Reft where
     Inj r tp -> Inj (subst r' x r) (subst r' x tp)
     Proj r -> Proj (subst r' x r)
 
-  rename new old r0 = case r0 of
-    Var z ar loc | z == old -> Var new ar loc
-    (Var {}; StringLit _; IntLit _; FloatLit _; DC _) -> r0
-    App h arg -> App (rename new old h) (rename new old arg)
-    Bop bop r1 r2 -> Bop bop (rename new old r1) (rename new old r2)
-    Neg r -> Neg $ rename new old r
-    QMark r rh rp -> QMark (rename new old r) (rename new old rh) (rename new old rp)
-    Pop pop r1 r2 -> Pop pop (rename new old r1) (rename new old r2)
-    Sub r tps tpt -> Sub (rename new old r) (rename new old tps) (rename new old tpt)
-    Inj r tp -> Inj (rename new old r) (rename new old tp)
-    Proj r -> Proj (rename new old r)
-
 instance HasVars Expr where
-  freeVars (Reft r) = freeVars r
-  freeVars (Let x tp ex e) = Set.unions [maybe Set.empty freeVars tp, freeVars ex, Set.delete x (freeVars e)]
-  freeVars (Case r branches) =
-    freeVars r
-      `Set.union` Set.unions (map (\((c, ys), ebr) -> maybe Set.empty freeVars ebr Set.\\ Set.fromList ys) branches)
+  freeVarsArLoc (Reft r) = freeVarsArLoc r
+  freeVarsArLoc (Let x tp ex e) =
+    Set.unions
+      [maybe Set.empty freeVarsArLoc tp, freeVarsArLoc ex, Set.delete (x, (maybe 0 arity tp, Local)) (freeVarsArLoc e)]
+  freeVarsArLoc (Case r branches) =
+    freeVarsArLoc r `Set.union` Set.unions (map fvBranch branches)
+    where
+      fvBranch (_, Nothing) = Set.empty
+      fvBranch ((c, ys), Just ebr) =
+        let ysSet = foldr (\y -> Set.insert (y, (0, Local))) Set.empty ys
+         in freeVarsArLoc ebr Set.\\ ysSet
 
   boundVars (Reft r) = Set.empty
   boundVars (Let x _ ex e) = Set.insert x (boundVars ex `Set.union` boundVars e)
@@ -245,60 +271,31 @@ instance HasVars Expr where
   subst r x e = case e of
     Reft re -> Reft $ subst r x re
     Let y _ _ e'
-      | y `Set.member` freeVars r && x `Set.member` freeVars e' ->
-          error $ "Variable " ++ x ++ " cannot be substituted in " ++ show e ++ " where it is bound."
+      | y `Set.member` freeVars r && x `Set.member` freeVars e' -> error err
     Let y tp ey e' | y == x -> Let y (subst r x <$> tp) (subst r x ey) e'
     Let y tp ey e' -> Let y (subst r x <$> tp) (subst r x ey) (subst r x e')
     Case r' branches ->
       Case (subst r x r') (map substBranch branches)
       where
-        substBranch ((_, ys), _)
-          | not (Set.fromList ys `Set.disjoint` freeVars r) =
-              error $ "Variable " ++ x ++ " cannot be substituted in " ++ show e ++ " where it is bound."
+        substBranch ((_, ys), _) | not (Set.fromList ys `Set.disjoint` freeVars r) = error err
         substBranch br@((_, ys), _) | x `elem` ys = br
         substBranch ((c, ys), ebr) = ((c, ys), subst r x <$> ebr)
-
-  rename new old e = case e of
-    Reft re -> Reft $ rename new old re
-    Let x _ _ e'
-      | x == new && old `Set.member` freeVars e' ->
-          error $ "Variable " ++ old ++ " cannot be renamed as " ++ new ++ " in " ++ show e
-    Let x tp ey e' | x == old -> Let x (rename new old <$> tp) (rename new old ey) e'
-    Let x tp ey e' -> Let x (rename new old <$> tp) (rename new old ey) (rename new old e')
-    Case r' branches ->
-      Case (rename new old r') (map renameBranch branches)
-      where
-        renameBranch ((_, ys), _)
-          | new `Set.member` Set.fromList ys =
-              error $ "Variable " ++ old ++ " cannot be renamed as " ++ new ++ " in " ++ show e
-        renameBranch br@((_, ys), _) | old `elem` ys = br
-        renameBranch ((c, ys), ebr) = ((c, ys), rename new old <$> ebr)
+    where
+      err = "Substitution {" ++ show r ++ "/" ++ x ++ "}(" ++ show e ++ ") is not sound because of variable capture."
 
 instance HasVars RefType where
-  freeVars (RefType x tp r) = Set.delete x (freeVars r)
-  freeVars (ArrType x tpx tp) = freeVars tpx `Set.union` Set.delete x (freeVars tp)
+  freeVarsArLoc (RefType x tp r) = Set.delete (x, (0, Local)) (freeVarsArLoc r)
+  freeVarsArLoc (ArrType x tpx tp) = freeVarsArLoc tpx `Set.union` Set.delete (x, (arity tpx, Local)) (freeVarsArLoc tp)
   boundVars (RefType x tp r) = Set.empty
   boundVars (ArrType x tpx tp) = Set.insert x (boundVars tpx `Set.union` boundVars tp)
   subst r x tp = case tp of
     RefType y _ _ | y == x -> tp
     RefType y b reft -> RefType y b $ subst r x reft
-    ArrType y _ tp' | y `Set.member` freeVars r && x `Set.member` freeVars tp' -> undefined
+    ArrType y _ tp'
+      | y `Set.member` freeVars r && x `Set.member` freeVars tp' ->
+          error $ "Substitution {" ++ show r ++ "/" ++ x ++ "}(" ++ show tp ++ ") is not sound because of variable capture."
     ArrType y tpx tp' | y == x -> ArrType y (subst r x tpx) tp'
     ArrType y tpx tp' -> ArrType y (subst r x tpx) (subst r x tp')
-  rename new old tp = case tp of
-    RefType y _ _ | y == old -> tp
-    RefType y b reft -> RefType y b $ rename new old reft
-    ArrType y _ tp' | y == new && old `Set.member` freeVars tp' -> undefined
-    ArrType y tpx tp' | y == old -> ArrType y (rename new old tpx) tp'
-    ArrType y tpx tp' -> ArrType y (rename new old tpx) (rename new old tp')
-
--- | Apply a list of substitutions, starting from the right
-substs :: (HasVars a) => [(Reft, Id)] -> a -> a
-substs = flip (foldr (uncurry subst))
-
--- | Apply a list of renamings, starting from the right
-renames :: (HasVars a) => [(Id, Id)] -> a -> a
-renames = flip (foldr (uncurry rename))
 
 -- * Printer for the grammar
 
