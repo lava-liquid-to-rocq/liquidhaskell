@@ -298,6 +298,8 @@ instance Show UArgList where
 -- >     | undefined | _ | p
 data CoqTerm
   = Forall [(Id, RocqType)] CoqTerm
+  -- FIX: remove duplicate
+  | FATerm (Id, Maybe RocqType) CoqTerm
   | Exists [(Id, RocqType)] CoqTerm
   | And CoqTerm CoqTerm
   | Or CoqTerm CoqTerm

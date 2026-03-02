@@ -52,6 +52,7 @@ module Lava.CoqUtil
     refProjName,
     mkUPackName,
     packInstanceName,
+    upackInstanceName,
     packDefName,
     constructProj {- packFFrelName, packFunctName, -},
     toPack,
@@ -129,7 +130,8 @@ mkPackName = "mkPack"
 mkUPackName = "mkUPack"
 refProjName = "refinement_proj"
 packProjName = "packPr_proj"
-packInstanceName f = f ++ "Pack"
+packInstanceName f = f ++ "_pack"
+upackInstanceName f = f ++ "_upack"
 uPackWfName = "uPack_wf"
 {- ORMOLU_ENABLE -}
 

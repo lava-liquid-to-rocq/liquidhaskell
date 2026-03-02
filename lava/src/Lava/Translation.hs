@@ -4,11 +4,11 @@
 -- Unrefined and refined translations are mutually dependent, so they are all in the same file
 module Lava.Translation where
 
-import Data.Bifunctor (second)
+import Data.Bifunctor (first, second)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
-import Lava.CoqSyntaxUtil (packGetF)
-import Lava.CoqUtil (funcHoodLemName, packInstanceName, relDefLemName, relDefName, relDefThmName, relPostfix, toPack, toUPack)
+import Lava.CoqSyntaxUtil (mkIsTrue, packGetF, packGetRel, upackGetRel)
+import Lava.CoqUtil (funcHoodLemName, packInstanceName, relDefLemName, relDefName, relDefThmName, relPostfix, toPack, toUPack, upackInstanceName)
 import Lava.Util (hashName, isSuffixOf)
 
 -- * Generic translations
@@ -77,25 +77,28 @@ utrRefTypeTop (ArrType _ tpx tp) = Coq.Arrow (utrRefType tpx) (utrRefTypeTop tp)
 -- | Translation of refinements
 --   Function RtoU (def 3.2) of the paper
 utrReft :: LH.Reft -> Coq.CoqTerm
-utrReft tm0 = case tm0 of
-  LH.Var x ar loc -> undefined
+utrReft r0 = case r0 of
+  LH.Var x n Global | n > 0 -> Coq.Var $ upackInstanceName x
+  LH.Var x _ _ -> Coq.Var x
   LH.StringLit s -> Coq.StringLiteral s
   LH.IntLit n -> Coq.IntLiteral n
   LH.FloatLit d -> Coq.FloatLiteral d
-  LH.DC c -> undefined
-  LH.App tm1 tm2 -> undefined
-  LH.Neg tm -> undefined
-  LH.Bop op tm r -> undefined
-  LH.QMark tm hint prop -> undefined
-  LH.Pop pop tm1 tm2 -> undefined
-  LH.Sub tm tps tpt -> undefined
-  LH.Inj tm tp -> undefined
-  LH.Proj tm -> Project (trReft [] tm)
+  LH.DC c -> Coq.Cr (unrefinedConstrName c)
+  LH.App r1 r2 -> Coq.App (utrReft r1) [utrReft r2]
+  LH.Neg r -> Coq.App (Coq.Def Coq.negb) [utrReft r]
+  LH.Bop op r1 r2 -> Coq.Bop (trBop op) (utrReft r1) (utrReft r2)
+  LH.QMark r _ _ -> utrReft r
+  LH.Pop _ _ r -> utrReft r
+  LH.Sub r _ _ -> utrReft r
+  LH.Inj r _ -> utrReft r
+  LH.Proj r -> Project (trReft [] r)
 
 -- | Translation of refinements to propositions
 --   Function RtoP (def 3.4) of the paper
 utrReftProp :: LH.Reft -> Coq.CoqTerm
-utrReftProp = undefined
+utrReftProp r =
+  let (rv, r') = extractApps r
+   in hypsRV rv (mkIsTrue (utrReft r'))
 
 -- ** Utility functions for unrefined translations
 
@@ -115,55 +118,79 @@ operatorsWithGraph =
 -- In the list associating terms to variables, the replacements have also been done.
 -- For operators, we only extract the ones in the list operatorsWithGraph
 -- Ex: extractApps ((f 0 1) + (f 0 1) + x) = ([(f 0 1, f_res)], f_res + f_res + x)
-extractApps :: [(Reft, Id)] -> Reft -> ([(Reft, Id)], Reft)
-extractApps env r = case r of
-  -- top-level constant
-  LH.Var x 0 Global -> updateEnv env r
-  (LH.Var {}; StringLit {}; FloatLit {}; IntLit {}; DC {}) -> (env, r)
-  LH.Neg r' -> second LH.Neg $ extractApps env r'
-  LH.Bop bop r1 r2 ->
-    let (env1, r1') = extractApps env r1
-        (env2, r2') = extractApps env1 r2
-     in case lookup bop operatorsWithGraph of
-          Nothing -> (env2, LH.Bop bop r1' r2')
-          Just bopVar -> updateEnv env2 (LH.App (LH.App bopVar r1') r2')
-  LH.App {} -> case apps r of
-    (DC c, args) ->
-      let (env', args') = foldr seqNames (env, []) args
-       in (env', foldr LH.App (LH.DC c) args')
-    -- why is this case necessary?
-    (LH.Var f_rel ar loc, args) | relPostfix `isSuffixOf` f_rel -> (env, r)
-    (LH.Var f ar loc, args) ->
-      let (env', args') = foldr seqNames (env, []) args
-          r' = foldr LH.App (LH.Var f ar loc) args'
-       in updateEnv env' r'
-    (Proj (LH.Var f ar loc), args) ->
-      let (env', args') = foldr seqNames (env, []) args
-          r' = foldr LH.App (Proj (LH.Var f ar loc)) args'
-       in updateEnv env' r'
-    _ -> error $ "LH application " ++ show r ++ " not starting with an identifier."
-  -- We do not extract applications of the subterms we will erase in QMark and Pop
-  QMark r' rh rp -> second (\r'' -> QMark r'' rh rp) $ extractApps env r'
-  Pop pop r1 r2 -> second (Pop pop r1) $ extractApps env r2
-  Inj r' tp -> second (`Inj` tp) $ extractApps env r'
-  Proj r' -> second Proj $ extractApps env r'
+extractApps :: Reft -> ([(Reft, Id)], Reft)
+extractApps r = go [] r
   where
-    seqNames arg (curEnv, curArgs) = second (: curArgs) $ extractApps curEnv arg
-    -- If r is in env, returns its associated variable,
-    -- otherwise creates a fresh variable, update env and returns the variable
-    updateEnv env r = case lookup r env of
-      Just z -> (env, LH.Var z 0 Local)
-      Nothing -> let z = fresh z env in (env ++ [(r, z)], LH.Var z 0 Local)
-    fresh f zs =
-      -- Number of calls to f
-      let nbOfCalls = foldr ((+) . isF) 0 zs
-       in if nbOfCalls == 0
-            then f ++ "res"
-            else f ++ "_res_" ++ show (nbOfCalls + 1)
+    go :: [(Reft, Id)] -> Reft -> ([(Reft, Id)], Reft)
+    go env r = case r of
+      -- top-level constant
+      LH.Var x 0 Global -> updateEnv env r
+      (LH.Var {}; StringLit {}; FloatLit {}; IntLit {}; DC {}) -> (env, r)
+      LH.Neg r' -> second LH.Neg $ go env r'
+      LH.Bop bop r1 r2 ->
+        let (env1, r1') = go env r1
+            (env2, r2') = go env1 r2
+         in case lookup bop operatorsWithGraph of
+              Nothing -> (env2, LH.Bop bop r1' r2')
+              Just bopVar -> updateEnv env2 (LH.App (LH.App bopVar r1') r2')
+      LH.App {} -> case apps r of
+        (DC c, args) ->
+          let (env', args') = foldr seqNames (env, []) args
+           in (env', foldr LH.App (LH.DC c) args')
+        -- why is this case necessary?
+        (LH.Var f_rel ar loc, args) | relPostfix `isSuffixOf` f_rel -> (env, r)
+        (LH.Var f ar loc, args) ->
+          let (env', args') = foldr seqNames (env, []) args
+              r' = foldr LH.App (LH.Var f ar loc) args'
+           in updateEnv env' r'
+        (Proj (LH.Var f ar loc), args) ->
+          let (env', args') = foldr seqNames (env, []) args
+              r' = foldr LH.App (Proj (LH.Var f ar loc)) args'
+           in updateEnv env' r'
+        _ -> error $ "LH application " ++ show r ++ " not starting with an identifier."
+      -- We do not extract applications of the subterms we will erase in QMark and Pop
+      QMark r' rh rp -> second (\r'' -> QMark r'' rh rp) $ go env r'
+      Pop pop r1 r2 -> second (Pop pop r1) $ go env r2
+      Inj r' tp -> second (`Inj` tp) $ go env r'
+      Proj r' -> second Proj $ go env r'
       where
-        isF :: (Reft, Id) -> Int
-        isF (LH.App (LH.Var f' _ _) _, _) | f' == f = 1
-        isF _ = 0
+        seqNames arg (curEnv, curArgs) = second (: curArgs) $ go curEnv arg
+        -- If r is in env, returns its associated variable,
+        -- otherwise creates a fresh variable, update env and returns the variable
+        updateEnv env r = case lookup r env of
+          Just z -> (env, LH.Var z 0 Local)
+          Nothing -> let z = fresh z env in (env ++ [(r, z)], LH.Var z 0 Local)
+        fresh f zs =
+          -- Number of calls to f
+          let nbOfCalls = foldr ((+) . isF) 0 zs
+           in if nbOfCalls == 0
+                then f ++ "res"
+                else f ++ "_res_" ++ show (nbOfCalls + 1)
+          where
+            isF :: (Reft, Id) -> Int
+            isF (LH.App (LH.Var f' _ _) _, _) | f' == f = 1
+            isF _ = 0
+
+-- Takes as first argument the map RV from applications to fresh variables and
+-- translates the hypothesis, placing them on top of the second argument
+hypsRV :: [(Reft, Id)] -> CoqTerm -> CoqTerm
+hypsRV rv p = foldr hyp p rv
+  where
+    -- hyp(f r1 … rn, z) p = forall z, (f_rel/get(U)PackRelName f) RtoU(r1) … RtoU(rn) z -> p
+    hyp :: (Reft, Id) -> CoqTerm -> CoqTerm
+    hyp (app, z) p =
+      FATerm (z, Nothing) $
+        Coq.Impl (Coq.App hdT (map utrReft args ++ [Coq.Var z])) p
+      where
+        (hd, args) = apps app
+        hdT = case hd of
+          -- f -> f_rel for global FO/HO variables (includes operators in `operatorsWithGraph`)
+          LH.Var f _ Global -> Coq.Def $ relDefName f
+          -- f -> getUPackRelName f for local HO variables
+          LH.Var f n Local | n > 0 -> upackGetRel (Coq.Def f)
+          -- proj f -> getPackRelName f for local HO variables
+          Proj (LH.Var f n _) | n > 0 -> packGetRel (Coq.Def f)
+          _ -> error "Unexpected extract term in Translation.hypsRV."
 
 -- * Refined translations
 
