@@ -5,11 +5,12 @@
 module Lava.Declaration where
 
 import Data.Bifunctor (bimap, first, second)
+import Data.Either (isLeft)
 import Data.List ((\\))
 import qualified Data.Set as Set
 import Lava.Calculus as LH
 import Lava.Coq as Coq
-import Lava.CoqSyntaxUtil (mkVarDestrPat, mkVarDestruct)
+import Lava.CoqSyntaxUtil (mkAnd, mkVarDestrPat, mkVarDestruct)
 import Lava.CoqUtil
 import Lava.Translation
 import Lava.TypingEnvironment as TypEnv hiding (map)
@@ -17,161 +18,16 @@ import Lava.Util (freshVar)
 
 -- | Main function for the translation of declarations
 trDecl :: LH.Decl -> [Coq.Decl]
-
--- | An inductive data type gives an unrefined data type, a well-formedness predicate, some utility definitions and pseudo-constructors
+-- An inductive data type gives an unrefined data type, a well-formedness predicate, some utility definitions and pseudo-constructors
 trDecl (LH.Data tc alts) =
-  [ -- Unrefined datatype declaration TC_u
-    unrefTCDecl tc alts,
-    -- Equality for TC_u defined as a fixpoint
-    eqDecl tc alts,
-    eqReflLem,
-    eqReflHint,
-    eqbEqLem,
-    eqbEqLemHint,
-    eqbInstanceDecl
-  ]
-    ++ tcRefDecls
-    ++ constrDecls
-    ++ constrWfDecls
-    ++ hints -- ++[rectThm, indThm]
-  where
-    constrs = map (uncurry Constr . second trRefType) alts
-    decls = [unrefTCDecl tc alts, TCDecl tc constrs]
-    unrefConstr (Constr c tp) = Constr (unrefinedConstrName c) (unrefRocqType tp)
-
-    mkIntDecl :: Id -> [((Id, RocqType), Bool)] -> RocqType -> Either [CoqTactic] CoqTerm -> Coq.Decl
-    mkIntDecl g args ret def = Coq.Definition g args ret defBody Transparent
-      where
-        defBody = case def of
-          Left tacs -> ProofBody tacs
-          Right term -> TermBody term
-
-    xIHs :: [(Id, RocqType)] -> [((Id, RocqType), Bool)]
-    xIHs = map isIHArg
-      where
-        isIHArg arg@(_, rt) = {-trace ("comparing "++tc++" and "++a)-} case rt of
-          Subset _ (Coq.TC st _) _ -> (arg, st == tc)
-          Subset {} -> (arg, False)
-          Pack argTps uargTps z t p -> (arg, False)
-          _ -> error "Found non normalized constructor type in CoqUtils.wfDecl."
-    usedVars = concatMap (\(Constr _ cTp) -> typeArgs cTp) constrs
-    indVar = mkFresh "x" usedVars
-    p = mkFresh "p" (usedVars ++ [indVar])
-    q = mkFresh "q" (usedVars ++ [indVar, p])
-    v = mkFresh "v" (usedVars ++ [indVar, p, q])
-    z = mkFresh "z" (usedVars ++ [indVar, p, q, v])
-    z1 = mkFresh "z1" (usedVars ++ [indVar, p, q, v, z])
-    z2 = mkFresh "z2" (usedVars ++ [indVar, p, q, v, z, z1])
-    tmV = mkFresh "tm" (usedVars ++ [indVar, p, q, v, z, z1, z2])
-
-    unrefTC = Coq.TC tc []
-    unrefTCArg = (indVar, unrefTC)
-    wfVar var = Coq.App (Def $ wfTCName tc) [Coq.Var var]
-
-    eqReflLem :: Coq.Decl
-    eqReflLem =
-      mkCoqLemma
-        (eqReflLemName tc)
-        []
-        (FAType ("x", unrefTC) $ Prop . IsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["x", "x"]))
-        [Custom "eq_refl"]
-
-    eqReflHint = AddHint ResolveHint (eqReflLemName tc) EqHintDb
-
-    eqbEqLem :: Coq.Decl
-    eqbEqLem =
-      mkCoqLemma
-        (eqEqbEqLemName tc)
-        []
-        ( FAType ("s", unrefTC)
-            $ FAType ("t", unrefTC)
-              . Prop
-            $ Coq.Impl (IsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["s", "t"])) (Coq.Bop Coq.Eq (Coq.Var "s") (Coq.Var "t"))
-        )
-        [Custom "eqb_eq_lem"]
-
-    eqbEqLemHint = AddHint ResolveHint (eqEqbEqLemName tc) EqHintDb
-
-    eqbInstanceDecl :: Coq.Decl
-    eqbInstanceDecl = Instance (leibnitzInstanceName tc) ["LeibnitzEqB"] [("equalB'", Def $ tcEqName tc), ("refl'", Def $ eqReflLemName tc), ("eqb_eq'", Def $ eqEqbEqLemName tc)]
-
-    wfDecl =
-      Fix (wfTCName tc) [(unrefTCArg, False)] (Sort PropSort) $
-        Match
-          [Coq.Var indVar]
-          Nothing
-          -- TODO: make something cleaner
-          [ ( [(unrefinedConstrName c, map (indPatVarName . fst) cargs)],
-              mkAnd (getCase cargs ++ [sub vv (Coq.App (Cr $ unrefinedConstrName c) (map (Coq.Var . fst) cargs)) crf])
-            )
-          | (Constr c cTp) <- constrs,
-            let (cargs, Subset vv _ (Coq.And _ crf)) = matchFunctionType [] cTp
-          ]
-      where
-        getCase :: [(Id, RocqType)] -> [CoqTerm]
-        getCase cargs = concatMap argReqs (xIHs cargs')
-          where
-            cargs' = map subArgs cargs
-            subArgs (v, Subset v' vBtp vr) = (v, Subset v vBtp (sub v' (Coq.Var v) vr))
-            subArgs (v, Pack argTps uargTps z t p) = (v, Pack argTps uargTps z t p)
-            argReqs ((_, Subset x _ r), _) = [ref]
-              where
-                ref = replaceSubterm (IdPat x, True) (Coq.Var $ indPatVarName x) r
-            argReqs ((f, Pack {}), _) = [Coq.App (Def uPackWfName) [Coq.Var f]] -- TODO: add required conditions
-    tm = (tmV, Subset v unrefTC $ Coq.And (wfVar v) (Coq.App (Coq.Var p) [Coq.Var v]))
-    wfLem = mkCoqLemma (wfLemName tc) [((p, Arrow unrefTC (Sort PropSort)), True), (tm, False)] (Prop $ Coq.App (Def $ wfTCName tc) [Project $ Coq.Var tmV]) [destructSubsetArg tmV, Oracle]
-
-    refTcDecl = CoqNewType tc (Subset indVar (Coq.TC tc []) (Coq.And (Coq.App (Def $ wfTCName tc) [Coq.Var indVar]) TT))
-
-    mkPseudoConstr :: CoqConstr -> [Coq.Decl]
-    mkPseudoConstr (Constr c cTp) = [argLem, mkIntDecl c (map (,False) args) ret (Right existTm)]
-      where
-        (args, ret@(Subset x _ xRef)) = matchFunctionType [c] cTp
-        retRef = sub x unrefCrAppl xRef
-
-        argPs = map (projTm decls . Coq.Var . fst) args
-        unrefCrAppl = Coq.App (Def $ unrefinedConstrName c) argPs
-
-        existTm = Exist TermHole unrefCrAppl (TermWitness $ Coq.App (Def $ psConstrLemName c) (map (Coq.Var . fst) args))
-        argLem = mkIntDecl (psConstrLemName c) (map (,False) args) (Prop retRef) (Left lemTacs)
-          where
-            lemTacs = [Custom "repeat first [split; solver]"]
-    {- [SplitB [argTacs] [Easy]]
-    argTacs = if null args then Easy else foldr1 (\tac cur -> SplitB [tac] [cur]) argPOPrfs
-    destructData :: [(Id, Bool)]
-    destructData = map getData (xIHs args) where
-      getData ((y, _), b) = (y, b)
-    argPOPrfs = map solvePOs destructData where
-      solvePOs (_, False) = Oracle -- Apply $ Var y
-      solvePOs (y, True) = Apply $ PrfTerm TypeHole (RefWitness $ Var y) -}
-    tcRefDecls = [wfDecl, wfLem, refTcDecl]
-    constrDecls = concatMap mkPseudoConstr constrs
-
-    constrWfDecls = concatMap mkConstrWf constrs
-    mkConstrWf (Constr c cTp) =
-      map mkConstrWfArg (filter (isTC . snd) args)
-      where
-        args = fst $ matchFunctionType [] cTp
-        isTC (Subset _ (Coq.TC a []) _) = tc == a || isInductTp decls' a
-        isTC (Subset {}) = False
-        isTC (Pack {}) = False
-        mkConstrWfArg (x, xTp) = mkIntDecl (constrWfName c x) (map (,True) argPs ++ [((p, Prop ass), False)]) (Prop goal) (Left constrWfPrf)
-          where
-            argPs = mapSnd unrefRocqType args
-            argPTs = map (Coq.Var . fst) args
-            unrefCrAppl = Coq.App (Def $ unrefinedConstrName c) argPTs
-            ass = Coq.App (Def $ wfTCName tc) [unrefCrAppl]
-            Subset _ (Coq.TC a []) _ = xTp
-            goal = Coq.App (Def $ wfTCName a) [Coq.Var x]
-            constrWfPrf = [Easy]
-
-    wfConstrHints = (ResolveHint, wfLemName tc, WfDB) : [(UnfoldHint,,WfDB) (wfTCName tc)]
-    refConstrHints = map (ResolveHint,) (tcEqName tc : map bindName constrWfDecls) ++ map ((UnfoldHint,) . cConstrNm) constrs
-
-    hints = map (uncurry3 AddHint) $ wfConstrHints ++ map (\(kO, n) -> (kO, n, RefConstrDB)) refConstrHints
-
--- For an unreflected definition, we only generate the refined definition,
--- if the graph relation is needed, we generate it on the fly
+  unrefTCDecl tc alts -- Unrefined datatype declaration TC_u
+    : tcEqDecls tc alts -- Equality TC_eq for TC_u and associated declarations
+    ++ tcRefDecls tc alts -- Well-formedness TC_wf and type alias for TC
+    ++ concatMap (mkPseudoConstr tc) alts -- Refined data constructors
+    ++ concatMap (mkConstrWf tc) alts -- Lemmas for decomposing well-formedness on data constructors
+    ++ tcHints tc alts -- Final hints for datatypes and constructor
+    --  For an unreflected definition, we only generate the refined definition,
+    -- if the graph relation is needed, we generate it on the fly
 trDecl (LH.Definition f tpf e False) = [trDefRefDef f tpf e]
 trDecl (LH.Definition f tpf e True) =
   [ trDefRefDef f tpf e, -- f
@@ -448,21 +304,33 @@ onlyFOArgs = filter (\case (_, RefType {}) -> True; (_, ArrType {}) -> False)
 tpArgsArLoc :: RefType -> [Reft]
 tpArgsArLoc = map (\(x, tp) -> LH.Var x (arity tp) Local) . fst . arrs
 
--- * Terms generated by the tranlation of a datatype
+-- * Declarations generated for the translation of a datatype
 
 -- | Translates a constructor to an unrefined constructor
 trConstr :: (Id, RefType) -> Coq.CoqConstr
 trConstr (c, tp) = Constr (unrefinedConstrName c) (utrRefTypeTop tp)
+
+-- | unrefTC(tc) = tc_u
+unrefTC :: Id -> RocqType
+unrefTC tc = Coq.TC (unrefinedTCName tc) []
 
 -- | Unrefined datatype declaration TC_u
 unrefTCDecl :: Id -> [(Id, RefType)] -> Coq.Decl
 unrefTCDecl tc alts =
   CoqInductive (unrefinedTCName tc) [] (Sort SetSort) $ map trConstr alts
 
+-- ** Equality
+
+-- | Declarations related to the equality on unrefined constructors
+tcEqDecls :: Id -> [(Id, RefType)] -> [Coq.Decl]
+tcEqDecls tc alts = eqDecl tc alts : eqReflLem tc ++ eqbEqLem tc ++ [eqbInstanceDecl tc]
+
 -- | Fixpoint definition of equality of two inductives
+--
+-- > Fixpoint TC_eq (x: TC_u) (y: TC_u): bool := ...
 eqDecl :: Id -> [(Id, RefType)] -> Coq.Decl
 eqDecl tc alts =
-  Fix (tcEqName tc) [(("x", Coq.TC tc []), False), (("y", Coq.TC tc []), False)] Coq.boolTp $
+  Fix (tcEqName tc) [(("x", unrefTC tc), False), (("y", unrefTC tc), False)] Coq.boolTp $
     Match [Coq.Var "x", Coq.Var "y"] Nothing (map mkConstrEqBranch alts ++ [defaultBranch | length alts > 1])
   where
     mkConstrEqBranch :: (Id, RefType) -> ([(Id, [Id])], CoqTerm)
@@ -479,3 +347,186 @@ eqDecl tc alts =
     mkEq :: RefType -> CoqTerm -> CoqTerm -> CoqTerm
     mkEq (RefType _ (LH.TC tc') _) x x' | tc' == tc = Coq.App (Def $ tcEqName tc) [x, x']
     mkEq _ x x' = Coq.Bop EqualB x x'
+
+-- | Lemma TC_eq_refl: reflexivity of TC_eq, with associated hint:
+--
+-- > Definition TC_eq_refl (x: TC_u): is_true (TC_eq x x).
+-- > Proof. eq_refl. Qed.
+-- > #[global] Hint Resolve TC_eq_refl : eq_hint_db.
+eqReflLem :: Id -> [Coq.Decl]
+eqReflLem tc =
+  [ Coq.Definition
+      (eqReflLemName tc)
+      [(("x", unrefTC tc), False)]
+      (Prop . IsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["x", "x"]))
+      (ProofBody [Custom "eq_refl"])
+      Opaque,
+    AddHint ResolveHint (eqReflLemName tc) EqHintDb
+  ]
+
+-- | Lemma TC_eqb_eq and hint:
+--
+-- > Definition TC_eqb_eq (s t: TC_u), is_true (TC_eq s t) -> s = t.
+-- > Proof. ... Qed.
+-- > #[global] Hint Resolve TC_eqb_eq : eq_hint_db.
+eqbEqLem :: Id -> [Coq.Decl]
+eqbEqLem tc =
+  [ Coq.Definition
+      (eqEqbEqLemName tc)
+      [(("s", unrefTC tc), False), (("t", unrefTC tc), False)]
+      ( Prop $
+          Coq.Impl
+            (IsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["s", "t"]))
+            (Coq.Bop Coq.Eq (Coq.Var "s") (Coq.Var "t"))
+      )
+      (ProofBody [Custom "eqb_eq_lem"])
+      Opaque,
+    AddHint ResolveHint (eqEqbEqLemName tc) EqHintDb
+  ]
+
+-- | Instantiation of the equality typeclass for TC_u
+--
+-- > #[global] Instance leibnitz_eq_TC : LeibnitzEqB := { ... }.
+eqbInstanceDecl :: Id -> Coq.Decl
+eqbInstanceDecl tc =
+  Instance
+    (leibnitzInstanceName tc)
+    ["LeibnitzEqB"]
+    [("equalB'", Def $ tcEqName tc), ("refl'", Def $ eqReflLemName tc), ("eqb_eq'", Def $ eqEqbEqLemName tc)]
+
+-- ** Definition of the refined datatype (well-formedness predicate and type alias)
+
+tcRefDecls :: Id -> [(Id, RefType)] -> [Coq.Decl]
+tcRefDecls tc alts = [wfDecl tc alts, wfLem tc, refTCDecl tc]
+
+-- | Well-formedness predicate TC_wf, defined as a fixpoint
+--
+-- > Fixpoint TC_wf (x: TC_u): Prop := match x with ...
+-- TODO: remove projections of the arguments
+wfDecl :: Id -> [(Id, RefType)] -> Coq.Decl
+wfDecl tc alts = undefined
+
+{- Fix (wfTCName tc) [(unrefTCArg, False)] (Sort PropSort) $
+  Match
+    [Coq.Var "x"]
+    Nothing
+    -- TODO: make something cleaner
+    [ ( [(unrefinedConstrName c, map fst cargs)],
+        mkAnd (getCase cargs ++ [sub vv (Coq.App (Cr $ unrefinedConstrName c) (map (Coq.Var . fst) cargs)) crf])
+      )
+    | (Constr c cTp) <- constrs,
+      let (cargs, Subset vv _ (Coq.And _ crf)) = matchFunctionType [] cTp
+    ]
+where
+  getCase :: [(Id, RocqType)] -> [CoqTerm]
+  getCase cargs = concatMap argReqs (xIHs cargs')
+    where
+      cargs' = map subArgs cargs
+      subArgs (v, Subset v' vBtp vr) = (v, Subset v vBtp (sub v' (Coq.Var v) vr))
+      subArgs (v, Pack argTps uargTps z t p) = (v, Pack argTps uargTps z t p)
+      argReqs ((_, Subset x _ r), _) = [r]
+      argReqs ((f, Pack {}), _) = [Coq.App (Def uPackWfName) [Coq.Var f]] -- TODO: add required conditions
+  unrefTCArg = ("x", unrefTC tc) -}
+
+{-   xIHs :: [(Id, RocqType)] -> [((Id, RocqType), Bool)]
+  xIHs = map isIHArg
+    where
+      isIHArg arg@(_, rt) = {-trace ("comparing "++tc++" and "++a)-} case rt of
+        Subset _ (Coq.TC st _) _ -> (arg, st == tc)
+        Subset {} -> (arg, False)
+        Pack argTps uargTps z t p -> (arg, False)
+        _ -> error "Found non normalized constructor type in CoqUtils.wfDecl." -}
+
+-- | Lemma TC_wf_ref:
+--
+-- > Theorem TC_wf_ref [p: TC_u -> Prop] (tm: {v: TC_u | TC_wf v /\ p v}): TC_wf (proj1_sig tm).
+wfLem :: Id -> Coq.Decl
+wfLem tc =
+  Coq.Definition
+    (wfLemName tc)
+    [(("p", Arrow (unrefTC tc) (Sort PropSort)), True), (tm, False)]
+    (Prop $ Coq.App (Def $ wfTCName tc) [Project $ Coq.Var "tm"])
+    (ProofBody [destructSubsetArg "tm", Oracle])
+    Opaque
+  where
+    tm = ("tm", Subset "v" (unrefTC tc) $ Coq.And wfV (Coq.App (Coq.Var "p") [Coq.Var "v"]))
+    wfV = Coq.App (Def $ wfTCName tc) [Coq.Var "v"]
+
+-- | Definition of the refined TC as a notation:
+--
+-- > Global Notation TC := {x: TC_u | TC_wf x /\ True}.
+refTCDecl :: Id -> Coq.Decl
+refTCDecl tc = CoqNewType tc (Subset "x" (Coq.TC tc []) (Coq.And (Coq.App (Def $ wfTCName tc) [Coq.Var "x"]) TT))
+
+-- ** Definition of the refined constructors
+
+-- | Definition of the refined constructors C and the needed lemma:
+--
+-- > Definition C_lem [args]: TC_wf (C_u [args]) /\ True.
+-- > Definition C [args]: TC := exist _ (C_u [args]) (C_lem [args]).
+mkPseudoConstr :: Id -> (Id, RefType) -> [Coq.Decl]
+mkPseudoConstr tc (c, tp) =
+  [ Coq.Definition (psConstrLemName c) argsT retLem bodyLem Transparent,
+    Coq.Definition c argsT retT bodyConstr Transparent
+  ]
+  where
+    (args, ret@(RefType x _ retRef)) = arrs tp
+    argsT = map ((,False) . second trRefType) args
+    retT = trRefType ret
+    -- C proj(x1) … proj(xn) (in LH), that translates to C_u proj1_sig(x1) … proj1_sig(x_n)
+    unrefCrApp = foldr LH.App (DC c) (map Proj $ tpArgsArLoc tp)
+    bodyLem = ProofBody [Custom "repeat first [split; solver]"]
+    -- The translated refinement of the return type of C, where x is replaced by Cu proj1_sig(args)
+    -- NOTE: instead of inlining the translation of the refinement of an
+    -- inductive type, we could use a substitution in Rocq, but I want to avoid
+    -- implementing it
+    retLem = Prop $ Coq.And (Coq.App (Def $ wfTCName tc) [utrReft unrefCrApp]) (trReft [] $ subst unrefCrApp x retRef)
+    -- The constructor is defined as an `exist`
+    bodyConstr =
+      let lemCrApp = Coq.App (Def $ psConstrLemName c) (map (Coq.Var . fst) args)
+       in TermBody $ Exist TermHole (trReft [] unrefCrApp) (TermWitness lemCrApp)
+
+-- | Lemmas giving well-formedness of inductive subterms, for each of the
+-- inductive subterms
+--
+-- > Definition wf_C_argInd1 [args] (p: TC_wf (C [args])): IList_wf [inductive arg 1].
+-- > ...
+-- > Definition wf_C_argIndn [args] (p: TC_wf (C [args])): IList_wf [inductive arg n].
+mkConstrWf :: Id -> (Id, RefType) -> [Coq.Decl]
+mkConstrWf tc (c, tp) =
+  map mkConstrWfArg (filter (isUserTC . snd) args)
+  where
+    args = fst $ arrs tp
+    -- Whether a type is the refinement of a user-defined datatype.
+    -- If so, this is an inductive argument for which we create a lemma
+    isUserTC (RefType _ tp'@(LH.TC tcInd) _) = isLeft $ lookupTC tcInd initial
+    isUserTC _ = False
+    -- Build the lemma wf_tcInd_x
+    mkConstrWfArg (x, RefType _ (LH.TC tcInd) _) =
+      Coq.Definition
+        (constrWfName c x)
+        (argsUT ++ [(("p", ass), False)])
+        (Prop goal)
+        (ProofBody [Easy])
+        Transparent
+      where
+        argsUT = map ((,True) . second utrRefType) args
+        unrefCrApp = Coq.App (Def $ unrefinedConstrName c) $ map (Coq.Var . fst) args
+        ass = Prop $ Coq.App (Def $ wfTCName tc) [unrefCrApp]
+        goal = Coq.App (Def $ wfTCName tcInd) [Coq.Var x]
+
+-- ** Final hints from a datatype translation
+
+tcHints :: Id -> [(Id, RefType)] -> [Coq.Decl]
+tcHints tc alts = map (\(a, b, c) -> AddHint a b c) hints
+  where
+    hints =
+      [ (ResolveHint, wfLemName tc, WfDB),
+        (UnfoldHint, wfTCName tc, WfDB),
+        (ResolveHint, tcEqName tc, RefConstrDB)
+      ]
+        ++ refConstrHints
+    refConstrHints =
+      map ((ResolveHint,,RefConstrDB) . bindName) constrWfDecls
+        -- Names of the lemmas create by mkConstrWf
+        ++ map ((UnfoldHint,,RefConstrDB) . fst) alts

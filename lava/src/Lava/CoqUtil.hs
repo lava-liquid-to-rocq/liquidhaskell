@@ -22,6 +22,11 @@ module Lava.CoqUtil
     -- * Translating a refined data type to Coq
     transRefTC,
     tcEqName,
+    eqReflLemName,
+    eqEqbEqLemName,
+    leibnitzInstanceName,
+    wfLemName,
+    psConstrLemName,
 
     -- * Miscellanious functions
     mkApp,
@@ -54,6 +59,7 @@ module Lava.CoqUtil
     mkUPackName,
     packInstanceName,
     upackInstanceName,
+    uPackWfName,
     packDefName,
     constructProj {- packFFrelName, packFunctName, -},
     toPack,
@@ -76,6 +82,8 @@ import Lava.CoqSyntaxUtil
 import Lava.Util
 
 -- * Names of ECoq generated declarations and variables
+
+-- TODO: put them in Declaration
 
 {- ORMOLU_DISABLE -}
 

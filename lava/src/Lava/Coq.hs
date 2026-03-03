@@ -543,8 +543,8 @@ printRocqType Hole _ = "_"
 instance Show RocqType where
   show rt = printRocqType rt True
 
-getTCRef :: Id -> String -> CoqTerm
-getTCRef x a = App (Def $ wfTCName a) [Var x]
+getTCRef :: Id -> Id -> CoqTerm
+getTCRef x tc = App (Def $ wfTCName tc) [Var x]
 
 -- TODO: do this for our RocqType
 -- equality of refinemed types is alpha-equivalence
