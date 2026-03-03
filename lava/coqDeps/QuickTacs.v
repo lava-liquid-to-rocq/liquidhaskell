@@ -449,9 +449,25 @@ Ltac instantiates_lia_goal := repeat progress instantiate_lia_goal.
 
 Ltac final_shape_based := match goal with
   | |- {_: Unit | _} => unshelve refine (exist _ unit _)
+  | [e: ⌊ ?ihAppl -⌋ = ?uterm |- _] => match ihAppl with
+    | _ _ => 
+      let term := fresh "term" in
+      let termWf := fresh "termWf" in
+      set ihAppl as term in *;
+      pose proof ⌈ ihAppl ⌉ as termWf;
+      rewrite e in termWf;
+      unfold term in termWf;
+      simpl in termWf;
+      let termWfTp := type of termWf in
+      tryif (match goal with
+      | [wf2: ?tp |- _] => eq_fail tp termWfTp; eq_fail wf2 termWfTp
+      end) then fail else idtac
+    end
+  (*
   (* here we have to synthesize a refined term, there is no way we can generically manage that (let alone choose the right term), 
   however this should only ever show up in the translation in branches that are anyways impossible, so we might as well use exfalso *)
-  | [ |- {_: _ | _} ] => exfalso
+  | [ |- {_: _ | _} ] => idtac "We need to synthesize a refined term, but it's unclear which term to pick, giving up and trying to prove a contradiction!"; exfalso
+  *)
   end.
 
 Create HintDb fix_notation_hints.
@@ -481,6 +497,10 @@ Local Lemma proj_ex' [A: Type] [P : A -> Prop] (tm : A) (z:P tm): ⌊ exist P tm
 Proof.
   reflexivity.
 Qed.
+Lemma proj_ex'' [A: Type] [P : A -> Prop] (tm : A) (z:P tm): ⌊ exist P tm z -⌋ = tm.
+Proof.
+  reflexivity.
+Qed.
 
 Local Lemma ex_proj [A: Type] [P : A -> Prop] (tm : {v:A | P v}): (exist P ⌊ tm -⌋ ⌈ tm ⌉) = tm.
 Proof.
@@ -489,6 +509,7 @@ Qed.
 #[global] Hint Rewrite ex_proj:fix_notation_hints. 
 #[global] Hint Rewrite proj_ex:fix_notation_hints.
 #[global] Hint Rewrite proj_ex':fix_notation_hints.
+#[global] Hint Rewrite proj_ex'':fix_notation_hints.
 Local Lemma ex_proj' [A: Type] [P : A -> Prop] (tm : {v:A | P v}): (exist P ⌊ tm _⌋ ⌈ tm ⌉) = tm.
 Proof.
   destruct tm as [v wit]. reflexivity.
@@ -570,9 +591,9 @@ Ltac apply_ifs :=
 
 Ltac fix_notations := repeat progress autorewrite with fix_notation_hints in *.
 
-Ltac simpl_proj := try (fix_notations; 
+Ltac simpl_proj := try fix_notations; (* (fix_notations; 
   unfold proj1_sig in *; fold proj1_sig in *; unfold False_rec in *;
-  cbv beta delta [proj1_sig] in *; autorewrite with fix_notation_hints in *);
+  cbv beta delta [proj1_sig] in *; autorewrite with fix_notation_hints in * ); *)
   try (repeat progress autounfold with ref_constr_db in *; progress (autorewrite with fix_notation_hints in * )).
 
 (* Linear arithmetic rewrites *)
@@ -709,7 +730,7 @@ Ltac simpl_loop :=
 Ltac quicksolve := try unshelve intuition; 
   solve [ 
     quick_wff_wit 
-    | quick_simpl; first [simpl_loop | final_shape_based; quick_simpl; subst; simpl_loop]
+    | quick_simpl; try (final_shape_based; repeat final_shape_based; subst; quick_simpl); subst; simpl_loop
   ].
 #[global] Hint Extern 20 () => quicksolve : quicksolve_db. 
 

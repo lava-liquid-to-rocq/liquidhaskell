@@ -215,8 +215,16 @@ Ltac rewriteAll h :=
   match type of h with
   | ?v = ?t => tryif (isVar v) then 
     first [subst v | 
-      first [progress rewrite h in *; clear h | revert h; intros ->]; 
-    clear v] else first [rewrite h in *; clear h | revert h; intros ->]
+      first [
+        progress rewrite h in *; clear h | 
+        revert h; intros -> |
+        let temp := fresh "temp" in
+        match type of h with
+        | ?term = _ => set term as temp in *;
+          revert h; intros ->; try subst temp
+        end
+      ]; 
+    try clear v] else first [rewrite h in *; clear h | revert h; intros ->]
   end.
 
 Global Tactic Notation "rewriteRLAll" hyp(h) := 
