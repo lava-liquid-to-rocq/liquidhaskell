@@ -34,21 +34,22 @@ trDecl (LH.Definition f tpf e False) = [trDefRefDef f tpf e]
 trDecl (LH.Definition f tpf e True) =
   trDefRefDef f tpf e --                                  f
     : defGraphRelAndHints f tpf e --                      f_rel
-    ++ relFunctionhoodLemma f (argsT, (f_res, retT)) --   f_rel_funct
+    ++ relFunctionhoodLemma f tpf --                      f_rel_funct
     ++ relConstrLems --                                   inversion lemmas for f_rel
     ++ defExLemma f --                                    f_ex
-    ++ [CoqMarkVisibility (ChangeVisibility f Opaque)] -- Opaque f.
+    ++ [CoqMarkVisibility $ ChangeVisibility f Opaque] -- Opaque f.
     ++ refRelRwLemma f --                                 f_rel_rw
-    ++ refUnrefLemmas f (args, (f_res, ret)) --           f__f_rel and f__f_rel'
+    ++ refUnrefLemmas f tpf --                            f__f_rel and f__f_rel'
     ++ relMkLemma f --                                    f_rel_mk
-    ++ packInstance f (args, ret) --                      f_pack
+    ++ packInstance f tpf --                              f_pack
   where
     -- Bindings of arguments
     (args, ret) = arrs tpf
     (argsT, retT) = (map (second trRefType) args, trRefType ret)
     (argsUT, retUT) = (map (second utrRefType) args, utrRefType ret)
     -- Name for the result of f (chosen different from the names of the arguments)
-    f_res = case retT of Coq.Subset v _ _ -> v; _ -> freshVar (map fst argsT)
+    -- Actually always v since not an arrow
+    f_res = case ret of RefType v _ _ -> v; _ -> freshVar (map fst argsT)
 
 -- * Translation of function definitions
 
@@ -196,32 +197,36 @@ namePath f (pats, _, _) takeVars = foldl (++) base $ map getConstructor pats'
 
 -- ** Generated lemmas
 
--- Functionhood lemma and hint:
+-- Functionhood lemma f_funct and hint:
 --
 -- > Definition f_rel_funct [args] (v v': Z) : f_rel [args] v -> f_rel [args] v' -> v = v'.
 -- > #[global] Hint Resolve f_rel_funct : f_rel_funct_db.
-relFunctionhoodLemma :: Id -> ([(Id, RocqType)], (Id, RocqType)) -> [Coq.Decl]
-relFunctionhoodLemma f (argsT, (f_res, retT)) =
-  [ functionhoodLemma, -- f_funct
-    AddHint ResolveHint (funcHoodLemName f) GraphRelDB -- hint for f_funct
-  ]
+relFunctionhoodLemma :: Id -> RefType -> [Coq.Decl]
+relFunctionhoodLemma f tpf =
+  [functionhoodLemma, AddHint ResolveHint (funcHoodLemName f) GraphRelDB]
   where
-    functionhoodLemma = undefined {- Coq.Definition
-                                    (funcHoodLemName f)
-                                    (map (,True) argsT)
-                                    ( mkForallT
-                                        [(f_res, unrefRocqType retT), (f_res', unrefRocqType retT), h, k]
-                                        (Coq.Prop $ Coq.Bop Coq.Eq (Coq.Var f_res) (Coq.Var f_res'))
-                                    )
-                                    (Coq.ProofBody functionhoodTacs)
-                                    Coq.Opaque
-                                  where
-                                    f_res' = f_res ++ "'"
-                                    indBrs = indBranches [] tacs
-                                    inductTac = mkInductiveSkeleton argsT indBrs False
-                                    functionhoodTacs = [Coq.Concat [inductTac, Coq.Custom "rel_functionhood_body"]]
-                                    h = ("H", Coq.Prop $ Coq.App (Coq.Def $ relDefName f) (map (Coq.Var . fst) argsT ++ [Coq.Var f_res]))
-                                    k = ("K", Coq.Prop $ Coq.App (Coq.Def $ relDefName f) (map (Coq.Var . fst) argsT ++ [Coq.Var f_res'])) -}
+    (args, ret@(RefType f_res _ _)) = arrs tpf
+    (argsT, retT) = (map (second trRefType) args, trRefType ret)
+    functionhoodLemma =
+      Coq.Definition
+        (funcHoodLemName f)
+        (map (,True) argsT)
+        ( mkForallT
+            [(f_res, unrefRocqType retT), (f_res', unrefRocqType retT)]
+            ( Coq.Prop
+                . Coq.Impl (relInst f_res)
+                . Coq.Impl (relInst f_res')
+                $ Coq.Bop Coq.Eq (Coq.Var f_res) (Coq.Var f_res')
+            )
+        )
+        (Coq.ProofBody undefined {- functionhoodTacs -})
+        Coq.Opaque
+      where
+        f_res' = f_res ++ "'"
+        {- indBrs = indBranches [] tacs
+        inductTac = mkInductiveSkeleton argsT indBrs False
+        functionhoodTacs = [Coq.Concat [inductTac, Coq.Custom "rel_functionhood_body"]] -}
+        relInst x = Coq.App (Coq.Def $ relDefName f) (map (Coq.Var . fst) argsT ++ [Coq.Var x])
 
 -- | Inversion lemmas for the graph relation, one for each branch
 relConstrLems = undefined {- concatMap (\lem -> [lem, AddHint RewriteHint (bindName lem) GraphRelBackDB]) relConstrLemmas -}
@@ -289,27 +294,27 @@ refRelRwLemma f =
 -- > #[global] Hint Rewrite f__f_rel : f_rel_funct_db.
 -- > Theorem f__f_rel' [args unrefined] [args_r refined] v : [arg = arg_r] -> (⌊ f [args_r] -⌋ = v <-> f_rel [args] v).
 -- > #[global] Hint Resolve f__f_rel' : f_rel_funct_db.
-refUnrefLemmas :: Id -> ([(Id, RefType)], (Id, RefType)) -> [Coq.Decl]
-refUnrefLemmas f tp@(args, (f_res, ret)) =
-  [ refUnrefLemma f (args, (f_res, ret)),
+refUnrefLemmas :: Id -> RefType -> [Coq.Decl]
+refUnrefLemmas f tpf =
+  [ refUnrefLemma f,
     Coq.AddHint Coq.RewriteHint (relDefThmName f) Coq.GraphRelDB,
     refUnrefLemma' f,
     Coq.AddHint Coq.ResolveHint (relDefLemName f) Coq.GraphRelDB
   ]
   where
+    (args, ret) = arrs tpf
+    (argsT, retT) = (map (second trRefType) args, trRefType ret)
     {- xir's = mapSnd substs xirs
     equivalence fuArgs =
       Coq.Equiv
         (Coq.Bop Coq.Eq (projectTm $ Coq.App (Coq.Def f) xirVars) (Coq.Var x))
         (Coq.App (Coq.Def fu) $ fuArgs ++ [Coq.Var x]) -}
-    refUnrefLemma :: Id -> ([(Id, RefType)], (Id, RefType)) -> Coq.Decl
-    refUnrefLemma f (args, (f_res, ret)) = undefined {- mkCoqTheorem
+    refUnrefLemma = undefined {- mkCoqTheorem
                                                       (relDefThmName f)
                                                       (map (,False) $ xir's ++ [(f_res, utrRefType ret)])
                                                       (equivalence xirProjArgs)
                                                       [Coq.Custom "f__f_rel"] -}
-    refUnrefLemma' :: Id -> Coq.Decl
-    refUnrefLemma' f = undefined {- Coq.Definition
+    refUnrefLemma' = undefined {- Coq.Definition
                                    (relDefLemName f)
                                    unrLemArgs
                                    unrLemTp
@@ -342,11 +347,12 @@ relMkLemma f = [refRelMkLem, AddHint ResolveHint (relDefMkLemName f) GraphRelDB]
 --
 -- > #[global] Instance f_pack : ….
 -- > Proof. buildPackG f f_rel f__f_rel f_rel_funct. Defined.
-packInstance :: Id -> ([(Id, RefType)], RefType) -> [Coq.Decl]
-packInstance f (args, ret) =
-  [TacInstance (packInstanceName f) (show $ toPack argsT_r (trRefType ret)) def | firstOrder]
+packInstance :: Id -> RefType -> [Coq.Decl]
+packInstance f tpf =
+  [TacInstance (packInstanceName f) (show $ toPack argsT_r retT) def | firstOrder]
   where
-    argsT_r = map (bimap (++ "_r") trRefType) args
+    (args, ret) = arrs tpf
+    (argsT_r, retT) = (map (bimap (++ "_r") trRefType) args, trRefType ret)
     def = Custom $ unwords ["\n\tbuildPackG", f, relDefName f, relDefThmName f, funcHoodLemName f] ++ ". "
     firstOrder = all (\case (_, RefType {}) -> True; (_, ArrType {}) -> False) args
 
