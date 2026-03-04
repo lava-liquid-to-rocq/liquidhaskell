@@ -171,6 +171,18 @@ apps tm = (tm, [])
 matchToApp :: (Id, [Id]) -> Reft
 matchToApp (c, ys) = foldr App (DC c) (map (\y -> Var y 0 Local) ys)
 
+-- | Harmonize the names of the variables bound by arrows:
+--
+-- > harmonizeBinderNames(x1:{x1':tp1 | r1} -> … -> xn:{xn':tpn | rn} -> {v:tp | rv})
+-- >   = (x1:{x1:tp1 | r1{x1'/x1}} -> … -> xn:{xn:tpn | rn{xn'/xn}} -> {v:tp | rv})
+harmonizeBinderNames :: RefType -> RefType
+harmonizeBinderNames (ArrType x tpx tp) =
+  let tpx' = case tpx of
+        RefType x' a r -> RefType x a (rename x x' r)
+        ArrType {} -> harmonizeBinderNames tpx
+   in ArrType x tpx' $ harmonizeBinderNames tp
+harmonizeBinderNames tp@(RefType {}) = tp
+
 -- * Typeclass related to free variables
 
 -- To use Sets with Localization inside
