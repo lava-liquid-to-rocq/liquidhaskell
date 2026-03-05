@@ -1,8 +1,8 @@
-- translation of datatypes
+- translation of reflected definitions
 
-- refined translation of declarations
 - refined translation of applications
 - refined translation of case
+  -> think about how to handle induction, whose structure is also necessary in some lemmas
 
 - typing and translation of ===, =<= and =>=
 

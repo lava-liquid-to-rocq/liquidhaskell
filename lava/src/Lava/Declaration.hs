@@ -8,6 +8,7 @@ module Lava.Declaration where
 import Data.Bifunctor (bimap, first, second)
 import Data.Either (isLeft)
 import Data.List ((\\))
+import Data.Maybe (catMaybes)
 import qualified Data.Set as Set
 import Lava.Calculus as LH
 import Lava.Coq as Coq
@@ -36,7 +37,7 @@ trDecl (LH.Definition f tpf e True) =
     : defGraphRelAndHints f tpf e --                      f_rel
     ++ relFunctionhoodLemma f tpf --                      f_rel_funct
     ++ relConstrLems --                                   inversion lemmas for f_rel
-    ++ defExLemma f --                                    f_ex
+    ++ defExLemma f tpf --                                f_ex
     ++ [CoqMarkVisibility $ ChangeVisibility f Opaque] -- Opaque f.
     ++ refRelRwLemma f --                                 f_rel_rw
     ++ refUnrefLemmas f tpf --                            f__f_rel and f__f_rel'
@@ -231,6 +232,7 @@ relFunctionhoodLemma f tpf =
 -- | Inversion lemmas for the graph relation, one for each branch
 relConstrLems = undefined {- concatMap (\lem -> [lem, AddHint RewriteHint (bindName lem) GraphRelBackDB]) relConstrLemmas -}
 
+-- TODO: mkRelBranchLemmas is a very long function in CoqUtil, used only for this
 relConstrLemmas :: [Coq.Decl]
 relConstrLemmas = undefined {- mkRelBranchLemmas args retArgU univArgs univAxs conds' branches
                             where
@@ -252,25 +254,35 @@ relConstrLemmas = undefined {- mkRelBranchLemmas args retArgU univArgs univAxs c
 -- | Lemma f_ex
 -- > Theorem f_rel_ex [args argsp]: f_rel [args] ⌊ f (exist args argsp) -⌋.
 -- > #[global] Hint Resolve f_rel_ex : rel_ax_db.
-defExLemma :: Id -> [Coq.Decl]
-defExLemma f =
-  [ exLem f, -- f_ex
-    AddHint ResolveHint (exLemName f) RelAxDB
-  ]
+defExLemma :: Id -> RefType -> [Coq.Decl]
+defExLemma f tpf = [exLem, AddHint ResolveHint (exLemName f) RelAxDB]
   where
-    exLem :: Id -> Coq.Decl
-    exLem f = undefined {- mkCoqTheorem
-                        (exLemName f)
-                        (map (,False) (args ++ catMaybes xiPs))
-                        (Coq.App (Def $ relDefName f) (vars ++ [Project $ mkApp (Def f) injArgs]))
-                        [ Concat
-                            [ Custom $ "existence_lemma_pre " ++ f,
-                              mkInductiveSkeleton uArgs indBrs True,
-                              Custom $ "existence_lemma_quicksolve " ++ f,
-                              Custom "f__f_rel_ex_body",
-                              Custom "f_rel_finish"
-                            ]
-                        ] -}
+    args = fst $ arrs tpf
+    -- vars = (packProj(x_i) if HO or x_i if FO)_{x_i: R_i in args}
+    vars = map (\case (x, ArrType {}) -> Coq.App (Def projPackName) [Coq.Var x]; (x, _) -> Coq.Var x) args
+    -- returns the injected version of each parameter: x_i if HO (already refined),
+    -- or exist _ x_i x_i_p if FO (because splitted)
+    injArgs = map injArg args
+      where
+        injArg (x, ArrType {}) = Coq.Var x
+        injArg (x, RefType {}) = Exist TermHole (Coq.Var x) (TermWitness $ Coq.Var (subsetWitnessNm x))
+    exLem =
+      Coq.Definition
+        (exLemName f)
+        (map (,False) $ fst (trRefTypeSplit tpf))
+        (Prop $ Coq.App (Def $ relDefName f) (vars ++ [Project $ mkApp (Def f) injArgs]))
+        ( ProofBody
+            [ Concat
+                [ Custom $ "existence_lemma_pre " ++ f,
+                  mkInductiveSkeleton (map (second utrRefType) args) indBrs True,
+                  Custom $ "existence_lemma_quicksolve " ++ f,
+                  Custom "f__f_rel_ex_body",
+                  Custom "f_rel_finish"
+                ]
+            ]
+        )
+        Opaque
+    indBrs = undefined {- indBranches [] tac -}
 
 -- | Lemma f__f_rel_rw
 --
@@ -465,7 +477,6 @@ tcRefDecls tc alts = [wfDecl tc alts, wfLem tc, refTCDecl tc]
 -- | Well-formedness predicate TC_wf, defined as a fixpoint
 --
 -- > Fixpoint TC_wf (x: TC_u): Prop := match x with ...
--- TODO: remove projections of the arguments
 wfDecl :: Id -> [(Id, RefType)] -> Coq.Decl
 wfDecl tc alts =
   Fix (wfTCName tc) [(("x", unrefTC tc), False)] (Sort PropSort) $
@@ -474,7 +485,7 @@ wfDecl tc alts =
     mkBranch :: (Id, RefType) -> ([(Id, [Id])], CoqTerm)
     mkBranch (c, tp) = ([(unrefinedConstrName c, map fst args)], mkAnd (retRefT : map argProp args))
       where
-        (args, RefType vv _ retRef) = arrs . removeArgProjs $ harmonizeBinderNames tp
+        (args, RefType vv _ retRef) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
         -- Proposition for the refinement of the return type, with C x1 … xn in the refinement
         retRefT = trReft [] (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef)
         -- Proposition for each argument
@@ -482,19 +493,6 @@ wfDecl tc alts =
           case trRefType argTp of
             Subset _ _ p -> p
             Pack {} -> Coq.App (Def uPackWfName) [Coq.Var x] -- TODO: add required conditions
-
-        -- Remove projections around the arguments of the constructor, because here they are unrefined. By construction, exactly the variables bound in the type are projected,
-        -- so we can remove all projections
-        removeArgProjs (RefType x a r) = RefType x a (aux r)
-        removeArgProjs (ArrType x tpx tp) = ArrType x (removeArgProjs tpx) (removeArgProjs tp)
-        aux (Proj x) = x
-        aux r@(LH.Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = r
-        aux (LH.App r1 r2) = LH.App (aux r1) (aux r2)
-        aux (LH.Neg r) = LH.Neg (aux r)
-        aux (LH.Bop bop r1 r2) = LH.Bop bop (aux r1) (aux r2)
-        aux (QMark r rh rp) = LH.QMark (aux r) (aux rh) (aux rp)
-        aux (LH.Pop pop r1 r2) = LH.Pop pop (aux r1) (aux r2)
-        aux (LH.Sub {}; LH.Inj {}) = error "Subsumption or injection cast found in type refinement."
 
 -- | Lemma TC_wf_ref:
 --
