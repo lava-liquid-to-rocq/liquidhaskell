@@ -408,6 +408,8 @@ mkReflAuxDecls f retArg rArgs uArgs conds branches indBrs =
           Subset y _ r -> Just (subsetWitnessNm y, Prop r)
           _ -> Nothing -- error $ show rt -- | In this case we have a higher-order argument to a reflected function, this will be tricky
           -- \| the existential combining the uArgs with their refinement witnesses
+          -- returns the injected version of each parameter: x_i if HO (already refined),
+          -- or exist _ x_i x_i_p if FO (because splitted)
     injArgs = zipWith3 (\x (xr, _) -> \case Just (xp, _) -> Exist TermHole x (TermWitness $ Var xp); Nothing -> Var $ removeSuffix "_r" xr) vars rArgs xiPs
 
     relApp = App (Def $ relDefName f) (vars ++ [Var v])

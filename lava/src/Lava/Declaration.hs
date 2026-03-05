@@ -18,6 +18,9 @@ import Lava.Translation
 import Lava.TypingEnvironment as TypEnv hiding (map)
 import Lava.Util (freshVar)
 
+-- TOOD: maybe put all translations, vars, injArgs etc in a record that is
+-- passed to all functions
+
 -- | Main function for the translation of declarations
 trDecl :: LH.Decl -> [Coq.Decl]
 -- An inductive data type gives an unrefined data type, a well-formedness predicate, some utility definitions and pseudo-constructors
@@ -39,9 +42,9 @@ trDecl (LH.Definition f tpf e True) =
     ++ relConstrLems --                                   inversion lemmas for f_rel
     ++ defExLemma f tpf --                                f_ex
     ++ [CoqMarkVisibility $ ChangeVisibility f Opaque] -- Opaque f.
-    ++ refRelRwLemma f --                                 f_rel_rw
+    ++ refRelRwLemma f tpf --                             f_rel_rw
     ++ refUnrefLemmas f tpf --                            f__f_rel and f__f_rel'
-    ++ relMkLemma f --                                    f_rel_mk
+    ++ relMkLemma f tpf --                                f_rel_mk
     ++ packInstance f tpf --                              f_pack
   where
     -- Bindings of arguments
@@ -66,6 +69,9 @@ trDefRefDef f tpf e = Coq.Definition f argsT (trRefType ret) (ProofBody tacs) Tr
       let destructArgs = map (mkVarDestruct . fst) $ onlyFOArgs args
        in -- TODO: maybe use cleanInductions (usedIHs eT) eT
           destructArgs ++ trExprTacs (tpArgsArLoc tpf) e
+    -- Filter arguments with a non-arrow refinement type (those that need to be destructed)
+    onlyFOArgs :: [(Id, RefType)] -> [(Id, RefType)]
+    onlyFOArgs = filter (\case (_, RefType {}) -> True; (_, ArrType {}) -> False)
 
 -- ** Graph relation
 
@@ -257,15 +263,6 @@ relConstrLemmas = undefined {- mkRelBranchLemmas args retArgU univArgs univAxs c
 defExLemma :: Id -> RefType -> [Coq.Decl]
 defExLemma f tpf = [exLem, AddHint ResolveHint (exLemName f) RelAxDB]
   where
-    args = fst $ arrs tpf
-    -- vars = (packProj(x_i) if HO or x_i if FO)_{x_i: R_i in args}
-    vars = map (\case (x, ArrType {}) -> Coq.App (Def projPackName) [Coq.Var x]; (x, _) -> Coq.Var x) args
-    -- returns the injected version of each parameter: x_i if HO (already refined),
-    -- or exist _ x_i x_i_p if FO (because splitted)
-    injArgs = map injArg args
-      where
-        injArg (x, ArrType {}) = Coq.Var x
-        injArg (x, RefType {}) = Exist TermHole (Coq.Var x) (TermWitness $ Coq.Var (subsetWitnessNm x))
     exLem =
       Coq.Definition
         (exLemName f)
@@ -282,6 +279,15 @@ defExLemma f tpf = [exLem, AddHint ResolveHint (exLemName f) RelAxDB]
             ]
         )
         Opaque
+    args = fst $ arrs tpf
+    -- vars = (packProj(x_i) if HO or x_i if FO)_{x_i: R_i in args}
+    vars = map (\case (x, ArrType {}) -> Coq.App (Def projPackName) [Coq.Var x]; (x, _) -> Coq.Var x) args
+    -- returns the injected version of each parameter: x_i if HO (already refined),
+    -- or exist _ x_i x_i_p if FO (because splitted)
+    injArgs = map injArg args
+      where
+        injArg (x, ArrType {}) = Coq.Var x
+        injArg (x, RefType {}) = Exist TermHole (Coq.Var x) (TermWitness $ Coq.Var (subsetWitnessNm x))
     indBrs = undefined {- indBranches [] tac -}
 
 -- | Lemma f__f_rel_rw
@@ -290,15 +296,37 @@ defExLemma f tpf = [exLem, AddHint ResolveHint (exLemName f) RelAxDB]
 -- > #[global] Hint Rewrite f__f_rel_rw : f_rel_funct_db.
 -- > #[global] Hint Resolve f__f_rel_rw : rel_ax_db.
 -- > #[global] Instance f_lookup_rw : dictionary rwLem f := { lookup' := f__f_rel_rw }.
-refRelRwLemma :: Id -> [Coq.Decl]
-refRelRwLemma f =
+refRelRwLemma :: Id -> RefType -> [Coq.Decl]
+refRelRwLemma f tpf =
   [ refRelRwLem,
     AddHint RewriteHint (relDefRwLemName f) GraphRelDB,
     AddHint ResolveHint (relDefRwLemName f) RelAxDB,
     Coq.Instance (f ++ "_lookup_rw") ["dictionary", "rwLem", f] [("lookup'", Coq.Def (relDefRwLemName f))]
   ]
   where
-    refRelRwLem = undefined {- mkCoqTheorem (relDefRwLemName f) (map (,False) (args ++ catMaybes xiPs ++ [retArgU])) (Equiv (Coq.Bop Coq.Eq (Project $ mkApp (Def f) injArgs) (Coq.Var v)) relApp) [Custom "f__f_rel_rw"] -}
+    refRelRwLem =
+      Coq.Definition
+        (relDefRwLemName f)
+        (map (,False) $ fst (trRefTypeSplit tpf) ++ [(v, utrRefType ret)])
+        (Prop $ Equiv defEq relApp)
+        (ProofBody [Custom "f__f_rel_rw"])
+        Opaque
+    -- ⌊ f (exist _ args argsp) -⌋ = v
+    defEq = Coq.Bop Coq.Eq (Project $ mkApp (Def f) injArgs) (Coq.Var v)
+    -- f_rel [exist _ args argsp] v
+    relApp = Coq.App (Def $ relDefName f) (vars ++ [Coq.Var v])
+    -- TODO: make vars and injArgs outside autonomous (or put them in the main function)
+    -- We can make it more obvious what they are by giving a function for the applications of f_rel
+    -- and f directly
+    (args, ret@(RefType v _ _)) = arrs tpf
+    -- vars = (packProj(x_i) if HO or x_i if FO)_{x_i: R_i in args}
+    vars = map (\case (x, ArrType {}) -> Coq.App (Def projPackName) [Coq.Var x]; (x, _) -> Coq.Var x) args
+    -- returns the injected version of each parameter: x_i if HO (already refined),
+    -- or exist _ x_i x_i_p if FO (because splitted)
+    injArgs = map injArg args
+      where
+        injArg (x, ArrType {}) = Coq.Var x
+        injArg (x, RefType {}) = Exist TermHole (Coq.Var x) (TermWitness $ Coq.Var (subsetWitnessNm x))
 
 -- | Lemmas f__f_rel and f__f_rel'
 --
@@ -344,14 +372,35 @@ refUnrefLemmas f tpf =
 --
 -- > Definition f_rel_mk [args argsp] : {v: _ | f_rel [args] v}.
 -- > #[global] Hint Resolve f_rel_mk : f_rel_funct_db.
-relMkLemma :: Id -> [Coq.Decl]
-relMkLemma f = [refRelMkLem, AddHint ResolveHint (relDefMkLemName f) GraphRelDB]
+relMkLemma :: Id -> RefType -> [Coq.Decl]
+relMkLemma f tpf = [refRelMkLem, AddHint ResolveHint (relDefMkLemName f) GraphRelDB]
   where
-    refRelMkLem = undefined {- mkCoqLemma
-                            (relDefMkLemName f)
-                            (map (,True) args ++ mapMaybe ((,False) <$>) xiPs)
-                            relMkRet
-                            [Concat [Intros [], Refine (SubCast relMkRet (Subset v Hole TermHole) (mkApp (Def f) injArgs) (TermWitness TermHole)), Rewrite (Just RwRL) (Def $ relDefLemName f) Nothing, Easy]] -}
+    refRelMkLem =
+      Coq.Definition
+        (relDefMkLemName f)
+        (mkOnlyWitnessesExplicit . fst $ trRefTypeSplit tpf)
+        relMkRet
+        ( ProofBody
+            [ Concat
+                [Intros [], Refine subCast, Rewrite (Just RwRL) (Def $ relDefLemName f) Nothing, Easy]
+            ]
+        )
+        Opaque
+    relMkRet = Subset v Hole relApp
+    (args, ret@(RefType v _ _)) = arrs tpf
+    relApp = Coq.App (Def $ relDefName f) (vars ++ [Coq.Var v])
+    vars = map (\case (x, ArrType {}) -> Coq.App (Def projPackName) [Coq.Var x]; (x, _) -> Coq.Var x) args
+    injArgs = map injArg args
+      where
+        injArg (x, ArrType {}) = Coq.Var x
+        injArg (x, RefType {}) = Exist TermHole (Coq.Var x) (TermWitness $ Coq.Var (subsetWitnessNm x))
+    subCast = SubCast relMkRet (Subset v Hole TermHole) (mkApp (Def f) injArgs) (TermWitness TermHole)
+    -- All arguments to the function are implicit, except for witnesses x_p
+    mkOnlyWitnessesExplicit ((x, utp) : (xp, p) : argsT)
+      | xp == subsetWitnessNm x =
+          ((x, utp), True) : ((xp, p), False) : mkOnlyWitnessesExplicit argsT
+    mkOnlyWitnessesExplicit ((x, tp) : argsT) = ((x, tp), True) : mkOnlyWitnessesExplicit argsT
+    mkOnlyWitnessesExplicit [] = []
 
 -- ** Pack instance
 
@@ -367,17 +416,6 @@ packInstance f tpf =
     (argsT_r, retT) = (map (bimap (++ "_r") trRefType) args, trRefType ret)
     def = Custom $ unwords ["\n\tbuildPackG", f, relDefName f, relDefThmName f, funcHoodLemName f] ++ ". "
     firstOrder = all (\case (_, RefType {}) -> True; (_, ArrType {}) -> False) args
-
--- ** Utility functions for declarations
-
--- | Filter arguments with a non-arrow refinement type (those that usually need to be destructed)
-onlyFOArgs :: [(Id, RefType)] -> [(Id, RefType)]
-onlyFOArgs = filter (\case (_, RefType {}) -> True; (_, ArrType {}) -> False)
-
--- | tpArgsArLoc((x_i:R_i|r_i)_{i ≤ n} -> R) = [Var x_i ar(R_i) Local]_{i ≤ n}
--- Used to give the initial patterns on the parameters of a function
-tpArgsArLoc :: RefType -> [Reft]
-tpArgsArLoc = map (\(x, tp) -> LH.Var x (arity tp) Local) . fst . arrs
 
 -- * Declarations generated for the translation of a datatype
 
