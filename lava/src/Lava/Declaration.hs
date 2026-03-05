@@ -14,6 +14,7 @@ import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil (mkAnd, mkVarDestrPat, mkVarDestruct)
 import Lava.CoqUtil
+import Lava.Temporary (relConstrLemmas)
 import Lava.Translation
 import Lava.TypingEnvironment as TypEnv hiding (map)
 import Lava.Util (freshVar)
@@ -39,7 +40,7 @@ trDecl (LH.Definition f tpf e True) =
   trDefRefDef f tpf e --                                  f
     : defGraphRelAndHints f tpf e --                      f_rel
     ++ relFunctionhoodLemma f tpf --                      f_rel_funct
-    ++ relConstrLems --                                   inversion lemmas for f_rel
+    ++ relConstrLems f tpf --                             inversion lemmas for f_rel
     ++ defExLemma f tpf --                                f_ex
     ++ [CoqMarkVisibility $ ChangeVisibility f Opaque] -- Opaque f.
     ++ refRelRwLemma f tpf --                             f_rel_rw
@@ -235,26 +236,8 @@ relFunctionhoodLemma f tpf =
         relInst x = Coq.App (Coq.Def $ relDefName f) (map (Coq.Var . fst) argsT ++ [Coq.Var x])
 
 -- | Inversion lemmas for the graph relation, one for each branch
+relConstrLems :: Id -> RefType -> [Coq.Decl]
 relConstrLems = undefined {- concatMap (\lem -> [lem, AddHint RewriteHint (bindName lem) GraphRelBackDB]) relConstrLemmas -}
-
--- TODO: mkRelBranchLemmas is a very long function in CoqUtil, used only for this
-relConstrLemmas :: [Coq.Decl]
-relConstrLemmas = undefined {- mkRelBranchLemmas args retArgU univArgs univAxs conds' branches
-                            where
-                              matchAxs :: CoqTerm -> ([(Id, RocqType, RocqType)], CoqTerm)
-                              matchAxs (Forall [(z, zTp)] (Coq.Impl zDefTp p)) = first ((z, zTp, Prop zDefTp) :) $ matchAxs p
-                              matchAxs r = ([], r)
-                              mkX (x, xTp, xDefTp) = (x, xTp)
-                              mkXDef (x, xTp, xDefTp) = (x ++ "_def", xDefTp)
-                              (univArgs, univAxs, conds') = case conds of
-                                [] -> ([], [], conds)
-                                cond : condTl -> (map mkX commonAxs, map mkXDef commonAxs, zipWith mkCond' remConds (cond' : cond's))
-                                  where
-                                    (condAxs, cond') = matchAxs cond
-                                    (condAxss, cond's) = unzip $ map matchAxs condTl
-                                    commonAxs = filter (\ax -> all (ax `elem`) condAxss) condAxs
-                                    remConds = map (\\ commonAxs) (condAxs : condAxss)
-                                    mkCond' caxs = mkForall (map mkX caxs ++ map mkXDef caxs) -}
 
 -- | Lemma f_ex
 -- > Theorem f_rel_ex [args argsp]: f_rel [args] ⌊ f (exist args argsp) -⌋.

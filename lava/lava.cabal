@@ -31,6 +31,7 @@ library
       Lava.LH
       Lava.Misc
       Lava.PaperUtils
+      Lava.Temporary
       Lava.Translation
       Lava.TypedTranslation
       Lava.TypingContext
