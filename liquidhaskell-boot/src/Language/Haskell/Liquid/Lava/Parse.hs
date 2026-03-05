@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wall #-}
 module Language.Haskell.Liquid.Lava.Parse
   ( -- ** type aliases for intermediate data
     SpecPair,
@@ -16,20 +17,23 @@ module Language.Haskell.Liquid.Lava.Parse
   )
 where
 
--- import GHC.Core.DataCon
+import           Control.Monad (filterM)
+import           Data.List (sortOn)
+import           System.Directory (doesFileExist)
+import           System.FilePath ((</>), (<.>), joinPath)
 
-import Data.List
-import Data.Tuple.Extra
-import GHC.Types.Var (Var, varName)
+-- import GHC.Core.DataCon
+import           GHC.Types.Var (Var, varName)
 import qualified Language.Fixpoint.Types as F (Located (..))
-import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
 import qualified Language.Haskell.Liquid.Types.RType as LhLib
-import Lava.InternalLH (ArrType (..), LHDecl (..), LHSimpleTerm (..), LHType (Buildin, Pi, TDat), RefType (..), unitTp)
-import Lava.LH
-import Lava.Misc
-import Lava.Util
-import System.Directory
-import Prelude
+
+import           Lava.InternalLH (ArrType (..), LHDecl (..), LHSimpleTerm (..), LHType (Buildin, Pi, TDat), RefType (..), unitTp)
+import           Lava.LH
+import           Lava.Misc
+import           Lava.Util
+
+import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
+
 
 -- ** LH -> ILH parsing
 
@@ -41,13 +45,14 @@ type PData =
   )
 
 -- , [LhLib.Located DataCon], [F.DataDecl]) -- more data type info, in case they are needed
-
 parseToSpecPair :: Id -> (Var, F.Located LhLib.SpecType) -> SpecPair
 parseToSpecPair modId (v, F.Loc _ _ spec) = (stripLegalName modId $ show (varName v), spec)
 
 -- | Parse refined type constructors into LH type constructors
 parsePData :: Id -> PData -> [LHDecl]
-parsePData modId (cs, typConstrs) = {- trace ("parsePData " ++ modId ++ "\n("++show constrs++", "++show typConstrs++")") $ -} map mkData (filter (not . isBuiltinDatatype) typeNames)
+parsePData modId (cs, typConstrs) =
+  {- trace ("parsePData " ++ modId ++ "\n("++show constrs++", "++show typConstrs++")") $ -}
+  map mkData (filter (not . isBuiltinDatatype) typeNames)
   where
     -- translate each branch
     constrs :: [(Id, ArrType)]
@@ -56,7 +61,7 @@ parsePData modId (cs, typConstrs) = {- trace ("parsePData " ++ modId ++ "\n("++s
       let sigT = SLH.transSig modId (Just c) sig
           (args', ret) = signatureToArgsRet sigT
           args_ = map SLH.defaultBind args'
-          args = mkDistinct args_
+          args = mkDistinct args_    -- TODO comes from Lava.Util
        in (c, ArrType args ret)
     -- we translate every type constructor that is not already built-in
     typeNames = map (\(LhLib.TyConP _ con _ _ _ _ _) -> SLH.showppStripped modId con) typConstrs
@@ -67,9 +72,7 @@ parsePData modId (cs, typConstrs) = {- trace ("parsePData " ++ modId ++ "\n("++s
     isConstrOf _ (Buildin _) = False
     isConstrOf _ (Pi _ _) = False
     -- Assemble typeName and the corresponding translated branches
-    mkData typeName = mkLHData typeName (getConstrs typeName)
-    mkLHData :: Id -> [(Id, ArrType)] -> LHDecl
-    mkLHData typeName cons' = Data typeName (sortBy (\(c, _) (c', _) -> compare c c') cons')
+    mkData typeName = Data typeName (sortOn fst (getConstrs typeName))
 
 -- ** translating the intermediate data structures (using ILH object-level data structures) to 'LHDecl's
 
@@ -78,24 +81,26 @@ combineDefsAndLemmas :: [(Def, Maybe ArrType, Bool)] -> [LHDecl]
 combineDefsAndLemmas = map parseDef
 
 -- | compute the file path of the module with given name
-getImportFile :: String -> String -> String
-getImportFile examplesFolder moduleName = examplesFolder ++ intercalate "/" (split '.' moduleName) ++ ".hs"
+getImportFile :: FilePath -> String -> FilePath
+getImportFile examplesFolder moduleName = examplesFolder </> joinPath (split '.' moduleName) <.> "hs"
 
 -- | filter out only those imported module names that correspond to files in the lhExamples folder
 filterImports :: String -> [String] -> IO [String]
-filterImports examplesFolder imports = do
-  let isExampleImport = doesFileExist . getImportFile examplesFolder
-      mapExampleImport f = do
-        actual <- isExampleImport f
-        pure $ if actual then Just f else Nothing
-  importOs <- mapM mapExampleImport imports
-  pure $ catMaybes importOs
+filterImports examplesFolder =
+  filterM (doesFileExist . getImportFile examplesFolder)
 
 -- | Get the imported filenames and the import declarations for the specified module names
 getImportFiles :: String -> [String] -> IO [String]
-getImportFiles examplesFolder potentialImports = do
-  actualImports <- filterImports examplesFolder potentialImports
-  pure $ map (getImportFile examplesFolder) actualImports
+getImportFiles examplesFolder potentialImports =
+  map (getImportFile examplesFolder) <$> filterImports examplesFolder potentialImports
+
+isLemma :: ArrType -> Bool
+isLemma = (== "()") . typeName . argTp . retTp
+  where
+    typeName :: LHType -> String
+    typeName (Buildin c) = show c
+    typeName (TDat n) = n
+    typeName piTp@Pi {} = show piTp
 
 parseDef :: (Def, Maybe ArrType, Bool) -> LHDecl
 parseDef ((dname, args, body, _), Just sig, b) =
@@ -108,13 +113,6 @@ parseDef ((dname, args, body, _), Just sig, b) =
     (sigArgs, sRes@(RefType _ _ reft)) = signatureToArgsRet sig
     substs = zipWith (\n (RefType argId _ _) -> (n, Var argId)) args sigArgs
     runRename = subst substs
-    isLemma :: ArrType -> Bool
-    isLemma = (== "()") . typeName . argTp . retTp
-      where
-        typeName :: LHType -> String
-        typeName (Buildin c) = show c
-        typeName (TDat n) = n
-        typeName piTp@Pi {} = show piTp
 parseDef ((dname, _, _, _), Nothing, _) = error $ "Top-level definition or lemma " ++ dname ++ " without signature is forbidden."
 
 -- | replace the names of variables v in refinement types {v:A|p} of arguments x by x

@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wall #-}
 module Language.Haskell.Liquid.Lava.Print (OUT (..), outPostfix) where
 
 data OUT = ILH | ECoq | Coq | Paper

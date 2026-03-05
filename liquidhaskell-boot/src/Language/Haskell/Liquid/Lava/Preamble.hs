@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wall #-}
 module Language.Haskell.Liquid.Lava.Preamble (preamble) where
 
 import Prelude
