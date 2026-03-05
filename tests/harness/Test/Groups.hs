@@ -78,6 +78,12 @@ relationalTestGroups =
   , "relational-neg"
   ]
 
+lavaTestGroups :: [Text]
+lavaTestGroups =
+  [ "benchmark-lava"
+  , "benchmark-lava-ple"
+  ]
+
 -- | Update this when you add new "classes" of test groups
 allTestGroupNames :: [Text]
 allTestGroupNames =
@@ -86,4 +92,5 @@ allTestGroupNames =
           , proverTestGroups
           , errorsTestGroups
           , relationalTestGroups
+          , lavaTestGroups
           ]
