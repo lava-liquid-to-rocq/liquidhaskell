@@ -88,14 +88,13 @@ defGraphRelAndHints f tpf e =
     Instance (f ++ "_lookup_rel") ["dictionary", "rel", f] [("lookup'", Coq.Def $ f ++ "_rel")],
     Instance (f ++ "_getF") ["getFunc", relDefName f] [("getF'", Coq.Def f)]
   ]
-
--- | Translation of a definition `f` to the unrefined graph relation `f_rel`
-trDefGraphRel :: Id -> RefType -> Expr -> Coq.Decl
-trDefGraphRel f tp e =
-  CoqInductive (relDefName f) [] (utrRefTypeTopProp tp) (map pathConstr paths)
   where
-    paths = functionPaths e (tpArgsArLoc tp)
-    pathConstr path = Coq.Constr (namePath f path False) (trPathToConstr f path)
+    trDefGraphRel :: Id -> RefType -> Expr -> Coq.Decl
+    trDefGraphRel f tp e =
+      CoqInductive (relDefName f) [] (utrRefTypeTopProp tp) (map pathConstr paths)
+      where
+        paths = functionPaths e (tpArgsArLoc tp)
+        pathConstr path = Coq.Constr (namePath f path False) (trPathToConstr f path)
 
 -- | Represents one path for a function.
 -- The first element contains a map from arguments to their patterns,
@@ -230,9 +229,9 @@ relFunctionhoodLemma f tpf =
         Coq.Opaque
       where
         f_res' = f_res ++ "'"
-        {- indBrs = indBranches [] tacs
+        indBrs = undefined {- indBranches [] tacs -}
         inductTac = mkInductiveSkeleton argsT indBrs False
-        functionhoodTacs = [Coq.Concat [inductTac, Coq.Custom "rel_functionhood_body"]] -}
+        functionhoodTacs = [Coq.Concat [inductTac, Coq.Custom "rel_functionhood_body"]]
         relInst x = Coq.App (Coq.Def $ relDefName f) (map (Coq.Var . fst) argsT ++ [Coq.Var x])
 
 -- | Inversion lemmas for the graph relation, one for each branch
@@ -280,8 +279,8 @@ defExLemma f tpf = [exLem, AddHint ResolveHint (exLemName f) RelAxDB]
         )
         Opaque
     args = fst $ arrs tpf
-    -- vars = (packProj(x_i) if HO or x_i if FO)_{x_i: R_i in args}
-    vars = map (\case (x, ArrType {}) -> Coq.App (Def projPackName) [Coq.Var x]; (x, _) -> Coq.Var x) args
+    -- vars = (proj(x_i) if HO or x_i if FO)_{x_i: R_i in args}
+    vars = map (\case (x, ArrType {}) -> Project (Coq.Var x); (x, _) -> Coq.Var x) args
     -- returns the injected version of each parameter: x_i if HO (already refined),
     -- or exist _ x_i x_i_p if FO (because splitted)
     injArgs = map injArg args
@@ -319,8 +318,8 @@ refRelRwLemma f tpf =
     -- We can make it more obvious what they are by giving a function for the applications of f_rel
     -- and f directly
     (args, ret@(RefType v _ _)) = arrs tpf
-    -- vars = (packProj(x_i) if HO or x_i if FO)_{x_i: R_i in args}
-    vars = map (\case (x, ArrType {}) -> Coq.App (Def projPackName) [Coq.Var x]; (x, _) -> Coq.Var x) args
+    -- vars = (proj(x_i) if HO or x_i if FO)_{x_i: R_i in args}
+    vars = map (\case (x, ArrType {}) -> Project (Coq.Var x); (x, _) -> Coq.Var x) args
     -- returns the injected version of each parameter: x_i if HO (already refined),
     -- or exist _ x_i x_i_p if FO (because splitted)
     injArgs = map injArg args
@@ -332,41 +331,50 @@ refRelRwLemma f tpf =
 --
 -- > Theorem f__f_rel [args refined] v : ⌊ f [args] -⌋ = v <-> (f_rel ⌊ [args] -⌋ v).
 -- > #[global] Hint Rewrite f__f_rel : f_rel_funct_db.
--- > Theorem f__f_rel' [args unrefined] [args_r refined] v : [arg = arg_r] -> (⌊ f [args_r] -⌋ = v <-> f_rel [args] v).
+-- > Theorem f__f_rel' [args_u unrefined] [args refined] v : [args_u = proj(args)] -> (⌊ f [args] -⌋ = v <-> f_rel [args_u] v).
 -- > #[global] Hint Resolve f__f_rel' : f_rel_funct_db.
 refUnrefLemmas :: Id -> RefType -> [Coq.Decl]
 refUnrefLemmas f tpf =
-  [ refUnrefLemma f,
+  [ refUnrefLemma,
     Coq.AddHint Coq.RewriteHint (relDefThmName f) Coq.GraphRelDB,
-    refUnrefLemma' f,
+    refUnrefLemma',
     Coq.AddHint Coq.ResolveHint (relDefLemName f) Coq.GraphRelDB
   ]
   where
-    (args, ret) = arrs tpf
-    (argsT, retT) = (map (second trRefType) args, trRefType ret)
-    {- xir's = mapSnd substs xirs
+    (args, ret@(RefType v _ _)) = arrs tpf
+    argsT = map (second trRefType) args
+    (argsUT, retUT) = (map (bimap (++ "_u") utrRefType) args, utrRefType ret)
+    params = map (Coq.Var . fst) argsT
+    params_u = map (Coq.Var . fst) argsUT
     equivalence fuArgs =
       Coq.Equiv
-        (Coq.Bop Coq.Eq (projectTm $ Coq.App (Coq.Def f) xirVars) (Coq.Var x))
-        (Coq.App (Coq.Def fu) $ fuArgs ++ [Coq.Var x]) -}
-    refUnrefLemma = undefined {- mkCoqTheorem
-                                                      (relDefThmName f)
-                                                      (map (,False) $ xir's ++ [(f_res, utrRefType ret)])
-                                                      (equivalence xirProjArgs)
-                                                      [Coq.Custom "f__f_rel"] -}
-    refUnrefLemma' = undefined {- Coq.Definition
-                                   (relDefLemName f)
-                                   unrLemArgs
-                                   unrLemTp
-                                   ( Coq.ProofBody
-                                       [ Coq.Intros $ replicate (length $ argsTps arrTp) (Coq.RewritePat Coq.RwLR),
-                                         Coq.Exact (Coq.App (Coq.Def f_fu) (xirVars ++ [Coq.Var x]))
-                                       ]
-                                   )
-                                   Coq.Opaque
-                                 where
-                                   unrLemArgs = map (,False) $ xis ++ xir's ++ [(x, utrRefType $ retTp arrTp)]
-                                   unrLemTp = Coq.Prop $ foldr Coq.Impl (equivalence xiVars) xiEqxir -}
+        (Coq.Bop Coq.Eq (Project $ Coq.App (Coq.Def f) params) (Coq.Var v))
+        (Coq.App (Coq.Def (relDefName f)) $ fuArgs ++ [Coq.Var v])
+    refUnrefLemma =
+      mkCoqTheorem
+        (relDefThmName f)
+        (map (,False) $ argsT ++ [(v, utrRefType ret)])
+        (equivalence $ map Project params)
+        [Coq.Custom "f__f_rel"]
+    refUnrefLemma' =
+      Coq.Definition
+        (relDefLemName f)
+        unrLemArgs
+        unrLemTp
+        ( Coq.ProofBody
+            [ Coq.Intros $ replicate (length args) (Coq.RewritePat Coq.RwLR),
+              Coq.Exact (Coq.App (Coq.Def $ relDefThmName' f) (params ++ [Coq.Var v]))
+            ]
+        )
+        Coq.Opaque
+      where
+        paramsEq =
+          zipWith
+            (\xiu xi -> Coq.Bop Coq.Eq (Coq.Var xiu) (Project (Coq.Var xi)))
+            (map fst argsUT)
+            (map fst argsT)
+        unrLemArgs = map (,False) $ argsUT ++ argsT ++ [(v, retUT)]
+        unrLemTp = Coq.Prop $ foldr Coq.Impl (equivalence params_u) paramsEq
 
 -- Lemma f_rel_mk
 --

@@ -9,6 +9,7 @@ module Lava.CoqUtil
     relDefName,
     relDefLemName,
     relDefThmName,
+    relDefThmName',
     funcHoodLemName,
     constrWfName,
     ihName,
@@ -97,6 +98,7 @@ relPostfix = "_rel"
 relDefName name = name ++ relPostfix
 relDefThmName name = name ++ "__" ++ relDefName name
 relDefLemName name = relDefThmName name ++ "'"
+relDefThmName' name = relDefThmName name ++ "'"
 relDefRwLemName name = name ++ "__" ++ relDefName name ++ "_rw"
 exLemName name = name ++ relPostfix ++ "_ex"
 relDefMkLemName name = relDefName name ++ "_mk"
