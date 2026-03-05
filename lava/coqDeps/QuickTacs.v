@@ -102,6 +102,7 @@ Ltac isVar tm :=
 
 (* very quick single-step tactic that matches on goal and tries to simplifies it, so other tactics can more easily solve it *)
 Ltac shape_based := match goal with
+  | [h:?g |- ?g] => exact h
   (* the following cases are used for proving the cases for dead branches 
      (translated using exfalso) in the existence lemata *)
   | |- ?f ⌊ False_rec _ ?z -⌋ => exfalso; exact z
@@ -274,6 +275,22 @@ Ltac shape_based := match goal with
     specialize (h (s =? t));
     specialize (h (ltac:(constructor)))
 
+  (*| [h: ?wf ⌊ ?ih ?z1 _ _ _ _ -⌋ |- _] =>
+    tryif (isVar z1) then fail else idtac;
+    let prf := fresh "z" in
+    pose proof z1 as prf;
+    progress replace z1 with prf in * by (auto with pi_db)
+  | [h: ?wf ⌊ ?ih ?z1 _ _ -⌋ |- _] =>
+    tryif (isVar z1) then fail else idtac;
+    let prf := fresh "z" in
+    pose proof z1 as prf;
+    progress replace z1 with prf in * by (auto with pi_db)
+  | [h: ?wf ⌊ ?ih ?z -⌋ |- _] =>
+    tryif (isVar z) then fail else idtac;
+    let prf := fresh "z" in
+    pose proof z as prf;
+    progress replace z with prf in * by (auto with pi_db)*)
+
   | [ h: ⌊ ?ih ?p -⌋ < ?t |- _] => 
     let pTp := type of p in
     let pKind := type of pTp in
@@ -308,18 +325,29 @@ Ltac shape_based := match goal with
     | [g: a |- _] => specialize (h g)
   end
   | [h: ?a <-> ?c |- _] => destruct h
+  | [h: ?x <> ?y |- ?c ?x <> ?c ?y] =>
+    injection; now apply h
+  | [h: ?x = ?y |- ?c ?x = ?c ?y] =>
+    injection; now apply h
   | [ h: ?c ?s = ?c ?t |- _] => 
-    tryif ( (* test whether c is a constructor of an inductive data type *)
-      let v := fresh "v" in
-      let v' := fresh "v'" in
-      let H := fresh "temp" in
-      let H0 := fresh "ante" in
-      assert (forall v v', c v = c v' -> v = v') as H by (intros v v' H0; injection H0; intros; assumption);
-      clear H
-    ) then (
+      assert (forall v v', c v = c v' -> v = v') as _ by (intros ? ?; injection 1; intros; assumption);
       injection h as ?
-    ) else fail
+  | [ h: ?c ?s <> ?c ?t |- _] => 
+    assert (forall v v', c v = c v' -> v = v') as _ by (intros ? ?; injection 1; intros; assumption);
+    assert (s <> t) by (intros ->; now apply h); clear h
+  | [ h: ?c ?s = ?c ?t -> False |- _] => 
+    assert (forall v v', c v = c v' -> v = v') as _ by (intros ? ?; injection 1; intros; assumption);
+    assert (s <> t) by (intros ->; now apply h); clear h
+  | [h: forall (_:?tp) (_:?p), False |- False] => match goal with
+    | [h2: p |- _] => specialize h with (2 := h2)
+    end
+  | [h: (?s = ?t -> False) -> _ |- _] => match goal with
+    | [h2: s <> t |- _] => specialize (h h2)
+    end
   | [ |- ?H <-> ?K] => split
+  | [h1: ?s <> ?t |- _] => match goal with
+    | [h2: s = t |- _] => apply h1 in h2
+    end
   (* if we have to synthesize a term of singleton type *)
   | [ |- {x: ?A | x = ?t} ] => exact (exist _ t eq_refl)
   | [ |- {x: ?A | ?t = x} ] => exact (exist _ t eq_refl)
@@ -332,10 +360,10 @@ Ltac shape_based := match goal with
   | [ |- {_: Unit | _} ] => refine (exist _ unit _)
   | [ |- True -> ?p ] => intros _
   | [h: ?t = ?t /\ _ |- _] => destruct h as [_ h]
-  | [h: false = true /\ _ \/ _ |- _] => destruct h as [h | h]; [exfalso; destruct h; unshelve intuition|]
-  | [h: true = false /\ _ \/ _ |- _] => destruct h as [h | h]; [exfalso; destruct h; unshelve intuition|]
-  | [h: _ \/ false = true /\ _ |- _] => destruct h as [h | h]; [|exfalso; destruct h; unshelve intuition]
-  | [h: _ \/ true = false /\ _ |- _] => destruct h as [h | h]; [|exfalso; destruct h; unshelve intuition]
+  | [h: false = true /\ _ \/ _ |- _] => destruct h as [h | h]; [exfalso; destruct h; now unshelve intuition|]
+  | [h: true = false /\ _ \/ _ |- _] => destruct h as [h | h]; [exfalso; destruct h; now unshelve intuition|]
+  | [h: _ \/ false = true /\ _ |- _] => destruct h as [h | h]; [|exfalso; destruct h; now unshelve intuition]
+  | [h: _ \/ true = false /\ _ |- _] => destruct h as [h | h]; [|exfalso; destruct h; now unshelve intuition]
 
   | |- (?l && ?r) = true => rewrite andb_true
   | [h: (?l && ?r) = true |- _] => rewrite andb_true in h
@@ -407,9 +435,9 @@ Ltac shape_based := match goal with
       let temp := fresh "H" in
       first [
         assert (c -> False) as temp by (fast_done); destruct h;
-        [exfalso; apply temp in h; apply h|] |
+        [exfalso; apply temp in h; now apply h|] |
         assert (d -> False) as temp by (fast_done); destruct h;
-        [|exfalso; apply temp in h; apply h]
+        [|exfalso; apply temp in h; now apply h]
       ]
   | |- ?c \/ ?d => 
       let temp := fresh "H" in
@@ -417,7 +445,7 @@ Ltac shape_based := match goal with
         assert (c -> False) as temp by (intro; repeat shape_based; fast_done); right |
         assert (d -> False) as temp by (intro; repeat shape_based; fast_done); left];
       clear temp
-  | _ => intro
+  | |- _ => intro
   end.
 
 Ltac simpl_exists tm := 
@@ -707,14 +735,13 @@ Ltac simpl_loop :=
     [ fast_done
     | f_equal_ind
     | progress unshelve eauto with wff_constr_db
-    | solve [shape_based; unshelve intuition; fast_done]
+    | solve [progress unshelve intuition; fast_done]
     | solve [trivial]
     | progress shape_based
-    | solve [symmetry; trivial]
+    | solve [symmetry; fast_done]
     | discriminate
     | contradiction
-    | unshelve intuition discriminate
-    | congruence
+    | progress unshelve intuition discriminate
     | progress subst
     | progress simpl
     | simpl_hyp
@@ -727,7 +754,7 @@ Ltac simpl_loop :=
     | right; simpl_loop
     ].
 
-Ltac quicksolve := try unshelve intuition; 
+Ltac quicksolve := (* try (progress unshelve intuition; timeout 1 quicksolve); *)
   solve [ 
     quick_wff_wit 
     | quick_simpl; try (final_shape_based; repeat final_shape_based; subst; quick_simpl); subst; simpl_loop

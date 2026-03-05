@@ -490,7 +490,7 @@ instance Show CoqDecl where
 
 instance Show ChangeVisibility where
   show (ChangeVisibility f Transparent) = "Transparent " ++ f ++ ". "
-  show (ChangeVisibility f Opaque) = "Opaque " ++ f ++ ". "
+  show (ChangeVisibility f Opaque) = "#[global] Opaque " ++ f ++ ". "
 
 instance Show HintKind where
   show UnfoldHint = "Unfold"

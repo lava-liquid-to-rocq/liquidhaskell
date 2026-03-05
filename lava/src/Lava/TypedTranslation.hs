@@ -12,7 +12,7 @@ where
 import Control.Monad (foldM, void)
 import Lava.Coq (projPackName, subsetWitnessNm)
 import qualified Lava.Coq as Coq
-import Lava.CoqUtil (assertFresh, funcHoodLemName, relDefBranchName, ihName, injCast, mkForallT, mkReflAuxDecls, mkIsTrue, mkInductiveSkeleton, IndTree (..), ppForall, projectTm, relDefName, relDefThmName, relDefLemName, relPostfix, transRefTC, mkCoqTheorem, packInstanceName, packDefName, destructSubsetArg, unrefRocqType)
+import Lava.CoqUtil (assertFresh, assertFreshName, funcHoodLemName, relDefBranchName, ihName, injCast, mkForallT, mkReflAuxDecls, mkIsTrue, mkInductiveSkeleton, IndTree (..), ppForall, projectTm, relDefName, relDefThmName, relDefLemName, relPostfix, transRefTC, mkCoqTheorem, packInstanceName, packDefName, destructSubsetArg, unrefRocqType)
 import Lava.CoqSyntaxUtil (mkArrowT, matchFunctionType, matchImplFunctionType, mkFuncType, packGetF)
 import Data.Bifunctor (bimap, first, second)
 import Data.Either.Extra (maybeToEither)
@@ -252,9 +252,9 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
         let
           asserted = Coq.Prop . utrSmpTermProp γ $ argRef tp2
           transHint = case tacs2 of
-            [pp@(Coq.ProofPose h tm)] -> [Coq.Custom "fix_notations", pp, Coq.Assert (h++"'") asserted Coq.Oracle]-- assertFresh asserted Coq.Oracle]
-            _ -> [assertFresh asserted (Coq.Concat tacs2)]
-        return $ transHint ++ Coq.Custom "fix_notations" : tacs1
+            [pp@(Coq.ProofPose h tm)] -> [Coq.Custom "fix_notations", pp, Coq.Assert (h++"'") asserted Coq.Oracle, Coq.Custom $ "simpl in " ++ h ++ "'"]-- assertFresh asserted Coq.Oracle]
+            _ -> [assertFresh asserted (Coq.Concat tacs2), Coq.Custom $ "simpl in " ++ assertFreshName asserted]
+        return $ transHint ++ tacs1
   BasicTerm r -> singleton . Coq.Exact <$> checkSmpTerm γ r tp (f, mCtx)
   _ -> do
     (tp', tacs) <- synTerm γ e (f, mCtx)

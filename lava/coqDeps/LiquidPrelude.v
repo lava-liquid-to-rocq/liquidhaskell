@@ -13,13 +13,6 @@ Ltac lia_shape_based := match goal with
   end.
 
 Create HintDb lia_unfold.
-#[global] Hint Unfold addZ : lia_unfold.
-#[global] Hint Unfold subZ : lia_unfold.
-#[global] Hint Unfold ltbZ : lia_unfold.
-#[global] Hint Unfold lebZ : lia_unfold.
-#[global] Hint Unfold eqbZ : lia_unfold.
-#[global] Hint Unfold negBool : lia_unfold.
-#[global] Hint Unfold is_true : lia_unfold.
 
 (* Lemmata for addition on Z *)
 Lemma addZ_rel_funct [m n: Z]: (forall x x' (H: addZ_rel m n x) (K: addZ_rel m n x') , x = x'). 
@@ -285,3 +278,11 @@ Lemma proj_divZ (s t:_): proj1_sig (s /Z t) = proj1_sig s / proj1_sig t.
 Proof.
   reflexivity.
 Qed.
+
+#[global] Opaque addZ.
+#[global] Opaque subZ.
+#[global] Opaque ltbZ.
+#[global] Opaque lebZ.
+#[global] Opaque eqbZ.
+#[global] Hint Unfold negBool : lia_unfold.
+#[global] Hint Unfold is_true : lia_unfold.

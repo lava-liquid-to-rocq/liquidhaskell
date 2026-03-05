@@ -830,12 +830,25 @@ Ltac specialize_hyp h :=
         match goal with
         | [g:f_rel_ap ?v |- _] => 
           (* idtac "Variable " w " in the context has matching axiomatization " g " to specialize " h ". "; *)
-          tryif (specialize (h v); specialize_wit h g) then (
+          (*tryif (specialize (h v); specialize_wit h g) then (
             let gtp := type of g in
             idtac "Axiomatization " g ": " gtp " of variable " v " is used to specialize " h ". "
           ) else (
             idtac "unable to specialize" h "with" v "!"; fail
-          )
+          )*)
+          let hApplTp := type of (h v g) in
+          tryif (match goal with
+            | [hApp':?hAppTp' |- _] => eq_fail hApplTp hAppTp'
+            end) then fail else (
+            tryif (specialize (h v)) then (
+              tryif (specialize_wit h g) then (
+                let gtp := type of g in
+                idtac "Axiomatization " g ": " gtp " of variable " v " is used to specialize " h ". "
+              ) else pose proof (h g)
+            ) else (
+              idtac "Unable to specialize" h "with" v "!";
+              pose proof (h v g)
+            ))
         | _ => 
           let u := fresh "u" in
           let uRefl := fresh "uRefl" in
@@ -2140,6 +2153,7 @@ Ltac f__f_rel :=
   ].
 
 Ltac eq_refl :=
+  let x := fresh "x" in
   intros x;
   induction x; quick_simpl; try quicksolve; simpl; 
   quick_simpl; repeat split; 
@@ -2147,6 +2161,13 @@ Ltac eq_refl :=
   assert (forall v, is_true v -> v = true) as unfoldIsTrueNotation by quicksolve;
   try apply unfoldIsTrueNotation;
   try quicksolve. 
+
+Ltac eq_refl_rec := 
+  repeat match goal with
+  | |- is_true (?eq ?v ?v) => generalize dependent v
+  | [h: _ |- _] => clear
+  | [ |- forall v, is_true (?eq v v)] => eq_refl
+  end.
 
 Ltac eqb_eq_lem :=
   intros s t H; multivariable_induction (s _::_ t _::_ _nil) _nil _nil; try quicksolve;

@@ -26,6 +26,7 @@ module Lava.CoqUtil
     mkFuncType,
     mkConcat,
     assertFresh,
+    assertFreshName,
     matchFunctionType,
     matchImplFunctionType,
     projectTm,
@@ -194,7 +195,7 @@ transRefTC decls' tc constrs = unrefTCDecl : (eqDecl : eqReflLem : eqReflHint : 
         (eqReflLemName tc)
         []
         (FAType ("x", unrefTC) $ Prop . IsTrue $ App (Def $ tcEqName tc) (map Var ["x", "x"]))
-        [Custom "eq_refl"]
+        [Custom "eq_refl_rec"]
 
     eqReflHint = AddHint ResolveHint (eqReflLemName tc) EqHintDb
 
@@ -410,9 +411,9 @@ mkReflAuxDecls f retArg rArgs uArgs conds branches indBrs =
         (map (,False) (args ++ catMaybes xiPs))
         (App (Def $ relDefName f) (vars ++ [Project $ mkApp (Def f) injArgs]))
         [ Concat
-            [ Custom $ "existence_lemma_pre " ++ f,
+            [ Custom $ "Opaque " ++ f ++ ".\n\texistence_lemma_pre " ++ f,
               mkInductiveSkeleton uArgs indBrs True,
-              Custom $ "existence_lemma_quicksolve " ++ f,
+              Custom $ "simpl in *. \n\tTransparent "++f++".\n\tall: existence_lemma_quicksolve " ++ f,
               Custom "f__f_rel_ex_body",
               Custom "f_rel_finish"
             ]
@@ -784,6 +785,8 @@ isInductTp decls a = isJust indTp || isJust builtinIndTp
     indTp = a `lookupTc` decls
     builtinIndTp = find ((a ==) . fst3) coqBuiltinInductDataTypes
 
+assertFreshName g = "H_" ++ hashName g
+
 assertFresh :: Goal -> CoqTactic -> CoqTactic
 assertFresh g tac = case tac of
   Concat [t] -> assertFresh g t
@@ -791,7 +794,7 @@ assertFresh g tac = case tac of
   Refine tm -> ProofPose hypName tm
   _ -> Assert hypName g tac
   where
-    hypName = "H_" ++ hashName g
+    hypName = assertFreshName g
 
 poseIHAppl :: CoqTerm -> CoqTactic
 poseIHAppl ihAppl = ProofPose hypName ihAppl
