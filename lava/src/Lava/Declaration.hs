@@ -8,14 +8,19 @@ module Lava.Declaration where
 import Data.Bifunctor (bimap, first, second)
 import Data.Either (isLeft)
 import Data.List ((\\))
+import Data.Maybe (catMaybes)
 import qualified Data.Set as Set
 import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil (mkAnd, mkVarDestrPat, mkVarDestruct)
 import Lava.CoqUtil
+import Lava.Temporary (relConstrLemmas)
 import Lava.Translation
 import Lava.TypingEnvironment as TypEnv hiding (map)
 import Lava.Util (freshVar)
+
+-- TOOD: maybe put all translations, vars, injArgs etc in a record that is
+-- passed to all functions
 
 -- | Main function for the translation of declarations
 trDecl :: LH.Decl -> [Coq.Decl]
@@ -35,12 +40,12 @@ trDecl (LH.Definition f tpf e True) =
   trDefRefDef f tpf e --                                  f
     : defGraphRelAndHints f tpf e --                      f_rel
     ++ relFunctionhoodLemma f tpf --                      f_rel_funct
-    ++ relConstrLems --                                   inversion lemmas for f_rel
-    ++ defExLemma f --                                    f_ex
+    ++ relConstrLems f tpf --                             inversion lemmas for f_rel
+    ++ defExLemma f tpf --                                f_ex
     ++ [CoqMarkVisibility $ ChangeVisibility f Opaque] -- Opaque f.
-    ++ refRelRwLemma f --                                 f_rel_rw
+    ++ refRelRwLemma f tpf --                             f_rel_rw
     ++ refUnrefLemmas f tpf --                            f__f_rel and f__f_rel'
-    ++ relMkLemma f --                                    f_rel_mk
+    ++ relMkLemma f tpf --                                f_rel_mk
     ++ packInstance f tpf --                              f_pack
   where
     -- Bindings of arguments
@@ -65,6 +70,9 @@ trDefRefDef f tpf e = Coq.Definition f argsT (trRefType ret) (ProofBody tacs) Tr
       let destructArgs = map (mkVarDestruct . fst) $ onlyFOArgs args
        in -- TODO: maybe use cleanInductions (usedIHs eT) eT
           destructArgs ++ trExprTacs (tpArgsArLoc tpf) e
+    -- Filter arguments with a non-arrow refinement type (those that need to be destructed)
+    onlyFOArgs :: [(Id, RefType)] -> [(Id, RefType)]
+    onlyFOArgs = filter (\case (_, RefType {}) -> True; (_, ArrType {}) -> False)
 
 -- ** Graph relation
 
@@ -81,14 +89,13 @@ defGraphRelAndHints f tpf e =
     Instance (f ++ "_lookup_rel") ["dictionary", "rel", f] [("lookup'", Coq.Def $ f ++ "_rel")],
     Instance (f ++ "_getF") ["getFunc", relDefName f] [("getF'", Coq.Def f)]
   ]
-
--- | Translation of a definition `f` to the unrefined graph relation `f_rel`
-trDefGraphRel :: Id -> RefType -> Expr -> Coq.Decl
-trDefGraphRel f tp e =
-  CoqInductive (relDefName f) [] (utrRefTypeTopProp tp) (map pathConstr paths)
   where
-    paths = functionPaths e (tpArgsArLoc tp)
-    pathConstr path = Coq.Constr (namePath f path False) (trPathToConstr f path)
+    trDefGraphRel :: Id -> RefType -> Expr -> Coq.Decl
+    trDefGraphRel f tp e =
+      CoqInductive (relDefName f) [] (utrRefTypeTopProp tp) (map pathConstr paths)
+      where
+        paths = functionPaths e (tpArgsArLoc tp)
+        pathConstr path = Coq.Constr (namePath f path False) (trPathToConstr f path)
 
 -- | Represents one path for a function.
 -- The first element contains a map from arguments to their patterns,
@@ -223,54 +230,47 @@ relFunctionhoodLemma f tpf =
         Coq.Opaque
       where
         f_res' = f_res ++ "'"
-        {- indBrs = indBranches [] tacs
+        indBrs = undefined {- indBranches [] tacs -}
         inductTac = mkInductiveSkeleton argsT indBrs False
-        functionhoodTacs = [Coq.Concat [inductTac, Coq.Custom "rel_functionhood_body"]] -}
+        functionhoodTacs = [Coq.Concat [inductTac, Coq.Custom "rel_functionhood_body"]]
         relInst x = Coq.App (Coq.Def $ relDefName f) (map (Coq.Var . fst) argsT ++ [Coq.Var x])
 
 -- | Inversion lemmas for the graph relation, one for each branch
+relConstrLems :: Id -> RefType -> [Coq.Decl]
 relConstrLems = undefined {- concatMap (\lem -> [lem, AddHint RewriteHint (bindName lem) GraphRelBackDB]) relConstrLemmas -}
-
-relConstrLemmas :: [Coq.Decl]
-relConstrLemmas = undefined {- mkRelBranchLemmas args retArgU univArgs univAxs conds' branches
-                            where
-                              matchAxs :: CoqTerm -> ([(Id, RocqType, RocqType)], CoqTerm)
-                              matchAxs (Forall [(z, zTp)] (Coq.Impl zDefTp p)) = first ((z, zTp, Prop zDefTp) :) $ matchAxs p
-                              matchAxs r = ([], r)
-                              mkX (x, xTp, xDefTp) = (x, xTp)
-                              mkXDef (x, xTp, xDefTp) = (x ++ "_def", xDefTp)
-                              (univArgs, univAxs, conds') = case conds of
-                                [] -> ([], [], conds)
-                                cond : condTl -> (map mkX commonAxs, map mkXDef commonAxs, zipWith mkCond' remConds (cond' : cond's))
-                                  where
-                                    (condAxs, cond') = matchAxs cond
-                                    (condAxss, cond's) = unzip $ map matchAxs condTl
-                                    commonAxs = filter (\ax -> all (ax `elem`) condAxss) condAxs
-                                    remConds = map (\\ commonAxs) (condAxs : condAxss)
-                                    mkCond' caxs = mkForall (map mkX caxs ++ map mkXDef caxs) -}
 
 -- | Lemma f_ex
 -- > Theorem f_rel_ex [args argsp]: f_rel [args] ⌊ f (exist args argsp) -⌋.
 -- > #[global] Hint Resolve f_rel_ex : rel_ax_db.
-defExLemma :: Id -> [Coq.Decl]
-defExLemma f =
-  [ exLem f, -- f_ex
-    AddHint ResolveHint (exLemName f) RelAxDB
-  ]
+defExLemma :: Id -> RefType -> [Coq.Decl]
+defExLemma f tpf = [exLem, AddHint ResolveHint (exLemName f) RelAxDB]
   where
-    exLem :: Id -> Coq.Decl
-    exLem f = undefined {- mkCoqTheorem
-                        (exLemName f)
-                        (map (,False) (args ++ catMaybes xiPs))
-                        (Coq.App (Def $ relDefName f) (vars ++ [Project $ mkApp (Def f) injArgs]))
-                        [ Concat
-                            [ Custom $ "existence_lemma_pre " ++ f,
-                              mkInductiveSkeleton uArgs indBrs True,
-                              Custom $ "existence_lemma_quicksolve " ++ f,
-                              Custom "f__f_rel_ex_body",
-                              Custom "f_rel_finish"
-                            ]
-                        ] -}
+    exLem =
+      Coq.Definition
+        (exLemName f)
+        (map (,False) $ fst (trRefTypeSplit tpf))
+        (Prop $ Coq.App (Def $ relDefName f) (vars ++ [Project $ mkApp (Def f) injArgs]))
+        ( ProofBody
+            [ Concat
+                [ Custom $ "existence_lemma_pre " ++ f,
+                  mkInductiveSkeleton (map (second utrRefType) args) indBrs True,
+                  Custom $ "existence_lemma_quicksolve " ++ f,
+                  Custom "f__f_rel_ex_body",
+                  Custom "f_rel_finish"
+                ]
+            ]
+        )
+        Opaque
+    args = fst $ arrs tpf
+    -- vars = (proj(x_i) if HO or x_i if FO)_{x_i: R_i in args}
+    vars = map (\case (x, ArrType {}) -> Project (Coq.Var x); (x, _) -> Coq.Var x) args
+    -- returns the injected version of each parameter: x_i if HO (already refined),
+    -- or exist _ x_i x_i_p if FO (because splitted)
+    injArgs = map injArg args
+      where
+        injArg (x, ArrType {}) = Coq.Var x
+        injArg (x, RefType {}) = Exist TermHole (Coq.Var x) (TermWitness $ Coq.Var (subsetWitnessNm x))
+    indBrs = undefined {- indBranches [] tac -}
 
 -- | Lemma f__f_rel_rw
 --
@@ -278,68 +278,120 @@ defExLemma f =
 -- > #[global] Hint Rewrite f__f_rel_rw : f_rel_funct_db.
 -- > #[global] Hint Resolve f__f_rel_rw : rel_ax_db.
 -- > #[global] Instance f_lookup_rw : dictionary rwLem f := { lookup' := f__f_rel_rw }.
-refRelRwLemma :: Id -> [Coq.Decl]
-refRelRwLemma f =
+refRelRwLemma :: Id -> RefType -> [Coq.Decl]
+refRelRwLemma f tpf =
   [ refRelRwLem,
     AddHint RewriteHint (relDefRwLemName f) GraphRelDB,
     AddHint ResolveHint (relDefRwLemName f) RelAxDB,
     Coq.Instance (f ++ "_lookup_rw") ["dictionary", "rwLem", f] [("lookup'", Coq.Def (relDefRwLemName f))]
   ]
   where
-    refRelRwLem = undefined {- mkCoqTheorem (relDefRwLemName f) (map (,False) (args ++ catMaybes xiPs ++ [retArgU])) (Equiv (Coq.Bop Coq.Eq (Project $ mkApp (Def f) injArgs) (Coq.Var v)) relApp) [Custom "f__f_rel_rw"] -}
+    refRelRwLem =
+      Coq.Definition
+        (relDefRwLemName f)
+        (map (,False) $ fst (trRefTypeSplit tpf) ++ [(v, utrRefType ret)])
+        (Prop $ Equiv defEq relApp)
+        (ProofBody [Custom "f__f_rel_rw"])
+        Opaque
+    -- ⌊ f (exist _ args argsp) -⌋ = v
+    defEq = Coq.Bop Coq.Eq (Project $ mkApp (Def f) injArgs) (Coq.Var v)
+    -- f_rel [exist _ args argsp] v
+    relApp = Coq.App (Def $ relDefName f) (vars ++ [Coq.Var v])
+    -- TODO: make vars and injArgs outside autonomous (or put them in the main function)
+    -- We can make it more obvious what they are by giving a function for the applications of f_rel
+    -- and f directly
+    (args, ret@(RefType v _ _)) = arrs tpf
+    -- vars = (proj(x_i) if HO or x_i if FO)_{x_i: R_i in args}
+    vars = map (\case (x, ArrType {}) -> Project (Coq.Var x); (x, _) -> Coq.Var x) args
+    -- returns the injected version of each parameter: x_i if HO (already refined),
+    -- or exist _ x_i x_i_p if FO (because splitted)
+    injArgs = map injArg args
+      where
+        injArg (x, ArrType {}) = Coq.Var x
+        injArg (x, RefType {}) = Exist TermHole (Coq.Var x) (TermWitness $ Coq.Var (subsetWitnessNm x))
 
 -- | Lemmas f__f_rel and f__f_rel'
 --
 -- > Theorem f__f_rel [args refined] v : ⌊ f [args] -⌋ = v <-> (f_rel ⌊ [args] -⌋ v).
 -- > #[global] Hint Rewrite f__f_rel : f_rel_funct_db.
--- > Theorem f__f_rel' [args unrefined] [args_r refined] v : [arg = arg_r] -> (⌊ f [args_r] -⌋ = v <-> f_rel [args] v).
+-- > Theorem f__f_rel' [args_u unrefined] [args refined] v : [args_u = proj(args)] -> (⌊ f [args] -⌋ = v <-> f_rel [args_u] v).
 -- > #[global] Hint Resolve f__f_rel' : f_rel_funct_db.
 refUnrefLemmas :: Id -> RefType -> [Coq.Decl]
 refUnrefLemmas f tpf =
-  [ refUnrefLemma f,
+  [ refUnrefLemma,
     Coq.AddHint Coq.RewriteHint (relDefThmName f) Coq.GraphRelDB,
-    refUnrefLemma' f,
+    refUnrefLemma',
     Coq.AddHint Coq.ResolveHint (relDefLemName f) Coq.GraphRelDB
   ]
   where
-    (args, ret) = arrs tpf
-    (argsT, retT) = (map (second trRefType) args, trRefType ret)
-    {- xir's = mapSnd substs xirs
+    (args, ret@(RefType v _ _)) = arrs tpf
+    argsT = map (second trRefType) args
+    (argsUT, retUT) = (map (bimap (++ "_u") utrRefType) args, utrRefType ret)
+    params = map (Coq.Var . fst) argsT
+    params_u = map (Coq.Var . fst) argsUT
     equivalence fuArgs =
       Coq.Equiv
-        (Coq.Bop Coq.Eq (projectTm $ Coq.App (Coq.Def f) xirVars) (Coq.Var x))
-        (Coq.App (Coq.Def fu) $ fuArgs ++ [Coq.Var x]) -}
-    refUnrefLemma = undefined {- mkCoqTheorem
-                                                      (relDefThmName f)
-                                                      (map (,False) $ xir's ++ [(f_res, utrRefType ret)])
-                                                      (equivalence xirProjArgs)
-                                                      [Coq.Custom "f__f_rel"] -}
-    refUnrefLemma' = undefined {- Coq.Definition
-                                   (relDefLemName f)
-                                   unrLemArgs
-                                   unrLemTp
-                                   ( Coq.ProofBody
-                                       [ Coq.Intros $ replicate (length $ argsTps arrTp) (Coq.RewritePat Coq.RwLR),
-                                         Coq.Exact (Coq.App (Coq.Def f_fu) (xirVars ++ [Coq.Var x]))
-                                       ]
-                                   )
-                                   Coq.Opaque
-                                 where
-                                   unrLemArgs = map (,False) $ xis ++ xir's ++ [(x, utrRefType $ retTp arrTp)]
-                                   unrLemTp = Coq.Prop $ foldr Coq.Impl (equivalence xiVars) xiEqxir -}
+        (Coq.Bop Coq.Eq (Project $ Coq.App (Coq.Def f) params) (Coq.Var v))
+        (Coq.App (Coq.Def (relDefName f)) $ fuArgs ++ [Coq.Var v])
+    refUnrefLemma =
+      mkCoqTheorem
+        (relDefThmName f)
+        (map (,False) $ argsT ++ [(v, utrRefType ret)])
+        (equivalence $ map Project params)
+        [Coq.Custom "f__f_rel"]
+    refUnrefLemma' =
+      Coq.Definition
+        (relDefLemName f)
+        unrLemArgs
+        unrLemTp
+        ( Coq.ProofBody
+            [ Coq.Intros $ replicate (length args) (Coq.RewritePat Coq.RwLR),
+              Coq.Exact (Coq.App (Coq.Def $ relDefThmName' f) (params ++ [Coq.Var v]))
+            ]
+        )
+        Coq.Opaque
+      where
+        paramsEq =
+          zipWith
+            (\xiu xi -> Coq.Bop Coq.Eq (Coq.Var xiu) (Project (Coq.Var xi)))
+            (map fst argsUT)
+            (map fst argsT)
+        unrLemArgs = map (,False) $ argsUT ++ argsT ++ [(v, retUT)]
+        unrLemTp = Coq.Prop $ foldr Coq.Impl (equivalence params_u) paramsEq
 
 -- Lemma f_rel_mk
 --
 -- > Definition f_rel_mk [args argsp] : {v: _ | f_rel [args] v}.
 -- > #[global] Hint Resolve f_rel_mk : f_rel_funct_db.
-relMkLemma :: Id -> [Coq.Decl]
-relMkLemma f = [refRelMkLem, AddHint ResolveHint (relDefMkLemName f) GraphRelDB]
+relMkLemma :: Id -> RefType -> [Coq.Decl]
+relMkLemma f tpf = [refRelMkLem, AddHint ResolveHint (relDefMkLemName f) GraphRelDB]
   where
-    refRelMkLem = undefined {- mkCoqLemma
-                            (relDefMkLemName f)
-                            (map (,True) args ++ mapMaybe ((,False) <$>) xiPs)
-                            relMkRet
-                            [Concat [Intros [], Refine (SubCast relMkRet (Subset v Hole TermHole) (mkApp (Def f) injArgs) (TermWitness TermHole)), Rewrite (Just RwRL) (Def $ relDefLemName f) Nothing, Easy]] -}
+    refRelMkLem =
+      Coq.Definition
+        (relDefMkLemName f)
+        (mkOnlyWitnessesExplicit . fst $ trRefTypeSplit tpf)
+        relMkRet
+        ( ProofBody
+            [ Concat
+                [Intros [], Refine subCast, Rewrite (Just RwRL) (Def $ relDefLemName f) Nothing, Easy]
+            ]
+        )
+        Opaque
+    relMkRet = Subset v Hole relApp
+    (args, ret@(RefType v _ _)) = arrs tpf
+    relApp = Coq.App (Def $ relDefName f) (vars ++ [Coq.Var v])
+    vars = map (\case (x, ArrType {}) -> Coq.App (Def projPackName) [Coq.Var x]; (x, _) -> Coq.Var x) args
+    injArgs = map injArg args
+      where
+        injArg (x, ArrType {}) = Coq.Var x
+        injArg (x, RefType {}) = Exist TermHole (Coq.Var x) (TermWitness $ Coq.Var (subsetWitnessNm x))
+    subCast = SubCast relMkRet (Subset v Hole TermHole) (mkApp (Def f) injArgs) (TermWitness TermHole)
+    -- All arguments to the function are implicit, except for witnesses x_p
+    mkOnlyWitnessesExplicit ((x, utp) : (xp, p) : argsT)
+      | xp == subsetWitnessNm x =
+          ((x, utp), True) : ((xp, p), False) : mkOnlyWitnessesExplicit argsT
+    mkOnlyWitnessesExplicit ((x, tp) : argsT) = ((x, tp), True) : mkOnlyWitnessesExplicit argsT
+    mkOnlyWitnessesExplicit [] = []
 
 -- ** Pack instance
 
@@ -355,17 +407,6 @@ packInstance f tpf =
     (argsT_r, retT) = (map (bimap (++ "_r") trRefType) args, trRefType ret)
     def = Custom $ unwords ["\n\tbuildPackG", f, relDefName f, relDefThmName f, funcHoodLemName f] ++ ". "
     firstOrder = all (\case (_, RefType {}) -> True; (_, ArrType {}) -> False) args
-
--- ** Utility functions for declarations
-
--- | Filter arguments with a non-arrow refinement type (those that usually need to be destructed)
-onlyFOArgs :: [(Id, RefType)] -> [(Id, RefType)]
-onlyFOArgs = filter (\case (_, RefType {}) -> True; (_, ArrType {}) -> False)
-
--- | tpArgsArLoc((x_i:R_i|r_i)_{i ≤ n} -> R) = [Var x_i ar(R_i) Local]_{i ≤ n}
--- Used to give the initial patterns on the parameters of a function
-tpArgsArLoc :: RefType -> [Reft]
-tpArgsArLoc = map (\(x, tp) -> LH.Var x (arity tp) Local) . fst . arrs
 
 -- * Declarations generated for the translation of a datatype
 
@@ -465,7 +506,6 @@ tcRefDecls tc alts = [wfDecl tc alts, wfLem tc, refTCDecl tc]
 -- | Well-formedness predicate TC_wf, defined as a fixpoint
 --
 -- > Fixpoint TC_wf (x: TC_u): Prop := match x with ...
--- TODO: remove projections of the arguments
 wfDecl :: Id -> [(Id, RefType)] -> Coq.Decl
 wfDecl tc alts =
   Fix (wfTCName tc) [(("x", unrefTC tc), False)] (Sort PropSort) $
@@ -474,7 +514,7 @@ wfDecl tc alts =
     mkBranch :: (Id, RefType) -> ([(Id, [Id])], CoqTerm)
     mkBranch (c, tp) = ([(unrefinedConstrName c, map fst args)], mkAnd (retRefT : map argProp args))
       where
-        (args, RefType vv _ retRef) = arrs . removeArgProjs $ harmonizeBinderNames tp
+        (args, RefType vv _ retRef) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
         -- Proposition for the refinement of the return type, with C x1 … xn in the refinement
         retRefT = trReft [] (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef)
         -- Proposition for each argument
@@ -482,19 +522,6 @@ wfDecl tc alts =
           case trRefType argTp of
             Subset _ _ p -> p
             Pack {} -> Coq.App (Def uPackWfName) [Coq.Var x] -- TODO: add required conditions
-
-        -- Remove projections around the arguments of the constructor, because here they are unrefined. By construction, exactly the variables bound in the type are projected,
-        -- so we can remove all projections
-        removeArgProjs (RefType x a r) = RefType x a (aux r)
-        removeArgProjs (ArrType x tpx tp) = ArrType x (removeArgProjs tpx) (removeArgProjs tp)
-        aux (Proj x) = x
-        aux r@(LH.Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = r
-        aux (LH.App r1 r2) = LH.App (aux r1) (aux r2)
-        aux (LH.Neg r) = LH.Neg (aux r)
-        aux (LH.Bop bop r1 r2) = LH.Bop bop (aux r1) (aux r2)
-        aux (QMark r rh rp) = LH.QMark (aux r) (aux rh) (aux rp)
-        aux (LH.Pop pop r1 r2) = LH.Pop pop (aux r1) (aux r2)
-        aux (LH.Sub {}; LH.Inj {}) = error "Subsumption or injection cast found in type refinement."
 
 -- | Lemma TC_wf_ref:
 --

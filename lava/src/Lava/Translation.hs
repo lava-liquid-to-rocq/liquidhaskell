@@ -217,6 +217,19 @@ trRefTypeTop :: LH.RefType -> RocqType
 trRefTypeTop tp@(RefType {}) = trRefType tp
 trRefTypeTop (ArrType x tpx tp) = Coq.FAType (x, trRefType tpx) (trRefTypeTop tp)
 
+-- | Translation of a refinement type to an arrow where first-order arguments
+-- are splitted over the value and predicate
+--
+-- > trRefTypeSplitFOArgs (x: {x:Int | x > 0}) -> (f: Int -> Int) -> {v: Int | v = proj(f) proj(x))
+-- >   = ([(x: Z) (x_p: geq_rel x 0 true) (f: Pack(Int -> Int))], {v: Z | (getPackRel f) x v})
+trRefTypeSplit :: LH.RefType -> ([(Id, RocqType)], RocqType)
+trRefTypeSplit tp =
+  let (args, ret) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
+   in (concatMap (splitIfFO . second trRefType) args, trRefType ret)
+  where
+    splitIfFO (x, Subset _ tpx p) = [(x, tpx), (subsetWitnessNm x, Prop p)]
+    splitIfFO argT = [argT]
+
 -- | Translation of refinements.
 --   Takes a typing environment (for type constructors)
 --   and the patterns of the arguments as supplementary arguments,

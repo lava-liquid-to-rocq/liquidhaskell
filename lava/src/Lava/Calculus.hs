@@ -141,7 +141,7 @@ builtinDCs = [ttTm, ffTm, unitTm]
 builtinTCs = [boolTp, unitTp]
 {- ORMOLU_ENABLE -}
 
--- * Functions on the grammar
+-- * Functions on the terms
 
 -- | Arity of a refinement type
 arity :: RefType -> Integer
@@ -157,9 +157,14 @@ arrs :: RefType -> ([(Id, RefType)], RefType)
 arrs tp@(RefType {}) = ([], tp)
 arrs (ArrType x tpx tp) = ((x, tpx) :) `first` arrs tp
 
--- | tpArgs()x_i:R_i|r_i)_{i ≤ n} -> R) = [x_i]_{i ≤ n}
+-- | tpArgs(x_i:R_i|r_i)_{i ≤ n} -> R) = [x_i]_{i ≤ n}
 tpArgs :: RefType -> [Id]
 tpArgs = map fst . fst . arrs
+
+-- | tpArgsArLoc((x_i:R_i|r_i)_{i ≤ n} -> R) = [Var x_i ar(R_i) Local]_{i ≤ n}
+-- Used to give the initial patterns on the parameters of a function
+tpArgsArLoc :: RefType -> [Reft]
+tpArgsArLoc = map (\(x, tp) -> Var x (arity tp) Local) . fst . arrs
 
 -- | Flattens an application
 apps :: Reft -> (Reft, [Reft])
@@ -182,6 +187,22 @@ harmonizeBinderNames (ArrType x tpx tp) =
         ArrType {} -> harmonizeBinderNames tpx
    in ArrType x tpx' $ harmonizeBinderNames tp
 harmonizeBinderNames tp@(RefType {}) = tp
+
+-- Remove projections around the *first-order* arguments of the constructor, in
+-- a context where FO arguments are given unrefined types
+-- This function should be used at top-level, where only variables appear inside projections
+removeFOArgProjs (ArrType x tpx tp) = ArrType x (removeFOArgProjs tpx) (removeFOArgProjs tp)
+removeFOArgProjs (RefType x a r) = RefType x a (aux r)
+  where
+    aux (Proj (Var x 0 Local)) = Var x 0 Local
+    aux (Proj x) = x
+    aux r@(Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = r
+    aux (App r1 r2) = App (aux r1) (aux r2)
+    aux (Neg r) = Neg (aux r)
+    aux (Bop bop r1 r2) = Bop bop (aux r1) (aux r2)
+    aux (QMark r rh rp) = QMark (aux r) (aux rh) (aux rp)
+    aux (Pop pop r1 r2) = Pop pop (aux r1) (aux r2)
+    aux (Sub {}; Inj {}) = error "Subsumption or injection cast found in type refinement."
 
 -- * Typeclass related to free variables
 

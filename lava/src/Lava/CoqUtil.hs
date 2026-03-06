@@ -9,6 +9,7 @@ module Lava.CoqUtil
     relDefName,
     relDefLemName,
     relDefThmName,
+    relDefThmName',
     funcHoodLemName,
     constrWfName,
     ihName,
@@ -97,6 +98,7 @@ relPostfix = "_rel"
 relDefName name = name ++ relPostfix
 relDefThmName name = name ++ "__" ++ relDefName name
 relDefLemName name = relDefThmName name ++ "'"
+relDefThmName' name = relDefThmName name ++ "'"
 relDefRwLemName name = name ++ "__" ++ relDefName name ++ "_rw"
 exLemName name = name ++ relPostfix ++ "_ex"
 relDefMkLemName name = relDefName name ++ "_mk"
@@ -383,23 +385,33 @@ mkInductiveSkeleton uArgs indBrs specIhs = {- traceFuncRet ["mkInductiveSkeleton
 -- | Generates various utility lemmata and hints after the declaration marking a reflected definition opaque
 mkReflAuxDecls :: Id -> (Id, RocqType) -> [(Id, RocqType)] -> [(Id, RocqType)] -> [CoqTerm] -> [(Id, RocqType)] -> IndTree -> [Decl]
 mkReflAuxDecls f retArg rArgs uArgs conds branches indBrs =
+  -- For an arrow type (x_i: R_i)_{i ≤ n} -> R@{x:B | rx}:
+  -- retArg = (x, TtoR(R))
+  -- rArgs = (xi_r: TtoR(R_i))_{i ≤ n}
+  -- uArgs = (x_i: TtoU(R_i))_{i ≤ n}
   {- trace (unwords ["mkReflAuxDecls", f, show retArg, show rArgs, show uArgs, show conds, show branches, show indBrs]) $ -}
   [exLem, exLemHint, refRelRwLem, refRelRwHint, refRelRwAuxHint, refRelMkLem, refRelMkLemHint]
     ++ [packInstance | not (null uArgs)]
     ++ relConstrLems
   where
+    -- args = (x_i: cqTp)_{i ≤ n}
+    -- where cqTp = TtoR(R_i) if R_i is an arrow and cqTp = TtoU(R_i) otherwise
     args = zipWith rArgIfUpack rArgs uArgs
     rArgIfUpack x_r (x, UPack {}) = (x, snd x_r)
     rArgIfUpack _ arg = arg
+    -- vars = (packProj(x_i) if HO or x_i if FO)_{i ≤ n}
     vars = map (\case (g, Pack {}) -> App (Def projPackName) [Var g]; (x, _) -> Var x) args
 
     -- \| the refinement witnesses for the rArgs
+    -- xiPs = (Just (y_p^i: r_i) if R_i = {y:_|r_i} or Nothing if R_i is HO)_{i ≤ n}
     xiPs = map getWit rArgs
       where
         getWit (_, rt) = case rt of
           Subset y _ r -> Just (subsetWitnessNm y, Prop r)
           _ -> Nothing -- error $ show rt -- | In this case we have a higher-order argument to a reflected function, this will be tricky
           -- \| the existential combining the uArgs with their refinement witnesses
+          -- returns the injected version of each parameter: x_i if HO (already refined),
+          -- or exist _ x_i x_i_p if FO (because splitted)
     injArgs = zipWith3 (\x (xr, _) -> \case Just (xp, _) -> Exist TermHole x (TermWitness $ Var xp); Nothing -> Var $ removeSuffix "_r" xr) vars rArgs xiPs
 
     relApp = App (Def $ relDefName f) (vars ++ [Var v])
