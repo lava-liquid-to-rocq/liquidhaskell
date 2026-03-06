@@ -64,9 +64,11 @@ Proof.
 		refine (exist _ 0 _); 
 		solver.  
 Defined. 
-Inductive llen_rel : (IList_u -> (Z -> Prop)) := 
-	 | llen_Cons: (forall ds_d27I l' , forall (llenres: Z), (llen_rel l' llenres) -> (forall (addZres: Z), (addZ_rel llenres 1 addZres) -> (llen_rel (Cons_u ds_d27I l') addZres)))
-	 | llen_Nil: llen_rel Nil_u 0. 
+Inductive llen_rel : IList_u -> Z -> Prop := 
+  | llen_Cons x' l': forall (llenres: Z), (llen_rel l' llenres) ->
+       forall (addZres: Z), (addZ_rel llenres 1 addZres) ->
+       llen_rel (Cons_u x' l') addZres
+	 | llen_Nil: llen_rel Nil_u 0.
 #[global] Hint Constructors llen_rel : core_hint_db.
 #[global] Instance llen_lookup_rel : dictionary rel llen := { 
 	lookup' := llen_rel
@@ -81,7 +83,9 @@ Proof.
 	rel_functionhood_body. 
 Qed. 
 #[global] Hint Resolve llen_rel_funct : f_rel_funct_db.
-Theorem llen_Cons_lem (ds_d27I: _) (l': _) (addZres: Z): (llen_rel (Cons_u ds_d27I l') addZres) <-> (exists (llenres: Z), (llen_rel l' llenres) /\ (addZ_rel llenres 1 addZres)). 
+Theorem llen_Cons_lem x' l' z:
+  llen_rel (Cons_u x' l') z <->
+  exists llenres, (llen_rel l' llenres) /\ llenres = 0 /\ addZ_rel llenres 1 z.
 Proof. 
 	rel_back' ( _nil). 
 Qed. 

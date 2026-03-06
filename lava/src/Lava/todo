@@ -1,4 +1,4 @@
-- translation of reflected definitions
+- translation of reflected definitions (two undefined in inversion lemmas)
 
 - refined translation of applications
 - refined translation of case
@@ -7,3 +7,5 @@
 - typing and translation of ===, =<= and =>=
 
 - use Text instead of strings (with a library)
+
+- cleanup files

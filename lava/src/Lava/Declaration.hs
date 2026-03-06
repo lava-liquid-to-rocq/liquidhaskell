@@ -7,17 +7,16 @@ module Lava.Declaration where
 
 import Data.Bifunctor (bimap, first, second)
 import Data.Either (isLeft)
-import Data.List ((\\))
-import Data.Maybe (catMaybes)
+import Data.List (groupBy, (\\))
+import Data.Maybe (catMaybes, isNothing)
 import qualified Data.Set as Set
 import Lava.Calculus as LH
 import Lava.Coq as Coq
-import Lava.CoqSyntaxUtil (mkAnd, mkVarDestrPat, mkVarDestruct)
+import Lava.CoqSyntaxUtil (mkAnd, mkForallXs, mkOr, mkVarDestrPat, mkVarDestruct)
 import Lava.CoqUtil
-import Lava.Temporary (relConstrLemmas)
 import Lava.Translation
 import Lava.TypingEnvironment as TypEnv hiding (map)
-import Lava.Util (freshVar)
+import Lava.Util (addParens, freshVar)
 
 -- TOOD: maybe put all translations, vars, injArgs etc in a record that is
 -- passed to all functions
@@ -40,7 +39,7 @@ trDecl (LH.Definition f tpf e True) =
   trDefRefDef f tpf e --                                  f
     : defGraphRelAndHints f tpf e --                      f_rel
     ++ relFunctionhoodLemma f tpf --                      f_rel_funct
-    ++ relConstrLems f tpf --                             inversion lemmas for f_rel
+    ++ relConstrLems f undefined --                             inversion lemmas for f_rel
     ++ defExLemma f tpf --                                f_ex
     ++ [CoqMarkVisibility $ ChangeVisibility f Opaque] -- Opaque f.
     ++ refRelRwLemma f tpf --                             f_rel_rw
@@ -168,36 +167,44 @@ separateBranches σxs σp (Case r branches) =
 -- | Translates a function path into a constructor for f_rel.
 -- Function pathInd (def 3.5) of the paper
 trPathToConstr :: Id -> FunctionPath -> RocqType
-trPathToConstr f (σxs, σp, rf) =
-  Coq.Prop $ mkForallYs argsVars (go σp [])
+trPathToConstr f p@(σxs, σp, rf) =
+  Coq.Prop $ mkForallXs argsVars (trPathGuard f p [] Nothing)
   where
-    -- Build forall (y)_{y in ys}, cqtm
-    mkForallYs ys cqtm = foldr (\y -> FATerm (y, Nothing)) cqtm ys
     -- Variable introduced by destructing the arguments
     argsVars = Set.toList $ freeVars (map snd σxs) Set.\\ Set.fromList (map fst σxs)
-    -- Auxiliary function matching on σp. The parameter hs contains hypotheses
-    -- that have already been included
-    go :: [(Reft, Reft)] -> [(Reft, Id)] -> CoqTerm
-    go [] hs =
-      let (hyps_r, r') = extractApps rf
-          currentHyps = hyps_r \\ hs
-          result = Coq.App (Coq.Def $ relDefName f) (map utrReft (map snd σxs ++ [r']))
-       in hypsRV currentHyps result
-    go ((r, rp) : σp') hs =
-      let (hyps_r, r') = extractApps r
-          currentHyps = hyps_r \\ hs
-          foralls = mkForallYs . Set.toList $ freeVars rp
-          equality = Coq.Bop EqProp (utrReft r') (utrReft rp)
-          recCall = go σp' (hs ++ currentHyps)
-       in hypsRV currentHyps . foralls $ Coq.Impl equality recCall
 
--- | Create a name for a constructor based on the patterns of the parameters (`pats`)
--- The flag takeVars indicates if we want the variables alone between the constructors
--- Used with true to create names of IH, and with false to create names for the relation
+-- | Auxiliary function for `trPathToConstr` and `inversionLemma`
+-- Builds a Rocq term from the guards of a path and the path result.
+-- The third argument hs contains hypotheses that have already been included
+-- The fourth argument is Nothing is we build the graph relation, Just z where
+-- z is a variable bound to the result of the application of f_rel in the
+-- inversion lemma
+trPathGuard :: Id -> FunctionPath -> [(Reft, Id)] -> Maybe Id -> CoqTerm
+trPathGuard f (σxs, [], rf) hs relRes =
+  let (hyps_r, r') = extractApps rf
+      currentHyps = hyps_r \\ hs
+      result =
+        case relRes of
+          Nothing -> Coq.App (Coq.Def $ relDefName f) (map utrReft (map snd σxs ++ [r']))
+          Just z -> Coq.Bop EqProp (Coq.Var z) (utrReft rf)
+   in hypsRV currentHyps (isNothing relRes) result
+trPathGuard f (σxs, (r, rp) : σp', rf) hs relRes =
+  let (hyps_r, r') = extractApps r
+      currentHyps = hyps_r \\ hs
+      foralls = mkForallXs . Set.toList $ freeVars rp
+      equality = Coq.Bop EqProp (utrReft r') (utrReft rp)
+      recCall = trPathGuard f (σxs, σp', rf) (hs ++ currentHyps) relRes
+   in hypsRV currentHyps (isNothing relRes) . foralls $ Coq.Impl equality recCall
+
+-- | Create a name for a constructor based on the patterns of the parameters (`pats`).
+-- The flag takeVars indicates if we want the variables alone between the constructors.
+-- It is used with True to create names of IH and with False to create names for the relation and inversion lemmas.
 namePath :: Id -> FunctionPath -> Bool -> Id
-namePath f (pats, _, _) takeVars = foldl (++) base $ map getConstructor pats'
+namePath f (pats, _, _) takeVars =
+  foldl (++) base $ map getConstructor pats'
   where
     pats' = map snd pats
+    -- TODO: deal with nested constructors (as in invLemName)
     getConstructor (LH.Var x _ _) = if takeVars then "_" ++ x else ""
     getConstructor (LH.App (DC c) _) = "_" ++ c
     base = if all (null . getConstructor) pats' then relDefBranchName f else f
@@ -236,8 +243,53 @@ relFunctionhoodLemma f tpf =
         relInst x = Coq.App (Coq.Def $ relDefName f) (map (Coq.Var . fst) argsT ++ [Coq.Var x])
 
 -- | Inversion lemmas for the graph relation, one for each branch
-relConstrLems :: Id -> RefType -> [Coq.Decl]
-relConstrLems = undefined {- concatMap (\lem -> [lem, AddHint RewriteHint (bindName lem) GraphRelBackDB]) relConstrLemmas -}
+relConstrLems :: Id -> [FunctionPath] -> [Coq.Decl]
+relConstrLems f paths = concatMap (inversionLemma f) $ groupPaths paths
+  where
+    -- Converts a list of function paths to a list of equations paths by grouping together paths that destruct arguments in the same way
+    groupPaths :: [FunctionPath] -> [([(Id, Reft)], [([(Reft, Reft)], Reft)])]
+    groupPaths branches =
+      map groupMatches $ groupBy (\(σ1, _, _) (σ2, _, _) -> σ1 == σ2) branches
+      where
+        groupMatches [] = ([], [])
+        groupMatches br@((xs, _, _) : _) = (xs, [(with, tm) | (_, with, tm) <- br])
+
+-- | Definition of the inversion lemma and rewrite hint.
+-- The second argument contains all paths that match on the arguments in the same way
+inversionLemma :: Id -> ([(Id, Reft)], [([(Reft, Reft)], Reft)]) -> [Coq.Decl]
+inversionLemma f (σxs, paths) =
+  [ Coq.Definition
+      f_lem
+      []
+      (Coq.Prop . mkForallXs argsVars $ FATerm (res, Nothing) (Equiv relApp guardDisjunction))
+      (ProofBody [Custom $ "rel_back' " ++ addParens tacArg])
+      Opaque,
+    AddHint RewriteHint f_lem GraphRelBackDB
+  ]
+  where
+    f_lem = invLemName f σxs
+    -- Variable introduced by destructing the arguments
+    argsVars = Set.toList $ freeVars (map snd σxs) Set.\\ Set.fromList (map fst σxs)
+    -- Fresh variable for the result of relApp
+    res = f_lem ++ "_res"
+    relApp = Coq.App (Def $ relDefName f) (map (utrReft . snd) σxs ++ [Coq.Var res])
+    guardDisjunction = mkOr $ map (\(σp, rf) -> trPathGuard f (σxs, σp, rf) rv (Just res)) paths
+    -- TODO: we need RV in inversionLemma, but we also need to define it with
+    -- respect to several terms
+    rv = undefined
+    -- argument of the tactic: the translation of the terms destructed in the guards
+    tacArg = unwords (map ((++ " _::_") . show . utrReft) undefined) ++ " _nil"
+
+-- | Name of the inversion lemma constructed from the patterns of the arguments in a path.
+-- This function is similar to `Declaration.namePath`
+invLemName :: Id -> [(Id, Reft)] -> Id
+invLemName f pats =
+  if all (\case (_, LH.Var {}) -> True; _ -> False) pats
+    then relBranchLemName f
+    else relBranchLemName $ "f" ++ concatMap ((++) "_" . printConstructors . apps . snd) pats
+  where
+    printConstructors (DC c, args) = c ++ concatMap (printConstructors . apps) args
+    printConstructors _ = ""
 
 -- | Lemma f_ex
 -- > Theorem f_rel_ex [args argsp]: f_rel [args] ⌊ f (exist args argsp) -⌋.

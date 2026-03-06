@@ -33,6 +33,10 @@ mkCoqTheorem f args ret = mkCoqLemma f args (Prop ret)
 mkForall :: [(Id, RocqType)] -> CoqTerm -> CoqTerm
 mkForall args r = if null args then r else Forall args r
 
+-- | Build forall (x)_{x in xs}, cqtm
+mkForallXs :: [Id] -> CoqTerm -> CoqTerm
+mkForallXs xs cqtm = foldr (\x -> FATerm (x, Nothing)) cqtm xs
+
 -- | Wrapper for Exists, defined as id for empty argument list
 mkExists :: [(Id, RocqType)] -> CoqTerm -> CoqTerm
 mkExists [] r = r
