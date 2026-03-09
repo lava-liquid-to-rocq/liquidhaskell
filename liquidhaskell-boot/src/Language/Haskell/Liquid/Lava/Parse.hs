@@ -2,7 +2,7 @@
 module Language.Haskell.Liquid.Lava.Parse
   ( -- ** type aliases for intermediate data
     SpecPair,
-    PData,
+    PData (..),
 
     -- ** "parsers" for the specification data extracted from LH
     parseToSpecPair,
@@ -39,10 +39,11 @@ import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
 
 type SpecPair = (Id, LhLib.SpecType)
 
-type PData =
-  ( [(Var, F.Located LhLib.SpecType)], -- refined types of data constructors
-    [LhLib.TyConP] -- refined types of type constructors
-  )
+-- | Parsed data declarations extracted from Liquid Haskell
+data PData = PData
+  { pdCtors  :: [(Var, F.Located LhLib.SpecType)]  -- ^ refined types of data constructors
+  , pdTyCons :: [LhLib.TyConP]                     -- ^ refined types of type constructors
+  }
 
 -- , [LhLib.Located DataCon], [F.DataDecl]) -- more data type info, in case they are needed
 parseToSpecPair :: Id -> (Var, F.Located LhLib.SpecType) -> SpecPair
@@ -50,7 +51,7 @@ parseToSpecPair modId (v, F.Loc _ _ spec) = (stripLegalName modId $ show (varNam
 
 -- | Parse refined type constructors into LH type constructors
 parsePData :: Id -> PData -> [LHDecl]
-parsePData modId (cs, typConstrs) =
+parsePData modId (PData cs typConstrs) =
   {- trace ("parsePData " ++ modId ++ "\n("++show constrs++", "++show typConstrs++")") $ -}
   map mkData (filter (not . isBuiltinDatatype) typeNames)
   where
@@ -103,7 +104,7 @@ isLemma = (== "()") . typeName . argTp . retTp
     typeName piTp@Pi {} = show piTp
 
 parseDef :: (Def, Maybe ArrType, Bool) -> LHDecl
-parseDef ((dname, args, body, _), Just sig, b) =
+parseDef (Def dname args body _, Just sig, b) =
   Definition dname (ArrType (map SLH.defaultBind sigArgs) tp) (runRename body) b
   where
     tp =
@@ -113,7 +114,7 @@ parseDef ((dname, args, body, _), Just sig, b) =
     (sigArgs, sRes@(RefType _ _ reft)) = signatureToArgsRet sig
     substs = zipWith (\n (RefType argId _ _) -> (n, Var argId)) args sigArgs
     runRename = subst substs
-parseDef ((dname, _, _, _), Nothing, _) = error $ "Top-level definition or lemma " ++ dname ++ " without signature is forbidden."
+parseDef (Def dname _ _ _, Nothing, _) = error $ "Top-level definition or lemma " ++ dname ++ " without signature is forbidden."
 
 -- | replace the names of variables v in refinement types {v:A|p} of arguments x by x
 signatureToArgsRet :: ArrType -> ([RefType], RefType)

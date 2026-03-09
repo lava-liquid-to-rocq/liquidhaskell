@@ -186,7 +186,7 @@ getBindsAndSpecs modId sinfo =
     getDataDecls (spdata, spnames) =
       -- NV TODO: filter out the data constructors and type constructors that are not defined in
       -- the currect module.
-      (Specs.gsCtors spdata, Specs.gsTconsP spnames) -- , Specs.gsDconsP spnames, Specs.gsADTs spnames)
+      PData (Specs.gsCtors spdata) (Specs.gsTconsP spnames) -- , Specs.gsDconsP spnames, Specs.gsADTs spnames)
 
 -- | Returns the absolute path of the root directory of the files to translate as a list of path components
 getSrcPath :: String -> String -> String -> [String]
@@ -220,4 +220,4 @@ pairLHDefsWithSigs :: Id -> [Def] -> M.Map Id InternalLH.ArrType -> [Var] -> [(D
 pairLHDefsWithSigs modId defs specMap reflectedDecls = map single defs
   where
     single :: Def -> (Def, Maybe InternalLH.ArrType, Bool)
-    single def@(x, _, _, _) = (def, M.lookup x specMap, any ((== x) . stripLegalName modId . show . varName) reflectedDecls)
+    single def = (def, M.lookup (defName def) specMap, any ((== defName def) . stripLegalName modId . show . varName) reflectedDecls)

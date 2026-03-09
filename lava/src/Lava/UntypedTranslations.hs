@@ -325,13 +325,13 @@ sigmaReduce expr = {-traceFuncRet ["sigmaReduce", show e] $ -} case expr of
   BasicTerm _ -> expr
   -- The case of if-then-else is subsumed by the one for pattern matching
   Lambda {} -> error "Cannot σ-reduce λ-expression."
-  (Case y alts b) -> Case y (mapThd sigmaReduce alts) b
+  (Case y alts b) -> Case y (map (modifyBrBody sigmaReduce) alts) b
   Undefined -> Undefined
   Let x _ _ e | not (hasMatch xPat e) -> sigmaReduce e
     where
       xPat :: SubtermPattern LHTerm
       xPat = (IdPat x, True)
-  Let x _ (BasicTerm r) (Case (Var x') cases rC) | x == x' -> sigmaReduce $ Case r (mapThd (sub x r) cases) rC
+  Let x _ (BasicTerm r) (Case (Var x') cases rC) | x == x' -> sigmaReduce $ Case r (map (modifyBrBody (sub x r)) cases) rC
   Let x tp ex e -> case ex of
     BasicTerm r -> sigmaReduce $ sub x r e
     Lambda {} -> error "Cannot σ-reduce let-bound λ-expression."
@@ -340,7 +340,7 @@ sigmaReduce expr = {-traceFuncRet ["sigmaReduce", show e] $ -} case expr of
     SEqn _ tm _ -> sigmaReduce $ sub x tm e
     lt@Let {} -> sigmaReduce $ Let x tp (sigmaReduce lt) e
     -- Again the if-then-else case is subsumed by the one for pattern matches
-    (Case r alts rC) -> Case r (mapThd (\t -> sigmaReduce (Let x tp t e)) alts) rC
+    (Case r alts rC) -> Case r (map (modifyBrBody (\t -> sigmaReduce (Let x tp t e))) alts) rC
     Undefined -> error "Cannot reduce let-bound Undefined constructor."
 
 constructMap :: Ctx.TypingCtx -> Map.Map Id Coq.RocqType

@@ -5,7 +5,7 @@
 module Lava.LH
   ( -- * type aliases for intermediate data during LH/GHC -> ILH parsing
     Lemma,
-    Def,
+    Def (..),
 
     -- * Dependencies and Binder classes and instances
     Dependencies (..),
@@ -15,7 +15,7 @@ module Lava.LH
 where
 
 import Data.Graph
-import Lava.InternalLH (ArrType (..), LHDecl (..), LHSimpleTerm (..), LHTerm (..), LHType (Buildin, TDat), RefType (..))
+import Lava.InternalLH (ArrType (..), CaseBranch (..), LHDecl (..), LHSimpleTerm (..), LHTerm (..), LHType (Buildin, TDat), RefType (..))
 import qualified Lava.InternalLH as ILH
 import Lava.Util
 import Prelude
@@ -24,7 +24,13 @@ import Prelude
 
 type Lemma = (Def, ArrType, Bool)
 
-type Def = (Id, [Id], LHTerm, Bool)
+-- * A top-level definition extracted from GHC Core
+data Def = Def
+  { defName  :: Id       -- ^ the name of the definition
+  , defArgs  :: [Id]     -- ^ the argument names
+  , defBody  :: LHTerm   -- ^ the translated body
+  , defIsRec :: Bool     -- ^ whether the definition is recursive
+  } deriving (Eq, Show)
 
 -- * 'Dependencies' class and instances, 'Binder class' and instance for 'LHDecl'
 
@@ -43,11 +49,11 @@ instance Dependencies LHSimpleTerm where
   dependsOn (Var n) name = n == name
   dependsOn _ _ = False
 
-dependsBranch :: (Id, [Id], LHTerm) -> Id -> Bool
+dependsBranch :: CaseBranch -> Id -> Bool
 
 -- | if a variable bound in the match name-clashes with 'name', then that nameclash ensures the branch cannot depend on 'name'
 -- Todo: what happens if 'name' is a constructor
-dependsBranch (c, ts, e) name = (c == name || e `dependsOn` name) && name `notElem` ts
+dependsBranch (CaseBranch c ts e) name = (c == name || e `dependsOn` name) && name `notElem` ts
 
 -- \|| any (\c -> c == name && isUpper (head c)) ts
 

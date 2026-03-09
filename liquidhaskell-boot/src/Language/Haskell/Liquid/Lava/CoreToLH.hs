@@ -26,7 +26,7 @@ import           Language.Haskell.Liquid.Types.RType (SpecType)
 import           Language.Haskell.Liquid.Types.Types (AnnInfo (..))
 import qualified Language.Haskell.Liquid.Types.Types ()
 
-import           Lava.InternalLH (LHSimpleTerm, LHTerm, ffTm, ttTm, unitTm)
+import           Lava.InternalLH (CaseBranch (..), LHSimpleTerm, LHTerm, ffTm, modifyBrBody, ttTm, unitTm)
 import qualified Lava.InternalLH as ILH
 import qualified Lava.LH as LH
 import           Lava.Misc
@@ -44,8 +44,10 @@ type CoreBinder b = (Data b, Show b, NamedThing b)
 -- > transBind(Rec [f_1 = e_1, …, f_n = e_n]) = trans(f_1,e_1)
 transBind :: CoreBinder b => String -> AnnInfo SpecType -> Bind b -> LH.Def
 transBind modId infTypes binds = case binds of
-  NonRec b e -> let (args, body) = flattenFun modId infTypes (f b) e in (f b, args, body, False)
-  Rec [(b, e)] -> let (args, body) = flattenFun modId infTypes (f b) e in (f b, args, body, True)
+  NonRec b e -> let (args, body) = flattenFun modId infTypes (f b) e in
+                LH.Def (f b) args body False
+  Rec [(b, e)] -> let (args, body) = flattenFun modId infTypes (f b) e in
+                  LH.Def (f b) args body True
   Rec defs -> error $ "Mutually recursive definitions " ++ show (map fst defs) ++ " not yet supported."
   where
     f b = stripLegalName modId $ show b
@@ -162,7 +164,7 @@ trans modId infTypes f app@App {} =
     collectTm (ILH.QMark t _)      = collectTm t
     collectTm tm                   = tm
 
-    prevEqns (eq@ILH.SEqn {}) = [eq]
+    prevEqns eq@ILH.SEqn {}   = [eq]
     prevEqns (ILH.QMark t _)  = prevEqns t
     prevEqns _                = []
 
@@ -215,7 +217,7 @@ transLit (LitDouble x) = ILH.FloatLit $ fromRational x
 transLit other = error $ "Unsupported literal " ++ toStr other
 
 -- | Fall back to non-mutually recursive binds.
--- NB: silently drops all but the first binding in a recursive group.
+-- NB: silently ignores mutually recursive groups.
 deconstructBind :: (NamedThing b) => Bind b -> (b, Expr b)
 deconstructBind (NonRec b e) = (b, e)
 deconstructBind (Rec ((b, e) : _)) = (b, e)
@@ -230,8 +232,11 @@ binderType (AI infTypes) x =
     _ -> error $ "Type annotation for " ++ show x ++ " not found."
 
 -- | Straightforward translation of Haskell cases
-altToClause :: CoreBinder b => Id -> AnnInfo SpecType -> Id -> Alt b -> (Id, [Id], LHTerm)
-altToClause modId infTypes f (Alt con bs e) = (go con, map (stripLegalName modId . show) bs, trans modId infTypes f e)
+altToClause :: CoreBinder b => Id -> AnnInfo SpecType -> Id -> Alt b -> CaseBranch
+altToClause modId infTypes f (Alt con bs e) =
+  CaseBranch (go con)
+             (map (stripLegalName modId . show) bs)
+             (trans modId infTypes f e)
   where
     go :: AltCon -> String
     -- NOTE: was `show dc`, but no show instance for DataCon
@@ -290,32 +295,33 @@ transEqns s' =
 {- The following is based on code liquidhaskell-boot Transforms/CoreToLogic -}
 
 -- | Cut redundant branches and matches and construct the given match
-mkCase :: Id -> Id -> [(Id, [Id], LHTerm)] -> ILH.LHTerm
+mkCase :: Id -> Id -> [CaseBranch] -> ILH.LHTerm
 mkCase f x = transCaseExpr (Just f) x False
 
-collapseUnproductiveMatches :: (Id, [Id], LHTerm) -> (Id, [Id], LHTerm)
-collapseUnproductiveMatches (c, xs, e) =
-  {- traceFuncRet ["collapseUnproductiveMatches", show c, show xs, show e] -}
-  (c, xs, e')
+collapseUnproductiveMatches :: CaseBranch -> CaseBranch
+collapseUnproductiveMatches = modifyBrBody go
   where
-    e' = case e of
-      -- ILH.Case x [("False", [], elseE), ("True", [], thenE)] _ -> ILH.Ite (ILH.Var x) thenE elseE
+    go e = case e of
+      -- ILH.Case x [CaseBranch "False" [] elseE, CaseBranch "True" [] thenE] _ -> ILH.Ite (ILH.Var x) thenE elseE
       ILH.Case x branches b -> ILH.Case x (map collapseUnproductiveMatches branches) b
       _ -> e
 
 -- | remove redundant branches/matches from an ILH pattern match
-transCaseExpr :: Maybe Id -> Id -> Bool -> [(Id, [Id], ILH.LHTerm)] -> ILH.LHTerm
+transCaseExpr :: Maybe Id -> Id -> Bool -> [ILH.CaseBranch] -> ILH.LHTerm
 transCaseExpr = recurse []
   where
-    recurse :: [(Id, (Id, [Id]))] -> Maybe Id -> Id -> Bool -> [(Id, [Id], ILH.LHTerm)] -> ILH.LHTerm
+    recurse :: [(Id, (Id, [Id]))] -> Maybe Id -> Id -> Bool -> [ILH.CaseBranch] -> ILH.LHTerm
     recurse prevPats fO indVar isRec cases' =
       {- traceFuncRet ["recurse", show prevPats, show fO, indVar, show isRec, show cases] $ -}
       subst substs res
       where
-        cases = map (\(c, cargs, ce) -> (c, cargs, replaceSubterm (TermPat (ILH.Var indVar), True) (ILH.App (ILH.Var c) (map ILH.Var cargs)) ce)) cases'
+        cases = map (\br -> modifyBrBody
+                              (replaceSubterm (TermPat (ILH.Var indVar), True)
+                                              (ILH.App (ILH.Var (brCon br)) (map ILH.Var (brVars br))))
+                              br) cases'
         res = caseOrInduct indVar branches
         {- res = case branches of
-          -- [("False", [], elseE), ("True", [], thenE)] -> ILH.Ite (ILH.Var indVar) thenE elseE
+          -- [CaseBranch "False" [] elseE, CaseBranch "True" [] thenE] -> ILH.Ite (ILH.Var indVar) thenE elseE
           _ -> caseOrInduct indVar branches -}
         (cutCases, substs) = cutRedundantBranches indVar prevPats cases
         cleanedCases = map collapseUnproductiveMatches cutCases
@@ -323,7 +329,7 @@ transCaseExpr = recurse []
         isRecursive e = case fO of
           Nothing -> False
           Just f -> hasMatch (TermPat (ILH.Var f), True) e
-        branches = map (\(c, xs, e) -> (c, xs, transBranchE e)) cleanedCases
+        branches = map (modifyBrBody transBranchE) cleanedCases
         transBranchE :: ILH.LHTerm -> ILH.LHTerm
         transBranchE e = case e of
           ILH.Case (ILH.Var x) css _ -> recurse prevPats fO x (isRecursive e) css
@@ -331,15 +337,15 @@ transCaseExpr = recurse []
           _ -> e
         {- Case (Let x def _) _ css -> LHTerm $ Let x (transBranchE def) (LHTerm $ recurse prevPats fO x (isRecursive e) css)
         _ -> transAExpr fO e (isRecursive e) -}
-        caseOrInduct :: Id -> [(Id, [Id], ILH.LHTerm)] -> ILH.LHTerm
+        caseOrInduct :: Id -> [ILH.CaseBranch] -> ILH.LHTerm
         caseOrInduct x brs = ILH.Case (ILH.Var x) brs anyIsRec
-        anyIsRec = isRec || any (isRecursive . thd3) branches
+        anyIsRec = isRec || any (isRecursive . brBody) branches
 
     -- \| Remove cases from nested matches whose patterns contradict the current branch's pattern in an ambient match
-    cutRedundantBranches :: Id -> [(Id, (Id, [Id]))] -> [(Id, [Id], ILH.LHTerm)] -> ([(Id, [Id], ILH.LHTerm)], [(Id, ILH.LHSimpleTerm)])
+    cutRedundantBranches :: Id -> [(Id, (Id, [Id]))] -> [ILH.CaseBranch] -> ([ILH.CaseBranch], [(Id, ILH.LHSimpleTerm)])
     cutRedundantBranches n prevPats = second concat . unzip . cutBranches . filterBranches
       where
-        filterBr (c, cargs, tm) =
+        filterBr (CaseBranch c cargs tm) =
           ((n, (c, cargs)) `notElem` prevPats)
             || trace
               ( unwords
@@ -354,8 +360,9 @@ transCaseExpr = recurse []
               )
               False
         filterBranches = filter filterBr
-        cutBranches :: [(Id, [Id], ILH.LHTerm)] -> [((Id, [Id], ILH.LHTerm), [(Id, ILH.LHSimpleTerm)])]
-        cutBranches = mapMaybe (\(c, cargs, e) -> first (c,cargs,) <$> cutRedundantMatches (prevPats ++ [(n, (c, cargs))]) e)
+        cutBranches :: [ILH.CaseBranch] -> [(ILH.CaseBranch, [(Id, ILH.LHSimpleTerm)])]
+        cutBranches = mapMaybe (\(CaseBranch c cargs e) ->
+                                    first (CaseBranch c cargs) <$> cutRedundantMatches (prevPats ++ [(n, (c, cargs))]) e)
 
     -- \| Translate nested matches, replacing redundant matches with the translation of the only matching branch
     cutRedundantMatches :: [(Id, (Id, [Id]))] -> ILH.LHTerm -> Maybe (ILH.LHTerm, [(Id, ILH.LHSimpleTerm)])
@@ -364,8 +371,8 @@ transCaseExpr = recurse []
         -- \| The previous pattern in which we already matched on the same variable as we do now, if any
         prevPat = find ((== m) . fst) prevPats
         -- \| Pattern and expression in the branch, in which the pattern matches the previous pattern, if any
-        caseExpr = find ((== (fst . snd <$> prevPat)) . Just . fst3) branches
-        caseVarSub = case (snd . snd <$> prevPat, snd3 <$> caseExpr) of
+        caseExpr = find ((== (fst . snd <$> prevPat)) . Just . brCon) branches
+        caseVarSub = case (snd . snd <$> prevPat, brVars <$> caseExpr) of
           (Just args, Just args') -> newSubst
             where
               newSubst = mapMaybe mkSubstO (zip args args')
@@ -375,7 +382,7 @@ transCaseExpr = recurse []
                 (_, _) -> Nothing
           _ -> []
         -- \| The translation of the only branch in which the pattern is consistent with the previously matched pattern matched against the same expression
-        recO = maybe ((,[]) . thd3 <$> caseExpr) (cutRedundantMatches prevPats . thd3) caseExpr
+        recO = maybe ((,[]) . brBody <$> caseExpr) (cutRedundantMatches prevPats . brBody) caseExpr
         res = second (++ caseVarSub) <$> recO
     cutRedundantMatches prevPats (ILH.Case (ILH.Var m) branches b) = Just (ILH.Case (ILH.Var m) branches' b, subs)
       where

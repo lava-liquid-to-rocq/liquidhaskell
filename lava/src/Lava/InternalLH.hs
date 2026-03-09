@@ -81,6 +81,15 @@ data LHDecl
     Definition Id ArrType LHTerm Bool
   deriving (Data, Eq)
 
+-- | A single branch of a pattern match
+--
+-- > | C x^ |-> e
+data CaseBranch = CaseBranch
+  { brCon  :: Id         -- ^ constructor name
+  , brVars :: [Id]       -- ^ bound variable names
+  , brBody :: LHTerm     -- ^ branch body
+  } deriving (Data, Eq)
+
 -- | General LH terms
 --
 -- > e ::= r | (rec) case x of (| c y* |-> e)*
@@ -94,7 +103,7 @@ data LHTerm
   | -- | type annotation
     Annot LHTerm RefType
   | -- | pattern matches, the flag indicates the presence of recursive calls
-    Case LHSimpleTerm [(Id, [Id], LHTerm)] Bool
+    Case LHSimpleTerm [CaseBranch] Bool
   | -- | let with type annotation
     --   for lets in the code, we can always get an annotation, but we also create some for ANF
     Let Id (Maybe RefType) LHTerm LHTerm
@@ -164,6 +173,9 @@ builtinDCs = [ttTm, ffTm, unitTm]
 
 builtinTCs = [boolTp, unitTp]
 
+modifyBrBody :: (LHTerm -> LHTerm) -> CaseBranch -> CaseBranch
+modifyBrBody f (CaseBranch c xs e) = CaseBranch c xs (f e)
+
 -- * Functions on the grammar
 
 -- Transformes an ArrType into a Pi
@@ -201,9 +213,12 @@ instance Show LHDecl where
     Data tc constrs -> "data " ++ tc ++ " = " ++ intercalate " | " (map show constrs)
     Definition f tp e _ -> "Def " ++ f ++ " :: " ++ show tp ++ " := " ++ showNewline 1 ++ prettyPrint 1 e
 
-instance PrettyPrintable (Id, [Id], LHTerm) where
+instance Show CaseBranch where
+  show = prettyPrint 1
+
+instance PrettyPrintable CaseBranch where
   -- \| pretty prints a branch of a Case or InductTerm
-  prettyPrint indent (c, cargs, def) = c ++ " " ++ unwords cargs ++ " |-> " ++ defS
+  prettyPrint indent (CaseBranch c cargs def) = c ++ " " ++ unwords cargs ++ " |-> " ++ defS
     where
       defS = case def of
         match@Case {} -> showNewline (indent + 1) ++ prettyPrint (indent + 1) match
@@ -293,16 +308,18 @@ instance AppSuable LHTerm LHSimpleTerm where
     BasicTerm t -> second (fmap $ \f r -> BasicTerm (f r)) $ findAndReplace p t
     Case (Var x) brs b -> resRec matches func
       where
-        matches = [Var x | isSubstOf p x] ++ concatMap (\(c, argNms, e) -> map Var ([c | isSubstOf p c] ++ filter (isSubstOf p) argNms) ++ findSubterm p e) brs
+        branchMatches (CaseBranch c argNms e) = map Var ([c | isSubstOf p c] ++ filter (isSubstOf p) argNms) ++ findSubterm p e
+        matches = [Var x | isSubstOf p x] ++ concatMap branchMatches brs
+        renameBranch r (CaseBranch c argNms expr) = CaseBranch (renameVar r c) (map (renameVar r) argNms) (replaceSubterm p r expr)
         func r | isSubstOf p x = case r of
-          -- \| we are replacing the variable matched on by another variable, i.e. just renamingthe variable
-          Var v_r -> Case (Var v_r) (map (\(c, argNms, expr) -> (renameVar r c, map (renameVar r) argNms, replaceSubterm p r expr)) brs) b
+          -- \| we are replacing the variable matched on by another variable, i.e. just renaming the variable
+          Var v_r -> Case (Var v_r) (map (renameBranch r) brs) b
           -- \| we cannot replace the variable matched on by an arbitrary term, as matches on arbitrary terms are not supported in ILH
-          _ -> Let v_r Nothing (BasicTerm r) $ Case (Var v_r) (map (\(c, argNms, expr) -> (renameVar r c, map (renameVar r) argNms, replaceSubterm p r expr)) brs) b
+          _ -> Let v_r Nothing (BasicTerm r) $ Case (Var v_r) (map (renameBranch r) brs) b
             where
               v_r = "v_" ++ hashName r
         -- \| we don't need to replace the matched on variable
-        func r = {- trace (unwords ["func", show r]) $ -} Case (Var x) (map (\(c, argNms, expr) -> (renameVar r c, map (renameVar r) argNms, replaceSubterm p r expr)) brs) b
+        func r = {- trace (unwords ["func", show r]) $ -} Case (Var x) (map (renameBranch r) brs) b
         renameVar :: LHSimpleTerm -> Id -> Id
         renameVar r y =
           if isSubstOf p y
@@ -314,8 +331,10 @@ instance AppSuable LHTerm LHSimpleTerm where
             else y
     Case matchedTerm brs b -> resRec matches func
       where
-        matches = concatMap (\(c, argNms, e) -> map Var ([c | isSubstOf p c] ++ filter (isSubstOf p) argNms) ++ findSubterm p e) brs
-        func r = {- trace (unwords ["func", show r]) $ -} Case matchedTerm (map (\(c, argNms, expr) -> (renameVar r c, map (renameVar r) argNms, replaceSubterm p r expr)) brs) b
+        branchMatches (CaseBranch c argNms e) = map Var ([c | isSubstOf p c] ++ filter (isSubstOf p) argNms) ++ findSubterm p e
+        matches = concatMap branchMatches brs
+        renameBranch r (CaseBranch c argNms expr) = CaseBranch (renameVar r c) (map (renameVar r) argNms) (replaceSubterm p r expr)
+        func r = {- trace (unwords ["func", show r]) $ -} Case matchedTerm (map (renameBranch r) brs) b
         renameVar :: LHSimpleTerm -> Id -> Id
         renameVar r y =
           if isSubstOf p y
@@ -361,13 +380,15 @@ instance AppSuable LHTerm LHTerm where
     Undefined -> unchanged
     Case (Var x) branches b -> resRec matches func
       where
-        matches = [BasicTerm $ Var x | isSubstOf p x] ++ concatMap (\(c, argNms, expr) -> map (BasicTerm . Var) ([c | isSubstOf p c] ++ filter (isSubstOf p) argNms) ++ findSubterm p expr) branches
+        branchMatches (CaseBranch c argNms expr) = map (BasicTerm . Var) ([c | isSubstOf p c] ++ filter (isSubstOf p) argNms) ++ findSubterm p expr
+        matches = [BasicTerm $ Var x | isSubstOf p x] ++ concatMap branchMatches branches
         p_ = case first toLHSimpleTermPat p of
           (Just stp, f) -> Just (stp, f)
           (Nothing, _) -> Nothing
+        renameBranch r (CaseBranch c argNms expr) = CaseBranch (renameVar r c) (map (renameVar r) argNms) (replaceSubterm p r expr)
         func r = case (r, p_) of
           (BasicTerm replTm, Just p') -> replaceSubterm p' replTm tm
-          _ | not (isSubstOf p x) -> Case (Var x) (map (\(c, argNms, expr) -> (renameVar r c, map (renameVar r) argNms, replaceSubterm p r expr)) branches) b
+          _ | not (isSubstOf p x) -> Case (Var x) (map (renameBranch r) branches) b
           _ -> error $ "Cannot replace " ++ show p ++ " with " ++ show r ++ ". "
 
         renameVar :: LHTerm -> Id -> Id

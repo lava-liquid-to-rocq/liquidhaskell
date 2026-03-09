@@ -127,7 +127,7 @@ wfDecl γ decl =
 checkTerm :: Ctx.TypingCtx -> LHTerm -> RefType -> (Id, MatchCtx) -> Either TransError [Coq.CoqTactic]
 checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", "...", showP e, showP tp, show (f, mCtx)] $ -} case e of
   -- An if-then-else written as a match
-  Case cond [("False", [], elseE), ("True", [], thenE)] _ -> do
+  Case cond [CaseBranch "False" [] elseE, CaseBranch "True" [] thenE] _ -> do
     let
       condT = utrSmpTerm (fetchFuncts γ) cond
       transBrExpr _ expr = checkTerm γ expr tp (f, mCtx)
@@ -135,7 +135,7 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
     thenET <- transBrExpr Coq.btrue thenE
     return [Coq.Destruct condT [("true", (Coq.ConjDestrPat [], thenET)), ("false", (Coq.ConjDestrPat [], elseET))]]
 
-  -- | (C-Case) 
+  -- | (C-Case)
   -- TODO: check that the left of the arrows are correctly typed? That R is an inductive?
   Case r alts _ -> do
     (tpR@(RefType v b r0), _) <- synSmpTerm γ r (f, mCtx)
@@ -148,7 +148,7 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
           Just tpsTC -> Right tpsTC
 
     let
-      -- | the function arguments 
+      -- | the function arguments
       args = concatMap (Set.toList . freeVars) fCtx
       -- | whether to translate using induction (when isInduction=True) or using destruct (when isInduction=False)
       (isInduction, xO) = case r of
@@ -157,15 +157,15 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
       onToplevel = all (\case (Var _) -> True; _ -> False) fCtx
     {-  getConstrTp c = maybeToEither (SynErr $ "Cannot synthetise type for constructor " ++ show c ++ ", tcConstrTps:" ++ show tcConstrTps) $
               Prelude.lookup c tcConstrTps
-      cis = map fst3 alts
+      cis = map brCon alts
 
     ciTps <- mapM getConstrTp cis
     ri <- mapM (\(ArrType _ (RefType _ bi ri)) -> if bi == b then Right ri else Left . CheckingErr $ "Constructor is of wrong base type. ") ciTps
     let ciArgs = map (\(ArrType args _) -> args) ciTps -}
 
     let
-      checkBranch :: (Id, [Id], LHTerm) -> Either TransError (Id, (Coq.CoqDestrPat, [Coq.CoqTactic]))
-      checkBranch alt@(c, ys, e) = do
+      checkBranch :: CaseBranch -> Either TransError (Id, (Coq.CoqDestrPat, [Coq.CoqTactic]))
+      checkBranch alt@(CaseBranch c ys _) = do
         -- New matching context
         bi <- case xO of
           Just x -> replaceVarByConstr x (c, ys) fCtx
@@ -182,7 +182,7 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
         let tpReplaced = case xO of
               Just x -> sub x (App (Var c) $ map Var ys) tp
               Nothing -> tp
-        (c,) . (desPattern ys indVars,) . (:) (Coq.Intros []) <$> checkTerm γi (thd3 alt) tpReplaced (f, (bi, matchedVars ++ maybe [] (singleton . (, ys `union` indVars)) xO))
+        (c,) . (desPattern ys indVars,) . (:) (Coq.Intros []) <$> checkTerm γi (brBody alt) tpReplaced (f, (bi, matchedVars ++ maybe [] (singleton . (, ys `union` indVars)) xO))
       -- For a branch with binders ys under matching context bi, build the destruction patterns, with an induction
       -- hypothesis for each binder of the same inductive types as x
       -- Having an empty indVars creates the correct patterns for a destruct
@@ -203,7 +203,7 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
         else Coq.Destruct (projectTm rT) branchesT
 
   -- An if
-  Let x _ (BasicTerm cond) (Case (Var x') [("False", [], elseE), ("True", [], thenE)] _) | x == x' -> do
+  Let x _ (BasicTerm cond) (Case (Var x') [CaseBranch "False" [] elseE, CaseBranch "True" [] thenE] _) | x == x' -> do
     let
       condT = utrSmpTerm (fetchFuncts γ) cond
       transBrExpr _ expr = checkTerm γ expr tp (f, mCtx)
@@ -211,7 +211,7 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
     thenET <- transBrExpr Coq.btrue thenE
     return [Coq.Destruct condT [("true", (Coq.ConjDestrPat [], thenET)), ("false", (Coq.ConjDestrPat [], elseET))]]
   -- A destruct
-  Let x _ (BasicTerm r) (Case (Var x') cases rC) | x == x' -> checkTerm γ (Case r (mapThd (sub x r) cases) rC) tp (f, mCtx)
+  Let x _ (BasicTerm r) (Case (Var x') cases rC) | x == x' -> checkTerm γ (Case r (map (modifyBrBody (sub x r)) cases) rC) tp (f, mCtx)
   -- TODO: (C-Let)
   Let x tpx' e1 e2 -> do
     -- NOTE: we try to synthesize the type to keep current examples working.
@@ -776,7 +776,7 @@ createRelationBranch γ f ((pats, body), antes, matchedVars) = {- traceFuncRet [
     -- Adding the relations as hypothesis
     prop' = foldr (uncurry3 ppForall) fuArgs (foralls++patForalls)
 
-    -- | cancel double negations (from ifs with negated conditions) and convert the bool to a Prop 
+    -- | cancel double negations (from ifs with negated conditions) and convert the bool to a Prop
     toProp (Coq.Neg (Coq.Neg p)) = toProp p
     toProp p = mkIsTrue p
     {-toProp (Coq.Neg p) = Coq.Bop Coq.Eq p Coq.bfalse
@@ -808,14 +808,14 @@ separateBranches ::
   Either TransError [(([LHSimpleTerm], LHSimpleTerm), [LHSimpleTerm], [Id])]
 separateBranches e = {- traceFuncRet ["separateBranches", show e] $ -} separateBranches' (sigmaReduce e)
   where
-    separateBranches' (Let x _ (BasicTerm cond) (Case (Var x') [("False", [], elseE), ("True", [], thenE)] _)) args | x == x' = do
+    separateBranches' (Let x _ (BasicTerm cond) (Case (Var x') [CaseBranch "False" [] elseE, CaseBranch "True" [] thenE] _)) args | x == x' = do
       thenBrs <- map (\(x_,y,z) -> (x_,cond:y,z)) <$> separateBranches' thenE args
       elseBrs <- map (\(x_,y,z) -> (x_,Neg cond:y,z)) <$> separateBranches' elseE args
       return $ thenBrs ++ elseBrs
     --separateBranches' (Let x (BasicTerm cond) (Case (Var x') cases _)) args | x == x' = do
     separateBranches' (Case matchedExpr cases _) args = concat <$> mapM separateBranch cases where
-      separateBranch :: (Id, [Id], LHTerm) -> Either TransError [(([LHSimpleTerm], LHSimpleTerm), [LHSimpleTerm], [Id])]
-      separateBranch (c, ys, body) =
+      separateBranch :: CaseBranch -> Either TransError [(([LHSimpleTerm], LHSimpleTerm), [LHSimpleTerm], [Id])]
+      separateBranch (CaseBranch c ys body) =
         map (\(destrParams,conds,c_) -> (destrParams,newCond++conds,c_++ [x | Var x <- [matchedExpr]]))
           <$> ( args' >>= separateBranches' body )
         where
@@ -837,7 +837,7 @@ branchCtx ::
   -- | Current context
   Ctx.TypingCtx ->
   -- | Branch
-  (Id, [Id], LHTerm) ->
+  CaseBranch ->
   -- | The variable being matched against
   Maybe Id ->
   -- | Type of that variable
@@ -846,7 +846,7 @@ branchCtx ::
   ArrType ->
   -- | Updated context
   Either TransError Ctx.TypingCtx
-branchCtx γ (ci, ys, _) xO (RefType x' (TDat tc) rx) (ArrType args ret) = do
+branchCtx γ (CaseBranch ci ys _) xO (RefType x' (TDat tc) rx) (ArrType args ret) = do
   (σ, argsSubst) <- substArgs args (map Var ys)
   let -- Bindings for each ys
       bindsYs = zip ys argsSubst
