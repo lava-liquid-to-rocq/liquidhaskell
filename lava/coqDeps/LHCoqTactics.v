@@ -33,6 +33,42 @@ Proof.
 Qed.
 #[global] Hint Rewrite f_rel_u_cleanup:get_rel_db. *)
 
+Ltac cleanup_witness z :=
+  let zTp := type of z in
+  let zKnd := type of zTp in
+  eq_fail zKnd Prop;
+  
+  let temp_wit_rw := fresh "temp_wit_rw" in
+  tryif (match zTp with
+  | True => idtac
+  | _ => fail
+  end) then fail else idtac;
+  match goal with
+  | [wit: zTp |- _] => 
+    assert (forall z', z' = wit) as temp_wit_rw by (intros; auto with pi_db);
+    try rewrite -> (temp_wit_rw z) in *;
+    repeat progress rewrite -> temp_wit_rw in *
+  | |- _ =>
+    let wit := fresh "wit_" in
+    set (z) as wit in *;
+    assert (forall z', z' = wit) as temp_wit_rw by (intros; auto with pi_db);
+    repeat progress rewrite -> temp_wit_rw in *;
+    try clearbody wit;
+    simpl in wit;
+    let witTp := type of wit in
+    tryif (eq_fail zTp witTp) then idtac "Created new witness " wit " for " witTp else 
+      match goal with
+      | [wit': witTp |- _] => neq_fail wit wit';
+        clear temp_wit_rw;
+        assert (forall z', z' = wit') as temp_wit_rw by (intros; auto with pi_db);
+        rewrite -> (temp_wit_rw wit) in *;
+        repeat progress rewrite -> temp_wit_rw in *;
+        clear wit;
+        idtac "Unified proof term with existing witness " wit' " for " witTp
+      | |- _ => idtac "Created new witness " wit " for " witTp
+      end
+  end; clear temp_wit_rw.
+
 #[global] Hint Unfold refinement_proj:get_rel_db.
 #[global] Hint Unfold packPr:get_rel_db.
 #[global] Hint Unfold f:get_rel_db.
@@ -211,37 +247,6 @@ Ltac findAppProj exp Res :=
   findSubExpr Res ihAppProj exp;
   undoProj Res.
 
-Tactic Notation "axiomatize_term" constr(tm) "as " ident(name) ident(def) :=
-  let v := fresh "v" in
-  let v_def := fresh "res_def" in
-  let v_wit := fresh "res_wit" in
-  let temp := fresh "res_ref" in
-  
-  (* autorewrite with fix_notation_hints in *; *)
-  pose (⌊ tm -⌋) as v; assert (⌊ tm -⌋ = v) as v_def by reflexivity;
-  let witTp := type of (⌈ tm ⌉) in
-  match goal with
-  | [h: ?htp |- _] => eq_fail witTp htp(*; idtac "A witness for the refined term " tm " is already present as hypothesis " h " not asserting another. " *)
-  | _ => assert _ as v_wit by (exact ⌈ tm ⌉)
-  end;
-  assert _ as temp by (refine (exist _ v v_def));
-  destruct temp as [name def]; 
-
-  clear v v_def;
-  let def_rw := fresh "def_rw" in
-  assert _ as def_rw by (exact def); try unfold tm in def;
-  first [rewrite def_rw in v_wit; rewriteAll def_rw
-  | simpl_proj; rewriteAll def_rw]; try clear tm.
-
-(*
-Ltac axiomatize_posed_tm v name def :=
-  let vRef := fresh "vRef" in
-  assert (v = v) as vRef by reflexivity; unfold v in vRef;
-  match type of vRef with
-  | ?tm = _ => clear vRef; axiomatize_term tm as name def
-  end.
-*)
-
 Ltac applyRwLem h :=
   tryif (progress autorewrite with f_rel_funct_db in h) then idtac else (
   let hTp := type of h in
@@ -316,6 +321,40 @@ Ltac applyRwLem h :=
     end
   end).
 
+Tactic Notation "axiomatize_term" constr(tm) "as " ident(name) ident(def) :=
+  let v := fresh "v" in
+  let v_def := fresh "res_def" in
+  let v_wit := fresh "res_wit" in
+  let temp := fresh "res_ref" in
+  
+  let tm' := fresh "tm'" in
+  pose (exist _ tm (eq_refl tm)) as tm';
+  
+  pose (⌊ tm -⌋) as v; assert (⌊ tm -⌋ = v) as v_def by reflexivity;
+  pose (exist _ v v_def) as temp;
+  destruct temp as [name def]; 
+
+  clear v v_def;
+  let def_rw := fresh "def_rw" in
+  pose proof def as def_rw; try unfold tm in def;
+  try clearbody tm;
+  try (applyRwLem def; simpl in def); 
+  
+  tryif (destruct tm' as [[v v_wit] v_def];
+  pose proof def_rw as temp; rewrite v_def in temp; simpl in temp;
+  revert temp; intros <-; clear v_def) then 
+    idtac "Sucessfully axiomatized refined term and created refinement witness for it."
+  else (idtac "Failed to create refinement witness for newly axiomatized refined term."; clear tm').
+
+(*
+Ltac axiomatize_posed_tm v name def :=
+  let vRef := fresh "vRef" in
+  assert (v = v) as vRef by reflexivity; unfold v in vRef;
+  match type of vRef with
+  | ?tm = _ => clear vRef; axiomatize_term tm as name def
+  end.
+*)
+
 Ltac pose_cleanup_refined_tm var_name tm := 
   let temp := fresh "temp_r" in
   let v_def := fresh "v_def" in 
@@ -329,26 +368,6 @@ Ltac pose_cleanup_refined_tm var_name tm :=
 
 Create HintDb f_rel_constr_db.
 Create HintDb f_rel_funct_db.
-
-Ltac cleanup_witness z :=
-  let zTp := type of z in
-  let temp_wit_rw := fresh "temp_wit_rw" in
-  tryif (match zTp with
-  | True => idtac
-  | _ => fail
-  end) then fail else idtac;
-  match goal with
-  | [wit: zTp |- _] => 
-    assert (forall z', z' = wit) as temp_wit_rw by (intros; auto with pi_db);
-    rewrite -> temp_wit_rw in *
-  | |- _ =>
-    let wit := fresh "wit_" in
-    set (z) as wit in *;
-    assert (forall z', z' = wit) as temp_wit_rw by (intros; auto with pi_db);
-    repeat progress rewrite -> temp_wit_rw in *;
-    try make_opaque wit;
-    idtac "Created new witness " wit " for " zTp
-  end; clear temp_wit_rw.
 
 Ltac cleanup_subterms tm :=
   match tm with
@@ -547,7 +566,7 @@ Ltac axProjTm exp :=
       progress autorewrite with rwH in *
     | _ => 
       (* idtac "Calling axiomatize_term Res as " tmv tmp " on "; print_res Res; *)
-      tryif (axiomatize_term Res as tmv tmp) then idtac else idtac "axiomatize_term failed on expression " exp;
+      tryif (axiomatize_term Res as tmv tmp) then idtac else idtac "axiomatize_term failed on subexpression " res " of expression " exp;
       try cleanup_subterms res;
       let tmpTp := type of tmp in
       tryif (applyRwLem tmp) then 
@@ -600,11 +619,12 @@ Ltac assIhAppl ih p Res :=
 Ltac axProjIhAppl exp :=
   let Res := fresh "Res" in
   let ih := fresh "ih" in
-  let ih_def := fresh "ih_def" in
+  let ihApplRefl := fresh "ihApplRefl" in
   findAppProj exp Res;
-  axiomatize_term Res as ih ih_def;
-  match type of ih_def with
-  | ⌊ ?ihApp -⌋ = ih => 
+  (*axiomatize_term Res as ih ihApplRefl;*)
+  pose proof (eq_refl ⌊ Res -⌋) as ihApplRefl; unfold Res in ihApplRefl;
+  match type of ihApplRefl with
+  | ⌊ ?ihApp -⌋ = _ => clear ihApplRefl;
     let ihAppD := fresh "ihAppD" in
     destrApp ihApp ihAppD;
     let ihAppRefl := fresh "ihAppRefl" in
@@ -715,7 +735,7 @@ Ltac simplify_hyp :=
     | [h: True |- _ ] => first [clear h | replace h with I in * by (auto with pi_db); clear h]
     | [h: ?tm = ?tm |- _ ] => clear h; idtac "Removed trivial hypothesis" h
     | [h1: ?f_rel_ap ?w |- _] => match goal with
-      | [h2:f_rel_ap ?v |- _] => first [isVar v | isVar w]; tryif (eq_fail h1 h2) then fail else idtac;
+      | [h2:f_rel_ap ?v |- _] => first [isVar v | isVar w]; neq_fail h1 h2;
         let temp := fresh "H" in
         assert (v = w) as temp by (unshelve eauto with f_rel_funct_db); 
         (* rewrite variable to term, or keep both around *)
@@ -724,12 +744,12 @@ Ltac simplify_hyp :=
         | isVar w; rewriteRLAll temp; replace h1 with h2 in * by (auto with pi_db); clear h1
         | rewriteAll temp; try clear h2
         ]; idtac "Unified axiomatized variables" v "and" w ". "
-      | [h2:f_rel_ap w |- _] => tryif (eq_fail h1 h2) then fail else idtac;
+      | [h2:f_rel_ap w |- _] => neq_fail h1 h2;
         first [
           replace h2 with h1 in * by (auto with pi_db f_rel_funct_db); clear h2; idtac "Removed redundant hypothesis" h2
           | replace h1 with h2 in * by (auto with pi_db f_rel_funct_db); clear h1; idtac "Removed redundant hypothesis" h1
         ]
-      | [h2:f_rel_ap ?v |- _] => tryif (eq_fail h1 h2) then fail else idtac;
+      | [h2:f_rel_ap ?v |- _] => neq_fail h1 h2;
         first [isConstrAppl v; isConstrAppl w | 
           let temp := fresh "temp" in
           assert (v <> w) as temp by (intros; discriminate);
@@ -740,16 +760,14 @@ Ltac simplify_hyp :=
         try solve [discriminate H]; try solve [now injection H]
     end
     | [g: ?rel ?s ?t ?u |- _] => isRelAppl rel; match goal with
-      | [h: ?rel ?s' ?t' ?v |- u = ?v] => 
-        first [concat_either (non_branching_inversion g) (non_branching_inversion h) |
-          assert (rel s' t' u) by (unshelve econstructor; try (quick_simpl; reflexivity); try unshelve eassumption; quicksolve) | 
-          assert (rel s t v) by (unshelve econstructor; try (quick_simpl; reflexivity); try unshelve eassumption; quicksolve)
-        ]; repeat_or_fail simplify_hyp;
+      | [h: ?rel ?s' ?t' ?v |- u = ?v] => tryif eq_fail u v then reflexivity else 
+        concat_either (non_branching_inversion g) (non_branching_inversion h); 
+        repeat_or_fail simplify_hyp;
         idtac "Trying to unify variables axiomatized in hypotheses " g h " to solve goal asserting their equality. "; reflexivity
       end
     | [h1: ?frel ?uargs ?v |- _] => isVar v;
       match goal with
-        | [h2: frel uargs ?w |- _] => tryif eq_fail v w then fail else idtac;
+        | [h2: frel uargs ?w |- _] => neq_fail v w;
           match goal with
           | [funct: forall (uargs_ : UArgList ?uargTps) (u u' : ?resTp),
             frel uargs_ u -> frel uargs_ u' -> u = u' |- _] =>
@@ -824,7 +842,7 @@ Ltac specialize_hyp h :=
       specialize (h (ltac:(constructor)))
     | _ /\ ?T => destruct h as [? h]; try specialize_hyp h
     | forall (w:?T), (?f_rel_ap w) -> _ => 
-      assert_fails (eq_fail T Prop);
+      neq_fail T Prop;
       (* idtac "found hypothesis to potentially specialize " h " with variable " w " of type " T; *)
       tryif (isRelAppl f_rel_ap) then (
         match goal with
@@ -1165,20 +1183,26 @@ Tactic Notation "recreate_refined_term" constr(relApp) ident(fAppl_res) :=
   try clear f_ts.
 
 Tactic Notation "recreate_var" constr(relApp) ident(vRes) := 
-  let fAppl_res := fresh "fAppl_res" in
-  recreate_refined_term relApp fAppl_res;
-  (* simpl_proj; *) simpl in fAppl_res;
-  
-  let Res := fresh "fAppl_Res" in
-  let v := fresh "fAppl_v" in
-  let v_p := fresh "fAppl_p" in
-  pose (⌊ fAppl_res -⌋) as Res; 
-  axiomatize_term fAppl_res as v v_p; subst Res; 
-  try rewrite v_p in *; 
-  let pTp := type of v_p in
-  tryif (applyRwLem v_p) then idtac else (idtac (* "Failed to rewrite " v_p ": " pTp " from an equality into the application of the graph relation. " *); fail);
-  simpl_proj; 
-  pose v as vRes; try clear fAppl_res.
+  match relApp with
+  | _ ?v => isVar v; match goal with
+    | [def: ⌊ ?tm -⌋ = v |- _] => pose tm as vRes
+    end
+  | _ =>
+    let fAppl_res := fresh "fAppl_res" in
+    recreate_refined_term relApp fAppl_res;
+    (* simpl_proj; *) simpl in fAppl_res;
+    
+    let Res := fresh "fAppl_Res" in
+    let v := fresh "fAppl_v" in
+    let v_p := fresh "fAppl_p" in
+    pose (⌊ fAppl_res -⌋) as Res; 
+    axiomatize_term fAppl_res as v v_p; subst Res; 
+    try rewrite v_p in *; 
+    let pTp := type of v_p in
+    tryif (applyRwLem v_p) then idtac else (idtac (* "Failed to rewrite " v_p ": " pTp " from an equality into the application of the graph relation. " *); fail);
+    simpl_proj; 
+    pose v as vRes; try clear fAppl_res
+  end.
 
 (* create variables to instantiate hypothesis *)
 Ltac instantiate_hyp :=
@@ -1360,7 +1384,7 @@ Ltac saturate_axiom relApp w :=
   tryif (
     match goal with
     | [k: ?tp |- _] => 
-      eq_fail tp witTp; assert_fails (eq_fail v_wit k);
+      eq_fail tp witTp; neq_fail v_wit k;
       idtac "A witness for variable " w " of type " witTp " is already present in the context: " k;
       clear v_wit;
       idtac
@@ -1575,16 +1599,16 @@ Tactic Notation "retCast'" open_constr(tm) :=
       | [ |- _] => idtac "found a Prop-kinded term to retCast, so running: "; idtac "unshelve epose proof " tm " as " H
       end
     (* the hint is a refinement of unit, typically a theorem call *)
-    | _ => assert_fails (eq_fail tmKind Prop); match tmTp with
+    | _ => neq_fail tmKind Prop; match tmTp with
       | {_:Unit | _} => unshelve epose proof tm as H; simpl_proj; try (timeout 20 oracle); destruct H as [_ H]
       end
-    | {v:?a | ?p} => assert_fails (eq_fail tmKind Prop); match tmTp with
+    | {v:?a | ?p} => neq_fail tmKind Prop; match tmTp with
       (* we need to add an injection cast *)
       | a => unshelve refine (exist _ tm _)
       (* we need to add an subsumption cast *)
       | {v:a | ?q} => unshelve refine (subsumptionCast _ _ tm _)
       end
-    | forall (x:?rt), ?cod => assert_fails (eq_fail tmKind Prop); match tmTp with
+    | forall (x:?rt), ?cod => neq_fail tmKind Prop; match tmTp with
       | forall (y:?rt'), ?cod' => 
         let subWitDom := fresh "subWitDom" in
         let subWitCod := fresh "subWitCod" in
@@ -1594,12 +1618,12 @@ Tactic Notation "retCast'" open_constr(tm) :=
         unshelve assert (sub tmTp g) as subWitFunc by (unshelve eapply sub_fun; oracle);
         unshelve refine (subCast _ _ tm subWitFunc)
       end
-    | ?a => assert_fails (eq_fail tmKind Prop); match tmTp with
+    | ?a => neq_fail tmKind Prop; match tmTp with
       (* we need to project *)
       | {v:a | ?p} => unshelve refine (⌊ tm -⌋)
       end
     (* fallback case, we cannot cast tm to the type of the goal *)
-    | _ => assert_fails (eq_fail tmKind Prop); match goal with
+    | _ => neq_fail tmKind Prop; match goal with
       (* we already have tm as a hypothesis, so we ignore this retCast completely *)
       | [ h:_ |- _] => eq_fail h tm; idtac "The term to retCast is already a hypothesis, so we won't assert it again."
       (* we don't have tm as hypothesis yet, so we assert it *)
@@ -1619,7 +1643,7 @@ Ltac rel_functionhood_body :=
   match goal with
   | [H: ?relApp ?x |- _] => isVar x; (* found hypothesis H *)
     match goal with
-    | [K: ?relApp' ?x' |- _] => isVar x'; assert_fails (eq_fail H K); (* found hypothesis K *)
+    | [K: ?relApp' ?x' |- _] => isVar x'; neq_fail H K; (* found hypothesis K *)
       strong_inversion H; strong_inversion K; try quicksolve
     end
   end; 
@@ -1801,6 +1825,23 @@ Ltac lia_preprocessor_step := match goal with
     match type of witEq with
     | ?witDef = _ => clear witEq; idtac "Specializing " h " with complicated proof term " (* witDef *); 
       tryif specialize (h witDef) then idtac else (specialize (h wit))
+    end
+  | [g: ?rel ?s ?t ?u |- _] => isRelAppl rel; match goal with
+    | [h: ?rel ?s' ?t' ?v |- _] => neq_fail u v;
+      repeat simplify_hyp;
+      first [
+        assert (rel s' t' u) by (strong_inversion g; now rconstructor); clear g |
+        assert (rel s t v) by (strong_inversion h; now rconstructor); clear h ]; 
+        match goal with
+        | [h1: ?f_rel_ap u |- _] => match goal with
+          | [h2:f_rel_ap v |- _] => isVar u; isVar v;
+            let temp := fresh "H" in
+            assert (u = v) as temp by (unshelve eauto with f_rel_funct_db); 
+            revert temp; first [intros -> | intros <-];
+            repeat simplify_hyp
+          end
+        end;
+        idtac "Unified variables " u " and " v " using inversion to prove their equality."
     end
   end.
 

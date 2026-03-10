@@ -89,8 +89,10 @@ Tactic Notation "last_res" hyp(Res) ident(Res2) :=
   end; clear temp.
 
 Ltac eq_fail s t :=
-  let temp := fresh "temp" in
-  tryif (assert (s = t) as temp by reflexivity; clear temp) then idtac else fail.
+  tryif (assert (s = t) as _ by reflexivity) then idtac else fail.
+
+Ltac neq_fail s t :=
+  tryif (assert (s = t) as _ by reflexivity) then fail else idtac.
 
 Ltac _any P plist :=
   match plist with

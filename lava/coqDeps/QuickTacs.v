@@ -491,6 +491,10 @@ Ltac final_shape_based := match goal with
       | [wf2: ?tp |- _] => eq_fail tp termWfTp; eq_fail wf2 termWfTp
       end) then fail else idtac
     end
+  | [h: ?s == ?t |- _] => solve [exfalso; rewrite <- eqb_eq in h; 
+    let ineq := fresh "ineq" in
+    assert (s <> t) as ineq by fast_done;
+    exact (ineq h)]
   (*
   (* here we have to synthesize a refined term, there is no way we can generically manage that (let alone choose the right term), 
   however this should only ever show up in the translation in branches that are anyways impossible, so we might as well use exfalso *)
