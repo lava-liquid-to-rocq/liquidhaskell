@@ -259,7 +259,7 @@ trReft xs tm0 = case tm0 of
     let (hd, args) = apps tm0
         argsT = map (trReft xs) args
      in case hd of
-          LH.Var f n Recursive -> undefined
+          LH.Var f n (Recursive σ) -> undefined
           LH.Var f n Local | n > 0 -> Coq.App (packGetF (Coq.Var f)) argsT
           _ -> Coq.App (trReft xs hd) argsT
 

@@ -58,14 +58,15 @@ data Decl
 --
 -- > e ::= r
 -- >     | let x (:: R)? := e in e
--- >     | case r of (C x* |-> (e | unreachable))*
+-- >     | case r of (C [(x,bool)]* |-> (e | unreachable))*
 data Expr
   = -- | Refinement used as expression
     Reft Reft
   | -- | Let with type annotation. binds the dependent variables in R
     --   for lets in the code, we can always get an annotation, but we also create some for ANF
     Let Id (Maybe RefType) Expr Expr
-  | -- | Pattern matching (includes conditionals), with Maybe for optional branches
+  | -- | Pattern matching (includes conditionals), with Maybe for optional branches.
+    --   The boolean in the list of parameters is true if the parameter is inductive
     Case Reft [((Id, [Id]), Maybe Expr)]
   deriving (Data, Eq)
 
@@ -99,7 +100,7 @@ data Reft
 -- | Localization of the variables
 --
 -- loc ::= L | G | Y
-data Localization = Local | Global | Recursive deriving (Data, Eq)
+data Localization = Local | Global | Recursive BranchPattern deriving (Data, Eq)
 
 -- | Builtin binary operators (@op@)
 data Bop
@@ -123,6 +124,12 @@ data Bop
 --
 -- > pop ::= === | =<= | =>=
 data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq)
+
+-- | Branch pattern: map from variables to simple terms that reflects the
+-- destruction of the arguments in the current branch.
+-- This is an additional parameter of many of the typing functions, and is
+-- necessary for the translation of case and recursive applications with tactics
+type BranchPattern = [(Id, Reft)]
 
 -- Builtin type and data constructors
 
@@ -209,9 +216,9 @@ removeFOArgProjs (RefType x a r) = RefType x a (aux r)
 -- To use Sets with Localization inside
 instance Ord Localization where
   compare l1 l2 | l1 == l2 = EQ
-  compare Local (Global; Recursive) = LT
-  compare Global Recursive = LT
-  compare Recursive (Global; Local) = GT
+  compare Local (Global; Recursive _) = LT
+  compare Global (Recursive _) = LT
+  compare (Recursive _) (Global; Local) = GT
   compare Global Local = GT
 
 class HasVars a where

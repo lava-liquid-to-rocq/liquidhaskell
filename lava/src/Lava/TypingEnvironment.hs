@@ -102,8 +102,10 @@ insertLocalVar γ (x, tp) = insertVar γ (x, Local, tp)
 insertGlobalVar :: TypEnv -> (Id, RefType) -> Either TypeError TypEnv
 insertGlobalVar γ (x, tp) = insertVar γ (x, Global, tp)
 
+-- | Inserts recursive variable in the context. We use an empty list as a
+-- placeholder for the destruction of the arguments
 insertRecVar :: TypEnv -> (Id, RefType) -> Either TypeError TypEnv
-insertRecVar γ (x, tp) = insertVar γ (x, Recursive, tp)
+insertRecVar γ (x, tp) = insertVar γ (x, Recursive [], tp)
 
 {- insertHOArgs :: ArrType -> TypEnv -> Either TypeError TypEnv
 insertHOArgs (ArrType argTps _) γ = foldM (flip insert) γ hoArgTps
