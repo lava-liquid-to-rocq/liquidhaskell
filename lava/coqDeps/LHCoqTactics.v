@@ -175,7 +175,6 @@ Ltac isExistProj exp :=
 Ltac isAppProj exp :=
   match exp with
   | ⌊ _ _ -⌋ => idtac (* "found matching subterm " exp *)
-  | ⌊ _ _ _⌋ => idtac
   | ⌊ ?const -⌋ => has_rel const; idtac
   | _ => (* idtac "subterm not matching " exp; *) fail
   end.
@@ -189,7 +188,6 @@ Tactic Notation "undoProj" ident(Res) :=
   let temp := fresh "temp" in
   assRefl Res as temp;
   match type of temp with
-  | ⌊ ?tm _⌋ = _ => clear temp; set tm as Res in *
   | ` ?tm = _ => clear temp; set tm as Res in *
   | ⌊ ?tm -⌋ = _ => clear temp; 
     (* idtac "found projection of " tm; *)
@@ -239,7 +237,6 @@ Ltac isHypApp fApp :=
 Ltac ihAppProj exp :=
   match exp with
   | ⌊ ?fApp ?p -⌋ => propKinded p; isHypApp fApp
-  | ⌊ ?fApp ?p _⌋ => propKinded p; isHypApp fApp
   | _ => fail
   end.
 
@@ -379,31 +376,11 @@ Ltac cleanup_subterms tm :=
 Ltac isHOAppProj exp :=
   match exp with
   | ⌊ ?f ?argList -⌋ => match goal with
-    | [f_frel : (forall (args : ArgList ?argTps) (v : ?resTp), ⌊ ?f args _⌋ = v <->
-      ?frel (prArgList args ?uargTps _) v) |- _] =>
-    idtac
-    end
-  | ` (?f ?argList) => match goal with
-    | [f_frel : (forall (args : ArgList ?argTps) (v : ?resTp), ⌊ ?f args _⌋ = v <->
-      ?frel (prArgList args ?uargTps _) v) |- _] =>
-    idtac
-    end
-  | ⌊ ?f ?argList _⌋ => match goal with
-    | [f_frel : (forall (args : ArgList ?argTps) (v : ?resTp), ⌊ ?f args _⌋ = v <->
-      ?frel (prArgList args ?uargTps _) v) |- _] =>
-    idtac
-    end
-  | ⌊ ?f ?argList -⌋ => match goal with
     | [f_frel : (forall (args : ArgList ?argTps) (v : ?resTp), ⌊ ?f args -⌋ = v <->
       ?frel (prArgList args ?uargTps _) v) |- _] =>
     idtac
     end
   | ` (?f ?argList) => match goal with
-    | [f_frel : (forall (args : ArgList ?argTps) (v : ?resTp), ⌊ ?f args -⌋ = v <->
-      ?frel (prArgList args ?uargTps _) v) |- _] =>
-    idtac
-    end
-  | ⌊ ?f ?argList _⌋ => match goal with
     | [f_frel : (forall (args : ArgList ?argTps) (v : ?resTp), ⌊ ?f args -⌋ = v <->
       ?frel (prArgList args ?uargTps _) v) |- _] =>
     idtac
@@ -418,9 +395,6 @@ Tactic Notation "undoHOAppProj" ident(ProjRes) ident(Res) :=
   match type of temp with
   | ?projRes = _ => 
     match type of temp with
-    | ⌊ ?tm _⌋ = _ => clear temp; 
-      set projRes as ProjRes in *;
-      set tm as Res in *
     | ⌊ ?tm -⌋ = _ => clear temp; 
       set projRes as ProjRes in *;
       (* idtac "found projection of " tm; *)
@@ -449,37 +423,6 @@ Ltac axHOAppProjTm exp :=
   match type of ResRefl with
   (* We have a projection of a pack application *)
   | ⌊ ?f ?argList -⌋ = _ => clear ResRefl; match goal with
-    | [f_frel : (forall (args : ArgList ?argTps) (v : ?resTp), ⌊ f args _⌋ = v <->
-      ?frel (prArgList args ?uargTps _) v) |- _] =>
-      let w := fresh "w" in
-      let tm := fresh "tm" in
-      let v_def := fresh "res_def" in
-      let v_df := fresh "res_def1" in
-      let v_wit := fresh "res_wit" in
-      let temp := fresh "res_ref" in
-      assert (⌊ Res -⌋ = ProjRes) as v_def by reflexivity;
-      let witTp := type of (⌈ Res ⌉) in
-      match goal with
-      | [h: ?htp |- _] => eq_fail witTp htp; idtac "A witness for the refined term " tm " is already present as hypothesis " h " not asserting another. "
-      | _ => pose proof (⌈ Res ⌉) as v_wit
-      end;
-      pose (exist _ ProjRes v_def) as temp;
-      destruct temp as [w v_df];
-      rewrite v_def in v_df; revert v_df; intros <-;
-      let def_rw := fresh "def_rw" in
-      pose proof v_def as def_rw; try unfold tm in v_def;
-      try match goal with
-      | [h: ?htp |- _] => eq_fail witTp htp; (*idtac h;*) rewrite def_rw in h
-      end; try rewrite def_rw in v_wit;
-      try rewriteAll def_rw;
-      let rw_lem := fresh "rw_lem" in
-      pose proof (f_frel argList ProjRes) as rw_lem;
-      replace (f argList) with Res in rw_lem by reflexivity;
-      apply pr1 in rw_lem;
-      apply rw_lem in def_rw; clear rw_lem;
-      simpl in def_rw;
-      pose proof (exist _ ProjRes eq_refl) as [? ->];
-      clear v_def; first [clear Res | subst Res]
     | [f_frel : (forall (args : ArgList ?argTps) (v : ?resTp), ⌊ f args -⌋ = v <->
       ?frel (prArgList args ?uargTps _) v) |- _] =>
       let w := fresh "w" in
@@ -530,28 +473,15 @@ Ltac axProjTm exp :=
   (* Some obvious simplifications *)
   | exist ?pred ?res ?z = _ => clear ResRefl; 
     let tempExist := fresh "tempExist" in
-    concat_either 
-    (set (⌊ exist pred res z -⌋) as tempExist in *;
+    set (⌊ exist pred res z -⌋) as tempExist in *;
     cbn in tempExist;
-    subst tempExist)
-    (set (⌊ exist pred res z _⌋) as tempExist in *;
-    cbn in tempExist;
-    subst tempExist)
+    subst tempExist
   | @subsumptionCast ?A ?G ?H ?res ?p = _ => clear ResRefl; 
     let tempPr := fresh "tempProjSubCast" in
-    concat_either 
-    (set (⌊ @subsumptionCast A G H res p -⌋) as tempPr in *;
+    set (⌊ @subsumptionCast A G H res p -⌋) as tempPr in *;
     simpl in tempPr;
-    subst tempPr)
-    (set (⌊ @subsumptionCast A G H res p _⌋) as tempPr in *;
-    simpl in tempPr;
-    subst tempPr)
+    subst tempPr
   (* We have a projection of a function application with the function being a ho argument *)
-  | ⌊ ?f ?argList -⌋ = _ => match goal with
-    | [f_frel : (forall (args : ArgList ?argTps) (v : ?resTp), ⌊ f args _⌋ = v <->
-      ?frel (prArgList args ?uargTps _) v) |- _] =>
-      idtac "call axHOAPPProjTm to fix things up!"
-    end
   | ⌊ ?f ?argList -⌋ = _ => match goal with
     | [f_frel : (forall (args : ArgList ?argTps) (v : ?resTp), ⌊ f args -⌋ = v <->
       ?frel (prArgList args ?uargTps _) v) |- _] =>
@@ -1212,31 +1142,6 @@ Ltac instantiate_hyp :=
   | [ih: forall (z: Z), subZ_rel ?s ?t z -> _ |- _] => simpl_specialize ih (s - t)
   | [h: forall (w:?T), ?frel ?uargs w -> ?rtp |- _] => 
     match goal with
-    | [f_frel : (forall (args : ArgList ?argTps) (v: T), ⌊ ?f args _⌋ = v <->
-    frel (prArgList args ?uargTps _) v) |- _] => 
-      let z := fresh "z" in
-      refine (let z: projectsArgListT argTps uargTps := ltac:(quicksolve) in _);
-      let args := fresh "args" in
-      let args_def := fresh "args_def" in
-      unshelve refine (let args : {args:ArgList argTps | prArgList args uargTps z = uargs} := 
-        ltac:(subst z; synthesize_args) in _); simpl in args; subst z;
-      destruct args as [args args_def];
-      let vRes := fresh "vRes" in
-      pose (exist _ (⌊ f args _⌋) eq_refl) as vRes;
-      let res_def := fresh "res_def" in
-      destruct vRes as [vRes res_def];
-      rewrite (f_frel args) in res_def;
-      match type of res_def with
-      | frel ?tm vRes => 
-        match type of args_def with
-        | ?tm2 = _ => 
-          replace tm with tm2 in res_def by solve_pi_unif_subgoal
-        end
-      end;
-      try rewrite args_def in res_def; try clear args_def args
-    end
-  | [h: forall (w:?T), ?frel ?uargs w -> ?rtp |- _] => 
-    match goal with
     | [f_frel : (forall (args : ArgList ?argTps) (v: T), ⌊ ?f args -⌋ = v <->
     frel (prArgList args ?uargTps _) v) |- _] => 
       let z := fresh "z" in
@@ -1247,7 +1152,7 @@ Ltac instantiate_hyp :=
         ltac:(subst z; synthesize_args) in _); simpl in args; subst z;
       destruct args as [args args_def];
       let vRes := fresh "vRes" in
-      pose (exist _ (⌊ f args _⌋) eq_refl) as vRes;
+      pose (exist _ (⌊ f args -⌋) eq_refl) as vRes;
       let res_def := fresh "res_def" in
       destruct vRes as [vRes res_def];
       rewrite (f_frel args) in res_def;
@@ -1341,10 +1246,6 @@ Ltac instantiate_goal :=
       tryif (isVar res) then try subst res else idtac
     | |- exists (v:?tp), ?ConstrApp ?res = ?ConstrApp v /\ ?q =>
       exists (res); split; [reflexivity|]
-    | [f_frel : (forall (args : ArgList ?argTps) (v : ?tp), ⌊ ?f args _⌋ = v <->
-      ?frel (prArgList args ?uargTps _) v) |- exists (w:?tp), ?frel ?uargs w /\ ?p] => 
-       refine (instantiate_frel_res (fun w => p) f_frel _ _);
-       [try synthesize_args|intros ? ?]
     | [f_frel : (forall (args : ArgList ?argTps) (v : ?tp), ⌊ ?f args -⌋ = v <->
       ?frel (prArgList args ?uargTps _) v) |- exists (w:?tp), ?frel ?uargs w /\ ?p] => 
        refine (instantiate_frel_res (fun w => p) f_frel _ _);
