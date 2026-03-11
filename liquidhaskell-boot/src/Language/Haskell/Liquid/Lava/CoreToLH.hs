@@ -58,6 +58,89 @@ data ParsedEqn
   | Qmark ILH.LHTerm ParsedEqn
   deriving (Eq, Show)
 
+-- | Classification of application head symbols.
+data HeadSymbol
+  = HNot | HLambda | HEqChain | HCast | HQmark | HPatError
+  | HConst LHSimpleTerm | HUnbox | HBinOp ILH.Bop | HGeneric Id
+
+-- | Classify an application head name into a 'HeadSymbol'.
+classifyHead :: Id -> HeadSymbol
+classifyHead "not"      = HNot
+classifyHead "lambda"   = HLambda
+classifyHead "==="      = HEqChain
+classifyHead "***"      = HCast
+classifyHead "?"        = HQmark
+classifyHead "patError" = HPatError
+classifyHead n
+  | n `elem` ["()", "trivial", "True", "False"] = HConst (transName n)
+  | n `elem` ["I#", "I"]                        = HUnbox
+  | Just op <- M.lookup n SLH.bops              = HBinOp op
+  | otherwise                                   = HGeneric n
+
+-- | Does the term contain equational reasoning combinators?
+hasEqn :: LHTerm -> Bool
+hasEqn ILH.SEqn {}     = True
+hasEqn (ILH.QMark s t) = hasEqn s || hasEqn t
+hasEqn _               = False
+
+unBasic :: LHTerm -> Maybe LHSimpleTerm
+unBasic (ILH.BasicTerm tm) = Just tm
+unBasic _                  = Nothing
+
+-- | The head of a flattened Core application.
+data AppHead
+  = VarHead HeadSymbol  -- ^ head is a classified variable
+  | ExprHead LHTerm     -- ^ head is a non-variable expression (already translated)
+
+-- | Flatten and translate an application, returning a structured head.
+--
+-- > flattenCoreApp((x e_1) … e_n) = (NamedHead x, [trans(e_1), …, trans(e_n)])
+-- > flattenCoreApp((e e_1) … e_n) = (ExprHead (trans e), [trans(e_1), …, trans(e_n)])
+flattenCoreApp :: CoreBinder b => Id -> AnnInfo SpecType -> Id -> Expr b -> (AppHead, [LHTerm])
+flattenCoreApp modId infTypes f (App g x) =
+  second (++ [trans modId infTypes f x]) $ flattenCoreApp modId infTypes f g
+flattenCoreApp modId _        _ (Var name) = (VarHead (classifyHead (stripLegalName modId $ show name)), [])
+flattenCoreApp modId infTypes f t          = (ExprHead (trans modId infTypes f t), [])
+
+-- | Translate a flattened application to ILH.
+transFlattenedApp :: AppHead -> [LHTerm] -> LHTerm
+transFlattenedApp (ExprHead g) args = case traverse unBasic (g : args) of
+  Just (h : hargs) -> ILH.BasicTerm $ ILH.App h hargs
+  _                -> unexpected "expression head" (g : args)
+transFlattenedApp (VarHead HNot)          [ILH.BasicTerm tm]                  = ILH.BasicTerm $ ILH.Neg tm
+transFlattenedApp (VarHead HLambda)       [ILH.BasicTerm (ILH.Var x), e]      = ILH.Lambda x e
+transFlattenedApp (VarHead HEqChain)      [_, fstTerm, ILH.BasicTerm lstTerm] = transEqns (parseLHTerm fstTerm) lstTerm
+transFlattenedApp (VarHead HCast) [_, eqChain, qed]
+  | qed == ILH.BasicTerm (ILH.Var "QED") = case parseLHTerm eqChain of
+      Eqn firstTerm lastTerm -> transEqns firstTerm lastTerm
+      _                      -> eqChain
+transFlattenedApp (VarHead HQmark)        (_ : _ : firstArg : secondArg : _)
+  | hasEqn firstArg || hasEqn secondArg =
+      mkQmark (prevEqns firstArg ++ [ILH.QMark secondArg (collectTm firstArg)])
+  | otherwise =
+      mkQmark (prevEqns firstArg ++ [ILH.QMark firstArg (collectTm secondArg)])
+transFlattenedApp (VarHead HPatError)     _                                    = ILH.Undefined
+transFlattenedApp (VarHead (HConst tm))   _                                    = ILH.BasicTerm tm
+transFlattenedApp (VarHead HUnbox)        [singleArg]                          = singleArg
+transFlattenedApp (VarHead (HBinOp op))   (_ : _ : a : b : _)                  =
+  let (fstBnd, fstArg) = evaluate a
+      (sndBnd, sndArg) = evaluate b
+      binders = foldr (.) id (fstBnd ++ sndBnd)
+  in  binders . ILH.BasicTerm $ ILH.Bop op fstArg sndArg
+transFlattenedApp (VarHead (HGeneric n))  args                                 =
+  let (letBinders, sArgs) = first (foldr (.) id . concat) . unzip $ map evaluate args
+  in  letBinders . ILH.BasicTerm $ ILH.App (ILH.Var n) sArgs
+transFlattenedApp (VarHead HNot)          args                                 = unexpected "not" args
+transFlattenedApp (VarHead HLambda)       args                                 = unexpected "lambda" args
+transFlattenedApp (VarHead HEqChain)      args                                 = unexpected "===" args
+transFlattenedApp (VarHead HCast)         args                                 = unexpected "***" args
+transFlattenedApp (VarHead HQmark)        args                                 = unexpected "?" args
+transFlattenedApp (VarHead HUnbox)        args                                 = unexpected "unbox" args
+transFlattenedApp (VarHead (HBinOp _))    args                                 = unexpected "binop" args
+
+unexpected :: Id -> [LHTerm] -> a
+unexpected n as = error $ "transFlattenedApp: unexpected args for " ++ show n ++ ": " ++ show as
+
 transName :: Id -> LHSimpleTerm
 transName "()"      = unitTm
 transName "trivial" = unitTm
@@ -65,10 +148,6 @@ transName "True"    = ttTm
 transName "False"   = ffTm
 transName "?"       = error "Impossible: '?'"
 transName n         = ILH.Var n
-
-unBasic :: LHTerm -> Maybe LHSimpleTerm
-unBasic (ILH.BasicTerm tm) = Just tm
-unBasic _                  = Nothing
 
 -- | Translate Haskell expressions.
 -- The first argument is the name of the top-level binder we are translating.
@@ -94,94 +173,49 @@ unBasic _                  = Nothing
 -- > trans(let [x1 = e1, ..., xn=en] in e) = let x1 = trans(e1) in trans(e) -- the other binders are ignored
 -- > trans(λx.e | cast | coercion) = unsupported
 trans :: CoreBinder b => Id -> AnnInfo SpecType -> Id -> Expr b -> LHTerm
-trans modId _        _ (Var n) = ILH.BasicTerm $ transName (stripLegalName modId $ show n)
-trans modId infTypes f app@App {} =
-  case name of
-    "not" -> case args of
-      [ILH.BasicTerm tm] -> ILH.BasicTerm $ ILH.Neg tm
-      _ -> unexpected "not" args
+trans modId _        _ (Var n)           = ILH.BasicTerm $ transName (stripLegalName modId $ show n)
+trans modId infTypes f app@App {}        = transApp modId infTypes f app
+trans modId infTypes f (Lam x e)         = ILH.Lambda (stripLegalName modId $ show x) $ trans modId infTypes f e
+trans modId infTypes f (Case e _ _ alts) = transCase modId infTypes f e alts
+trans _     _        _ c@Cast {}         = error $ "cast expression not supported: " ++ toStr c
+trans modId infTypes f (Tick _ e)        = trans modId infTypes f e
+trans _     _        _ (Type t)          = transType t
+trans _     _        _ c@Coercion {}     = error $ "coercion expression not supported: " ++ toStr c
+trans modId infTypes f (Let bind e)      = transLet modId infTypes f bind e
+trans _     _        _ (Lit lit)         = ILH.BasicTerm $ transLit lit
 
-    "_ flattened" -> case traverse unBasic args of
-      Just (g : gargs) -> ILH.BasicTerm $ ILH.App g gargs
-      _ -> unexpected "_ flattened" args
+-- | Translate type arguments.
+transType :: Type -> LHTerm
+transType (GHC.Core.TyCo.Rep.TyConApp tyCon []) = ILH.BasicTerm (ILH.Var $ show tyCon)
+transType t = error $ "Polymorphism not supported: " ++ toStr t
 
-    "lambda" -> case args of
-      [ILH.BasicTerm (ILH.Var x), e] -> ILH.Lambda x e
-      _ -> unexpected "lambda" args
-
-    "===" -> case args of
-      [_, fstTerm, ILH.BasicTerm lstTerm] ->
-        {- trace ("=== " ++ unwords (map showP args)) $ -}
-        transEqns (parseLHTerm fstTerm) lstTerm
-      _ -> unexpected "===" args
-
-    "***" -> case args of
-      [_, eqChain, qed]
-        | qed == ILH.BasicTerm (ILH.Var "QED") -> case parseLHTerm eqChain of
-            Eqn firstTerm lastTerm ->
-              {- trace ("***" ++ unwords (map showP args)) $ -}
-              transEqns firstTerm lastTerm
-            _ -> eqChain
-      _ -> unexpected "***" args
-
-    "?" -> case args of
-      (_ : _ : firstArg : secondArg : _)
-        | hasEqn firstArg || hasEqn secondArg ->
-          {- trace ("_?_" ++ unwords (map showP args)) $ -}
-          mkQmark (prevEqns firstArg ++ [ILH.QMark secondArg (collectTm firstArg)])
-        | otherwise ->
-          {- trace ("?" ++ unwords (map showP args)) $ -}
-          mkQmark (prevEqns firstArg ++ [ILH.QMark firstArg (collectTm secondArg)])
-      _ -> unexpected "?" args
-
-    "patError" -> ILH.Undefined
-
-    _ | name `elem` ["()", "trivial", "True", "False"] -> ILH.BasicTerm $ transName name
-
-      | name `elem` ["I#", "I"] -> case args of
-          [singleArg] -> singleArg
-          _ -> unexpected name args
-
-      | Just op <- bop -> case args of
-          _ : _ : firstArg : secondArg : _ ->
-            let (fstBnd, fstArg) = evaluate firstArg
-                (sndBnd, sndArg) = evaluate secondArg
-                letBinders' = foldr (.) id (fstBnd ++ sndBnd)
-            in  letBinders' . ILH.BasicTerm $ ILH.Bop op fstArg sndArg
-          _ -> unexpected name args
-
-      | otherwise -> letBinders . ILH.BasicTerm $ ILH.App (ILH.Var name) sArgs
-          where
-            (letBinders, sArgs) = first (foldr (.) id . concat) . unzip $ map evaluate args
+-- | Translate applications by flattening them and translating the parsed application.
+transApp :: CoreBinder b => Id -> AnnInfo SpecType -> Id -> Expr b -> LHTerm
+transApp modId infTypes f app = transFlattenedApp appHead args
   where
-    (name, args) = flattenCoreApp modId infTypes f app
-    bop = M.lookup name SLH.bops
+    (appHead, args) = flattenCoreApp modId infTypes f app
 
-    unexpected :: Id -> [LHTerm] -> a
-    unexpected n as = error $ "trans: unexpected args for " ++ show n ++ ": " ++ show as
+collectTm :: LHTerm -> LHTerm
+collectTm (ILH.SEqn _ lstTm _) = ILH.BasicTerm lstTm
+collectTm (ILH.QMark t _)      = collectTm t
+collectTm tm                   = tm
 
-    collectTm (ILH.SEqn _ lstTm _) = ILH.BasicTerm lstTm
-    collectTm (ILH.QMark t _)      = collectTm t
-    collectTm tm                   = tm
+prevEqns :: LHTerm -> [LHTerm]
+prevEqns eq@ILH.SEqn {}  = [eq]
+prevEqns (ILH.QMark t _) = prevEqns t
+prevEqns _               = []
 
-    prevEqns eq@ILH.SEqn {}   = [eq]
-    prevEqns (ILH.QMark t _)  = prevEqns t
-    prevEqns _                = []
+evaluate :: LHTerm -> ([LHTerm -> LHTerm], LHSimpleTerm)
+evaluate (ILH.BasicTerm t) = ([], t)
+evaluate tm                = ([ILH.Let x Nothing tm], ILH.Var x)
+  where
+    x = "x_" ++ hashName tm
 
-    hasEqn (ILH.SEqn {})   = True
-    hasEqn (ILH.QMark s t) = hasEqn s || hasEqn t
-    hasEqn _               = False
-
-    evaluate (ILH.BasicTerm t) = ([], t)
-    evaluate tm                = ([ILH.Let x Nothing tm], ILH.Var x)
-      where
-        x = "x_" ++ hashName tm
-trans modId infTypes f (Lam x e) =
-    {-trace (unwords [show x, show $ trans f e]) $ -}
-    ILH.Lambda (stripLegalName modId $ show x) $ trans modId infTypes f e
-trans modId infTypes f (Case e _ _ []) = trans modId infTypes f e
+-- | Translate case expressions.
+transCase :: CoreBinder b => Id -> AnnInfo SpecType -> Id -> Expr b -> [Alt b] -> LHTerm
+transCase modId infTypes f e []   = trans modId infTypes f e
 -- NOTE: we could support match on simple terms
-trans modId infTypes f (Case e _ _ alts) = case eT of
+transCase modId infTypes f e alts = case eT of
     ILH.BasicTerm (ILH.Var x') -> mkCase f x' branches
     ILH.BasicTerm {} -> ILH.Let y Nothing eT (mkCase f y branches)
     _ -> error $ "unexpected case: case " ++ show eT ++ " of \n" ++ intercalate "\n" (map show branches)
@@ -189,39 +223,34 @@ trans modId infTypes f (Case e _ _ alts) = case eT of
     eT = trans modId infTypes f e
     y = "x_" ++ hashName eT
     branches = map (altToClause modId infTypes f) alts
-trans _     _        _ c@Cast {} = error $ "cast expression not supported: " ++ toStr c
-trans modId infTypes f (Tick _ e) = trans modId infTypes f e -- ignore ticks
-trans _     _        _ (Type (GHC.Core.TyCo.Rep.TyConApp tyCon [])) =
-    -- error $ "Expected term but found type " ++ show tyCon --ILH.BasicTerm (ILH.Var $ show tyCon) --
-    ILH.BasicTerm (ILH.Var $ show tyCon)
-trans _     _        _ (Type t) = error $ "Polymorphism not supported: " ++ toStr t
-trans _     _        _ c@Coercion {} = error $ "coercion expression not supported: " ++ toStr c
-trans modId infTypes f (Let bind e) =
-    let (x, e') = deconstructBind bind
-     in case e' of
-          Lit {} -> trans modId infTypes f e -- ignore let lit (part of patError)
-          _ ->
-            ILH.Let
-              (stripLegalName modId $ show x)
-              (Just $ SLH.transType "" (SLH.ConstrArgsCtx Nothing []) $ binderType infTypes x)
-              (trans modId infTypes f e')
-              (trans modId infTypes f e)
-trans _     _        _ (Lit lit) = ILH.BasicTerm $ transLit lit
+
+-- | Translate let bindings.
+transLet :: CoreBinder b => Id -> AnnInfo SpecType -> Id -> Bind b -> Expr b -> LHTerm
+transLet modId infTypes f bind e =
+    let (x, e') = deconstructBind bind in
+    case e' of
+      Lit {} -> trans modId infTypes f e -- ignore let lit (part of patError)
+      _ ->
+        ILH.Let
+          (stripLegalName modId $ show x)
+          (Just $ SLH.transType "" (SLH.ConstrArgsCtx Nothing []) $ binderType infTypes x)
+          (trans modId infTypes f e')
+          (trans modId infTypes f e)
 
 -- | Trivial translation of literals
 transLit :: Literal -> LHSimpleTerm
 transLit (LitNumber _ n) = ILH.IntLit n
-transLit (LitString s) = ILH.StringLit $ show s
-transLit (LitFloat x) = ILH.FloatLit $ fromRational x
-transLit (LitDouble x) = ILH.FloatLit $ fromRational x
-transLit other = error $ "Unsupported literal " ++ toStr other
+transLit (LitString s)   = ILH.StringLit $ show s
+transLit (LitFloat x)    = ILH.FloatLit $ fromRational x
+transLit (LitDouble x)   = ILH.FloatLit $ fromRational x
+transLit other           = error $ "Unsupported literal " ++ toStr other
 
 -- | Fall back to non-mutually recursive binds.
 -- NB: silently ignores mutually recursive groups.
 deconstructBind :: (NamedThing b) => Bind b -> (b, Expr b)
-deconstructBind (NonRec b e) = (b, e)
+deconstructBind (NonRec b e)       = (b, e)
 deconstructBind (Rec ((b, e) : _)) = (b, e)
-deconstructBind (Rec []) = error "Found empty list of mutually recursive binders while translating."
+deconstructBind (Rec [])           = error "Found empty list of mutually recursive binders while translating."
 
 -- | Retrieves the type inferred by Liquid Haskell for a variable
 binderType :: (Show b, NamedThing b) => AnnInfo SpecType -> b -> SpecType
@@ -250,16 +279,6 @@ altToClause modId infTypes f (Alt con bs e) =
 flattenFun :: CoreBinder b => Id -> AnnInfo SpecType -> Id -> Expr b -> ([Id], LHTerm)
 flattenFun modId infTypes f (Lam b e) = first ((stripLegalName modId . show) b :) $ flattenFun modId infTypes f e
 flattenFun modId infTypes f e         = ([], trans modId infTypes f e)
-
--- | Flatten and translate an application with a head variable
---
--- > flattenCoreApp((x e_1) … e_n) = (x, [trans(e_1), …, trans(e_n)])
-flattenCoreApp :: CoreBinder b => Id -> AnnInfo SpecType -> Id -> Expr b -> (Id, [LHTerm])
-flattenCoreApp modId infTypes f (App g x)  =
-  {- traceFuncRet ["flattenApp", show f, "..."] $ -}
-  second (++ [trans modId infTypes f x]) $ flattenCoreApp modId infTypes f g
-flattenCoreApp modId _        _ (Var name) = (stripLegalName modId $ show name, [])
-flattenCoreApp modId infTypes f t          = ("_ flattened", [trans modId infTypes f t]) -- error "cannot flatten expr."
 
 -- | combine lists of 'LHSimpleTerm's into a single 'LHTerm' using 'QMark', observe that 'mkQmark . map Hint' is a right-inverse of 'flattenQmarks'
 mkQmark :: [LHTerm] -> LHTerm
@@ -326,9 +345,9 @@ transCaseExpr = recurse []
         (cutCases, substs) = cutRedundantBranches indVar prevPats cases
         cleanedCases = map collapseUnproductiveMatches cutCases
         isRecursive :: ILH.LHTerm -> Bool
-        isRecursive e = case fO of
-          Nothing -> False
-          Just f -> hasMatch (TermPat (ILH.Var f), True) e
+        isRecursive e =
+          maybe False
+            (\f -> hasMatch (TermPat (ILH.Var f), True) e) fO
         branches = map (modifyBrBody transBranchE) cleanedCases
         transBranchE :: ILH.LHTerm -> ILH.LHTerm
         transBranchE e = case e of
