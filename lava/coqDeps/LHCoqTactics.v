@@ -519,15 +519,35 @@ Ltac axProjTm exp :=
     end
   end.
 
+Ltac createIhAppRw ih p :=
+  match goal with
+  | [h: ih ?q = ?v |- _ ] => propKinded q; (*idtac "Specialization of " ih " already exists in context as " v;*)
+    tryif (neq_fail p q) then replace p with q in * by (auto with pi_db) else idtac
+  | |- _ => 
+    let H := fresh "temp" in
+    assert (forall p', ih p' = ih p) as H by (intros; f_equal; now auto with pi_db); 
+    (* let Htp := type of H in
+    idtac H ": " Htp; *)
+    try (rewrite H in *; idtac "Rewrote other applications of " ih " to " ih p " using proof irrelevance. "); 
+    clear H;
+    
+    let v := fresh "v" in
+    let v_def := fresh "v_def" in
+    pose proof (exist (fun v => ih p = v) (ih p) eq_refl) as v;
+    destruct v as [v v_def]; 
+    try cleanup_witness p
+  end.
 
 Ltac assIhAppl ih p Res :=
   propKinded p;
-  (* idtac "assIhAppl " ih p Res; *)
+  idtac "assIhAppl " ih p Res; 
+  createIhAppRw ih p;
   match goal with
   | [h: ih ?q = ?v |- _ ] => propKinded q; (*idtac "Specialization of " ih " already exists in context as " v;*)
     replace p with q in * by (auto with pi_db);
-    pose v as Res
-  | _ => (* idtac "rewrite all applications of the shape " ih  " _ to " ih p " using proof irrelevance";*)
+    pose v as Res;
+    try (rewriteAll h)
+  (*| _ => (* idtac "rewrite all applications of the shape " ih  " _ to " ih p " using proof irrelevance";*)
     (* rewrite all applications of the shape ih _ to ih p using proof irrelevance *)
     let H := fresh "temp" in
     assert (forall p', ih p' = ih p) as H by (intros; f_equal; now auto with pi_db); 
@@ -543,7 +563,8 @@ Ltac assIhAppl ih p Res :=
     rewriteAll v_def;
     try subst ih; 
     pose v as Res;
-    try (specialize (ih p))
+    try (specialize (ih p))*)
+  | |- _ => fail "Missing hypothesis rewriting ih application into a variable. "
   end.
 
 Ltac axProjIhAppl exp :=

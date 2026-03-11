@@ -421,14 +421,14 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve applyToFirst_rel_mk : f_rel_funct_db.
-Definition thm1 (xs: IList) (x: {x: Z | ltbZ_rel 5 x true}) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): {{forall (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) -> (forall (addZres: Z), (addZ_rel (⌊ i -⌋) 1 addZres) -> (forall (get_res_2: Z), (get_rel (Cons_u (⌊ x -⌋) (⌊ xs -⌋)) addZres get_res_2) -> (getres == get_res_2)))}}. 
+Theorem thm1 (xs: IList) (x: {x: Z | ltbZ_rel 5 x true}) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): {{forall (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) -> (forall (addZres: Z), (addZ_rel (⌊ i -⌋) 1 addZres) -> (forall (get_res_2: Z), (get_rel (Cons_u (⌊ x -⌋) (⌊ xs -⌋)) addZres get_res_2) -> (getres == get_res_2)))}}. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct x as [x x_p]. 
 	destruct i as [i i_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
+Qed. 
 Theorem thm2 (xs: IList) (ys: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): {{forall (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) -> (forall (llenres: Z), (llen_rel (⌊ ys -⌋) llenres) -> (forall (addZres: Z), (addZ_rel (⌊ i -⌋) llenres addZres) -> (forall (appendres: IList_u), (append_rel (⌊ ys -⌋) (⌊ xs -⌋) appendres) -> (forall (get_res_2: Z), (get_rel appendres addZres get_res_2) -> (getres == get_res_2)))))}}. 
 Proof. 
 	destruct xs as [xs xs_p]. 
@@ -456,7 +456,7 @@ Proof.
 		(IH_ys (ltac: (try clear IH_ys; 
 	solver)) xs (ltac: (try clear IH_ys; 
 	solver)) i (ltac: (try clear IH_ys; 
-	solver))) _). 
+	solver))) _); 
 		solver.  
 	  - intros . 
 		refine (exist _ unit _); 
