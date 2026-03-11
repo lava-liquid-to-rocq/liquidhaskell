@@ -568,7 +568,7 @@ wfDecl tc alts =
       where
         (args, RefType vv _ retRef) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
         -- Proposition for the refinement of the return type, with C x1 … xn in the refinement
-        retRefT = trReft [] (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef)
+        retRefT = trReft (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef)
         -- Proposition for each argument
         argProp (x, argTp) =
           case trRefType argTp of
@@ -618,11 +618,11 @@ mkPseudoConstr tc (c, tp) =
     -- NOTE: instead of inlining the translation of the refinement of an
     -- inductive type, we could use a substitution in Rocq, but I want to avoid
     -- implementing it
-    retLem = Prop $ Coq.And (Coq.App (Def $ wfTCName tc) [utrReft unrefCrApp]) (trReft [] $ subst unrefCrApp x retRef)
+    retLem = Prop $ Coq.And (Coq.App (Def $ wfTCName tc) [utrReft unrefCrApp]) (trReft $ subst unrefCrApp x retRef)
     -- The constructor is defined as an `exist`
     bodyConstr =
       let lemCrApp = Coq.App (Def $ psConstrLemName c) (map (Coq.Var . fst) args)
-       in TermBody $ Exist TermHole (trReft [] unrefCrApp) (TermWitness lemCrApp)
+       in TermBody $ Exist TermHole (trReft unrefCrApp) (TermWitness lemCrApp)
 
 -- | Lemmas giving well-formedness of inductive subterms, for each of the
 -- inductive subterms.

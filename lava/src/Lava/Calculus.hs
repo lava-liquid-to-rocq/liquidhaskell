@@ -125,11 +125,11 @@ data Bop
 -- > pop ::= === | =<= | =>=
 data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq)
 
--- | Branch pattern: map from variables to simple terms that reflects the
--- destruction of the arguments in the current branch.
+-- | Branch pattern: patterns of the current branch obtained
+-- by destructing the parameters of the function.
 -- This is an additional parameter of many of the typing functions, and is
 -- necessary for the translation of case and recursive applications with tactics
-type BranchPattern = [(Id, Reft)]
+type BranchPattern = [Reft]
 
 -- Builtin type and data constructors
 

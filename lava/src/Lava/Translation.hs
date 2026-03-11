@@ -253,15 +253,15 @@ trReft tm0 = case tm0 of
   LH.Inj tm tp -> Coq.Exist (TypeArg $ trRefType tp) (trReft tm) (Coq.ProofHole Nothing)
   LH.Proj tm -> error $ "Projection " ++ show tm0 ++ " found outside of refinements in Translation.trReft"
   LH.App {} -> case apps tm0 of
-    (LH.Var f n (Recursive σ), args) ->
-      let argsσ = zip args (map (second apps) σ)
+    (LH.Var f n (Recursive pats), args) ->
+      let argsAndPats = zip args (map apps pats)
           -- The inductive variables are those that appear after a single
           -- destruction of a parameter and that are used as an argument
           -- of the application we are translating in the same position
           -- as the parameter they originate from
           indVarCandidates =
             [ y
-            | (LH.Var y _ _, (_, (DC _, ys))) <- argsσ,
+            | (LH.Var y _ _, (DC _, ys)) <- argsAndPats,
               -- this enforces that y is obtained after a single
               -- destruction, rather than using freeVars ys
               y `elem` [y' | LH.Var y' _ _ <- ys]
@@ -282,14 +282,14 @@ trReft tm0 = case tm0 of
           -- contains the arity.
           -- A first-order argument must be decomposed into its first
           -- projection and the witness, for which we use ltac:(oracle)
-          trArg (ri, (_, (LH.Var _ n _, _))) =
+          trArg (ri, (LH.Var _ n _, _)) =
             if n > 0 then [trReft ri] else [Coq.Project $ trReft ri, oracleTac]
           trArg _ = []
           -- The number of parameters that have been destructed gives us
           -- the number of ltac:(oracle) we need for the induction
           -- hypothesis, one for each of those plus one for the induction variable
-          nbOracles = length [ri | (_, (ri, (LH.DC _, _))) <- argsσ] + 1
-          argsT = replicate nbOracles oracleTac ++ concatMap trArg argsσ
+          nbOracles = length [ri | (ri, (LH.DC _, _)) <- argsAndPats] + 1
+          argsT = replicate nbOracles oracleTac ++ concatMap trArg argsAndPats
        in Coq.App ihHyp argsT
     (LH.Var f n Local, args)
       | n > 0 ->
