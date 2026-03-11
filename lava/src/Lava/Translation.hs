@@ -8,8 +8,8 @@ import Data.Bifunctor (first, second)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil (mkIsTrue, packGetF, packGetRel, upackGetRel)
-import Lava.CoqUtil (funcHoodLemName, packInstanceName, relDefLemName, relDefName, relDefThmName, relPostfix, toPack, toUPack, upackInstanceName)
-import Lava.Util (hashName, isSuffixOf)
+import Lava.CoqUtil (funcHoodLemName, ihName, packInstanceName, relDefLemName, relDefName, relDefThmName, relPostfix, toPack, toUPack, upackInstanceName)
+import Lava.Util (hashName, isSuffixOf, safeHead)
 
 -- * Generic translations
 
@@ -96,7 +96,7 @@ utrReft r0 = case r0 of
   LH.Pop _ _ r -> utrReft r
   LH.Sub r _ _ -> utrReft r
   LH.Inj r _ -> utrReft r
-  LH.Proj r -> Project (trReft [] r)
+  LH.Proj r -> Project $ trReft r
 
 -- | Translation of refinements to propositions
 --   Function RtoP (def 3.4) of the paper
@@ -234,41 +234,74 @@ trRefTypeSplit tp =
     splitIfFO (x, Subset _ tpx p) = [(x, tpx), (subsetWitnessNm x, Prop p)]
     splitIfFO argT = [argT]
 
--- | Translation of refinements.
---   Takes a typing environment (for type constructors)
---   and the patterns of the arguments as supplementary arguments,
---   to translate applications.
+-- | Translation of refinements
 --   Function RtoR (def 3.8) of the paper
-trReft :: [Reft] -> LH.Reft -> Coq.CoqTerm
-trReft xs tm0 = case tm0 of
+trReft :: LH.Reft -> Coq.CoqTerm
+trReft tm0 = case tm0 of
   LH.Var x ar Global | ar > 0 -> Coq.Def $ packInstanceName x
   LH.Var x _ _ -> Coq.Var x
   LH.StringLit s -> Coq.StringLiteral s
   LH.IntLit n -> Coq.IntLiteral n
   LH.FloatLit d -> Coq.FloatLiteral d
   LH.DC c -> Cr (trDC c)
-  LH.Neg tm -> Coq.App (Coq.Def Coq.negB) [trReft xs tm]
-  LH.Bop op tm1 tm2 -> Coq.Bop (trBop op) (trReft xs tm1) (trReft xs tm2)
+  LH.Neg tm -> Coq.App (Coq.Def Coq.negB) [trReft tm]
+  LH.Bop op tm1 tm2 -> Coq.Bop (trBop op) (trReft tm1) (trReft tm2)
   LH.QMark tm hint prop ->
-    Coq.Let "_" (Just . Prop $ utrReftProp prop) (Proj2sig $ trReft xs hint) (trReft xs tm)
+    Coq.Let "_" (Just . Prop $ utrReftProp prop) (Proj2sig $ trReft hint) (trReft tm)
   LH.Pop pop tm1 tm2 -> undefined
-  LH.Sub tm from to -> Coq.SubCast (trRefType to) (trRefType from) (trReft xs tm) (Coq.ProofHole Nothing)
-  LH.Inj tm tp -> Coq.Exist (TypeArg $ trRefType tp) (trReft xs tm) (Coq.ProofHole Nothing)
+  LH.Sub tm from to -> Coq.SubCast (trRefType to) (trRefType from) (trReft tm) (Coq.ProofHole Nothing)
+  LH.Inj tm tp -> Coq.Exist (TypeArg $ trRefType tp) (trReft tm) (Coq.ProofHole Nothing)
   LH.Proj tm -> error $ "Projection " ++ show tm0 ++ " found outside of refinements in Translation.trReft"
-  LH.App {} ->
-    let (hd, args) = apps tm0
-        argsT = map (trReft xs) args
-     in case hd of
-          LH.Var f n (Recursive σ) -> undefined
-          LH.Var f n Local | n > 0 -> Coq.App (packGetF (Coq.Var f)) argsT
-          _ -> Coq.App (trReft xs hd) argsT
+  LH.App {} -> case apps tm0 of
+    (LH.Var f n (Recursive σ), args) ->
+      let argsσ = zip args (map (second apps) σ)
+          -- The inductive variables are those that appear after a single
+          -- destruction of a parameter and that are used as an argument
+          -- of the application we are translating in the same position
+          -- as the parameter they originate from
+          indVarCandidates =
+            [ y
+            | (LH.Var y _ _, (_, (DC _, ys))) <- argsσ,
+              -- this enforces that y is obtained after a single
+              -- destruction, rather than using freeVars ys
+              y `elem` [y' | LH.Var y' _ _ <- ys]
+            ]
+          -- We arbitrarily choose the first of the candidates to be the
+          -- variable we do induction on
+          indVar = safeHead indVarCandidates
+          ihHyp = case indVar of
+            Just x -> Coq.Var $ ihName x
+            Nothing -> error $ "No main induction variable in term " ++ show tm0
+          -- ltac:(try clear ihHyp; solver)
+          oracleTac = Coq.PrfTerm Coq.Hole $ Coq.ProofHole (ihName <$> indVar)
+          -- Translation of the arguments:
+          -- We translate only arguments in positions of parameters that
+          -- have not been destructed, the only ones that are not already instantiated.
+          -- A higher-order argument is translated directly with RtoR;
+          -- we recognize it with its pattern, necessarily intact and
+          -- contains the arity.
+          -- A first-order argument must be decomposed into its first
+          -- projection and the witness, for which we use ltac:(oracle)
+          trArg (ri, (_, (LH.Var _ n _, _))) =
+            if n > 0 then [trReft ri] else [Coq.Project $ trReft ri, oracleTac]
+          trArg _ = []
+          -- The number of parameters that have been destructed gives us
+          -- the number of ltac:(oracle) we need for the induction
+          -- hypothesis, one for each of those plus one for the induction variable
+          nbOracles = length [ri | (_, (ri, (LH.DC _, _))) <- argsσ] + 1
+          argsT = replicate nbOracles oracleTac ++ concatMap trArg argsσ
+       in Coq.App ihHyp argsT
+    (LH.Var f n Local, args)
+      | n > 0 ->
+          Coq.App (packGetF (Coq.Var f)) (map trReft args)
+    (hd, args) -> Coq.App (trReft hd) (map trReft args)
 
 -- | Translation of expressions as tactics
 -- Some other cases might be necessary because of branches coming from Core.
 -- Function EtoTac (def 3.7) of the paper
 trExprTacs :: [Reft] -> LH.Expr -> [CoqTactic]
 trExprTacs xs e0 = case e0 of
-  LH.Reft tm -> [Coq.Exact $ trReft xs tm]
+  LH.Reft tm -> [Coq.Exact $ trReft tm]
   {- LH.Case cond [("False", [], elseE), ("True", [], thenE)] -> do
     let
       condT = utrSmpTerm (fetchFuncts γ) cond
