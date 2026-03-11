@@ -1,6 +1,6 @@
 - translation of reflected definitions (two undefined in inversion lemmas)
 
-- freeVars CoqTactic
+- freeVars Coq
 - turn induct into destruct if no IH introduced
 
 - typing and translation of ===, =<= and =>=
@@ -8,3 +8,4 @@
 - use Text instead of strings (with a library)
 
 - cleanup files
+- cleanup Rocq grammar

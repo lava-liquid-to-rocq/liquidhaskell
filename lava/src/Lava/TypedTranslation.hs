@@ -124,7 +124,7 @@ wfDecl γ decl =
 -- | Checking of expressions
 -- The additional argument (f, mCtx) is a list of replacements of ILH applications
 -- paired with calls to the appropriate IH in Coq
-checkTerm :: Ctx.TypingCtx -> LHTerm -> RefType -> (Id, MatchCtx) -> Either TransError [Coq.CoqTactic]
+checkTerm :: Ctx.TypingCtx -> LHTerm -> RefType -> (Id, MatchCtx) -> Either TransError [Coq.Tactic]
 checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", "...", showP e, showP tp, show (f, mCtx)] $ -} case e of
   -- An if-then-else written as a match
   Case cond [CaseBranch "False" [] elseE, CaseBranch "True" [] thenE] _ -> do
@@ -164,7 +164,7 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
     let ciArgs = map (\(ArrType args _) -> args) ciTps -}
 
     let
-      checkBranch :: CaseBranch -> Either TransError (Id, (Coq.CoqDestrPat, [Coq.CoqTactic]))
+      checkBranch :: CaseBranch -> Either TransError (Id, (Coq.CoqDestrPat, [Coq.Tactic]))
       checkBranch alt@(CaseBranch c ys _) = do
         -- New matching context
         bi <- case xO of
@@ -274,7 +274,7 @@ checkTerm γ e tp (f, mCtx@(fCtx, matchedVars)) = {- traceFuncRet ["checkTerm", 
         _ -> error $ "tacs: " ++ show tacs
 
 -- | Synthesis of expressions
-synTerm :: Ctx.TypingCtx -> LHTerm -> (Id, MatchCtx) -> Either TransError (RefType, [Coq.CoqTactic])
+synTerm :: Ctx.TypingCtx -> LHTerm -> (Id, MatchCtx) -> Either TransError (RefType, [Coq.Tactic])
 synTerm γ e (f, mCtx) = {- trace (unwords ["synTerm", show e]) $ -} case e of
   BasicTerm r -> do
     (tp, cqtm) <- synSmpTerm γ r (f, mCtx)
@@ -282,7 +282,7 @@ synTerm γ e (f, mCtx) = {- trace (unwords ["synTerm", show e]) $ -} case e of
   -- (Syn-Eq)
   SEqn r1 r2 hint -> do
     (RefType x a r, cqtm1) <- synSmpTerm γ r1 (f, mCtx)
-    {- checkTerm :: Ctx.TypingCtx -> LHTerm -> RefType -> (Id, MatchCtx) -> Either TransError [Coq.CoqTactic] -}
+    {- checkTerm :: Ctx.TypingCtx -> LHTerm -> RefType -> (Id, MatchCtx) -> Either TransError [Coq.Tactic] -}
     (tpHint, tacs) <- synTerm γ hint (f, mCtx)
     cqtm2 <- do
       γ' <- Ctx.insertRefType (argName tpHint, tpHint) γ
@@ -558,7 +558,7 @@ where
 -}
 
 -- | Translation of an unreflected definition
-transDefinition :: Ctx.TypingCtx -> Id -> ArrType -> [Coq.CoqTactic] -> [Coq.Decl]
+transDefinition :: Ctx.TypingCtx -> Id -> ArrType -> [Coq.Tactic] -> [Coq.Decl]
 transDefinition γ f tp tacs =
   [Coq.Definition f (map (,False) args) ret (Coq.ProofBody $ destructs ++ cleanInductions (usedIHs tacs) tacs) Coq.Transparent]
   where
@@ -569,7 +569,7 @@ transDefinition γ f tp tacs =
 -- *** Reflected definitions
 
 -- | Translation of a reflected definition
-transReflDefinition :: Ctx.TypingCtx -> Id -> ArrType -> LHTerm -> [Coq.CoqTactic] -> Either TransError [Coq.Decl]
+transReflDefinition :: Ctx.TypingCtx -> Id -> ArrType -> LHTerm -> [Coq.Tactic] -> Either TransError [Coq.Decl]
 transReflDefinition γ f arrTp e tacs = do
   -- Expression splitted into its branches
   sepBranches <- separateBranches e (map (Var . fst) (argsTps arrTp))
@@ -658,7 +658,7 @@ transReflDefinition γ f arrTp e tacs = do
       indBranches ihs allTacs = {- traceFuncRet ["indBranches", show ihs, show allTacs, ", where \nmatchTacs:", show matchTacs] $ -} maybe (Finish [] ihs) extractInds (safeHead matchTacs) where
         matchTacs = filterMatchTacs allTacs
 
-        extractInds :: Coq.CoqTactic -> IndTree
+        extractInds :: Coq.Tactic -> IndTree
         extractInds tac = {- traceFuncRet ["extractInds", show ihs, show tac] $ -} case tac of
           Coq.Destruct (Coq.Var y) brs -> Induct y (map (\(c, (pats, ts)) -> ((c, pats), indBranches ihs ts)) brs) True
           Coq.Induction (Coq.Var y) brs -> Induct y (map (\(c, (pats, ts)) -> ((c, pats), indBranches (ihs ++ getIHs pats) ts)) brs) False
@@ -871,7 +871,7 @@ branchCtx _ _ _ _ _ = Left $ CheckingErr "Variable in match does not have an ind
 --
 -- > Ex: generalize dependent n; induction m as [|m' IHm']; intros.
 -- > --> destruct m.
-cleanInductions :: [Id] -> [Coq.CoqTactic] -> [Coq.CoqTactic]
+cleanInductions :: [Id] -> [Coq.Tactic] -> [Coq.Tactic]
 cleanInductions ihs = map recurse
   where
     recurse tac = case tac of
@@ -883,10 +883,6 @@ cleanInductions ihs = map recurse
       Coq.Concat tacs -> Coq.Concat (cleanInductions ihs tacs)
       Coq.Destruct tm branches ->
         Coq.Destruct tm $ map (second (second (cleanInductions ihs))) branches
-      Coq.SplitB tacs1 tacs2 ->
-        Coq.SplitB (cleanInductions ihs tacs1) (cleanInductions ihs tacs2)
-      Coq.SubgoalMarkers tacs ->
-        Coq.SubgoalMarkers $ cleanInductions ihs tacs
       _ -> tac
     -- Replace superfluous IHs by _ in patterns. Also returns true if all IHs have been thus erased
     -- TODO: This function should be put on top-level for readability
@@ -911,7 +907,7 @@ cleanInductions ihs = map recurse
 
 -- | List the induction hypothesis that appear in the list of tactics
 -- obtained from the translation of a term
-usedIHs :: [Coq.CoqTactic] -> [Id]
+usedIHs :: [Coq.Tactic] -> [Id]
 usedIHs = trace "TODO: define TypedTranslation.usedIHs or remove it." undefined
 
 -- * Utility functions

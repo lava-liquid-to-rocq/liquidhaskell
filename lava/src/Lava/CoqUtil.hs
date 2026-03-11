@@ -156,7 +156,7 @@ transRefTC decls' tc constrs = unrefTCDecl : (eqDecl : eqReflLem : eqReflHint : 
     unrefConstr (Constr c tp) = Constr (unrefinedConstrName c) (unrefRocqType tp)
     unrefTCDecl = CoqInductive (unrefinedTCName tc) [] (Sort SetSort) $ map unrefConstr constrs
 
-    mkIntDecl :: Id -> [((Id, RocqType), Bool)] -> RocqType -> Either [CoqTactic] CoqTerm -> Decl
+    mkIntDecl :: Id -> [((Id, RocqType), Bool)] -> RocqType -> Either [Tactic] CoqTerm -> Decl
     mkIntDecl g args ret def = Definition g args ret defBody Transparent
       where
         defBody = case def of
@@ -273,14 +273,6 @@ transRefTC decls' tc constrs = unrefTCDecl : (eqDecl : eqReflLem : eqReflHint : 
         argLem = mkIntDecl (psConstrLemName c) (map (,False) args) (Prop retRef) (Left lemTacs)
           where
             lemTacs = [Custom "repeat first [split; solver]"]
-    {- [SplitB [argTacs] [Easy]]
-    argTacs = if null args then Easy else foldr1 (\tac cur -> SplitB [tac] [cur]) argPOPrfs
-    destructData :: [(Id, Bool)]
-    destructData = map getData (xIHs args) where
-      getData ((y, _), b) = (y, b)
-    argPOPrfs = map solvePOs destructData where
-      solvePOs (_, False) = Oracle -- Apply $ Var y
-      solvePOs (y, True) = Apply $ PrfTerm TypeHole (RefWitness $ Var y) -}
     tcRefDecls = [wfDecl, wfLem, refTcDecl]
     constrDecls = concatMap mkPseudoConstr constrs
 
@@ -345,7 +337,7 @@ toUPack xs utp = UPack (UArgListT $ map unrefRocqType xs) (unrefRocqType utp)
 
 -- | Generates the nested top-level inductive skeleton tactic in the functionhood and existence lemma proofs
 -- | the flag indicates whether we should specialize ihs
-mkInductiveSkeleton :: [(Id, RocqType)] -> IndTree -> Bool -> CoqTactic
+mkInductiveSkeleton :: [(Id, RocqType)] -> IndTree -> Bool -> Tactic
 mkInductiveSkeleton uArgs indBrs specIhs = {- traceFuncRet ["mkInductiveSkeleton", show uArgs, show indBrs, show specIhs] -} res
   where
     args = map fst uArgs
@@ -372,7 +364,7 @@ mkInductiveSkeleton uArgs indBrs specIhs = {- traceFuncRet ["mkInductiveSkeleton
         ordFunc :: ((Id, CoqDestrPat), IndTree) -> ((Id, CoqDestrPat), IndTree) -> Ordering
         ordFunc ((c1, _), _) ((c2, _), _) = compare c1 c2
 
-        recurse :: IndTree -> CoqTactic
+        recurse :: IndTree -> Tactic
         recurse (Finish ihAppls ihs) = finishTac ihAppls ihs
         recurse (Cond tm caseBrs) = if unrefinedHeuristic tm caseBrs then Destruct tm $ map (\(c, pat, caseBr) -> (c, (pat, [recurse caseBr]))) caseBrs else Concat []
         recurse (Induct y brs' b') = Concat [indTac (Var y) yBranches, Intros [], Branches $ map recurse otherBrs]
@@ -711,7 +703,7 @@ mkRelBranchLemmas args retArg univArgs univAxs conds branches = {- traceFuncRet 
             disjRes = mkAnd $ preConjs ++ [Bop Eq (Var resArgV) resTm | resIsTm] ++ [existTm]
 
 -- | Concat the tactics but remove Oracle tactics, until the very end of the script
-mkConcat :: CoqTactic -> CoqTactic -> CoqTactic
+mkConcat :: Tactic -> Tactic -> Tactic
 mkConcat t1 t2 = Concat $ t ++ [t2]
   where
     t = go t1
@@ -762,7 +754,7 @@ projTm decls tm = case tm of
 getStRef :: RocqType -> Id -> (RocqType, CoqTerm)
 getStRef (Subset x tp r) y = (tp, sub x (Var y) r)
 
-destructSubsetArg :: Id -> CoqTactic
+destructSubsetArg :: Id -> Tactic
 destructSubsetArg x = DestructSubsetTerm (Var x) (ConjDestrPat [SingleIdPat x, SingleIdPat $ subsetWitnessNm x])
 
 unrefRocqType :: RocqType -> RocqType
@@ -803,7 +795,7 @@ isInductTp decls a = isJust indTp || isJust builtinIndTp
     indTp = a `lookupTc` decls
     builtinIndTp = find ((a ==) . fst3) coqBuiltinInductDataTypes
 
-assertFresh :: Goal -> CoqTactic -> CoqTactic
+assertFresh :: Goal -> Tactic -> Tactic
 assertFresh g tac = case tac of
   Concat [t] -> assertFresh g t
   Exact tm -> ProofPose hypName tm
@@ -812,14 +804,14 @@ assertFresh g tac = case tac of
   where
     hypName = "H_" ++ hashName g
 
-poseIHAppl :: CoqTerm -> CoqTactic
+poseIHAppl :: CoqTerm -> Tactic
 poseIHAppl ihAppl = ProofPose hypName ihAppl
   where
     hypName = "IH_" ++ hashName ihAppl
 
 -- * Miscellaneous functions for 'TypedTranslations'
 
-injCast :: RocqType -> CoqTerm -> Maybe CoqTactic -> CoqTerm
+injCast :: RocqType -> CoqTerm -> Maybe Tactic -> CoqTerm
 injCast rt tm pO = Exist (Lambda "x" (unrefRocqType rt) ref) tm prfTm
   where
     ref = case rt of

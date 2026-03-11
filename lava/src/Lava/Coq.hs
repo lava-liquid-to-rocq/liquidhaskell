@@ -5,6 +5,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE OrPatterns #-}
 {- {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE KindSignatures #-} -}
 
@@ -42,7 +43,7 @@ module Lava.Coq
     CoqTerm (..),
     Bop (..),
     ProofTerm (..),
-    CoqTactic (..),
+    Tactic (..),
     CoqDestrPat (..),
     RewriteDir (..),
     CoqIntroPat (..),
@@ -195,11 +196,11 @@ data Decl
     CoqNewType Id RocqType
   | -- | An instance of one of the dictionary classes used for lookup in the proof automation tactics in Coq
     Instance Id [Id] [(Id, CoqTerm)]
-  | TacInstance Id Id CoqTactic
+  | TacInstance Id Id Tactic
   deriving (Eq, Data)
 
 data DefBody
-  = ProofBody [CoqTactic]
+  = ProofBody [Tactic]
   | TermBody CoqTerm
   deriving (Data, Eq)
 
@@ -229,8 +230,6 @@ data HintDatabase = CoreDB | GraphRelDB | GraphRelBackDB | WfDB | RefConstrDB | 
 -- | Basically the same as a RocqType, but shouldn't contain holes (it can still contain simple type goals, but those Coq should be able to infer when needed) or errors
 type Goal = RocqType
 
--- TODO: rename names with 2
-
 -- | Built-in datatypes
 --
 -- > B ::= Z | string | float
@@ -241,7 +240,6 @@ data Builtin = CTInt | CTString | CTFloat
 --
 -- > κ ::= Type | Prop | Set
 data BaseSort = TypeSort | PropSort | SetSort deriving (Eq, Data)
-
 
 -- | Types
 --
@@ -357,54 +355,35 @@ data ProofTerm
   = CoqProofTerm String
   | TermWitness CoqTerm
   | ProofHole (Maybe Id)
-  | ByTac CoqTactic
+  | ByTac Tactic
   | RefWitness CoqTerm
   | Conj ProofTerm ProofTerm
   deriving (Data, Eq)
 
--- TODO: remove unnecessary tactics, once we get rid of legacy translation
-
 -- | represents supported ECoq tactics, both custom tactics and basic Coq tactics (@tac@)
-data CoqTactic
+data Tactic
   = Easy
   | Oracle
-  | Ple
-  | Apply CoqTerm
   | -- In the branches, the Id is the name of the constructor in the branch (useful for reordering in the order needed by Coq)
-    Destruct {destrExpr :: CoqTerm, destrBranches :: [(Id, (CoqDestrPat, [CoqTactic]))]}
-  | Induction {indTerm :: CoqTerm, indBranches :: [(Id, (CoqDestrPat, [CoqTactic]))]}
-  | Now CoqTactic
-  | SplitB [CoqTactic] [CoqTactic]
+    Destruct {destrExpr :: CoqTerm, destrBranches :: [(Id, (CoqDestrPat, [Tactic]))]}
+  | Induction {indTerm :: CoqTerm, indBranches :: [(Id, (CoqDestrPat, [Tactic]))]}
   | Exact CoqTerm
-  | RefineT RocqType
-  | SubgoalMarkers [CoqTactic]
   | Admit [Id]
   | Pose Id CoqTerm
   | ProofPose Id CoqTerm
-  | Try CoqTactic
-  | Timeout Int CoqTactic
-  | ApplyPartial CoqTerm
+  | Try Tactic
   | Refine CoqTerm
   | -- ToDo: Extend to a more useful version of this tactic
     DestructSubsetTerm CoqTerm CoqDestrPat
   | DestructConj Id Id Id
-  | Simpl (Maybe Id)
   | Rewrite (Maybe RewriteDir) CoqTerm (Maybe Id)
-  | Replace CoqTerm CoqTerm CoqTactic (Maybe Id)
-  | Assert {assHypName :: Id, assClaim :: Goal, assPrf :: CoqTactic}
-  | AssertTerm Id CoqTerm (Maybe Id)
-  | AssertTacs Id RocqType [CoqTactic]
+  | Assert {assHypName :: Id, assClaim :: Goal, assPrf :: Tactic}
+  | AssertTacs Id RocqType [Tactic]
   | Intros [CoqIntroPat]
-  | Revert [Id]
   | GeneralizeDependent [Id]
-  | Specialize Id [CoqTerm]
-  | -- | represents the custom specialization tactics, currently no longer used in the translation
-    SpecializeIH {unspecIh :: Id, spIhIhTp :: RocqType, spIhMatchedVar :: Id, spIhConstr :: Id, spIhCargs :: [Id], spIhBoundVar :: CoqTerm, spIhZ :: Maybe ProofTerm, newIHName :: Maybe Id}
   | Clear Id
-  | ClearDependent Id
-  | Inversion Id [[Id]]
-  | Concat [CoqTactic]
-  | Branches [CoqTactic]
+  | Concat [Tactic]
+  | Branches [Tactic]
   | Custom String
   | Exfalso
   deriving (Data, Eq)
@@ -437,8 +416,17 @@ data CoqIntroPat = DestrPat CoqDestrPat | RewritePat RewriteDir deriving (Data, 
 class HasVars a where
   freeVars :: (HasVars a) => a -> Set Id
 
-instance HasVars CoqTactic where
+instance HasVars RocqType where
   freeVars = undefined
+
+instance HasVars CoqTerm where
+  freeVars = undefined
+
+instance HasVars Tactic where
+  freeVars (Easy; Oracle; Exfalso) = Set.empty
+  freeVars (Destruct tm alts) = undefined
+  freeVars (Induction tm alts) = undefined
+  freeVars (Exact tm) = freeVars tm
 
 instance (HasVars a) => HasVars [a] where
   freeVars tms = Set.unions $ map freeVars tms
@@ -776,13 +764,11 @@ prntTpls (hd : tl) = showTpl hd ++ " _::_ " ++ prntTpls tl
     -- (f, relDefName f, funcHoodLemName f, relDefThmName f, relDefRwLemName f, relDefLemName f, relDefMkLemName f)
     showTpl (f, f_rel {-}, f_func, f__f_rel, f_rel_rw, f__f_rel', f_rel_mk -}) = "(" ++ intercalate ", " [f, f_rel {-, f_func, f__f_rel, f_rel_rw, f__f_rel', f_rel_mk -}] ++ ")"
 
-instance PrettyPrintable CoqTactic where
+instance PrettyPrintable Tactic where
   prettyPrint indent tac = case tac of
     Easy -> "quicksolve"
     Oracle -> "solver"
     Admit hints -> (if null hints then "" else "(* hints: " ++ intercalate ", " hints ++ "*) ") ++ "admit"
-    Ple -> "ple"
-    Apply tm -> {-"apply " ++ showP tm -} "smt_app " ++ showP tm
     Destruct (Var x) branches | all ((== "") . intercalate "; " . map (prettyPrint indent) . snd . snd) branches -> "destruct " ++ x ++ " as [" ++ intercalate " | " (map (prntPat . fst . snd) branchesS) ++ "]"
       where
         branchesS = sortBy ordFunc branches
@@ -807,8 +793,6 @@ instance PrettyPrintable CoqTactic where
     Induction tm branches -> "induction " ++ show tm ++ " as [" ++ intercalate " | " (map (\br -> "(*" ++ fst br ++ "*) " ++ (prntPat . fst $ snd br)) branchesS) ++ "]. " ++ showTacBranches (indent + 1) (map snd branchesS)
       where
         branchesS = sortBy ordFunc branches
-    Now t -> "now " ++ prt t
-    SplitB tacL tacR -> "split. " ++ showTacBranch (indent + 1) False tacL ++ showTacBranch (indent + 1) False tacR
     Exact t -> case t of
       SubCast _ _ (Exist _ tm (CoqProofTerm "eq_refl")) (ProofHole _) -> "refine " ++ showP (Exist TermHole tm (TermWitness TermHole)) ++ "; " ++ showNewline indent ++ show Oracle
       SubCast _ _ (Exist _ tm (CoqProofTerm "I")) (ProofHole _) -> "refine " ++ showP (Exist TermHole tm (TermWitness TermHole)) ++ "; " ++ showNewline indent ++ show Oracle
@@ -816,8 +800,6 @@ instance PrettyPrintable CoqTactic where
       SubCast _ have tm p -> "exact " ++ showP (SubCast Hole have tm p)
       -- Exist _ tm p -> Exist TermHole tm p
       _ -> "refine " ++ showP t
-    RefineT tp -> "refine " ++ showP tp
-    SubgoalMarkers tacs -> showTacBranch (indent + 1) True tacs
     Concat tacs -> intercalate ("; " ++ showNewline indent) $ map (prettyPrint indent) tacs'
       where
         tacs' = filter (\case (Custom "idtac") -> False; t -> prettyPrint indent t /= "") tacs
@@ -826,8 +808,6 @@ instance PrettyPrintable CoqTactic where
     Custom str -> str
     Exfalso -> "exfalso"
     Try t -> "try " ++ show t
-    Timeout t tc -> "timeout " ++ show t ++ " " ++ addParens (prettyPrint indent tc)
-    ApplyPartial tm -> "unshelve eapply " ++ showP tm
     Refine t -> "refine " ++ showP t
     DestructSubsetTerm tm destrPat -> "destruct " ++ show tm ++ " as [" ++ prntPat destrPat ++ "]"
     DestructConj h h1 h2 -> "destruct " ++ h ++ " as [" ++ h1 ++ " " ++ h2 ++ "]"
@@ -841,58 +821,38 @@ instance PrettyPrintable CoqTactic where
         dirS = case dirO of
           Just dir -> show dir ++ " "
           Nothing -> ""
-    Replace s t tactic (Just hyp) -> "replace " ++ showP s ++ " with " ++ showP t ++ " in " ++ hyp ++ " by " ++ showP tactic
-    Replace s t tactic Nothing -> "replace " ++ showP s ++ " with " ++ showP t ++ " by " ++ showP tactic
-    Simpl hypO -> "simpl" ++ maybe "" (" in " ++) hypO
     Pose abbr tm -> "pose " ++ showP tm ++ " as " ++ abbr
     ProofPose abbr tm -> "pose proof " ++ showP tm ++ " as " ++ abbr
     Assert n claim prf -> "assert (" ++ n ++ ": " ++ show claim ++ ") by " ++ showP prf
-    AssertTerm h tm Nothing -> "assert _ as " ++ h ++ " by " ++ showP (Concat [Refine tm, Oracle])
-    AssertTerm h tm (Just ih) -> "assert _ as " ++ h ++ " by " ++ showP (Concat [Refine tm, Clear ih, Oracle])
     Intros pats -> "intros " ++ unwords (map show pats)
-    Revert xs -> "revert " ++ unwords xs
     GeneralizeDependent xs -> intercalate "; " $ map (\x -> "try revert " ++ subsetWitnessNm x ++ "; generalize dependent " ++x) xs
-    SpecializeIH ih _ _ _ _ y _ newIh -> unwords ["specTac", ih, showP y] ++ maybe "" (" as " ++) newIh
-    Specialize hyp ts -> "specialize (" ++ hyp ++ concatMap ((" " ++) . showP) ts ++ ")"
     Clear hyp -> "clear " ++ hyp
-    ClearDependent hyp -> "clear dependent " ++ hyp
-    Inversion hyp pat -> "inversion " ++ hyp ++ " as " ++ "[" ++ patS ++ "]"
-      where
-        patS = intercalate " | " $ map unwords pat
     where
-      prt = prettyPrint indent
       -- \| comparison operator to alphabetically order branches of Induction/Destruct
-      ordFunc :: (Id, (CoqDestrPat, [CoqTactic])) -> (Id, (CoqDestrPat, [CoqTactic])) -> Ordering
+      ordFunc :: (Id, (CoqDestrPat, [Tactic])) -> (Id, (CoqDestrPat, [Tactic])) -> Ordering
       ordFunc ("true", _) ("false", _) = LT
       ordFunc ("false", _) ("true", _) = GT
       ordFunc br br' = compare (fst br) (fst br')
   includesBranches tac = case tac of
     Concat [] -> False
     Concat tacs -> includesBranches (last tacs)
-    SplitB {} -> True
     Destruct Var {} _ -> True
     Destruct _ _ -> False
     Induction {} -> True
-    SubgoalMarkers {} -> True
     _ -> False
 
-instance Show CoqTactic where
+instance Show Tactic where
   show = prettyPrint 1
 
-admitted :: [CoqTactic] -> Bool
+admitted :: [Tactic] -> Bool
 admitted = any containsAdmit
   where
     containsAdmit tac = case tac of
       Admit {} -> True
       Try t -> containsAdmit t
-      Timeout _ t -> containsAdmit t
-      Replace _ _ t _ -> containsAdmit t
       Destruct _ cases -> admitted $ concatMap (snd . snd) cases
       Induction _ cases -> admitted $ concatMap (snd . snd) cases
       Assert _ _ t -> containsAdmit t
-      Now t -> containsAdmit t
-      SubgoalMarkers ts -> admitted ts
-      SplitB ts ts' -> admitted ts || admitted ts'
       Concat ts -> admitted ts
       Branches ts -> admitted ts
       _ -> False
@@ -1040,9 +1000,8 @@ instance AppSuable CoqIntroPat CoqTerm where
 instance Suable CoqIntroPat CoqTerm where
   sub = replaceSubterm . (,True) . IdPat
 
-instance AppSuable CoqTactic CoqTerm where
+instance AppSuable Tactic CoqTerm where
   findAndReplace p tac = case tac of
-    Apply t -> recurseFindAndRepl p Apply t
     Destruct t cases -> resRec matches func
       where
         matches = findSubterm p t ++ concatMap ((\(pat, tacs) -> findSubterm p pat ++ concatMap (findSubterm p) tacs) . snd) cases
@@ -1053,19 +1012,12 @@ instance AppSuable CoqTactic CoqTerm where
         func r = Destruct (replaceSubterm p r t) (map (second (bimap (replaceSubterm p r) (map $ replaceSubterm p r))) branches)
     Exact t -> recurseFindAndRepl p Exact t
     Refine t -> recurseFindAndRepl p Refine t
-    RefineT t -> recurseFindAndRepl p RefineT t
-    SubgoalMarkers tacs -> recurseFindAndRepls p SubgoalMarkers tacs
     Concat tacs -> recurseFindAndRepls p Concat tacs
     Branches tacs -> recurseFindAndRepls p Branches tacs
-    SplitB tacs moreTacs -> recurseFindAndRepls2 p SplitB tacs moreTacs
-    ApplyPartial t -> recurseFindAndRepl p ApplyPartial t
     DestructSubsetTerm t pat -> recurseFindAndRepl2 p DestructSubsetTerm t pat
     -- DestructConj h h1 h2 -> recurseFindAndRepl3 p DestructConj h h1 h2
-    Replace s t tc hO -> recurseFindAndRepl2 p (\s' t' -> Replace s' t' tc hO) s t
     Assert h _ _ | isSubstOf p h -> error $ "name-clash between supposedly free-variable in substitution and label of assert: " ++ h
     Assert h r z -> recurseFindAndRepl2 p (Assert h) r z
-    AssertTerm h _ _ | isSubstOf p h -> error $ "name-clash between supposedly free-variable in substitution and label of AssertTerm: " ++ h
-    AssertTerm h term idO -> recurseFindAndRepl p (\tm -> AssertTerm h tm idO) term
     Intros pats -> case fst p of
       IdPat _ -> resRec matches func
         where
@@ -1074,18 +1026,16 @@ instance AppSuable CoqTactic CoqTerm where
       _ -> unchanged
     _ -> unchanged
 
-instance Suable CoqTactic CoqTerm where
+instance Suable Tactic CoqTerm where
   sub = replaceSubterm . (,True) . IdPat
 
 {-
 sub x tm tac = case tac of
   Rewrite dirO hyp hO -> Rewrite dirO (subs hyp) hO
-  Replace s t tc hO -> Replace (subs s) (subs t) (subs tc) hO
   Assert h r z | h == x -> case tm of
     Var h' -> Assert h' r z
     _ -> error $ "name-clash between supposedly free-variable in substitution and label of assert: " ++ x
   Assert h r z -> Assert h (subs r) (subs z)
-  AssertTerm h term idO -> AssertTerm h (subs term) idO
   Intros pats -> Intros (map subs pats)
   _ -> tac
   where

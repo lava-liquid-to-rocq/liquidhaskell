@@ -303,7 +303,7 @@ trReft tm0 = case tm0 of
 -- | Translation of expressions as tactics
 -- Some other cases might be necessary because of branches coming from Core.
 -- Function EtoTac (def 3.7) of the paper
-trExprTacs :: LH.Expr -> [CoqTactic]
+trExprTacs :: LH.Expr -> [Tactic]
 trExprTacs (LH.Reft tm) = [Coq.Exact $ trReft tm]
 trExprTacs (LH.Let _ Nothing _ _) = error "Found let-binding with annotation while translating."
 trExprTacs (LH.Let x (Just tpx@(RefType {})) e1 e2) =

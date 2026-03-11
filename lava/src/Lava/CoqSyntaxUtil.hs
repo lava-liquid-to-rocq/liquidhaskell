@@ -23,10 +23,10 @@ getUPackFunctName = "getUPackFunct"
 
 -- * Wrappers for Rocq terms
 
-mkCoqLemma :: Id -> [((Id, RocqType), Bool)] -> RocqType -> [CoqTactic] -> Decl
+mkCoqLemma :: Id -> [((Id, RocqType), Bool)] -> RocqType -> [Tactic] -> Decl
 mkCoqLemma f args ret tacs = Definition f args ret (ProofBody tacs) Opaque
 
-mkCoqTheorem :: Id -> [((Id, RocqType), Bool)] -> CoqTerm -> [CoqTactic] -> Decl
+mkCoqTheorem :: Id -> [((Id, RocqType), Bool)] -> CoqTerm -> [Tactic] -> Decl
 mkCoqTheorem f args ret = mkCoqLemma f args (Prop ret)
 
 -- | Wrapper for Forall, defined as id for empty argument list
@@ -94,7 +94,7 @@ mkVarDestrPat :: Id -> CoqDestrPat
 mkVarDestrPat x = ConjDestrPat [SingleIdPat x, SingleIdPat $ subsetWitnessNm x]
 
 -- | mkVarDestruct(x) = destruct x as [x x_p].
-mkVarDestruct :: Id -> CoqTactic
+mkVarDestruct :: Id -> Tactic
 mkVarDestruct x = DestructSubsetTerm (Var x) (mkVarDestrPat x)
 
 -- * Normalization of arrow types
@@ -193,7 +193,7 @@ mkLam :: [(Id, RocqType)] -> CoqTerm -> CoqTerm
 mkLam [] tm = tm
 mkLam ((x, xTp) : xTs) tm = Lambda x xTp $ mkLam xTs tm
 
-ltacTerm :: CoqTactic -> CoqTerm
+ltacTerm :: Tactic -> CoqTerm
 ltacTerm tac = PrfTerm Hole (ByTac tac)
 
 packGetF :: CoqTerm -> CoqTerm
