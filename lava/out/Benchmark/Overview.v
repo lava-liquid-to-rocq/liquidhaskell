@@ -6,12 +6,12 @@ Inductive IList_u : Set :=
 	 | Nil_u: IList_u. 
 Fixpoint IList_eq (x: IList_u) (y: IList_u): bool := 
 	match (x, y) with (Cons_u x x_1, Cons_u x' x_1') => ((true && (x ==? x')) && (IList_eq x_1 x_1')) | (Nil_u, Nil_u) => true | (_, _) => false end. 
-Definition IList_eq_refl: (forall (x: IList_u) , is_true (IList_eq x x)). 
+Theorem IList_eq_refl: (forall (x: IList_u) , is_true (IList_eq x x)). 
 Proof. 
 	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve IList_eq_refl : eq_hint_db.
-Definition IList_eqb_eq: (forall (s: IList_u) (t: IList_u) , (is_true (IList_eq s t)) -> (s = t)). 
+Theorem IList_eqb_eq: (forall (s: IList_u) (t: IList_u) , (is_true (IList_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -74,7 +74,7 @@ Inductive llen_rel : (IList_u -> (Z -> Prop)) :=
 #[global] Instance llen_getF : getFunc llen_rel := { 
 	getF' := llen
 }.
-Definition llen_rel_funct [l: IList_u]: (forall (v: Z) (v': Z) (H: llen_rel l v) (K: llen_rel l v') , v = v'). 
+Theorem llen_rel_funct [l: IList_u]: (forall (v: Z) (v': Z) (H: llen_rel l v) (K: llen_rel l v') , v = v'). 
 Proof. 
 	induction l as [(*Cons*) ds_d27I l' IH_l' | (*Nil*) ]; 
 	intros ; 
@@ -130,7 +130,7 @@ Proof.
 	refine (llen__llen_rel l_r v). 
 Qed. 
 #[global] Hint Resolve llen__llen_rel' : f_rel_funct_db.
-Definition llen_rel_mk [l: IList_u] (l_p: (IList_wf l) /\ True): {v: _ | llen_rel l v}. 
+Theorem llen_rel_mk [l: IList_u] (l_p: (IList_wf l) /\ True): {v: _ | llen_rel l v}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (v: _) => (llen_rel l v)) (llen (exist _ l l_p)) _); 
@@ -171,7 +171,7 @@ Inductive append_rel : (IList_u -> (IList_u -> (IList_u -> Prop))) :=
 #[global] Instance append_getF : getFunc append_rel := { 
 	getF' := append
 }.
-Definition append_rel_funct [xs: IList_u] [ys: IList_u]: (forall (v: IList_u) (v': IList_u) (H: append_rel xs ys v) (K: append_rel xs ys v') , v = v'). 
+Theorem append_rel_funct [xs: IList_u] [ys: IList_u]: (forall (v: IList_u) (v': IList_u) (H: append_rel xs ys v) (K: append_rel xs ys v') , v = v'). 
 Proof. 
 	try revert ys_p; generalize dependent ys; 
 	induction xs as [(*Cons*) x xs IH_xs | (*Nil*) ]; 
@@ -230,7 +230,7 @@ Proof.
 	refine (append__append_rel xs_r ys_r v). 
 Qed. 
 #[global] Hint Resolve append__append_rel' : f_rel_funct_db.
-Definition append_rel_mk [xs: IList_u] [ys: IList_u] (xs_p: (IList_wf xs) /\ True) (ys_p: (IList_wf ys) /\ True): {v: _ | append_rel xs ys v}. 
+Theorem append_rel_mk [xs: IList_u] [ys: IList_u] (xs_p: (IList_wf xs) /\ True) (ys_p: (IList_wf ys) /\ True): {v: _ | append_rel xs ys v}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (v: _) => (append_rel xs ys v)) (append (exist _ xs xs_p) (exist _ ys ys_p)) _); 
@@ -271,7 +271,7 @@ Inductive get_rel : (IList_u -> (Z -> (Z -> Prop))) :=
 #[global] Instance get_getF : getFunc get_rel := { 
 	getF' := get
 }.
-Definition get_rel_funct [xs: IList_u] [i: Z]: (forall (v: Z) (v': Z) (H: get_rel xs i v) (K: get_rel xs i v') , v = v'). 
+Theorem get_rel_funct [xs: IList_u] [i: Z]: (forall (v: Z) (v': Z) (H: get_rel xs i v) (K: get_rel xs i v') , v = v'). 
 Proof. 
 	try revert i_p; generalize dependent i; 
 	induction xs as [(*Cons*) x xs' IH_xs' | (*Nil*) ]; 
@@ -327,7 +327,7 @@ Proof.
 	refine (get__get_rel xs_r i_r v). 
 Qed. 
 #[global] Hint Resolve get__get_rel' : f_rel_funct_db.
-Definition get_rel_mk [xs: IList_u] [i: Z] (xs_p: (IList_wf xs) /\ True) (i_p: forall (llenres: Z), (llen_rel xs llenres) -> ((0 <= i) /\ (i < llenres))): {v: _ | get_rel xs i v}. 
+Theorem get_rel_mk [xs: IList_u] [i: Z] (xs_p: (IList_wf xs) /\ True) (i_p: forall (llenres: Z), (llen_rel xs llenres) -> ((0 <= i) /\ (i < llenres))): {v: _ | get_rel xs i v}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (v: _) => (get_rel xs i v)) (get (exist _ xs xs_p) (exist _ i i_p)) _); 
@@ -362,7 +362,7 @@ Inductive applyToFirst_rel : ((@uPack (Z ::UT nilUT) Z) -> (IList_u -> (Z -> Pro
 #[global] Instance applyToFirst_getF : getFunc applyToFirst_rel := { 
 	getF' := applyToFirst
 }.
-Definition applyToFirst_rel_funct [f: @uPack (Z ::UT nilUT) Z] [xs: IList_u]: (forall (v: Z) (v': Z) (H: applyToFirst_rel f xs v) (K: applyToFirst_rel f xs v') , v = v'). 
+Theorem applyToFirst_rel_funct [f: @uPack (Z ::UT nilUT) Z] [xs: IList_u]: (forall (v: Z) (v': Z) (H: applyToFirst_rel f xs v) (K: applyToFirst_rel f xs v') , v = v'). 
 Proof. 
 	try revert f_p; generalize dependent f; 
 	induction xs as [(*Cons*) x l' IH_l' | (*Nil*) ]; 
@@ -413,7 +413,7 @@ Proof.
 	refine (applyToFirst__applyToFirst_rel f_r xs_r v). 
 Qed. 
 #[global] Hint Resolve applyToFirst__applyToFirst_rel' : f_rel_funct_db.
-Definition applyToFirst_rel_mk [f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (y: Z) => (ltbZ_rel 5 y true))) x_86410777 v_x_86410777)))))] [xs: IList_u] (xs_p: (IList_wf xs) /\ (forall (llenres: Z), (llen_rel xs llenres) -> (llenres <> 0))): {v: _ | applyToFirst_rel (packProj f) xs v}. 
+Theorem applyToFirst_rel_mk [f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (y: Z) => (ltbZ_rel 5 y true))) x_86410777 v_x_86410777)))))] [xs: IList_u] (xs_p: (IList_wf xs) /\ (forall (llenres: Z), (llen_rel xs llenres) -> (llenres <> 0))): {v: _ | applyToFirst_rel (packProj f) xs v}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (v: _) => (applyToFirst_rel (packProj f) xs v)) (applyToFirst f (exist _ xs xs_p)) _); 

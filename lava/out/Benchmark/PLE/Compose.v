@@ -1,12 +1,12 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Definition prop2 (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: Z) => True)) x_86410777 v_x_86410777)))))) (g: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: Z) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: Z) => True)) x_61572807 v_x_61572807)))))) (x: {x: Z | True}): {{True}}. 
+Theorem prop2 (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: Z) => True)) x_86410777 v_x_86410777)))))) (g: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: Z) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: Z) => True)) x_61572807 v_x_61572807)))))) (x: {x: Z | True}): {{True}}. 
 Proof. 
 	destruct x as [x x_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
+Qed. 
 Definition compose (lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_39721497: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))) => (fun (v_x_39721497: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True)) x_39721497 v_x_39721497)))))) (lq_tmp3: (@Pack ({lq_tmp4: Z | True} ::RT (fun (lq_tmp4: {lq_tmp4: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp4: Z | True} ::RT (fun (lq_tmp4: {lq_tmp4: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_26591512: (ArgList {lq_tmp4: Z | True} ::RT (fun (lq_tmp4: {lq_tmp4: Z | True}) => nilRT))) => (fun (v_x_26591512: Z) => (ltac: (flattenP (fun (lq_tmp4: {lq_tmp4: Z | True}) => (fun (VV: Z) => True)) x_26591512 v_x_26591512)))))) (lq_tmp6: {lq_tmp6: Z | True}): {VV: Z | True}. 
 Proof. 
 	destruct lq_tmp6 as [lq_tmp6 lq_tmp6_p]. 
@@ -25,7 +25,7 @@ Inductive compose_rel : ((@uPack (Z ::UT nilUT) Z) -> ((@uPack (Z ::UT nilUT) Z)
 #[global] Instance compose_getF : getFunc compose_rel := { 
 	getF' := compose
 }.
-Definition compose_rel_funct [lq_tmp0: @uPack (Z ::UT nilUT) Z] [lq_tmp3: @uPack (Z ::UT nilUT) Z] [lq_tmp6: Z]: (forall (VV: Z) (VV': Z) (H: compose_rel lq_tmp0 lq_tmp3 lq_tmp6 VV) (K: compose_rel lq_tmp0 lq_tmp3 lq_tmp6 VV') , VV = VV'). 
+Theorem compose_rel_funct [lq_tmp0: @uPack (Z ::UT nilUT) Z] [lq_tmp3: @uPack (Z ::UT nilUT) Z] [lq_tmp6: Z]: (forall (VV: Z) (VV': Z) (H: compose_rel lq_tmp0 lq_tmp3 lq_tmp6 VV) (K: compose_rel lq_tmp0 lq_tmp3 lq_tmp6 VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -68,7 +68,7 @@ Proof.
 	refine (compose__compose_rel lq_tmp0_r lq_tmp3_r lq_tmp6_r VV). 
 Qed. 
 #[global] Hint Resolve compose__compose_rel' : f_rel_funct_db.
-Definition compose_rel_mk [lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_39721497: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))) => (fun (v_x_39721497: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True)) x_39721497 v_x_39721497)))))] [lq_tmp3: (@Pack ({lq_tmp4: Z | True} ::RT (fun (lq_tmp4: {lq_tmp4: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp4: Z | True} ::RT (fun (lq_tmp4: {lq_tmp4: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_26591512: (ArgList {lq_tmp4: Z | True} ::RT (fun (lq_tmp4: {lq_tmp4: Z | True}) => nilRT))) => (fun (v_x_26591512: Z) => (ltac: (flattenP (fun (lq_tmp4: {lq_tmp4: Z | True}) => (fun (VV: Z) => True)) x_26591512 v_x_26591512)))))] [lq_tmp6: Z] (lq_tmp6_p: True): {VV: _ | compose_rel (packProj lq_tmp0) (packProj lq_tmp3) lq_tmp6 VV}. 
+Theorem compose_rel_mk [lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_39721497: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))) => (fun (v_x_39721497: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True)) x_39721497 v_x_39721497)))))] [lq_tmp3: (@Pack ({lq_tmp4: Z | True} ::RT (fun (lq_tmp4: {lq_tmp4: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp4: Z | True} ::RT (fun (lq_tmp4: {lq_tmp4: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_26591512: (ArgList {lq_tmp4: Z | True} ::RT (fun (lq_tmp4: {lq_tmp4: Z | True}) => nilRT))) => (fun (v_x_26591512: Z) => (ltac: (flattenP (fun (lq_tmp4: {lq_tmp4: Z | True}) => (fun (VV: Z) => True)) x_26591512 v_x_26591512)))))] [lq_tmp6: Z] (lq_tmp6_p: True): {VV: _ | compose_rel (packProj lq_tmp0) (packProj lq_tmp3) lq_tmp6 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ 
@@ -77,9 +77,9 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve compose_rel_mk : f_rel_funct_db.
-Definition prop1 (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: Z) => True)) x_86410777 v_x_86410777)))))) (g: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: Z) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: Z) => True)) x_61572807 v_x_61572807)))))) (x: {x: Z | True}): {{forall (gres: _), ((getPackRel g) (⌊ x -⌋) gres) -> (forall (fres: _), ((getPackRel f) gres fres) -> (forall (composeres: Z), (compose_rel (packProj f) (packProj g) (⌊ x -⌋) composeres) -> (fres == composeres)))}}. 
+Theorem prop1 (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: Z) => True)) x_86410777 v_x_86410777)))))) (g: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: Z) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: Z) => True)) x_61572807 v_x_61572807)))))) (x: {x: Z | True}): {{forall (gres: _), ((getPackRel g) (⌊ x -⌋) gres) -> (forall (fres: _), ((getPackRel f) gres fres) -> (forall (composeres: Z), (compose_rel (packProj f) (packProj g) (⌊ x -⌋) composeres) -> (fres == composeres)))}}. 
 Proof. 
 	destruct x as [x x_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
+Qed. 

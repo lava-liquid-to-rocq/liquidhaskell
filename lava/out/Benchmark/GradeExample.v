@@ -7,12 +7,12 @@ Inductive Modifier_u : Set :=
 	 | Plus_u: Modifier_u. 
 Fixpoint Modifier_eq (x: Modifier_u) (y: Modifier_u): bool := 
 	match (x, y) with (Minus_u, Minus_u) => true | (Natural_u, Natural_u) => true | (Plus_u, Plus_u) => true | (_, _) => false end. 
-Definition Modifier_eq_refl: (forall (x: Modifier_u) , is_true (Modifier_eq x x)). 
+Theorem Modifier_eq_refl: (forall (x: Modifier_u) , is_true (Modifier_eq x x)). 
 Proof. 
 	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Modifier_eq_refl : eq_hint_db.
-Definition Modifier_eqb_eq: (forall (s: Modifier_u) (t: Modifier_u) , (is_true (Modifier_eq s t)) -> (s = t)). 
+Theorem Modifier_eqb_eq: (forall (s: Modifier_u) (t: Modifier_u) , (is_true (Modifier_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -62,12 +62,12 @@ Inductive Letter_u : Set :=
 	 | F_u: Letter_u. 
 Fixpoint Letter_eq (x: Letter_u) (y: Letter_u): bool := 
 	match (x, y) with (A_u, A_u) => true | (B_u, B_u) => true | (C_u, C_u) => true | (D_u, D_u) => true | (F_u, F_u) => true | (_, _) => false end. 
-Definition Letter_eq_refl: (forall (x: Letter_u) , is_true (Letter_eq x x)). 
+Theorem Letter_eq_refl: (forall (x: Letter_u) , is_true (Letter_eq x x)). 
 Proof. 
 	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Letter_eq_refl : eq_hint_db.
-Definition Letter_eqb_eq: (forall (s: Letter_u) (t: Letter_u) , (is_true (Letter_eq s t)) -> (s = t)). 
+Theorem Letter_eqb_eq: (forall (s: Letter_u) (t: Letter_u) , (is_true (Letter_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -156,7 +156,7 @@ Inductive lowerLetter_rel : (Letter_u -> (Letter_u -> Prop)) :=
 #[global] Instance lowerLetter_getF : getFunc lowerLetter_rel := { 
 	getF' := lowerLetter
 }.
-Definition lowerLetter_rel_funct [l: Letter_u]: (forall (VV: Letter_u) (VV': Letter_u) (H: lowerLetter_rel l VV) (K: lowerLetter_rel l VV') , VV = VV'). 
+Theorem lowerLetter_rel_funct [l: Letter_u]: (forall (VV: Letter_u) (VV': Letter_u) (H: lowerLetter_rel l VV) (K: lowerLetter_rel l VV') , VV = VV'). 
 Proof. 
 	destruct l as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]; 
 	intros ; 
@@ -227,7 +227,7 @@ Proof.
 	refine (lowerLetter__lowerLetter_rel l_r VV). 
 Qed. 
 #[global] Hint Resolve lowerLetter__lowerLetter_rel' : f_rel_funct_db.
-Definition lowerLetter_rel_mk [l: Letter_u] (l_p: (Letter_wf l) /\ True): {VV: _ | lowerLetter_rel l VV}. 
+Theorem lowerLetter_rel_mk [l: Letter_u] (l_p: (Letter_wf l) /\ True): {VV: _ | lowerLetter_rel l VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (lowerLetter_rel l VV)) (lowerLetter (exist _ l l_p)) _); 
@@ -239,21 +239,21 @@ Qed.
 Proof. 
 	buildPackG lowerLetter lowerLetter_rel lowerLetter__lowerLetter_rel lowerLetter_rel_funct. 
 Defined.
-Definition lowerLetterFIsF: {{forall (lowerLetterres: Letter_u), (lowerLetter_rel F_u lowerLetterres) -> (lowerLetterres = F_u)}}. 
+Theorem lowerLetterFIsF: {{forall (lowerLetterres: Letter_u), (lowerLetter_rel F_u lowerLetterres) -> (lowerLetterres = F_u)}}. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
+Qed. 
 Inductive Grades_u : Set := 
 	 | Grade_u: Letter_u -> (Modifier_u -> Grades_u). 
 Fixpoint Grades_eq (x: Grades_u) (y: Grades_u): bool := 
 	match (x, y) with (Grade_u x x_1, Grade_u x' x_1') => ((true && (x ==? x')) && (x_1 ==? x_1')) end. 
-Definition Grades_eq_refl: (forall (x: Grades_u) , is_true (Grades_eq x x)). 
+Theorem Grades_eq_refl: (forall (x: Grades_u) , is_true (Grades_eq x x)). 
 Proof. 
 	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Grades_eq_refl : eq_hint_db.
-Definition Grades_eqb_eq: (forall (s: Grades_u) (t: Grades_u) , (is_true (Grades_eq s t)) -> (s = t)). 
+Theorem Grades_eqb_eq: (forall (s: Grades_u) (t: Grades_u) , (is_true (Grades_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -348,7 +348,7 @@ Inductive lowerGrade_rel : (Grades_u -> (Grades_u -> Prop)) :=
 #[global] Instance lowerGrade_getF : getFunc lowerGrade_rel := { 
 	getF' := lowerGrade
 }.
-Definition lowerGrade_rel_funct [g: Grades_u]: (forall (VV: Grades_u) (VV': Grades_u) (H: lowerGrade_rel g VV) (K: lowerGrade_rel g VV') , VV = VV'). 
+Theorem lowerGrade_rel_funct [g: Grades_u]: (forall (VV: Grades_u) (VV': Grades_u) (H: lowerGrade_rel g VV) (K: lowerGrade_rel g VV') , VV = VV'). 
 Proof. 
 	induction g as [(*Grade*) l m]; 
 	intros ; 
@@ -441,7 +441,7 @@ Proof.
 	refine (lowerGrade__lowerGrade_rel g_r VV). 
 Qed. 
 #[global] Hint Resolve lowerGrade__lowerGrade_rel' : f_rel_funct_db.
-Definition lowerGrade_rel_mk [g: Grades_u] (g_p: (Grades_wf g) /\ True): {VV: _ | lowerGrade_rel g VV}. 
+Theorem lowerGrade_rel_mk [g: Grades_u] (g_p: (Grades_wf g) /\ True): {VV: _ | lowerGrade_rel g VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (lowerGrade_rel g VV)) (lowerGrade (exist _ g g_p)) _); 
@@ -490,7 +490,7 @@ Inductive applyLatePolicy_rel : (Z -> (Grades_u -> (Grades_u -> Prop))) :=
 #[global] Instance applyLatePolicy_getF : getFunc applyLatePolicy_rel := { 
 	getF' := applyLatePolicy
 }.
-Definition applyLatePolicy_rel_funct [lateDays: Z] [g: Grades_u]: (forall (VV: Grades_u) (VV': Grades_u) (H: applyLatePolicy_rel lateDays g VV) (K: applyLatePolicy_rel lateDays g VV') , VV = VV'). 
+Theorem applyLatePolicy_rel_funct [lateDays: Z] [g: Grades_u]: (forall (VV: Grades_u) (VV': Grades_u) (H: applyLatePolicy_rel lateDays g VV) (K: applyLatePolicy_rel lateDays g VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -537,7 +537,7 @@ Proof.
 	refine (applyLatePolicy__applyLatePolicy_rel lateDays_r g_r VV). 
 Qed. 
 #[global] Hint Resolve applyLatePolicy__applyLatePolicy_rel' : f_rel_funct_db.
-Definition applyLatePolicy_rel_mk [lateDays: Z] [g: Grades_u] (lateDays_p: True) (g_p: (Grades_wf g) /\ True): {VV: _ | applyLatePolicy_rel lateDays g VV}. 
+Theorem applyLatePolicy_rel_mk [lateDays: Z] [g: Grades_u] (lateDays_p: True) (g_p: (Grades_wf g) /\ True): {VV: _ | applyLatePolicy_rel lateDays g VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (applyLatePolicy_rel lateDays g VV)) 
@@ -550,22 +550,22 @@ Qed.
 Proof. 
 	buildPackG applyLatePolicy applyLatePolicy_rel applyLatePolicy__applyLatePolicy_rel applyLatePolicy_rel_funct. 
 Defined.
-Definition lowerGradeFMinus: {{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u F_u Minus_u) lowerGraderes) -> (lowerGraderes == (Grade_u F_u Minus_u))}}. 
+Theorem lowerGradeFMinus: {{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u F_u Minus_u) lowerGraderes) -> (lowerGraderes == (Grade_u F_u Minus_u))}}. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition lowerGradeThrice: {{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u B_u Minus_u) lowerGraderes) -> (forall (lowerGrade_res_2: Grades_u), (lowerGrade_rel lowerGraderes lowerGrade_res_2) -> (forall (lowerGrade_res_3: Grades_u), (lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3) -> (lowerGrade_res_3 == (Grade_u C_u Minus_u))))}}. 
+Qed. 
+Theorem lowerGradeThrice: {{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u B_u Minus_u) lowerGraderes) -> (forall (lowerGrade_res_2: Grades_u), (lowerGrade_rel lowerGraderes lowerGrade_res_2) -> (forall (lowerGrade_res_3: Grades_u), (lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3) -> (lowerGrade_res_3 == (Grade_u C_u Minus_u))))}}. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition lowerGradeTwice: {{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u B_u Minus_u) lowerGraderes) -> (forall (lowerGrade_res_2: Grades_u), (lowerGrade_rel lowerGraderes lowerGrade_res_2) -> (lowerGrade_res_2 == (Grade_u C_u Natural_u)))}}. 
+Qed. 
+Theorem lowerGradeTwice: {{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u B_u Minus_u) lowerGraderes) -> (forall (lowerGrade_res_2: Grades_u), (lowerGrade_rel lowerGraderes lowerGrade_res_2) -> (lowerGrade_res_2 == (Grade_u C_u Natural_u)))}}. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition noPenaltyForMostlyOnTime (lateDays: {lateDays: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ lateDays -⌋) 9 true}}): {{forall (applyLatePolicyres: Grades_u), (applyLatePolicy_rel (⌊ lateDays -⌋) (⌊ g -⌋) applyLatePolicyres) -> (applyLatePolicyres = (⌊ g -⌋))}}. 
+Qed. 
+Theorem noPenaltyForMostlyOnTime (lateDays: {lateDays: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ lateDays -⌋) 9 true}}): {{forall (applyLatePolicyres: Grades_u), (applyLatePolicy_rel (⌊ lateDays -⌋) (⌊ g -⌋) applyLatePolicyres) -> (applyLatePolicyres = (⌊ g -⌋))}}. 
 Proof. 
 	destruct lateDays as [lateDays lateDays_p]. 
 	destruct g as [g g_p]. 
@@ -574,19 +574,19 @@ Proof.
 	destruct (lateDays <? 9) as [ | ] eqn:E; [refine (exist _ unit _); 
 	solver | refine (exist _ h _); 
 	solver]. 
-Defined. 
+Qed. 
 Inductive Comparison_u : Set := 
 	 | Eq_u: Comparison_u
 	 | Gt_u: Comparison_u
 	 | Lt_u: Comparison_u. 
 Fixpoint Comparison_eq (x: Comparison_u) (y: Comparison_u): bool := 
 	match (x, y) with (Eq_u, Eq_u) => true | (Gt_u, Gt_u) => true | (Lt_u, Lt_u) => true | (_, _) => false end. 
-Definition Comparison_eq_refl: (forall (x: Comparison_u) , is_true (Comparison_eq x x)). 
+Theorem Comparison_eq_refl: (forall (x: Comparison_u) , is_true (Comparison_eq x x)). 
 Proof. 
 	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Comparison_eq_refl : eq_hint_db.
-Definition Comparison_eqb_eq: (forall (s: Comparison_u) (t: Comparison_u) , (is_true (Comparison_eq s t)) -> (s = t)). 
+Theorem Comparison_eqb_eq: (forall (s: Comparison_u) (t: Comparison_u) , (is_true (Comparison_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -753,7 +753,7 @@ Inductive letterComparison_rel : (Letter_u -> (Letter_u -> (Comparison_u -> Prop
 #[global] Instance letterComparison_getF : getFunc letterComparison_rel := { 
 	getF' := letterComparison
 }.
-Definition letterComparison_rel_funct [l1: Letter_u] [l2: Letter_u]: (forall (VV: Comparison_u) (VV': Comparison_u) (H: letterComparison_rel l1 l2 VV) (K: letterComparison_rel l1 l2 VV') , VV = VV'). 
+Theorem letterComparison_rel_funct [l1: Letter_u] [l2: Letter_u]: (forall (VV: Comparison_u) (VV': Comparison_u) (H: letterComparison_rel l1 l2 VV) (K: letterComparison_rel l1 l2 VV') , VV = VV'). 
 Proof. 
 	try revert l2_p; generalize dependent l2; 
 	destruct l1 as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]; 
@@ -966,7 +966,7 @@ Proof.
 	refine (letterComparison__letterComparison_rel l1_r l2_r VV). 
 Qed. 
 #[global] Hint Resolve letterComparison__letterComparison_rel' : f_rel_funct_db.
-Definition letterComparison_rel_mk [l1: Letter_u] [l2: Letter_u] (l1_p: (Letter_wf l1) /\ True) (l2_p: (Letter_wf l2) /\ True): {VV: _ | letterComparison_rel l1 l2 VV}. 
+Theorem letterComparison_rel_mk [l1: Letter_u] [l2: Letter_u] (l1_p: (Letter_wf l1) /\ True) (l2_p: (Letter_wf l2) /\ True): {VV: _ | letterComparison_rel l1 l2 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (letterComparison_rel l1 l2 VV)) (letterComparison (exist _ l1 l1_p) (exist _ l2 l2_p)) _); 
@@ -978,7 +978,7 @@ Qed.
 Proof. 
 	buildPackG letterComparison letterComparison_rel letterComparison__letterComparison_rel letterComparison_rel_funct. 
 Defined.
-Definition letterComparisonEq (l: Letter): {{forall (letterComparisonres: Comparison_u), (letterComparison_rel (⌊ l -⌋) (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Eq_u)}}. 
+Theorem letterComparisonEq (l: Letter): {{forall (letterComparisonres: Comparison_u), (letterComparison_rel (⌊ l -⌋) (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Eq_u)}}. 
 Proof. 
 	destruct l as [l l_p]. 
 	induction l as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]. 
@@ -997,8 +997,8 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
-Definition lowerLetterLowers (l: Letter) (p: {{forall (letterComparisonres: Comparison_u), (letterComparison_rel F_u (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Lt_u)}}): {{forall (lowerLetterres: Letter_u), (lowerLetter_rel (⌊ l -⌋) lowerLetterres) -> (forall (letterComparisonres: Comparison_u), (letterComparison_rel lowerLetterres (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Lt_u))}}. 
+Qed. 
+Theorem lowerLetterLowers (l: Letter) (p: {{forall (letterComparisonres: Comparison_u), (letterComparison_rel F_u (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Lt_u)}}): {{forall (lowerLetterres: Letter_u), (lowerLetter_rel (⌊ l -⌋) lowerLetterres) -> (forall (letterComparisonres: Comparison_u), (letterComparison_rel lowerLetterres (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Lt_u))}}. 
 Proof. 
 	destruct l as [l l_p]. 
 	destruct p as [p p_p]. 
@@ -1019,7 +1019,7 @@ Proof.
 	  - intros . 
 		refine (exist _ p _); 
 		solver.  
-Defined. 
+Qed. 
 Definition modifierComparison (m1: Modifier) (m2: Modifier): Comparison. 
 Proof. 
 	destruct m1 as [m1 m1_p]. 
@@ -1077,7 +1077,7 @@ Inductive modifierComparison_rel : (Modifier_u -> (Modifier_u -> (Comparison_u -
 #[global] Instance modifierComparison_getF : getFunc modifierComparison_rel := { 
 	getF' := modifierComparison
 }.
-Definition modifierComparison_rel_funct [m1: Modifier_u] [m2: Modifier_u]: (forall (VV: Comparison_u) (VV': Comparison_u) (H: modifierComparison_rel m1 m2 VV) (K: modifierComparison_rel m1 m2 VV') , VV = VV'). 
+Theorem modifierComparison_rel_funct [m1: Modifier_u] [m2: Modifier_u]: (forall (VV: Comparison_u) (VV': Comparison_u) (H: modifierComparison_rel m1 m2 VV) (K: modifierComparison_rel m1 m2 VV') , VV = VV'). 
 Proof. 
 	try revert m2_p; generalize dependent m2; 
 	destruct m1 as [(*Minus*)  | (*Natural*)  | (*Plus*) ]; 
@@ -1187,7 +1187,7 @@ Proof.
 	refine (modifierComparison__modifierComparison_rel m1_r m2_r VV). 
 Qed. 
 #[global] Hint Resolve modifierComparison__modifierComparison_rel' : f_rel_funct_db.
-Definition modifierComparison_rel_mk [m1: Modifier_u] [m2: Modifier_u] (m1_p: (Modifier_wf m1) /\ True) (m2_p: (Modifier_wf m2) /\ True): {VV: _ | modifierComparison_rel m1 m2 VV}. 
+Theorem modifierComparison_rel_mk [m1: Modifier_u] [m2: Modifier_u] (m1_p: (Modifier_wf m1) /\ True) (m2_p: (Modifier_wf m2) /\ True): {VV: _ | modifierComparison_rel m1 m2 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (modifierComparison_rel m1 m2 VV)) (modifierComparison (exist _ m1 m1_p) (exist _ m2 m2_p)) _); 

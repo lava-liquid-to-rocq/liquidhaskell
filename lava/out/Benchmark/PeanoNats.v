@@ -6,12 +6,12 @@ Inductive Nats_u : Set :=
 	 | Zero_u: Nats_u. 
 Fixpoint Nats_eq (x: Nats_u) (y: Nats_u): bool := 
 	match (x, y) with (Suc_u x, Suc_u x') => (true && (Nats_eq x x')) | (Zero_u, Zero_u) => true | (_, _) => false end. 
-Definition Nats_eq_refl: (forall (x: Nats_u) , is_true (Nats_eq x x)). 
+Theorem Nats_eq_refl: (forall (x: Nats_u) , is_true (Nats_eq x x)). 
 Proof. 
 	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Nats_eq_refl : eq_hint_db.
-Definition Nats_eqb_eq: (forall (s: Nats_u) (t: Nats_u) , (is_true (Nats_eq s t)) -> (s = t)). 
+Theorem Nats_eqb_eq: (forall (s: Nats_u) (t: Nats_u) , (is_true (Nats_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -79,7 +79,7 @@ Inductive add_rel : (Nats_u -> (Nats_u -> (Nats_u -> Prop))) :=
 #[global] Instance add_getF : getFunc add_rel := { 
 	getF' := add
 }.
-Definition add_rel_funct [m: Nats_u] [n: Nats_u]: (forall (VV: Nats_u) (VV': Nats_u) (H: add_rel m n VV) (K: add_rel m n VV') , VV = VV'). 
+Theorem add_rel_funct [m: Nats_u] [n: Nats_u]: (forall (VV: Nats_u) (VV': Nats_u) (H: add_rel m n VV) (K: add_rel m n VV') , VV = VV'). 
 Proof. 
 	try revert n_p; generalize dependent n; 
 	induction m as [(*Suc*) m IH_m | (*Zero*) ]; 
@@ -138,7 +138,7 @@ Proof.
 	refine (add__add_rel m_r n_r VV). 
 Qed. 
 #[global] Hint Resolve add__add_rel' : f_rel_funct_db.
-Definition add_rel_mk [m: Nats_u] [n: Nats_u] (m_p: (Nats_wf m) /\ True) (n_p: (Nats_wf n) /\ True): {VV: _ | add_rel m n VV}. 
+Theorem add_rel_mk [m: Nats_u] [n: Nats_u] (m_p: (Nats_wf m) /\ True) (n_p: (Nats_wf n) /\ True): {VV: _ | add_rel m n VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (add_rel m n VV)) (add (exist _ m m_p) (exist _ n n_p)) _); 
@@ -173,7 +173,7 @@ Proof.
 		(exist (fun (n: Nats_u) => ((Nats_wf n) /\ True)) n (ltac: (solver)))) _); 
 	solver. 
 Defined. 
-Definition add_assoc (m: Nats) (n: Nats) (o: Nats): {{forall (addres: Nats_u), (add_rel (⌊ n -⌋) (⌊ o -⌋) addres) -> (forall (add_res_2: Nats_u), (add_rel (⌊ m -⌋) addres add_res_2) -> (forall (add_res_3: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) add_res_3) -> (forall (add_res_4: Nats_u), (add_rel add_res_3 (⌊ o -⌋) add_res_4) -> (add_res_2 == add_res_4))))}}. 
+Theorem add_assoc (m: Nats) (n: Nats) (o: Nats): {{forall (addres: Nats_u), (add_rel (⌊ n -⌋) (⌊ o -⌋) addres) -> (forall (add_res_2: Nats_u), (add_rel (⌊ m -⌋) addres add_res_2) -> (forall (add_res_3: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) add_res_3) -> (forall (add_res_4: Nats_u), (add_rel add_res_3 (⌊ o -⌋) add_res_4) -> (add_res_2 == add_res_4))))}}. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -190,8 +190,8 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
-Definition add_suc_r (m: Nats) (n: Nats): {{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (add_res_2: Nats_u), (add_rel (⌊ m -⌋) (Suc_u (⌊ n -⌋)) add_res_2) -> ((Suc_u addres) == add_res_2))}}. 
+Qed. 
+Theorem add_suc_r (m: Nats) (n: Nats): {{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (add_res_2: Nats_u), (add_rel (⌊ m -⌋) (Suc_u (⌊ n -⌋)) add_res_2) -> ((Suc_u addres) == add_res_2))}}. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -206,8 +206,8 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
-Definition add_zero_l (n: Nats): {{forall (addres: Nats_u), (add_rel Zero_u (⌊ n -⌋) addres) -> (addres = (⌊ n -⌋))}}. 
+Qed. 
+Theorem add_zero_l (n: Nats): {{forall (addres: Nats_u), (add_rel Zero_u (⌊ n -⌋) addres) -> (addres = (⌊ n -⌋))}}. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*Suc*) n IH_n | (*Zero*) ]. 
@@ -218,8 +218,8 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
-Definition add_zero_l_test: {{forall (addres: Nats_u), (add_rel Zero_u (Suc_u (Suc_u Zero_u)) addres) -> (addres == (Suc_u (Suc_u Zero_u)))}}. 
+Qed. 
+Theorem add_zero_l_test: {{forall (addres: Nats_u), (add_rel Zero_u (Suc_u (Suc_u Zero_u)) addres) -> (addres == (Suc_u (Suc_u Zero_u)))}}. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(add_zero_l 
@@ -229,8 +229,8 @@ Proof.
 		(Suc 
 		(subsumptionCast Nats_u (fun (n: Nats_u) => ((Nats_wf n) /\ True)) Zero (ltac: (solver)))) (ltac: (solver)))) (ltac: (solver)))) _); 
 	solver. 
-Defined. 
-Definition add_zero_r (n: Nats): {{forall (addres: Nats_u), (add_rel (⌊ n -⌋) Zero_u addres) -> (addres = (⌊ n -⌋))}}. 
+Qed. 
+Theorem add_zero_r (n: Nats): {{forall (addres: Nats_u), (add_rel (⌊ n -⌋) Zero_u addres) -> (addres = (⌊ n -⌋))}}. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*Suc*) n IH_n | (*Zero*) ]. 
@@ -241,7 +241,7 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
+Qed. 
 Definition eqN (m: Nats) (n: Nats): Bool. 
 Proof. 
 	destruct m as [m m_p]. 
@@ -280,7 +280,7 @@ Inductive eqN_rel : (Nats_u -> (Nats_u -> (bool -> Prop))) :=
 #[global] Instance eqN_getF : getFunc eqN_rel := { 
 	getF' := eqN
 }.
-Definition eqN_rel_funct [m: Nats_u] [n: Nats_u]: (forall (VV: bool) (VV': bool) (H: eqN_rel m n VV) (K: eqN_rel m n VV') , VV = VV'). 
+Theorem eqN_rel_funct [m: Nats_u] [n: Nats_u]: (forall (VV: bool) (VV': bool) (H: eqN_rel m n VV) (K: eqN_rel m n VV') , VV = VV'). 
 Proof. 
 	try revert n_p; generalize dependent n; 
 	induction m as [(*Suc*) m IH_m | (*Zero*) ]; 
@@ -362,7 +362,7 @@ Proof.
 	refine (eqN__eqN_rel m_r n_r VV). 
 Qed. 
 #[global] Hint Resolve eqN__eqN_rel' : f_rel_funct_db.
-Definition eqN_rel_mk [m: Nats_u] [n: Nats_u] (m_p: (Nats_wf m) /\ True) (n_p: (Nats_wf n) /\ True): {VV: _ | eqN_rel m n VV}. 
+Theorem eqN_rel_mk [m: Nats_u] [n: Nats_u] (m_p: (Nats_wf m) /\ True) (n_p: (Nats_wf n) /\ True): {VV: _ | eqN_rel m n VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (eqN_rel m n VV)) (eqN (exist _ m m_p) (exist _ n n_p)) _); 
@@ -440,7 +440,7 @@ Inductive geqN_rel : (Nats_u -> (Nats_u -> (bool -> Prop))) :=
 #[global] Instance geqN_getF : getFunc geqN_rel := { 
 	getF' := geqN
 }.
-Definition geqN_rel_funct [m: Nats_u] [n: Nats_u]: (forall (VV: bool) (VV': bool) (H: geqN_rel m n VV) (K: geqN_rel m n VV') , VV = VV'). 
+Theorem geqN_rel_funct [m: Nats_u] [n: Nats_u]: (forall (VV: bool) (VV': bool) (H: geqN_rel m n VV) (K: geqN_rel m n VV') , VV = VV'). 
 Proof. 
 	try revert m_p; generalize dependent m; 
 	induction n as [(*Suc*) n IH_n | (*Zero*) ]; 
@@ -512,7 +512,7 @@ Proof.
 	refine (geqN__geqN_rel m_r n_r VV). 
 Qed. 
 #[global] Hint Resolve geqN__geqN_rel' : f_rel_funct_db.
-Definition geqN_rel_mk [m: Nats_u] [n: Nats_u] (m_p: (Nats_wf m) /\ True) (n_p: (Nats_wf n) /\ True): {VV: _ | geqN_rel m n VV}. 
+Theorem geqN_rel_mk [m: Nats_u] [n: Nats_u] (m_p: (Nats_wf m) /\ True) (n_p: (Nats_wf n) /\ True): {VV: _ | geqN_rel m n VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (geqN_rel m n VV)) (geqN (exist _ m m_p) (exist _ n n_p)) _); 
@@ -564,7 +564,7 @@ Inductive PeanoNats__sub_rel : (Nats_u -> (Nats_u -> (Nats_u -> Prop))) :=
 #[global] Instance PeanoNats__sub_getF : getFunc PeanoNats__sub_rel := { 
 	getF' := PeanoNats__sub
 }.
-Definition PeanoNats__sub_rel_funct [m: Nats_u] [n: Nats_u]: (forall (o: Nats_u) (o': Nats_u) (H: PeanoNats__sub_rel m n o) (K: PeanoNats__sub_rel m n o') , o = o'). 
+Theorem PeanoNats__sub_rel_funct [m: Nats_u] [n: Nats_u]: (forall (o: Nats_u) (o': Nats_u) (H: PeanoNats__sub_rel m n o) (K: PeanoNats__sub_rel m n o') , o = o'). 
 Proof. 
 	try revert n_p; generalize dependent n; 
 	induction m as [(*Suc*) m IH_m | (*Zero*) ]; 
@@ -641,7 +641,7 @@ Proof.
 	refine (PeanoNats__sub__PeanoNats__sub_rel m_r n_r o). 
 Qed. 
 #[global] Hint Resolve PeanoNats__sub__PeanoNats__sub_rel' : f_rel_funct_db.
-Definition PeanoNats__sub_rel_mk [m: Nats_u] [n: Nats_u] (m_p: (Nats_wf m) /\ True) (n_p: (Nats_wf n) /\ (geqN_rel m n true)): {o: _ | PeanoNats__sub_rel m n o}. 
+Theorem PeanoNats__sub_rel_mk [m: Nats_u] [n: Nats_u] (m_p: (Nats_wf m) /\ True) (n_p: (Nats_wf n) /\ (geqN_rel m n true)): {o: _ | PeanoNats__sub_rel m n o}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (o: _) => (PeanoNats__sub_rel m n o)) (PeanoNats__sub (exist _ m m_p) (exist _ n n_p)) _); 
@@ -653,7 +653,7 @@ Qed.
 Proof. 
 	buildPackG PeanoNats__sub PeanoNats__sub_rel PeanoNats__sub__PeanoNats__sub_rel PeanoNats__sub_rel_funct. 
 Defined.
-Definition add_sub (m: Nats) (n: Nats): {{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (PeanoNats__subres: Nats_u), (PeanoNats__sub_rel addres (⌊ n -⌋) PeanoNats__subres) -> (PeanoNats__subres = (⌊ m -⌋)))}}. 
+Theorem add_sub (m: Nats) (n: Nats): {{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (PeanoNats__subres: Nats_u), (PeanoNats__sub_rel addres (⌊ n -⌋) PeanoNats__subres) -> (PeanoNats__subres = (⌊ m -⌋)))}}. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -691,7 +691,7 @@ Proof.
 		  -- intros . 
 			refine (exist _ unit _); 
 			solver.   
-Defined. 
+Qed. 
 Definition mult (m: Nats) (n: Nats): Nats. 
 Proof. 
 	destruct m as [m m_p]. 
@@ -721,7 +721,7 @@ Inductive mult_rel : (Nats_u -> (Nats_u -> (Nats_u -> Prop))) :=
 #[global] Instance mult_getF : getFunc mult_rel := { 
 	getF' := mult
 }.
-Definition mult_rel_funct [m: Nats_u] [n: Nats_u]: (forall (VV: Nats_u) (VV': Nats_u) (H: mult_rel m n VV) (K: mult_rel m n VV') , VV = VV'). 
+Theorem mult_rel_funct [m: Nats_u] [n: Nats_u]: (forall (VV: Nats_u) (VV': Nats_u) (H: mult_rel m n VV) (K: mult_rel m n VV') , VV = VV'). 
 Proof. 
 	try revert n_p; generalize dependent n; 
 	induction m as [(*Suc*) m IH_m | (*Zero*) ]; 
@@ -780,7 +780,7 @@ Proof.
 	refine (mult__mult_rel m_r n_r VV). 
 Qed. 
 #[global] Hint Resolve mult__mult_rel' : f_rel_funct_db.
-Definition mult_rel_mk [m: Nats_u] [n: Nats_u] (m_p: (Nats_wf m) /\ True) (n_p: (Nats_wf n) /\ True): {VV: _ | mult_rel m n VV}. 
+Theorem mult_rel_mk [m: Nats_u] [n: Nats_u] (m_p: (Nats_wf m) /\ True) (n_p: (Nats_wf n) /\ True): {VV: _ | mult_rel m n VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (mult_rel m n VV)) (mult (exist _ m m_p) (exist _ n n_p)) _); 
@@ -792,7 +792,7 @@ Qed.
 Proof. 
 	buildPackG mult mult_rel mult__mult_rel mult_rel_funct. 
 Defined.
-Definition add_dist_rmult (m: Nats) (n: Nats) (o: Nats): {{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (multres: Nats_u), (mult_rel addres (⌊ o -⌋) multres) -> (forall (mult_res_2: Nats_u), (mult_rel (⌊ n -⌋) (⌊ o -⌋) mult_res_2) -> (forall (mult_res_3: Nats_u), (mult_rel (⌊ m -⌋) (⌊ o -⌋) mult_res_3) -> (forall (add_res_2: Nats_u), (add_rel mult_res_3 mult_res_2 add_res_2) -> (multres == add_res_2)))))}}. 
+Theorem add_dist_rmult (m: Nats) (n: Nats) (o: Nats): {{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (multres: Nats_u), (mult_rel addres (⌊ o -⌋) multres) -> (forall (mult_res_2: Nats_u), (mult_rel (⌊ n -⌋) (⌊ o -⌋) mult_res_2) -> (forall (mult_res_3: Nats_u), (mult_rel (⌊ m -⌋) (⌊ o -⌋) mult_res_3) -> (forall (add_res_2: Nats_u), (add_rel mult_res_3 mult_res_2 add_res_2) -> (multres == add_res_2)))))}}. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -820,7 +820,7 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
+Qed. 
 Definition one: Nats. 
 Proof. 
 	refine (subsumptionCast _ _ 
@@ -837,7 +837,7 @@ Inductive one_rel : (Nats_u -> Prop) :=
 #[global] Instance one_getF : getFunc one_rel := { 
 	getF' := one
 }.
-Definition one_rel_funct: (forall (VV: Nats_u) (VV': Nats_u) (H: one_rel VV) (K: one_rel VV') , VV = VV'). 
+Theorem one_rel_funct: (forall (VV: Nats_u) (VV': Nats_u) (H: one_rel VV) (K: one_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -880,7 +880,7 @@ Proof.
 	refine (one__one_rel VV). 
 Qed. 
 #[global] Hint Resolve one__one_rel' : f_rel_funct_db.
-Definition one_rel_mk: {VV: _ | one_rel VV}. 
+Theorem one_rel_mk: {VV: _ | one_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (one_rel VV)) one _); 
@@ -888,7 +888,7 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve one_rel_mk : f_rel_funct_db.
-Definition sub_self (m: Nats) (n: Nats): {{forall (eqNres: bool), (eqN_rel (⌊ m -⌋) (⌊ n -⌋) eqNres) -> (forall (PeanoNats__subres: Nats_u), (PeanoNats__sub_rel (⌊ m -⌋) (⌊ n -⌋) PeanoNats__subres) -> ((is_true eqNres) -> (PeanoNats__subres = Zero_u)))}}. 
+Theorem sub_self (m: Nats) (n: Nats): {{forall (eqNres: bool), (eqN_rel (⌊ m -⌋) (⌊ n -⌋) eqNres) -> (forall (PeanoNats__subres: Nats_u), (PeanoNats__sub_rel (⌊ m -⌋) (⌊ n -⌋) PeanoNats__subres) -> ((is_true eqNres) -> (PeanoNats__subres = Zero_u)))}}. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -908,7 +908,7 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
+Qed. 
 Definition two: Nats. 
 Proof. 
 	refine (subsumptionCast _ _ 
@@ -925,7 +925,7 @@ Inductive two_rel : (Nats_u -> Prop) :=
 #[global] Instance two_getF : getFunc two_rel := { 
 	getF' := two
 }.
-Definition two_rel_funct: (forall (VV: Nats_u) (VV': Nats_u) (H: two_rel VV) (K: two_rel VV') , VV = VV'). 
+Theorem two_rel_funct: (forall (VV: Nats_u) (VV': Nats_u) (H: two_rel VV) (K: two_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -968,7 +968,7 @@ Proof.
 	refine (two__two_rel VV). 
 Qed. 
 #[global] Hint Resolve two__two_rel' : f_rel_funct_db.
-Definition two_rel_mk: {VV: _ | two_rel VV}. 
+Theorem two_rel_mk: {VV: _ | two_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (two_rel VV)) two _); 

@@ -1136,7 +1136,7 @@ Tactic Notation "recreate_refined_term" constr(relApp) ident(fAppl_res) :=
 Tactic Notation "recreate_var" constr(relApp) ident(vRes) := 
   match relApp with
   | _ ?v => isVar v; match goal with
-    | [def: ⌊ ?tm -⌋ = v |- _] => pose tm as vRes
+    | [def: ⌊ ?tm -⌋ = v |- _] => pose (exist _ v ⌈ tm ⌉) as vRes
     end
   | _ =>
     let fAppl_res := fresh "fAppl_res" in

@@ -7,12 +7,12 @@ Inductive RBin_u : Set :=
 	 | RZ_u: RBin_u. 
 Fixpoint RBin_eq (x: RBin_u) (y: RBin_u): bool := 
 	match (x, y) with (RB0_u x, RB0_u x') => (true && (RBin_eq x x')) | (RB1_u x, RB1_u x') => (true && (RBin_eq x x')) | (RZ_u, RZ_u) => true | (_, _) => false end. 
-Definition RBin_eq_refl: (forall (x: RBin_u) , is_true (RBin_eq x x)). 
+Theorem RBin_eq_refl: (forall (x: RBin_u) , is_true (RBin_eq x x)). 
 Proof. 
 	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve RBin_eq_refl : eq_hint_db.
-Definition RBin_eqb_eq: (forall (s: RBin_u) (t: RBin_u) , (is_true (RBin_eq s t)) -> (s = t)). 
+Theorem RBin_eqb_eq: (forall (s: RBin_u) (t: RBin_u) , (is_true (RBin_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -70,12 +70,12 @@ Inductive Bin_u : Set :=
 	 | RBinsToBins__Z_u: Bin_u. 
 Fixpoint Bin_eq (x: Bin_u) (y: Bin_u): bool := 
 	match (x, y) with (B0_u x, B0_u x') => (true && (Bin_eq x x')) | (B1_u x, B1_u x') => (true && (Bin_eq x x')) | (RBinsToBins__Z_u, RBinsToBins__Z_u) => true | (_, _) => false end. 
-Definition Bin_eq_refl: (forall (x: Bin_u) , is_true (Bin_eq x x)). 
+Theorem Bin_eq_refl: (forall (x: Bin_u) , is_true (Bin_eq x x)). 
 Proof. 
 	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Bin_eq_refl : eq_hint_db.
-Definition Bin_eqb_eq: (forall (s: Bin_u) (t: Bin_u) , (is_true (Bin_eq s t)) -> (s = t)). 
+Theorem Bin_eqb_eq: (forall (s: Bin_u) (t: Bin_u) , (is_true (Bin_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 

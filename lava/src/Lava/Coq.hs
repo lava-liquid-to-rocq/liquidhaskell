@@ -460,9 +460,7 @@ instance Show CoqDecl where
         ProofBody tacs -> prfBody tacs
         TermBody expr -> definien expr
 
-      header = case ret of
-        Prop {} | vis == Opaque -> "Theorem " ++ sign
-        _ -> "Definition " ++ sign
+      header = (if vis == Opaque then "Theorem " else "Definition ") ++ sign
       sign = f ++ concatMap showCoqArg args ++ ": " ++ show ret
       definien tm = " := \n\t" ++ show tm ++ ". "
       prfBody tacs = ". \nProof. \n\t" ++ showTacs 1 tacs ++ if admitted tacs then "\nAdmitted. " else qedSym

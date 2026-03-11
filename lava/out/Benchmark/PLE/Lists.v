@@ -6,12 +6,12 @@ Inductive L_u : Set :=
 	 | Emp_u: L_u. 
 Fixpoint L_eq (x: L_u) (y: L_u): bool := 
 	match (x, y) with (C_u x x_1, C_u x' x_1') => ((true && (x ==? x')) && (L_eq x_1 x_1')) | (Emp_u, Emp_u) => true | (_, _) => false end. 
-Definition L_eq_refl: (forall (x: L_u) , is_true (L_eq x x)). 
+Theorem L_eq_refl: (forall (x: L_u) , is_true (L_eq x x)). 
 Proof. 
 	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve L_eq_refl : eq_hint_db.
-Definition L_eqb_eq: (forall (s: L_u) (t: L_u) , (is_true (L_eq s t)) -> (s = t)). 
+Theorem L_eqb_eq: (forall (s: L_u) (t: L_u) , (is_true (L_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -78,7 +78,7 @@ Inductive append_rel : (L_u -> (L_u -> (L_u -> Prop))) :=
 #[global] Instance append_getF : getFunc append_rel := { 
 	getF' := append
 }.
-Definition append_rel_funct [lq_tmp0: L_u] [lq_tmp1: L_u]: (forall (VV: L_u) (VV': L_u) (H: append_rel lq_tmp0 lq_tmp1 VV) (K: append_rel lq_tmp0 lq_tmp1 VV') , VV = VV'). 
+Theorem append_rel_funct [lq_tmp0: L_u] [lq_tmp1: L_u]: (forall (VV: L_u) (VV': L_u) (H: append_rel lq_tmp0 lq_tmp1 VV) (K: append_rel lq_tmp0 lq_tmp1 VV') , VV = VV'). 
 Proof. 
 	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
 	induction lq_tmp0 as [(*C*) x xs IH_xs | (*Emp*) ]; 
@@ -138,7 +138,7 @@ Proof.
 	refine (append__append_rel lq_tmp0_r lq_tmp1_r VV). 
 Qed. 
 #[global] Hint Resolve append__append_rel' : f_rel_funct_db.
-Definition append_rel_mk [lq_tmp0: L_u] [lq_tmp1: L_u] (lq_tmp0_p: (L_wf lq_tmp0) /\ True) (lq_tmp1_p: (L_wf lq_tmp1) /\ True): {VV: _ | append_rel lq_tmp0 lq_tmp1 VV}. 
+Theorem append_rel_mk [lq_tmp0: L_u] [lq_tmp1: L_u] (lq_tmp0_p: (L_wf lq_tmp0) /\ True) (lq_tmp1_p: (L_wf lq_tmp1) /\ True): {VV: _ | append_rel lq_tmp0 lq_tmp1 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (append_rel lq_tmp0 lq_tmp1 VV)) 
@@ -151,24 +151,24 @@ Qed.
 Proof. 
 	buildPackG append append_rel append__append_rel append_rel_funct. 
 Defined.
-Definition propConst1 (lq_tmp0: {{True}}): {{forall (appendres: L_u), (append_rel (C_u 1 Emp_u) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 Emp_u)))}}. 
+Theorem propConst1 (lq_tmp0: {{True}}): {{forall (appendres: L_u), (append_rel (C_u 1 Emp_u) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 Emp_u)))}}. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition propConst2 (lq_tmp0: {{True}}): {{forall (appendres: L_u), (append_rel (C_u 1 (C_u 2 Emp_u)) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 (C_u 2 Emp_u))))}}. 
+Qed. 
+Theorem propConst2 (lq_tmp0: {{True}}): {{forall (appendres: L_u), (append_rel (C_u 1 (C_u 2 Emp_u)) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 (C_u 2 Emp_u))))}}. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition propConst3 (lq_tmp0: {{True}}): {{forall (appendres: L_u), (append_rel (C_u 1 (C_u 2 (C_u 3 Emp_u))) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 (C_u 2 (C_u 3 Emp_u)))))}}. 
+Qed. 
+Theorem propConst3 (lq_tmp0: {{True}}): {{forall (appendres: L_u), (append_rel (C_u 1 (C_u 2 (C_u 3 Emp_u))) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 (C_u 2 (C_u 3 Emp_u)))))}}. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
+Qed. 
 Definition length (lq_tmp0: L): {VV: Z | gebZ_rel VV 0 true}. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
@@ -192,7 +192,7 @@ Inductive length_rel : (L_u -> (Z -> Prop)) :=
 #[global] Instance length_getF : getFunc length_rel := { 
 	getF' := length
 }.
-Definition length_rel_funct [lq_tmp0: L_u]: (forall (VV: Z) (VV': Z) (H: length_rel lq_tmp0 VV) (K: length_rel lq_tmp0 VV') , VV = VV'). 
+Theorem length_rel_funct [lq_tmp0: L_u]: (forall (VV: Z) (VV': Z) (H: length_rel lq_tmp0 VV) (K: length_rel lq_tmp0 VV') , VV = VV'). 
 Proof. 
 	induction lq_tmp0 as [(*C*) ds_d2Vm xs IH_xs | (*Emp*) ]; 
 	intros ; 
@@ -248,7 +248,7 @@ Proof.
 	refine (length__length_rel lq_tmp0_r VV). 
 Qed. 
 #[global] Hint Resolve length__length_rel' : f_rel_funct_db.
-Definition length_rel_mk [lq_tmp0: L_u] (lq_tmp0_p: (L_wf lq_tmp0) /\ True): {VV: _ | length_rel lq_tmp0 VV}. 
+Theorem length_rel_mk [lq_tmp0: L_u] (lq_tmp0_p: (L_wf lq_tmp0) /\ True): {VV: _ | length_rel lq_tmp0 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (length_rel lq_tmp0 VV)) (length (exist _ lq_tmp0 lq_tmp0_p)) _); 
@@ -260,7 +260,7 @@ Qed.
 Proof. 
 	buildPackG length length_rel length__length_rel length_rel_funct. 
 Defined.
-Definition prop (x: {x: Z | True}) (xs: L) (ys: L) (zs: L): {{forall (appendres: L_u), (append_rel (C_u (⌊ x -⌋) (⌊ xs -⌋)) (⌊ ys -⌋) appendres) -> (forall (append_res_2: L_u), (append_rel appendres (⌊ zs -⌋) append_res_2) -> (forall (append_res_3: L_u), (append_rel (⌊ xs -⌋) (⌊ ys -⌋) append_res_3) -> (forall (append_res_4: L_u), (append_rel append_res_3 (⌊ zs -⌋) append_res_4) -> (append_res_2 == (C_u (⌊ x -⌋) append_res_4)))))}}. 
+Theorem prop (x: {x: Z | True}) (xs: L) (ys: L) (zs: L): {{forall (appendres: L_u), (append_rel (C_u (⌊ x -⌋) (⌊ xs -⌋)) (⌊ ys -⌋) appendres) -> (forall (append_res_2: L_u), (append_rel appendres (⌊ zs -⌋) append_res_2) -> (forall (append_res_3: L_u), (append_rel (⌊ xs -⌋) (⌊ ys -⌋) append_res_3) -> (forall (append_res_4: L_u), (append_rel append_res_3 (⌊ zs -⌋) append_res_4) -> (append_res_2 == (C_u (⌊ x -⌋) append_res_4)))))}}. 
 Proof. 
 	destruct x as [x x_p]. 
 	destruct xs as [xs xs_p]. 
@@ -268,4 +268,4 @@ Proof.
 	destruct zs as [zs zs_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
+Qed. 

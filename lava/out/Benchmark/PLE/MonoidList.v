@@ -6,12 +6,12 @@ Inductive L_u : Set :=
 	 | Emp_u: L_u. 
 Fixpoint L_eq (x: L_u) (y: L_u): bool := 
 	match (x, y) with (C_u x x_1, C_u x' x_1') => ((true && (x ==? x')) && (L_eq x_1 x_1')) | (Emp_u, Emp_u) => true | (_, _) => false end. 
-Definition L_eq_refl: (forall (x: L_u) , is_true (L_eq x x)). 
+Theorem L_eq_refl: (forall (x: L_u) , is_true (L_eq x x)). 
 Proof. 
 	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve L_eq_refl : eq_hint_db.
-Definition L_eqb_eq: (forall (s: L_u) (t: L_u) , (is_true (L_eq s t)) -> (s = t)). 
+Theorem L_eqb_eq: (forall (s: L_u) (t: L_u) , (is_true (L_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -78,7 +78,7 @@ Inductive mappend_rel : (L_u -> (L_u -> (L_u -> Prop))) :=
 #[global] Instance mappend_getF : getFunc mappend_rel := { 
 	getF' := mappend
 }.
-Definition mappend_rel_funct [lq_tmp0: L_u] [lq_tmp1: L_u]: (forall (VV: L_u) (VV': L_u) (H: mappend_rel lq_tmp0 lq_tmp1 VV) (K: mappend_rel lq_tmp0 lq_tmp1 VV') , VV = VV'). 
+Theorem mappend_rel_funct [lq_tmp0: L_u] [lq_tmp1: L_u]: (forall (VV: L_u) (VV': L_u) (H: mappend_rel lq_tmp0 lq_tmp1 VV) (K: mappend_rel lq_tmp0 lq_tmp1 VV') , VV = VV'). 
 Proof. 
 	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
 	induction lq_tmp0 as [(*C*) x xs IH_xs | (*Emp*) ]; 
@@ -138,7 +138,7 @@ Proof.
 	refine (mappend__mappend_rel lq_tmp0_r lq_tmp1_r VV). 
 Qed. 
 #[global] Hint Resolve mappend__mappend_rel' : f_rel_funct_db.
-Definition mappend_rel_mk [lq_tmp0: L_u] [lq_tmp1: L_u] (lq_tmp0_p: (L_wf lq_tmp0) /\ True) (lq_tmp1_p: (L_wf lq_tmp1) /\ True): {VV: _ | mappend_rel lq_tmp0 lq_tmp1 VV}. 
+Theorem mappend_rel_mk [lq_tmp0: L_u] [lq_tmp1: L_u] (lq_tmp0_p: (L_wf lq_tmp0) /\ True) (lq_tmp1_p: (L_wf lq_tmp1) /\ True): {VV: _ | mappend_rel lq_tmp0 lq_tmp1 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (mappend_rel lq_tmp0 lq_tmp1 VV)) 
@@ -151,7 +151,7 @@ Qed.
 Proof. 
 	buildPackG mappend mappend_rel mappend__mappend_rel mappend_rel_funct. 
 Defined.
-Definition mappend_assoc (xs: L) (ys: L) (zs: L): {{forall (mappendres: L_u), (mappend_rel (⌊ xs -⌋) (⌊ ys -⌋) mappendres) -> (forall (mappend_res_2: L_u), (mappend_rel mappendres (⌊ zs -⌋) mappend_res_2) -> (forall (mappend_res_3: L_u), (mappend_rel (⌊ ys -⌋) (⌊ zs -⌋) mappend_res_3) -> (forall (mappend_res_4: L_u), (mappend_rel (⌊ xs -⌋) mappend_res_3 mappend_res_4) -> (mappend_res_2 == mappend_res_4))))}}. 
+Theorem mappend_assoc (xs: L) (ys: L) (zs: L): {{forall (mappendres: L_u), (mappend_rel (⌊ xs -⌋) (⌊ ys -⌋) mappendres) -> (forall (mappend_res_2: L_u), (mappend_rel mappendres (⌊ zs -⌋) mappend_res_2) -> (forall (mappend_res_3: L_u), (mappend_rel (⌊ ys -⌋) (⌊ zs -⌋) mappend_res_3) -> (forall (mappend_res_4: L_u), (mappend_rel (⌊ xs -⌋) mappend_res_3 mappend_res_4) -> (mappend_res_2 == mappend_res_4))))}}. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct ys as [ys ys_p]. 
@@ -168,7 +168,7 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
+Qed. 
 Definition mempty: L. 
 Proof. 
 	refine (subsumptionCast _ _ Emp _); 
@@ -183,7 +183,7 @@ Inductive mempty_rel : (L_u -> Prop) :=
 #[global] Instance mempty_getF : getFunc mempty_rel := { 
 	getF' := mempty
 }.
-Definition mempty_rel_funct: (forall (VV: L_u) (VV': L_u) (H: mempty_rel VV) (K: mempty_rel VV') , VV = VV'). 
+Theorem mempty_rel_funct: (forall (VV: L_u) (VV': L_u) (H: mempty_rel VV) (K: mempty_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -226,7 +226,7 @@ Proof.
 	refine (mempty__mempty_rel VV). 
 Qed. 
 #[global] Hint Resolve mempty__mempty_rel' : f_rel_funct_db.
-Definition mempty_rel_mk: {VV: _ | mempty_rel VV}. 
+Theorem mempty_rel_mk: {VV: _ | mempty_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (mempty_rel VV)) mempty _); 
@@ -234,13 +234,13 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve mempty_rel_mk : f_rel_funct_db.
-Definition mempty_left (x: L): {{forall (mappendres: L_u), (mappend_rel (⌊ mempty -⌋) (⌊ x -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+Theorem mempty_left (x: L): {{forall (mappendres: L_u), (mappend_rel (⌊ mempty -⌋) (⌊ x -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
 Proof. 
 	destruct x as [x x_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition mempty_right (x: L): {{forall (mappendres: L_u), (mappend_rel (⌊ x -⌋) (⌊ mempty -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+Qed. 
+Theorem mempty_right (x: L): {{forall (mappendres: L_u), (mappend_rel (⌊ x -⌋) (⌊ mempty -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
 Proof. 
 	destruct x as [x x_p]. 
 	induction x as [(*C*) x xs IH_xs | (*Emp*) ]. 
@@ -251,4 +251,4 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
+Qed. 

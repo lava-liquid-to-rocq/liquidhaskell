@@ -6,12 +6,12 @@ Inductive MaybeInt_u : Set :=
 	 | Nothing_u: MaybeInt_u. 
 Fixpoint MaybeInt_eq (x: MaybeInt_u) (y: MaybeInt_u): bool := 
 	match (x, y) with (Just_u x, Just_u x') => (true && (x ==? x')) | (Nothing_u, Nothing_u) => true | (_, _) => false end. 
-Definition MaybeInt_eq_refl: (forall (x: MaybeInt_u) , is_true (MaybeInt_eq x x)). 
+Theorem MaybeInt_eq_refl: (forall (x: MaybeInt_u) , is_true (MaybeInt_eq x x)). 
 Proof. 
 	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve MaybeInt_eq_refl : eq_hint_db.
-Definition MaybeInt_eqb_eq: (forall (s: MaybeInt_u) (t: MaybeInt_u) , (is_true (MaybeInt_eq s t)) -> (s = t)). 
+Theorem MaybeInt_eqb_eq: (forall (s: MaybeInt_u) (t: MaybeInt_u) , (is_true (MaybeInt_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -69,7 +69,7 @@ Inductive bind_rel : (MaybeInt_u -> ((@uPack (Z ::UT nilUT) MaybeInt_u) -> (Mayb
 #[global] Instance bind_getF : getFunc bind_rel := { 
 	getF' := bind
 }.
-Definition bind_rel_funct [lq_tmp0: MaybeInt_u] [lq_tmp1: @uPack (Z ::UT nilUT) MaybeInt_u]: (forall (VV: MaybeInt_u) (VV': MaybeInt_u) (H: bind_rel lq_tmp0 lq_tmp1 VV) (K: bind_rel lq_tmp0 lq_tmp1 VV') , VV = VV'). 
+Theorem bind_rel_funct [lq_tmp0: MaybeInt_u] [lq_tmp1: @uPack (Z ::UT nilUT) MaybeInt_u]: (forall (VV: MaybeInt_u) (VV': MaybeInt_u) (H: bind_rel lq_tmp0 lq_tmp1 VV) (K: bind_rel lq_tmp0 lq_tmp1 VV') , VV = VV'). 
 Proof. 
 	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
 	induction lq_tmp0 as [(*Just*) m | (*Nothing*) ]; 
@@ -124,7 +124,7 @@ Proof.
 	refine (bind__bind_rel lq_tmp0_r lq_tmp1_r VV). 
 Qed. 
 #[global] Hint Resolve bind__bind_rel' : f_rel_funct_db.
-Definition bind_rel_mk [lq_tmp0: MaybeInt_u] [lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) MaybeInt_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: MaybeInt_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: MaybeInt_u) => ((MaybeInt_wf VV) /\ True))) x_61572807 v_x_61572807)))))] (lq_tmp0_p: (MaybeInt_wf lq_tmp0) /\ True): {VV: _ | bind_rel lq_tmp0 (packProj lq_tmp1) VV}. 
+Theorem bind_rel_mk [lq_tmp0: MaybeInt_u] [lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) MaybeInt_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: MaybeInt_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: MaybeInt_u) => ((MaybeInt_wf VV) /\ True))) x_61572807 v_x_61572807)))))] (lq_tmp0_p: (MaybeInt_wf lq_tmp0) /\ True): {VV: _ | bind_rel lq_tmp0 (packProj lq_tmp1) VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (bind_rel lq_tmp0 (packProj lq_tmp1) VV)) (bind (exist _ lq_tmp0 lq_tmp0_p) lq_tmp1) _); 
@@ -148,7 +148,7 @@ Inductive retrn_rel : (Z -> (MaybeInt_u -> Prop)) :=
 #[global] Instance retrn_getF : getFunc retrn_rel := { 
 	getF' := retrn
 }.
-Definition retrn_rel_funct [lq_tmp0: Z]: (forall (VV: MaybeInt_u) (VV': MaybeInt_u) (H: retrn_rel lq_tmp0 VV) (K: retrn_rel lq_tmp0 VV') , VV = VV'). 
+Theorem retrn_rel_funct [lq_tmp0: Z]: (forall (VV: MaybeInt_u) (VV': MaybeInt_u) (H: retrn_rel lq_tmp0 VV) (K: retrn_rel lq_tmp0 VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -191,7 +191,7 @@ Proof.
 	refine (retrn__retrn_rel lq_tmp0_r VV). 
 Qed. 
 #[global] Hint Resolve retrn__retrn_rel' : f_rel_funct_db.
-Definition retrn_rel_mk [lq_tmp0: Z] (lq_tmp0_p: True): {VV: _ | retrn_rel lq_tmp0 VV}. 
+Theorem retrn_rel_mk [lq_tmp0: Z] (lq_tmp0_p: True): {VV: _ | retrn_rel lq_tmp0 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (retrn_rel lq_tmp0 VV)) (retrn (exist _ lq_tmp0 lq_tmp0_p)) _); 
@@ -203,13 +203,13 @@ Qed.
 Proof. 
 	buildPackG retrn retrn_rel retrn__retrn_rel retrn_rel_funct. 
 Defined.
-Definition left_identity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) MaybeInt_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: MaybeInt_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: MaybeInt_u) => ((MaybeInt_wf VV) /\ True))) x_86410777 v_x_86410777)))))): {{forall (retrnres: MaybeInt_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (bindres: MaybeInt_u), (bind_rel retrnres (packProj f) bindres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (bindres == fres)))}}. 
+Theorem left_identity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) MaybeInt_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: MaybeInt_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: MaybeInt_u) => ((MaybeInt_wf VV) /\ True))) x_86410777 v_x_86410777)))))): {{forall (retrnres: MaybeInt_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (bindres: MaybeInt_u), (bind_rel retrnres (packProj f) bindres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (bindres == fres)))}}. 
 Proof. 
 	destruct x as [x x_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition right_identity (x: MaybeInt): {{forall (bindres: MaybeInt_u), (bind_rel (⌊ x -⌋) 
+Qed. 
+Theorem right_identity (x: MaybeInt): {{forall (bindres: MaybeInt_u), (bind_rel (⌊ x -⌋) 
 		(ltac: (pose retrn_rel as Rel; 
 	pose retrn_rel_funct as Funct; 
 	buildUPackG Rel Funct)) bindres) -> (bindres = (⌊ x -⌋))}}. 
@@ -222,4 +222,4 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
+Qed. 

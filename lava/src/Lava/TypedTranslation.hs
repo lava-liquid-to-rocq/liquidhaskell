@@ -567,13 +567,17 @@ where
 -- | Translation of an unreflected definition
 transDefinition :: Ctx.TypingCtx -> Id -> ArrType -> [Coq.CoqTactic] -> [Coq.CoqDecl]
 transDefinition γ f tp tacs =
-  [Coq.Definition f (map (,False) args) ret (Coq.ProofBody $ destructs ++ cleanInductions (usedIHs tacs) tacs) Coq.Transparent]
+  [Coq.Definition f (map (,False) args) ret (Coq.ProofBody $ destructs ++ cleanInductions (usedIHs tacs) tacs) vis]
   where
     argsNames = map fst $ filter ((\case Pi{} -> False; _ -> True) . argTp . snd) (argsTps tp) -- = map fst args
     destructs = map (\x -> Coq.DestructSubsetTerm (Coq.Var x) (Coq.ConjDestrPat [Coq.SingleIdPat x, Coq.SingleIdPat $ subsetWitnessNm x])) argsNames
     -- hoArgsNames = map fst $ filter ((\case Pi{} -> True; _ -> False) . argTp . snd) (argsTps tp) -- = map fst args
     -- simpls = map (Coq.Simpl . Just) hoArgsNames
     (args, ret) = matchFunctionType [] $ trArrType γ tp
+    ArrType _ retTp = tp
+    vis = case tp of
+      ArrType _ retTp | argTp retTp == unitTp  -> Coq.Opaque
+      _ -> Coq.Transparent
 
 -- *** Reflected definitions
 
