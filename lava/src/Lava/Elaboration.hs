@@ -245,6 +245,7 @@ checkReft γ pats r tp = do
     then return (Sub r' tp_r tp)
     else Left . SubtypingErr $ "Synthesized type " ++ show tp_r ++ " for " ++ show r ++ " is not a subtype of type " ++ show tp
 
+-- TODO: change xs
 checkExpr :: TypEnv -> BranchPattern -> Expr -> RefType -> Either TypeError Expr
 -- (C-Syn)
 checkExpr γ pats (Reft r) tp = Reft <$> checkReft γ pats r tp
@@ -267,22 +268,36 @@ checkExpr γ pats (Let x Nothing (Reft r) e) tp = do
   return (Let x (Just tpr) (Reft r') e')
 checkExpr _ _ e@(Let {}) _ = Left . CheckingErr $ "Type annotation expected for the let-binding " ++ show e
 -- (C-Case)
-checkExpr γ pats e0@(Case r branches) tp = do
+checkExpr γ pats e0@(Case r branches _) tp = do
   (tpr, r') <- synReft γ pats r
   case tpr of
     RefType v (TC tc) rv -> do
       branches' <- mapM checkBranch branches
-      return (Case r' branches')
+      -- To translate using tactics, we include additional information in case
+      -- (not in the paper)
+      let ind = case r of
+            Var x _ _
+              | r `elem` pats ->
+                  Induct $ reverse [z | Var z _ _ <- pats, z /= x && onTopLevel]
+              where
+                onTopLevel = all (\case (Var {}) -> True; _ -> False) pats
+            _ -> Destruct
+      return (Case r' branches' ind)
     _ -> Left . CheckingErr $ "Matched term is not of an inductive type in expression " ++ show e0
   where
-    checkBranch :: ((Id, [Id]), Maybe Expr) -> Either TypeError ((Id, [Id]), Maybe Expr)
+    -- The booleans on the introduced variables are just placeholder, we
+    -- instantiate them here for real
+    checkBranch :: ((Id, [(Id, Bool)]), Maybe Expr) -> Either TypeError ((Id, [(Id, Bool)]), Maybe Expr)
     checkBranch (c, Nothing) = return (c, Nothing)
     checkBranch br@((c, ys), Just e) = do
       tpc <- lookupDC c γ
       -- Replace the binders in tpc by the names of the match in ys
-      let tpcRenamed = renames (zip ys (tpArgs tpc)) tpc
-      let (argsc, RefType v _ r) = arrs tpcRenamed
+      let tpcRenamed = renames (zip (map fst ys) (tpArgs tpc)) tpc
+      let (argsc, RefType v tc r) = arrs tpcRenamed
       -- TODO: add additional type with z for occurence typing
       γ' <- foldM insertLocalVar γ argsc
       e' <- checkExpr γ' pats e tp
-      return ((c, ys), Just e')
+      -- True for inductive variables in ys
+      let inductives = map (\case (_, RefType _ tc' _) -> tc' == tc; (_, ArrType {}) -> False) argsc
+          ys' = zip (map fst ys) inductives
+      return ((c, ys'), Just e')

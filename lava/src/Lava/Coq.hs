@@ -77,6 +77,8 @@ module Lava.Coq
     UArgList (..),
     UArgListT (..),
     mkArgList, mkUArgList, mkArgListT, mkUArgListT,
+
+    freeVars
   )
 where
 
@@ -84,6 +86,8 @@ import Data.Bifunctor
 import Data.Data
 import Data.List (sortBy)
 import Lava.Util
+import qualified Data.Set as Set
+import Data.Set (Set)
 
 unrefinedTCName :: Id -> Id
 unrefinedTCName name = name ++ "_u"
@@ -427,6 +431,17 @@ data RewriteDir
   deriving (Data, Eq)
 
 data CoqIntroPat = DestrPat CoqDestrPat | RewritePat RewriteDir deriving (Data, Eq)
+
+-- * Free variables
+
+class HasVars a where
+  freeVars :: (HasVars a) => a -> Set Id
+
+instance HasVars CoqTactic where
+  freeVars = undefined
+
+instance (HasVars a) => HasVars [a] where
+  freeVars tms = Set.unions $ map freeVars tms
 
 -- * Functions on the grammar
 

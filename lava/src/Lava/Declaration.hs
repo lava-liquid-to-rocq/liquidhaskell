@@ -68,7 +68,7 @@ trDefRefDef f tpf e = Coq.Definition f argsT (trRefType ret) (ProofBody tacs) Tr
     tacs =
       let destructArgs = map (mkVarDestruct . fst) $ onlyFOArgs args
        in -- TODO: maybe use cleanInductions (usedIHs eT) eT
-          destructArgs ++ trExprTacs (tpArgsArLoc tpf) e
+          destructArgs ++ trExprTacs e
     -- Filter arguments with a non-arrow refinement type (those that need to be destructed)
     onlyFOArgs :: [(Id, RefType)] -> [(Id, RefType)]
     onlyFOArgs = filter (\case (_, RefType {}) -> True; (_, ArrType {}) -> False)
@@ -119,7 +119,7 @@ separateBranches σxs σp (Reft r) = [(σxs, σp, r)]
 separateBranches σxs σp (LH.Let x _ ex e) =
   let x_br = separateBranches σxs σp ex
    in concatMap (\(σxs_x, σp_x, r_x) -> separateBranches σxs_x σp_x (subst r_x x ex)) x_br
-separateBranches σxs σp (Case r branches) =
+separateBranches σxs σp (Case r branches _) =
   case alreadyMatched of
     -- if r is matched already
     Just (DC c, rs) -> maybe [] (separateBranches σxs σp) $ matchBranch (c, rs) cleanBranches
@@ -129,15 +129,7 @@ separateBranches σxs σp (Case r branches) =
       -- if r is a parameter
       (LH.Var x _ _, []) -> concatMap (varRecCall x) cleanBranches
       -- if r is an application or top-level constant
-      _ ->
-        concatMap
-          ( \((c, ys), e) ->
-              separateBranches
-                σxs
-                (σp ++ [(r, foldl LH.App (LH.DC c) (map (\y -> LH.Var y 0 Local) ys))])
-                e
-          )
-          cleanBranches
+      _ -> concatMap (\(pat, e) -> separateBranches σxs (σp ++ [(r, matchToApp pat)]) e) cleanBranches
   where
     -- Reachable branches only
     cleanBranches = concatMap (\case (_, Nothing) -> []; (pat, Just x) -> [(pat, x)]) branches
@@ -147,21 +139,25 @@ separateBranches σxs σp (Case r branches) =
         LH.Var x _ _ -> case lookup x σxs of Just (LH.Var y _ _) -> Nothing; pat -> pat
         _ -> lookup r σp
     -- Recursive calls for the variable case, substituting the variable everywhere
-    varRecCall :: Id -> ((Id, [Id]), Expr) -> [FunctionPath]
+    varRecCall :: Id -> ((Id, [(Id, Bool)]), Expr) -> [FunctionPath]
     varRecCall x (pat, ebr) =
       let pat' = matchToApp pat
        in separateBranches
             (map (second (subst pat' x)) σxs)
             (map (bimap (subst pat' x) (subst pat' x)) σp)
             (subst pat' x ebr)
+    -- Returns the application corresponding to the pattern of a case
+    -- Since we do not have higher-order constructors, all variables are of arity 0
+    matchToApp :: (Id, [(Id, Bool)]) -> Reft
+    matchToApp (c, ys) = foldr LH.App (DC c) (map (\(y, _) -> LH.Var y 0 Local) ys)
     -- Given a pattern and a branch, returns the corresponding branch instantiated
     -- with respect to the arguments of the constructor.
     -- There should be at most one corresponding branch, so we return only one
     -- expression even if several branches are found.
-    matchBranch :: (Id, [Reft]) -> [((Id, [Id]), Expr)] -> Maybe Expr
+    matchBranch :: (Id, [Reft]) -> [((Id, [(Id, Bool)]), Expr)] -> Maybe Expr
     matchBranch (c, rs) branches =
       case filter (\((c', _), _) -> c == c') branches of
-        ((_, ys), e) : _ -> Just $ substs (zip rs ys) e
+        ((_, ys), e) : _ -> Just $ substs (zip rs (map fst ys)) e
         [] -> Nothing
 
 -- | Translates a function path into a constructor for f_rel.
@@ -171,7 +167,7 @@ trPathToConstr f p@(σxs, σp, rf) =
   Coq.Prop $ mkForallXs argsVars (trPathGuard f p [] Nothing)
   where
     -- Variable introduced by destructing the arguments
-    argsVars = Set.toList $ freeVars (map snd σxs) Set.\\ Set.fromList (map fst σxs)
+    argsVars = Set.toList $ LH.freeVars (map snd σxs) Set.\\ Set.fromList (map fst σxs)
 
 -- | Auxiliary function for `trPathToConstr` and `inversionLemma`
 -- Builds a Rocq term from the guards of a path and the path result.
@@ -191,7 +187,7 @@ trPathGuard f (σxs, [], rf) hs relRes =
 trPathGuard f (σxs, (r, rp) : σp', rf) hs relRes =
   let (hyps_r, r') = extractApps r
       currentHyps = hyps_r \\ hs
-      foralls = mkForallXs . Set.toList $ freeVars rp
+      foralls = mkForallXs . Set.toList $ LH.freeVars rp
       equality = Coq.Bop EqProp (utrReft r') (utrReft rp)
       recCall = trPathGuard f (σxs, σp', rf) (hs ++ currentHyps) relRes
    in hypsRV currentHyps (isNothing relRes) . foralls $ Coq.Impl equality recCall
@@ -269,7 +265,7 @@ inversionLemma f (σxs, paths) =
   where
     f_lem = invLemName f σxs
     -- Variable introduced by destructing the arguments
-    argsVars = Set.toList $ freeVars (map snd σxs) Set.\\ Set.fromList (map fst σxs)
+    argsVars = Set.toList $ LH.freeVars (map snd σxs) Set.\\ Set.fromList (map fst σxs)
     -- Fresh variable for the result of relApp
     res = f_lem ++ "_res"
     relApp = Coq.App (Def $ relDefName f) (map (utrReft . snd) σxs ++ [Coq.Var res])

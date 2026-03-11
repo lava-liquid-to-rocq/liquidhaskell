@@ -1,10 +1,14 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OrPatterns #-}
+
+{- HLINT ignore "Use section" -}
 
 -- | This module contains the main functions of the translation.
 -- Unrefined and refined translations are mutually dependent, so they are all in the same file
 module Lava.Translation where
 
 import Data.Bifunctor (first, second)
+import qualified Data.Set as Set (empty, member)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil (mkIsTrue, packGetF, packGetRel, upackGetRel)
@@ -299,43 +303,71 @@ trReft tm0 = case tm0 of
 -- | Translation of expressions as tactics
 -- Some other cases might be necessary because of branches coming from Core.
 -- Function EtoTac (def 3.7) of the paper
-trExprTacs :: [Reft] -> LH.Expr -> [CoqTactic]
-trExprTacs xs e0 = case e0 of
-  LH.Reft tm -> [Coq.Exact $ trReft tm]
-  {- LH.Case cond [("False", [], elseE), ("True", [], thenE)] -> do
-    let
-      condT = utrSmpTerm (fetchFuncts γ) cond
-      transBrExpr _ expr = checkTerm γ expr tp (f, mCtx)
-    elseET <- transBrExpr Coq.btrue elseE
-    thenET <- transBrExpr Coq.btrue thenE
-    return [Coq.Destruct condT [("true", (Coq.ConjDestrPat [], thenET)), ("false", (Coq.ConjDestrPat [], elseET))]] -}
-  LH.Case tm alts -> undefined
-  -- An if
-  {- LH.Let x _ (Reft cond) (LH.Case (LH.Var x' _ _) [("False", [], elseE), ("True", [], thenE)]) | x == x' -> do
-    let
-      condT = utrSmpTerm (fetchFuncts γ) cond
-      transBrExpr _ expr = checkTerm γ expr tp (f, mCtx)
-    elseET <- transBrExpr Coq.btrue elseE
-    thenET <- transBrExpr Coq.btrue thenE
-    return [Coq.Destruct condT [("true", (Coq.ConjDestrPat [], thenET)), ("false", (Coq.ConjDestrPat [], elseET))]] -}
-  -- A destruct
-  -- LH.Let x _ (Reft r) (LH.Case (LH.Var x' _ _) alts) | x == x' -> trExprTacs γ xs (Case r (mapThd (sub x r) alts))
-  LH.Let _ Nothing _ _ -> error "Found let-binding with annotation while translating."
-  LH.Let x (Just tpx@(RefType {})) e1 e2 ->
-    [ AssertTacs x' (trRefType tpx) (trExprTacs xs e1),
-      DestructConj x' x (subsetWitnessNm x)
-    ]
-      ++ trExprTacs xs e2
-    where
-      x' = x ++ "'"
-  LH.Let x (Just tpx@(ArrType {})) e1 e2 ->
-    [ AssertTacs x' (trRefTypeTop tpx) (intros : trExprTacs xs e1),
-      assertF
-    ]
-      ++ trExprTacs xs e2
-    where
-      (args, ret) = arrs tpx
-      intros = Intros $ map (\(xi, _) -> DestrPat $ ConjDestrPat [SingleIdPat xi, SingleIdPat $ subsetWitnessNm xi]) args
-      tpxT = trRefTypeTop tpx
-      x' = "f_" ++ hashName tpxT
-      assertF = Coq.Custom $ "unshelve refine (let " ++ x ++ " : ltac:(buildPackG_spec " ++ x' ++ ") := (ltac:(fun_to_pack " ++ x' ++ ")) in _)"
+trExprTacs :: LH.Expr -> [CoqTactic]
+trExprTacs (LH.Reft tm) = [Coq.Exact $ trReft tm]
+trExprTacs (LH.Let _ Nothing _ _) = error "Found let-binding with annotation while translating."
+trExprTacs (LH.Let x (Just tpx@(RefType {})) e1 e2) =
+  [ AssertTacs x' (trRefType tpx) (trExprTacs e1),
+    DestructConj x' x (subsetWitnessNm x)
+  ]
+    ++ trExprTacs e2
+  where
+    x' = x ++ "'"
+trExprTacs (LH.Let x (Just tpx@(ArrType {})) e1 e2) =
+  [ AssertTacs x' (trRefTypeTop tpx) (intros : trExprTacs e1),
+    assertF
+  ]
+    ++ trExprTacs e2
+  where
+    (args, ret) = arrs tpx
+    intros = Intros $ map (\(xi, _) -> DestrPat $ ConjDestrPat [SingleIdPat xi, SingleIdPat $ subsetWitnessNm xi]) args
+    tpxT = trRefTypeTop tpx
+    x' = "f_" ++ hashName tpxT
+    assertF = Custom $ "unshelve refine (let " ++ x ++ " : ltac:(buildPackG_spec " ++ x' ++ ") := (ltac:(fun_to_pack " ++ x' ++ ")) in _)"
+-- TODO: if we build an induct that does not introduce induction hypotheses,
+-- turn it into a destruct
+trExprTacs (Case tm alts induct) =
+  case induct of
+    LH.Destruct -> [Coq.Destruct (Project $ trReft tm) (map trAlt alts)]
+    LH.Induct genVars ->
+      let gendep = [GeneralizeDependent genVars | not (null genVars)]
+          -- we add intros in each branch to degeneralize the variables from genVars
+          trAltIntros = second (second (Intros [] :)) . trAlt
+       in [Concat $ gendep ++ [Induction (trReft tm) (map trAltIntros alts)]]
+  where
+    -- translation of an unreachable branch as intros; exfalso; oracle.
+    trAlt ((c, ys), Nothing) =
+      (c, (ysDesPat ys Set.empty, [Concat [Intros [], Exfalso, Oracle]]))
+    trAlt ((c, ys), Just e) =
+      let eT = trExprTacs e
+       in (c, (ysDesPat ys (Coq.freeVars eT), eT))
+    -- Build the patterns for the introduced variables.
+    -- The second argument contains the free variables of the translated branch,
+    -- to check what induction hypotheses are used
+    ysDesPat ys usedIHs = ConjDestrPat $ case induct of
+      LH.Destruct -> map (SingleIdPat . fst) ys
+      LH.Induct _ -> concatMap varPattern ys
+        where
+          -- For inductive variables, in the pattern we add either the name of the IH if it is
+          -- used later, or a hole _
+          varPattern (y, isInd) =
+            let ihy = if ihName y `Set.member` usedIHs then SingleIdPat $ ihName y else UnnamedIdPat
+             in SingleIdPat y : [ihy | isInd]
+
+{- trExprTacs (LH.Case cond [("False", [], elseE), ("True", [], thenE)]) = do
+  let
+    condT = utrSmpTerm (fetchFuncts γ) cond
+    transBrExpr _ expr = checkTerm γ expr tp (f, mCtx)
+  elseET <- transBrExpr Coq.btrue elseE
+  thenET <- transBrExpr Coq.btrue thenE
+  return [Coq.Destruct condT [("true", (Coq.ConjDestrPat [], thenET)), ("false", (Coq.ConjDestrPat [], elseET))]] -}
+-- An if
+{- trExprTacs (LH.Let x _ (Reft cond) (LH.Case (LH.Var x' _ _) [("False", [], elseE), ("True", [], thenE)]) | x == x') =  do
+  let
+    condT = utrSmpTerm (fetchFuncts γ) cond
+    transBrExpr _ expr = checkTerm γ expr tp (f, mCtx)
+  elseET <- transBrExpr Coq.btrue elseE
+  thenET <- transBrExpr Coq.btrue thenE
+  return [Coq.Destruct condT [("true", (Coq.ConjDestrPat [], thenET)), ("false", (Coq.ConjDestrPat [], elseET))]] -}
+-- A destruct
+-- trExprTacs (LH.Let x _ (Reft r) (LH.Case (LH.Var x' _ _) alts)) | x == x' -> trExprTacs γ (Case r (mapThd (sub x r) alts))

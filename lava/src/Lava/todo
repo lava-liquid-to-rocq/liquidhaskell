@@ -1,8 +1,7 @@
 - translation of reflected definitions (two undefined in inversion lemmas)
 
-- refined translation of applications
-- refined translation of case
-  -> think about how to handle induction, whose structure is also necessary in some lemmas
+- freeVars CoqTactic
+- turn induct into destruct if no IH introduced
 
 - typing and translation of ===, =<= and =>=
 

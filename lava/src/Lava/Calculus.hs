@@ -67,7 +67,7 @@ data Expr
     Let Id (Maybe RefType) Expr Expr
   | -- | Pattern matching (includes conditionals), with Maybe for optional branches.
     --   The boolean in the list of parameters is true if the parameter is inductive
-    Case Reft [((Id, [Id]), Maybe Expr)]
+    Case Reft [((Id, [(Id, Bool)]), Maybe Expr)] IndCase
   deriving (Data, Eq)
 
 -- | Simple LH terms including formulas.
@@ -102,6 +102,12 @@ data Reft
 -- loc ::= L | G | Y
 data Localization = Local | Global | Recursive BranchPattern deriving (Data, Eq)
 
+-- | Branch pattern: patterns of the current branch obtained
+-- by destructing the parameters of the function.
+-- This is an additional parameter of many of the typing functions, and is
+-- necessary for the translation of case and recursive applications with tactics
+type BranchPattern = [Reft]
+
 -- | Builtin binary operators (@op@)
 data Bop
   = Plus
@@ -125,11 +131,9 @@ data Bop
 -- > pop ::= === | =<= | =>=
 data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq)
 
--- | Branch pattern: patterns of the current branch obtained
--- by destructing the parameters of the function.
--- This is an additional parameter of many of the typing functions, and is
--- necessary for the translation of case and recursive applications with tactics
-type BranchPattern = [Reft]
+-- | Whether a case must be translated to induct or destruct.
+-- In the first option, we store the names of variables to generalize
+data IndCase = Induct [Id] | Destruct deriving (Data, Eq)
 
 -- Builtin type and data constructors
 
@@ -177,11 +181,6 @@ tpArgsArLoc = map (\(x, tp) -> Var x (arity tp) Local) . fst . arrs
 apps :: Reft -> (Reft, [Reft])
 apps (App tm1 tm2) = let (hd, args) = apps tm1 in (hd, args ++ [tm2])
 apps tm = (tm, [])
-
--- | Returns the application corresponding to the pattern of a case
--- Since we do not have higher-order constructors, all variables are of arity 0
-matchToApp :: (Id, [Id]) -> Reft
-matchToApp (c, ys) = foldr App (DC c) (map (\y -> Var y 0 Local) ys)
 
 -- | Harmonize the names of the variables bound by arrows:
 --
@@ -284,12 +283,12 @@ instance HasVars Expr where
   freeVarsArLoc (Let x tp ex e) =
     Set.unions
       [maybe Set.empty freeVarsArLoc tp, freeVarsArLoc ex, Set.delete (x, (maybe 0 arity tp, Local)) (freeVarsArLoc e)]
-  freeVarsArLoc (Case r branches) =
+  freeVarsArLoc (Case r branches _) =
     freeVarsArLoc r `Set.union` Set.unions (map fvBranch branches)
     where
       fvBranch (_, Nothing) = Set.empty
       fvBranch ((c, ys), Just ebr) =
-        let ysSet = foldr (\y -> Set.insert (y, (0, Local))) Set.empty ys
+        let ysSet = foldr (\(y, _) -> Set.insert (y, (0, Local))) Set.empty ys
          in freeVarsArLoc ebr Set.\\ ysSet
 
   {- boundVars (Reft r) = Set.empty
@@ -302,11 +301,11 @@ instance HasVars Expr where
       | y `Set.member` freeVars r && x `Set.member` freeVars e' -> error err
     Let y tp ey e' | y == x -> Let y (subst r x <$> tp) (subst r x ey) e'
     Let y tp ey e' -> Let y (subst r x <$> tp) (subst r x ey) (subst r x e')
-    Case r' branches ->
-      Case (subst r x r') (map substBranch branches)
+    Case r' branches ind ->
+      Case (subst r x r') (map substBranch branches) ind
       where
-        substBranch ((_, ys), _) | not (Set.fromList ys `Set.disjoint` freeVars r) = error err
-        substBranch br@((_, ys), _) | x `elem` ys = br
+        substBranch ((_, ys), _) | not (Set.fromList (map fst ys) `Set.disjoint` freeVars r) = error err
+        substBranch br@((_, ys), _) | x `elem` map fst ys = br
         substBranch ((c, ys), ebr) = ((c, ys), subst r x <$> ebr)
     where
       err = "Substitution {" ++ show r ++ "/" ++ x ++ "}(" ++ show e ++ ") is not sound because of variable capture."
