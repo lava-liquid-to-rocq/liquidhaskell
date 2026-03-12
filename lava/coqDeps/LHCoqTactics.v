@@ -815,8 +815,8 @@ Ltac specialize_hyp h :=
                 idtac "Axiomatization " g ": " gtp " of variable " v " is used to specialize " h ". "
               ) else pose proof (h g)
             ) else (
-              idtac "Unable to specialize" h "with" v "!";
-              pose proof (h v g)
+              idtac "Unable to specialize" h "with" v "and" g ":" hApplTp "!";
+              progress cleanup_witness (h v g)
             ))
         | _ => 
           let u := fresh "u" in
@@ -837,7 +837,7 @@ Ltac specialize_hyp h :=
                 pose proof (h z)
             ) else (
               idtac "Unable to directly specialize " h "!";
-              pose proof (h tm z)
+              progress cleanup_witness (h tm z)
             ))
           end
         | _ => fail

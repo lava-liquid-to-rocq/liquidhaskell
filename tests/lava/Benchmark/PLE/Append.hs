@@ -195,7 +195,12 @@ take_all (Suc n) (App x xs) = take_all n xs
 
 {-@ zip_take:: l:L -> m:L -> {zip l m = zip (take (length m) l) (take (length l) m)} @-}
 zip_take:: L -> L -> Proof
-zip_take Emp _ = trivial
+zip_take Emp m = zip Emp m 
+                  === zip Emp Emp 
+                  === zip (take (length m) Emp) Emp
+                  === zip (take (length m) Emp) (take Zero m)
+                  === zip (take (length m) Emp) (take (length Emp) m)
+                  *** QED
 zip_take _ Emp = trivial
 zip_take (App x xs) (App y ys) = zip_take xs ys
 
