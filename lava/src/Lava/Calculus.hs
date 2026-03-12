@@ -12,7 +12,9 @@ import Data.Data
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Lava.Util hiding (Id, sub, subst)
-import Prelude hiding (lookup)
+import Text.PrettyPrint
+import Text.PrettyPrint.HughesPJClass hiding (first)
+import Prelude hiding (lookup, (<>))
 
 -- * The grammar
 
@@ -26,7 +28,7 @@ type Id = String
 -- Strings for simplicity). Other GHC.Core literals are not relevant for us
 --
 -- > B ::= Integer | Double | String
-data Builtin = Integer | Double | String deriving (Data, Eq)
+data Builtin = Integer | Double | String deriving (Data, Eq, Show)
 
 -- | Base Types
 --
@@ -311,7 +313,7 @@ instance HasVars Expr where
         substBranch br@((_, ys), _) | x `elem` map fst ys = br
         substBranch ((c, ys), ebr) = ((c, ys), subst r x <$> ebr)
     where
-      err = "Substitution {" ++ show r ++ "/" ++ x ++ "}(" ++ show e ++ ") is not sound because of variable capture."
+      err = render $ text "Substitution" <+> braces (pPrint r <> char '/' <> text x) <> parens (pPrint e) <+> text "is not sound because of variable capture."
 
 instance HasVars RefType where
   freeVarsArLoc (RefType x tp r) = Set.delete (x, (0, Local)) (freeVarsArLoc r)
@@ -322,7 +324,7 @@ instance HasVars RefType where
     RefType y b reft -> RefType y b $ subst r x reft
     ArrType y _ tp'
       | y `Set.member` freeVars r && x `Set.member` freeVars tp' ->
-          error $ "Substitution {" ++ show r ++ "/" ++ x ++ "}(" ++ show tp ++ ") is not sound because of variable capture."
+          error . render $ text "Substitution" <+> braces (pPrint r <> char '/' <> text x) <> parens (pPrint tp) <+> text "is not sound because of variable capture."
     ArrType y tpx tp' | y == x -> ArrType y (subst r x tpx) tp'
     ArrType y tpx tp' -> ArrType y (subst r x tpx) (subst r x tp')
 
@@ -336,64 +338,64 @@ instance (HasVars a) => HasVars (Maybe a) where
 
 -- * Printer for the grammar
 
-instance Show Builtin where
-  show b = undefined
+instance Pretty Builtin where
+  pPrint = text . show
 
-instance Show BaseType where
-  show tp = undefined
+instance Pretty BaseType where
+  pPrint (Builtin b) = pPrint b
+  pPrint (TC tc) = text tc
 
-{- show tp = case tp of
-  TDat "()" -> error "Unexpectedly found reserved identifier () as typename"
-  TDat a -> a
-  Builtin b -> show b
-  Pi (x, rA) rB -> "(" ++ x ++ ": " ++ show rA ++ ") -> " ++ show rB -}
+instance Pretty RefType where
+  pPrint (RefType x a r) =
+    braces (text x <> colon <+> pPrint a <+> char '|' <+> pPrint r)
+  pPrint (ArrType x tpx tp) =
+    parens (text x <> colon <+> pPrint tpx) <+> text "->" <+> pPrint tp
 
-instance Show RefType where
-  show = undefined
-
-{- show (RefType x a r) = "{" ++ x ++ ": " ++ show a ++ " | " ++ show r ++ "}"
-show (ArrType args ret) = unwords (map (\(x, r) -> "(" ++ x ++ ": " ++ show r ++ ") ->") args) ++ show ret -}
-
-instance Show Decl where
-  show d = case d of
-    Data tc constrs -> "data " ++ tc ++ " = " ++ intercalate " | " (map show constrs)
-    Definition f tp e _ -> "Def " ++ f ++ " :: " ++ show tp ++ " := " ++ showNewline 1 ++ prettyPrint 1 e
-
-instance PrettyPrintable (Id, [Id], Expr) where
-  -- \| pretty prints a branch of a Case or InductTerm
-  prettyPrint indent (c, cargs, def) = c ++ " " ++ unwords cargs ++ " |-> " ++ defS
+instance Pretty Decl where
+  pPrint (Data tc constrs) =
+    sep [ppTC, nest identNb . sep $ punctuate (char '|') (map ppConstr constrs)]
     where
-      defS = case def of
-        match@Case {} -> showNewline (indent + 1) ++ prettyPrint (indent + 1) match
-        _ -> show def
+      ppTC = text "data" <+> text tc <+> text ":="
+      ppConstr (c, tpc) = text c <+> text "::" <+> pPrint tpc
+  pPrint (Definition f tp e isRefl) =
+    sep [ppRefl <+> ppF, nest identNb (pPrint e)]
+    where
+      ppRefl = if isRefl then text "Refl" else empty
+      ppF = text "Def" <+> text f <+> text "::" <+> pPrint tp <+> text ":="
 
-instance PrettyPrintable Expr where
-  -- \| pretty prints an Expr, printing branches of match expressions in separate indented lines
-  prettyPrint indent e = undefined {- case e of
-                                   BasicTerm t -> show t
-                                   Undefined -> "undefined"
-                                   Case x branches _ -> "case " ++ show x ++ " of " ++ showNewline (indent + 1) ++ showIndent " | " False (indent + 1) branches
-                                   Let x tp def e' -> "let " ++ var ++ " := " ++ show def ++ " in " ++ show e'
-                                     where
-                                       var = maybe x (\tp' -> "(" ++ x ++ ": " ++ show tp' ++ ")") tp
-                                   Lambda x e' -> "λ" ++ x ++ ". " ++ show e'
-                                   SEqn s t hint -> showP s ++ (if hint == BasicTerm unitTm then "" else " ? " ++ showP hint) ++ " === " ++ showP t
-                                   QMark z t -> showP z ++ " ? " ++ showP t
-                                   Annot e' tp -> "(" ++ show e' ++ " :: " ++ show tp ++ ")" -}
+instance Pretty Expr where
+  pPrint (Reft r) = pPrint r
+  pPrint (Let x tpx ex e) = sep [sep [ppLet, pPrint ex], nest 1 (text "in" <+> pPrint e)]
+    where
+      ppLet = text "let" <+> ppTp <+> text ":="
+      ppTp = case tpx of
+        Nothing -> text x
+        Just tp -> parens (text x <> colon <+> pPrint tp)
+  pPrint (Case r alts ind) =
+    vcat $ (text "case" <+> pPrint r <+> text "of") : map ppAlt alts
+    where
+      ppAlt (pat, e) = nest identNb $ sep [char '|' <+> ppPat pat <+> text "->", nest identNb $ pPrint e]
+      ppPat (c, ys) = text c <+> hsep (map (text . fst) ys)
 
-instance Show Expr where
-  show = prettyPrint 1
+instance Pretty Reft where
+  pPrint (Var x ar loc) = text x <> char '/' <> parens (integer ar <> comma <> pPrint loc)
+  pPrint (StringLit s) = quotes $ text s
+  pPrint (IntLit i) = integer i
+  pPrint (FloatLit f) = double f
+  pPrint (DC c) = text c
+  pPrint (App r1 r2) = pPrint r1 <+> pPrint r2
+  pPrint (Neg r) = text "not" <+> parens (pPrint r)
+  pPrint (Bop bop r1 r2) = pPrint r1 <+> pPrint bop <+> pPrint r2
+  pPrint (QMark r rh rp) = pPrint r <+> parens (pPrint rh <+> char '?' <+> pPrint rp)
+  pPrint (Pop pop r1 r2) = pPrint r1 <+> pPrint pop <+> pPrint r2
+  pPrint (Sub r from to) = text "sub" <> parens (sep $ punctuate comma (map pPrint [from, to]))
+  pPrint (Inj r tp) = text "inj" <> parens (pPrint r <> comma <+> pPrint tp)
+  pPrint (Proj r) = text "proj" <> parens (pPrint r)
 
-instance Show Reft where
-  show = undefined
-
-{- show (Neg r) = "not " ++ addParens (show r)
-show (Bop b s t) = show s ++ " " ++ showP b ++ " " ++ showP t
-show (Var x) = x
-show (App f ts) = unwords $ map showP (f : ts)
-show (StringLit s) = "\"" ++ s ++ "\""
-show (IntLit n) = "I " ++ show n
-show (FloatLit f) = "F " ++ show f -}
+instance Pretty Localization where
+  pPrint Local = char 'L'
+  pPrint Global = char 'G'
+  pPrint (Recursive _) = char 'Y'
 
 instance Show Bop where
   show op = case op of
@@ -411,3 +413,14 @@ instance Show Bop where
     And -> "&&"
     Or -> "||"
     Impl -> "=>"
+
+instance Pretty Bop where
+  pPrint = text . show
+
+instance Show ProofOp where
+  show PEq = "==="
+  show PLeq = "=<="
+  show PGeq = "=>="
+
+instance Pretty ProofOp where
+  pPrint = text . show

@@ -11,6 +11,8 @@ import Data.Maybe (fromJust, listToMaybe)
 import Lava.Calculus
 import Lava.TypingEnvironment
 import Lava.Util (safeHead)
+import Text.PrettyPrint
+import Text.PrettyPrint.HughesPJClass hiding (first)
 
 -- * Types of primitives
 
@@ -57,10 +59,10 @@ mkBopType bop a1 a2 r2 a3 =
 data SimpleType = SmpBuiltin Builtin | SmpTC Id | SmpArrow SimpleType SimpleType
   deriving (Eq)
 
-instance Show SimpleType where
-  show (SmpBuiltin b) = show b
-  show (SmpTC tc) = tc
-  show (SmpArrow tp1 tp2) = show tp1 ++ " -> " ++ show tp2
+instance Pretty SimpleType where
+  pPrint (SmpBuiltin b) = pPrint b
+  pPrint (SmpTC tc) = text tc
+  pPrint (SmpArrow tp1 tp2) = pPrint tp1 <+> text "->" <+> pPrint tp2
 
 -- | Projects a refinement type into a simple type
 refTptoSmpTp :: RefType -> SimpleType
@@ -119,37 +121,37 @@ smpTpCheck γ pats r@(App {}) = do
   (tp2, r2') <- smpTpCheck γ pats r1
   case tp1 of
     SmpArrow tpx tp | tpx == tp2 -> return (tp, App r1' r2')
-    _ -> Left . SmpTpErr $ "Too many arguments given in the application " ++ show (App r1 r2)
+    _ -> Left . SmpTpErr $ "Too many arguments given in the application " ++ prettyShow (App r1 r2)
 smpTpCheck γ pats (Neg r) = do
   (tp, r') <- smpTpCheck γ pats r
   if tp == SmpTC boolTpName
     then return (tp, Neg r')
-    else Left . SmpTpErr $ "Term " ++ show r ++ " should be boolean"
+    else Left . SmpTpErr $ "Term " ++ prettyShow r ++ " should be boolean"
 smpTpCheck γ pats r@(Bop bop r1 r2) | bop == Eq || bop == Neq = do
   (tp1, r1') <- smpTpCheck γ pats r1
   (tp2, r2') <- smpTpCheck γ pats r2
   if tp1 == tp2
     then return (SmpTC boolTpName, Bop bop r1' r2')
-    else Left . SmpTpErr $ "Different types on both sides of (in)equality " ++ show r ++ ": found " ++ show tp1 ++ " and " ++ show tp2
+    else Left . SmpTpErr $ "Different types on both sides of (in)equality " ++ prettyShow r ++ ": found " ++ prettyShow tp1 ++ " and " ++ prettyShow tp2
 smpTpCheck γ pats r@(Bop bop r1 r2) = do
   let SmpArrow tp1 (SmpArrow tp2 tp) = refTptoSmpTp (fromJust $ lookup bop bopTypes)
   (tp1', r1') <- smpTpCheck γ pats r1
   (tp2', r2') <- smpTpCheck γ pats r2
   if tp1' == tp1 && tp2' == tp2
     then return (tp, Bop bop r1' r2')
-    else Left . SmpTpErr $ "Wrong types for the arguments of the operator " ++ show r
+    else Left . SmpTpErr $ "Wrong types for the arguments of the operator " ++ prettyShow r
 smpTpCheck γ pats r0@(QMark r rh rp) = do
   (tph, rh') <- smpTpCheck γ pats rh
   (tp, r') <- smpTpCheck γ pats r
   if tph == SmpTC boolTpName
     then return (tp, QMark r' rh' rp)
-    else Left . SmpTpErr $ "Wrong type (not a refinement of unit) found for the hint in " ++ show r0
+    else Left . SmpTpErr $ "Wrong type (not a refinement of unit) found for the hint in " ++ prettyShow r0
 smpTpCheck γ pats r@(Pop pop r1 r2) = do
   (tp1, r1') <- smpTpCheck γ pats r1
   (tp2, r2') <- smpTpCheck γ pats r2
   if tp1 == tp2
     then return (tp1, Pop pop r1' r2')
-    else Left . SmpTpErr $ "Different types on both sides of proof combinators " ++ show r ++ ": found " ++ show tp1 ++ " and " ++ show tp2
+    else Left . SmpTpErr $ "Different types on both sides of proof combinators " ++ prettyShow r ++ ": found " ++ prettyShow tp1 ++ " and " ++ prettyShow tp2
 smpTpCheck γ pats (Sub r tps tpt) = error "Constructor Sub found in type refinement"
 smpTpCheck γ pats (Inj r tp) = error "Constructor Inj found in type refinement"
 smpTpCheck γ pats (Proj r) = error "Constructor Proj found in type refinement"
@@ -175,7 +177,7 @@ wfRefType γ pats (RefType x tp r) =
       (tp_r, r') <- smpTpCheck γ' pats r
       if tp_r == SmpTC boolTpName
         then return $ RefType x tp r'
-        else Left . WfErr $ "Refinement of type " ++ show (RefType x tp r) ++ " is not boolean"
+        else Left . WfErr $ "Refinement of type " ++ prettyShow (RefType x tp r) ++ " is not boolean"
 -- (E-TFun)
 wfRefType γ pats (ArrType x tpx tp) = do
   tpx' <- wfRefType γ pats tpx
@@ -201,8 +203,8 @@ wfDecls γ (Data tc constrs : decls) = do
     checkFOandTC tp =
       let (args, RefType _ tc' _) = arrs tp
        in if any ((\case RefType {} -> False; _ -> True) . snd) args
-            then Left . WfErr $ "The constructor type " ++ show tp ++ " is higher-order, which is forbidden"
-            else when (tc' /= TC tc) . Left . WfErr $ "The constructor type " ++ show tp ++ " must return a refinement of " ++ show tc
+            then Left . WfErr $ "The constructor type " ++ prettyShow tp ++ " is higher-order, which is forbidden"
+            else when (tc' /= TC tc) . Left . WfErr $ "The constructor type " ++ prettyShow tp ++ " must return a refinement of " ++ prettyShow tc
 -- (WF-DDef)
 wfDecls γ (Definition f tpf e isRefl : decls) = do
   tpf' <- wfRefType γ [] tpf
@@ -238,7 +240,7 @@ synReft γ pats r@(App {}) = do
     ArrType x tpx tp -> do
       r2' <- checkReft γ pats r2 tpx
       return (subst r2' x tp, App r1' r2')
-    _ -> Left . SynErr $ "Too many arguments given in the application " ++ show (App r1 r2)
+    _ -> Left . SynErr $ "Too many arguments given in the application " ++ prettyShow (App r1 r2)
 -- (S-Neg)
 synReft γ pats (Neg r) = do
   let (ArrType x tpx tp) = negType
@@ -254,9 +256,9 @@ synReft γ pats r@(Bop bop r1 r2) | bop == Eq || bop == Neq = do
           let Just (ArrType x1 _ (ArrType x2 _ tp)) = lookup bop (eqneqTypes a)
            in return (substs [(r2', x2), (r1', x1)] tp, Bop bop r1' r2')
     (RefType _ a _, RefType _ b _) ->
-      Left . SynErr $ "Different types on both sides of (in)equality " ++ show r ++ ": found " ++ show a ++ " and " ++ show b
+      Left . SynErr $ "Different types on both sides of (in)equality " ++ prettyShow r ++ ": found " ++ prettyShow a ++ " and " ++ prettyShow b
     (_, _) ->
-      Left . SynErr $ "(In)Equality on higher-order values is not defined, in the type synthesis of " ++ show r
+      Left . SynErr $ "(In)Equality on higher-order values is not defined, in the type synthesis of " ++ prettyShow r
 -- (S-Bin)
 synReft γ pats (Bop bop r1 r2) = do
   let Just (ArrType x1 tp1 (ArrType x2 tp2 tp)) = lookup bop bopTypes
@@ -271,12 +273,12 @@ synReft γ pats r0@(QMark r rh _) = do
       γ' <- insertLocalVar γ (x, tph)
       (tp, r') <- synReft γ' pats r
       return (tp, QMark r' rh' rp)
-    _ -> Left . SynErr $ "Wrong type (not a refinement of unit) found for the hint in " ++ show r0
+    _ -> Left . SynErr $ "Wrong type (not a refinement of unit) found for the hint in " ++ prettyShow r0
 -- Not in the paper
 synReft γ pats r@(Pop pop r1 r2) = do
   (tp1, r1') <- synReft γ pats r1
   case tp1 of
-    ArrType {} -> Left . SynErr $ "Proof combinators on higher-order values is not defined, in the type synthesis of " ++ show r
+    ArrType {} -> Left . SynErr $ "Proof combinators on higher-order values is not defined, in the type synthesis of " ++ prettyShow r
     RefType x a reft1 -> do
       let xvar = Var x 0 Local
           reft2 = Bop And reft1 (Bop (popToBop pop) xvar (Proj r1'))
@@ -296,7 +298,7 @@ checkReft γ pats r tp = do
   (tp_r, r') <- synReft γ pats r
   if isSubtype tp_r tp
     then return (Sub r' tp_r tp)
-    else Left . SubtypingErr $ "Synthesized type " ++ show tp_r ++ " for " ++ show r ++ " is not a subtype of type " ++ show tp
+    else Left . SubtypingErr $ "Synthesized type " ++ prettyShow tp_r ++ " for " ++ prettyShow r ++ " is not a subtype of type " ++ prettyShow tp
 
 checkExpr :: TypEnv -> BranchPattern -> Expr -> RefType -> Either TypeError Expr
 -- (C-Syn)
@@ -318,7 +320,7 @@ checkExpr γ pats (Let x Nothing (Reft r) e) tp = do
   γ' <- insertLocalVar γ (x, tpr)
   e' <- checkExpr γ' pats e tp
   return (Let x (Just tpr) (Reft r') e')
-checkExpr _ _ e@(Let {}) _ = Left . CheckingErr $ "Type annotation expected for the let-binding " ++ show e
+checkExpr _ _ e@(Let {}) _ = Left . CheckingErr $ "Type annotation expected for the let-binding " ++ prettyShow e
 -- (C-Case)
 checkExpr γ pats e0@(Case r branches _) tp = do
   (tpr, r') <- synReft γ pats r
@@ -337,7 +339,7 @@ checkExpr γ pats e0@(Case r branches _) tp = do
                 onTopLevel = all (\case (Var {}) -> True; _ -> False) pats
             _ -> Destruct
       return (Case r' branches' ind)
-    _ -> Left . CheckingErr $ "Matched term is not of an inductive type in expression " ++ show e0
+    _ -> Left . CheckingErr $ "Matched term is not of an inductive type in expression " ++ prettyShow e0
   where
     -- The booleans on the introduced variables are just placeholder, we
     -- instantiate them here for real

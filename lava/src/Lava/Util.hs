@@ -22,6 +22,7 @@ import Data.List (find, intercalate, isInfixOf, isPrefixOf, isSuffixOf, partitio
 import Data.Maybe (catMaybes, fromJust, fromMaybe, isJust, isNothing, mapMaybe, maybe, maybeToList)
 import Data.Tuple.Extra (fst3, snd3, thd3)
 import Debug.Trace
+import Text.PrettyPrint
 import Prelude
 
 type Id = String
@@ -116,6 +117,14 @@ class (Show a) => PrettyPrintable a where
   -- | whether the printed tactic included its own branches (if any) and those terminate the proof
   includesBranches :: a -> Bool
   includesBranches = const False
+
+-- -- | Pretty print using HughesPJ
+-- class Pretty a where
+--   pprint :: a -> Doc
+
+-- | Number of spaces in the indentation
+identNb :: Int
+identNb = 2
 
 -- Get rid of module names.
 showStripped :: (Show a) => a -> String

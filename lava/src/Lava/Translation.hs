@@ -13,6 +13,7 @@ import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil (mkIsTrue, packGetF, packGetRel, upackGetRel)
 import Lava.CoqUtil (funcHoodLemName, ihName, packInstanceName, relDefLemName, relDefName, relDefThmName, relPostfix, toPack, toUPack, upackInstanceName)
 import Lava.Util (hashName, isSuffixOf, safeHead)
+import Text.PrettyPrint.HughesPJClass
 
 -- * Generic translations
 
@@ -151,7 +152,7 @@ extractApps r = go [] r
           let (env', args') = foldr seqNames (env, []) args
               r' = foldr LH.App (Proj (LH.Var f ar loc)) args'
            in updateEnv env' r'
-        _ -> error $ "LH application " ++ show r ++ " not starting with an identifier."
+        _ -> error $ "LH application " ++ prettyShow r ++ " not starting with an identifier."
       -- We do not extract applications of the subterms we will erase in QMark and Pop
       QMark r' rh rp -> second (\r'' -> QMark r'' rh rp) $ go env r'
       Pop pop r1 r2 -> second (Pop pop r1) $ go env r2
@@ -251,7 +252,7 @@ trReft (LH.Pop pop tm1 tm2) =
    in Coq.Let "_" popProp (PrfTerm Hole $ ProofHole Nothing) (trReft tm2)
 trReft (LH.Sub tm from to) = Coq.SubCast (trRefType to) (trRefType from) (trReft tm) (Coq.ProofHole Nothing)
 trReft (LH.Inj tm tp) = Coq.Exist (TypeArg $ trRefType tp) (trReft tm) (Coq.ProofHole Nothing)
-trReft tm@(LH.Proj _) = error $ "Projection " ++ show tm ++ " found outside of refinements in Translation.trReft"
+trReft tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of refinements in Translation.trReft"
 trReft tm@(LH.App {}) = case apps tm of
   (LH.Var _ _ (Recursive indVar pats), args) ->
     trRecCall indVar pats args
