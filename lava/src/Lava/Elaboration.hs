@@ -56,7 +56,9 @@ data SimpleType = SmpBuiltin Builtin | SmpTC Id | SmpArrow SimpleType SimpleType
   deriving (Eq)
 
 instance Show SimpleType where
-  show = undefined
+  show (SmpBuiltin b) = show b
+  show (SmpTC tc) = tc
+  show (SmpArrow tp1 tp2) = show tp1 ++ " -> " ++ show tp2
 
 -- | Projects a refinement type into a simple type
 refTptoSmpTp :: RefType -> SimpleType

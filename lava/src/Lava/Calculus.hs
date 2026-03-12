@@ -341,6 +341,9 @@ instance (HasVars a) => HasVars (Maybe a) where
 
 -- * Printer for the grammar
 
+instance Show Builtin where
+  show b = undefined
+
 instance Show BaseType where
   show tp = undefined
 
