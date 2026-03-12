@@ -47,7 +47,7 @@ mkBopType bop a1 a2 r2 a3 =
     ArrType "x_2" (RefType "x_2" a2 r2) $
       RefType "VV" a3 (Bop Eq (Var "VV" 0 Local) (Bop bop (Proj $ Var "x_1" 0 Local) (Proj $ Var "x_2" 0 Local)))
 
--- * Simple types
+-- * Simple types, used for typing type refinements
 
 -- Simple types
 --
@@ -91,7 +91,7 @@ smpTpCheck γ pats r@(Bop bop r1 r2) | bop == Eq || bop == Neq = do
   (tp2, r2') <- smpTpCheck γ pats r2
   if tp1 == tp2
     then return (SmpTC boolTpName, Bop bop r1' r2')
-    else Left . SynErr $ "Different types on both sides of (in)equality " ++ show r ++ ": found " ++ show tp1 ++ " and " ++ show tp2
+    else Left . SmpTpErr $ "Different types on both sides of (in)equality " ++ show r ++ ": found " ++ show tp1 ++ " and " ++ show tp2
 smpTpCheck γ pats r@(Bop bop r1 r2) = do
   let SmpArrow tp1 (SmpArrow tp2 tp) = refTptoSmpTp (fromJust $ lookup bop bopTypes)
   (tp1', r1') <- smpTpCheck γ pats r1
@@ -104,8 +104,13 @@ smpTpCheck γ pats r0@(QMark r rh rp) = do
   (tp, r') <- smpTpCheck γ pats r
   if tph == SmpTC boolTpName
     then return (tp, QMark r' rh' rp)
-    else Left . SynErr $ "Wrong type (not a refinement of unit) found for the hint in " ++ show r0
-smpTpCheck γ pats (Pop pop r1 r2) = undefined
+    else Left . SmpTpErr $ "Wrong type (not a refinement of unit) found for the hint in " ++ show r0
+smpTpCheck γ pats r@(Pop pop r1 r2) = do
+  (tp1, r1') <- smpTpCheck γ pats r1
+  (tp2, r2') <- smpTpCheck γ pats r2
+  if tp1 == tp2
+    then return (tp1, Pop pop r1' r2')
+    else Left . SmpTpErr $ "Different types on both sides of proof combinators " ++ show r ++ ": found " ++ show tp1 ++ " and " ++ show tp2
 smpTpCheck γ pats (Sub r tps tpt) = error "Constructor Sub found in type refinement"
 smpTpCheck γ pats (Inj r tp) = error "Constructor Inj found in type refinement"
 smpTpCheck γ pats (Proj r) = error "Constructor Proj found in type refinement"
@@ -230,7 +235,17 @@ synReft γ pats r0@(QMark r rh _) = do
       return (tp, QMark r' rh' rp)
     _ -> Left . SynErr $ "Wrong type (not a refinement of unit) found for the hint in " ++ show r0
 -- Not in the paper
-synReft γ pats (Pop pop r1 r2) = undefined
+synReft γ pats r@(Pop pop r1 r2) = do
+  (tp1, r1') <- synReft γ pats r1
+  case tp1 of
+    ArrType {} -> Left . SynErr $ "Proof combinators on higher-order values is not defined, in the type synthesis of " ++ show r
+    RefType x a reft1 -> do
+      let xvar = Var x 0 Local
+          reft2 = Bop And reft1 (Bop (popToBop pop) xvar (Proj r1'))
+      r2' <- checkReft γ pats r2 (RefType x a reft2)
+      let reft3' = Bop And reft1 (Bop Eq xvar (Proj r2'))
+          reft3 = case pop of PEq -> Bop And reft3' (Bop Eq xvar (Proj r1')); _ -> reft3'
+      return (RefType x a reft3, Pop pop r1' r2')
 synReft γ pats (Sub r tps tpt) = error "Constructor Sub found before elaboration"
 synReft γ pats (Inj r tp) = error "Constructor Inj found before elaboration"
 synReft γ pats (Proj r) = error "Constructor Proj found before elaboration"

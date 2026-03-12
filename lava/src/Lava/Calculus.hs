@@ -182,6 +182,12 @@ apps :: Reft -> (Reft, [Reft])
 apps (App tm1 tm2) = let (hd, args) = apps tm1 in (hd, args ++ [tm2])
 apps tm = (tm, [])
 
+-- | Gives the bop corresponding to a pop
+popToBop :: ProofOp -> Bop
+popToBop PEq = Eq
+popToBop PLeq = Leq
+popToBop PGeq = Geq
+
 -- | Harmonize the names of the variables bound by arrows:
 --
 -- > harmonizeBinderNames(x1:{x1':tp1 | r1} -> … -> xn:{xn':tpn | rn} -> {v:tp | rv})

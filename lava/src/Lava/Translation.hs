@@ -57,10 +57,6 @@ trBop LH.And = Coq.Andb
 trBop LH.Or = Coq.Orb
 trBop LH.Impl = Coq.ImplB
 
--- | Translation of binary proof operators to operators for the refinements
-trPop :: LH.ProofOp -> Coq.Bop
-trPop = undefined
-
 -- * Unrefined translations
 
 -- ** Main functions
@@ -252,7 +248,9 @@ trReft tm0 = case tm0 of
   LH.Bop op tm1 tm2 -> Coq.Bop (trBop op) (trReft tm1) (trReft tm2)
   LH.QMark tm hint prop ->
     Coq.Let "_" (Just . Prop $ utrReftProp prop) (Proj2sig $ trReft hint) (trReft tm)
-  LH.Pop pop tm1 tm2 -> undefined
+  LH.Pop pop tm1 tm2 ->
+    let popProp = Just . Prop $ Coq.Bop (trBop $ popToBop pop) (Project $ trReft tm1) (Project $ trReft tm2)
+     in Coq.Let "_" popProp (PrfTerm Hole $ ProofHole Nothing) (trReft tm2)
   LH.Sub tm from to -> Coq.SubCast (trRefType to) (trRefType from) (trReft tm) (Coq.ProofHole Nothing)
   LH.Inj tm tp -> Coq.Exist (TypeArg $ trRefType tp) (trReft tm) (Coq.ProofHole Nothing)
   LH.Proj tm -> error $ "Projection " ++ show tm0 ++ " found outside of refinements in Translation.trReft"
