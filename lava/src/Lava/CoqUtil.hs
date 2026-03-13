@@ -338,41 +338,53 @@ toUPack xs utp = UPack (UArgListT $ map unrefRocqType xs) (unrefRocqType utp)
 -- | Generates the nested top-level inductive skeleton tactic in the functionhood and existence lemma proofs
 -- | the flag indicates whether we should specialize ihs
 mkInductiveSkeleton :: [(Id, RocqType)] -> IndTree -> Bool -> Tactic
-mkInductiveSkeleton uArgs indBrs specIhs = {- traceFuncRet ["mkInductiveSkeleton", show uArgs, show indBrs, show specIhs] -} res
+mkInductiveSkeleton uArgs indBrs specIhs = case indBrs of
+  Finish ihAppls ihs -> finishTac ihAppls ihs -- same recurse
+  Cond tm caseBrs ->
+    -- same recurse
+    if unrefinedHeuristic tm caseBrs
+      then Destruct tm $ map (\(c, pat, caseBr) -> (c, (pat, [recurse caseBr]))) caseBrs
+      else Concat []
+  Induct x xIndBrs' b ->
+    -- same recurse but without the generalize dependent
+    Concat $
+      [GeneralizeDependent (reverse $ map fst uArgs \\ [x]) | not (null $ map fst uArgs \\ [x])]
+        ++ [matchTac (Var x) xBranches, Intros [], Branches $ map recurse otherBrs]
+    where
+      matchTac = if b then Destruct else Induction
+      xIndBrs = sortBy ordFunc xIndBrs'
+      xBranches = map (second (,[]) . fst) xIndBrs
+      otherBrs = map snd xIndBrs
   where
-    args = map fst uArgs
-    res = case indBrs of
-      Finish ihAppls ihs -> finishTac ihAppls ihs
-      Cond tm caseBrs -> if unrefinedHeuristic tm caseBrs then Destruct tm $ map (\(c, pat, caseBr) -> (c, (pat, [recurse caseBr]))) caseBrs else Concat []
-      Induct x xIndBrs' b -> Concat $ [GeneralizeDependent (reverse $ args \\ [x]) | not (null $ args \\ [x])] ++ [matchTac (Var x) xBranches, Intros [], Branches $ map recurse otherBrs]
-        where
-          matchTac = if b then Destruct else Induction
-          xIndBrs = sortBy ordFunc xIndBrs'
-          xBranches = map (second (,[]) . fst) xIndBrs
-          otherBrs = map snd xIndBrs
+    finishTac ihAppls ihs =
+      Concat $
+        [Custom "fix_notations" | specIhs]
+          ++ [poseIHAppl $ App (Var ih) ts | specIhs, (ih, ts) <- ihAppls]
+          ++ [Try $ Clear ih | specIhs, ih <- ihs]
       where
-        finishTac ihAppls ihs = Concat $ [Custom "fix_notations" | specIhs] ++ [poseIHAppl $ App (Var ih) ts | specIhs, (ih, ts) <- ihAppls] ++ [Try $ Clear ih | specIhs, ih <- ihs]
+        poseIHAppl :: CoqTerm -> Tactic
+        poseIHAppl ihAppl = ProofPose ("IH_" ++ hashName ihAppl) ihAppl
 
-        unrefinedHeuristic Var {} _ = True
-        unrefinedHeuristic Def {} _ = True
-        unrefinedHeuristic Cr {} _ = True
-        unrefinedHeuristic (Bop _ s t) caseBrs = unrefinedHeuristic s caseBrs && unrefinedHeuristic t caseBrs
-        unrefinedHeuristic (IsTrue tm) caseBrs = unrefinedHeuristic tm caseBrs
-        unrefinedHeuristic (App tm ts) caseBrs = all (`unrefinedHeuristic` caseBrs) $ tm : ts
-        unrefinedHeuristic _ _ = specIhs
+    unrefinedHeuristic Var {} _ = True
+    unrefinedHeuristic Def {} _ = True
+    unrefinedHeuristic Cr {} _ = True
+    unrefinedHeuristic (Bop _ s t) caseBrs = unrefinedHeuristic s caseBrs && unrefinedHeuristic t caseBrs
+    unrefinedHeuristic (IsTrue tm) caseBrs = unrefinedHeuristic tm caseBrs
+    unrefinedHeuristic (App tm ts) caseBrs = all (`unrefinedHeuristic` caseBrs) $ tm : ts
+    unrefinedHeuristic _ _ = specIhs
 
-        ordFunc :: ((Id, CoqDestrPat), IndTree) -> ((Id, CoqDestrPat), IndTree) -> Ordering
-        ordFunc ((c1, _), _) ((c2, _), _) = compare c1 c2
+    ordFunc :: ((Id, CoqDestrPat), IndTree) -> ((Id, CoqDestrPat), IndTree) -> Ordering
+    ordFunc ((c1, _), _) ((c2, _), _) = compare c1 c2
 
-        recurse :: IndTree -> Tactic
-        recurse (Finish ihAppls ihs) = finishTac ihAppls ihs
-        recurse (Cond tm caseBrs) = if unrefinedHeuristic tm caseBrs then Destruct tm $ map (\(c, pat, caseBr) -> (c, (pat, [recurse caseBr]))) caseBrs else Concat []
-        recurse (Induct y brs' b') = Concat [indTac (Var y) yBranches, Intros [], Branches $ map recurse otherBrs]
-          where
-            indTac = if b' then Destruct else Induction
-            brs = sortBy ordFunc brs'
-            otherBrs = map snd brs
-            yBranches = map (second (,[]) . fst) brs
+    recurse :: IndTree -> Tactic
+    recurse (Finish ihAppls ihs) = finishTac ihAppls ihs
+    recurse (Cond tm caseBrs) = if unrefinedHeuristic tm caseBrs then Destruct tm $ map (\(c, pat, caseBr) -> (c, (pat, [recurse caseBr]))) caseBrs else Concat []
+    recurse (Induct y brs' b') = Concat [indTac (Var y) yBranches, Intros [], Branches $ map recurse otherBrs]
+      where
+        indTac = if b' then Destruct else Induction
+        brs = sortBy ordFunc brs'
+        otherBrs = map snd brs
+        yBranches = map (second (,[]) . fst) brs
 
 -- | Generates various utility lemmata and hints after the declaration marking a reflected definition opaque
 mkReflAuxDecls :: Id -> (Id, RocqType) -> [(Id, RocqType)] -> [(Id, RocqType)] -> [CoqTerm] -> [(Id, RocqType)] -> IndTree -> [Decl]
@@ -803,11 +815,6 @@ assertFresh g tac = case tac of
   _ -> Assert hypName g tac
   where
     hypName = "H_" ++ hashName g
-
-poseIHAppl :: CoqTerm -> Tactic
-poseIHAppl ihAppl = ProofPose hypName ihAppl
-  where
-    hypName = "IH_" ++ hashName ihAppl
 
 -- * Miscellaneous functions for 'TypedTranslations'
 

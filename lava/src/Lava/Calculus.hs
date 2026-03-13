@@ -97,10 +97,12 @@ data Reft
   | Proj Reft
   deriving (Data, Eq)
 
--- | Localization of the variables
+-- | Localization of the variables.
+-- The recursive variables take the name of the induction variable
+-- (this is used to clean up unused IHs) and the current branch pattern
 --
--- loc ::= L | G | Y
-data Localization = Local | Global | Recursive BranchPattern deriving (Data, Eq)
+-- loc ::= L | G | Y (x, σ)
+data Localization = Local | Global | Recursive Id BranchPattern deriving (Data, Eq)
 
 -- | Branch pattern: patterns of the current branch obtained
 -- by destructing the parameters of the function.
@@ -221,16 +223,17 @@ removeFOArgProjs (RefType x a r) = RefType x a (aux r)
 -- To use Sets with Localization inside
 instance Ord Localization where
   compare l1 l2 | l1 == l2 = EQ
-  compare Local (Global; Recursive _) = LT
-  compare Global (Recursive _) = LT
-  compare (Recursive _) (Global; Local) = GT
+  -- since we do not care about getting the branch pattern with
+  -- freeVarsArLoc, we do not compare it
+  compare (Recursive ih1 _) (Recursive ih2 _) = compare ih1 ih2
+  compare Local (Global; Recursive _ _) = LT
+  compare Global (Recursive _ _) = LT
+  compare (Recursive _ _) (Global; Local) = GT
   compare Global Local = GT
 
 class HasVars a where
   -- | Return the free variables with their arity and localization
   freeVarsArLoc :: a -> Set (Id, (Integer, Localization))
-
-  {- boundVars :: a -> Set Id -}
 
   -- | subst r x tm is {r/x}tm
   subst :: Reft -> Id -> a -> a
@@ -270,8 +273,6 @@ instance HasVars Reft where
   freeVarsArLoc (Inj r _) = freeVarsArLoc r
   freeVarsArLoc (Proj r) = freeVarsArLoc r
 
-  {- boundVars _ = Set.empty -}
-
   subst r' x r0 = case r0 of
     Var y _ _ | y == x -> r'
     (Var {}; StringLit _; IntLit _; FloatLit _; DC _) -> r0
@@ -297,10 +298,6 @@ instance HasVars Expr where
         let ysSet = foldr (\(y, _) -> Set.insert (y, (0, Local))) Set.empty ys
          in freeVarsArLoc ebr Set.\\ ysSet
 
-  {- boundVars (Reft r) = Set.empty
-  boundVars (Let x _ ex e) = Set.insert x (boundVars ex `Set.union` boundVars e)
-  boundVars (Case _ branches) = Set.unions (map (Set.fromList . snd . fst) branches) -}
-
   subst r x e = case e of
     Reft re -> Reft $ subst r x re
     Let y _ _ e'
@@ -320,8 +317,6 @@ instance HasVars RefType where
   freeVarsArLoc (RefType x tp r) = Set.delete (x, (0, Local)) (freeVarsArLoc r)
   freeVarsArLoc (ArrType x tpx tp) = freeVarsArLoc tpx `Set.union` Set.delete (x, (arity tpx, Local)) (freeVarsArLoc tp)
 
-  {- boundVars (RefType x tp r) = Set.empty
-  boundVars (ArrType x tpx tp) = Set.insert x (boundVars tpx `Set.union` boundVars tp) -}
   subst r x tp = case tp of
     RefType y _ _ | y == x -> tp
     RefType y b reft -> RefType y b $ subst r x reft

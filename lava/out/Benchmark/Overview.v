@@ -285,17 +285,13 @@ Qed.
 Theorem get_rel_ex (xs: IList_u) (i: Z) (xs_p: (IList_wf xs) /\ True) (i_p: forall (llenres: Z), (llen_rel xs llenres) -> ((0 <= i) /\ (i < llenres))): get_rel xs i (⌊ get (exist _ xs xs_p) (exist _ i i_p) -⌋). 
 Proof. 
 	existence_lemma_pre get; 
-	try revert i_p; generalize dependent i; 
-	induction xs as [(*Cons*) x xs' IH_xs' | (*Nil*) ]; 
-	intros ; 
-	[let E := fresh "E" in 
-	destruct (i ==? 0) as [ | ] eqn:E; [fix_notations; 
-	try clear IH_xs' | fix_notations; 
-	pose proof (IH_xs' (ltac: (try clear IH_xs'; 
-	solver)) (i - 1) (ltac: (try clear IH_xs'; 
-	solver))) as IH_33585716; 
-	try clear IH_xs']| 
-	fix_notations]; 
+	try revert i_p; generalize dependent i; induction xs as [(*Cons*) x xs' IH_xs' | (*Nil*) ]; intros ;
+	[let E := fresh "E" in destruct (i ==? 0) as [ | ] eqn:E;
+    [ fix_notations; try clear IH_xs'
+    | fix_notations; pose proof
+        (IH_xs' (ltac: (try clear IH_xs'; solver)) (i - 1) (ltac: (try clear IH_xs'; solver))
+        ) as IH_33585716; try clear IH_xs']
+  | fix_notations]; 
 	existence_lemma_quicksolve get; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 

@@ -6,9 +6,11 @@ module Lava.Elaboration where
 
 import Control.Monad (foldM, when)
 import Data.Either.Extra (maybeToEither)
-import Data.Maybe (fromJust)
+import Data.List (unsnoc)
+import Data.Maybe (fromJust, listToMaybe)
 import Lava.Calculus
 import Lava.TypingEnvironment
+import Lava.Util (safeHead)
 
 -- * Types of primitives
 
@@ -66,18 +68,53 @@ refTptoSmpTp (RefType _ (TC tc) _) = SmpTC tc
 refTptoSmpTp (RefType _ (Builtin b) _) = SmpBuiltin b
 refTptoSmpTp (ArrType x tpx tp) = SmpArrow (refTptoSmpTp tpx) (refTptoSmpTp tp)
 
+-- | If the application in argument is a recursive call,
+-- choose an induction variable and updates the localization with
+-- the variable and the current branch pattern
+-- We return a term App r1 r2 (without App constructor) to avoid a partial
+-- pattern matching in the main functions
+chooseIndVar :: TypEnv -> BranchPattern -> (Reft, [Reft]) -> Either TypeError (Reft, Reft)
+chooseIndVar γ pats (hd, args) =
+  case hd of
+    Var x ar _ -> do
+      (loc, _) <- lookupVar x γ
+      case loc of
+        Recursive {} ->
+          let -- The inductive variables are those that appear after a single
+              -- destruction of a parameter and that are used as an argument
+              -- of the application we are translating in the same position
+              -- as the parameter they originate from
+              indVarCandidates =
+                [ y
+                | (Var y _ _, (DC _, ys)) <- zip args (map apps pats),
+                  -- this enforces that y is obtained after a single
+                  -- destruction, rather than using freeVars ys
+                  y `elem` [y' | Var y' _ _ <- ys]
+                ]
+              -- We arbitrarily choose the first of the candidates to be the
+              -- variable we do induction on
+              indVar = case listToMaybe indVarCandidates of
+                Nothing -> error $ "No possible induction variable in term " ++ show ogTerm
+                Just y -> y
+           in return (foldl App (Var x ar (Recursive indVar pats)) args', argsLast)
+        _ -> return ogTerm
+    _ -> return ogTerm
+  where
+    Just (args', argsLast) = unsnoc args
+    ogTerm = (foldl App hd args', argsLast)
+
 smpTpCheck :: TypEnv -> BranchPattern -> Reft -> Either TypeError (SimpleType, Reft)
 smpTpCheck γ pats (Var x _ _) = do
   (loc, tp) <- lookupVar x γ
-  let loc' = case loc of Recursive _ -> Recursive pats; _ -> loc
-  return (refTptoSmpTp tp, Var x (arity tp) loc')
+  return (refTptoSmpTp tp, Var x (arity tp) loc)
 smpTpCheck γ pats r@(StringLit s) = return (SmpBuiltin String, r)
 smpTpCheck γ pats r@(IntLit n) = return (SmpBuiltin Integer, r)
 smpTpCheck γ pats r@(FloatLit f) = return (SmpBuiltin Double, r)
 smpTpCheck γ pats r@(DC c) = do
   tpc <- lookupDC c γ
   return (refTptoSmpTp tpc, r)
-smpTpCheck γ pats (App r1 r2) = do
+smpTpCheck γ pats r@(App {}) = do
+  (r1, r2) <- chooseIndVar γ pats (apps r)
   (tp1, r1') <- smpTpCheck γ pats r1
   (tp2, r2') <- smpTpCheck γ pats r1
   case tp1 of
@@ -185,10 +222,8 @@ synReft γ pats (Var x _ _) = do
   case (arity tp, loc) of
     -- (S-VarL)
     (0, Local) -> return (tp, Inj (Var x 0 Local) tp)
-    -- Recursive variable: we use the current branch pattern
-    (ar, Recursive _) -> return (tp, Var x ar (Recursive pats))
     -- (S-Var)
-    (ar, _) -> return (tp, Var x ar loc)
+    (ar, loc) -> return (tp, Var x ar loc)
 -- (S-Lit)
 synReft γ pats r@(StringLit s) = return (litType String r, r)
 synReft γ pats r@(IntLit n) = return (litType Integer r, r)
@@ -196,7 +231,8 @@ synReft γ pats r@(FloatLit f) = return (litType Double r, r)
 -- (S-Data)
 synReft γ pats r@(DC c) = (,r) <$> lookupDC c γ
 -- (S-App)
-synReft γ pats (App r1 r2) = do
+synReft γ pats r@(App {}) = do
+  (r1, r2) <- chooseIndVar γ pats (apps r)
   (tp1, r1') <- synReft γ pats r1
   case tp1 of
     ArrType x tpx tp -> do
@@ -262,7 +298,6 @@ checkReft γ pats r tp = do
     then return (Sub r' tp_r tp)
     else Left . SubtypingErr $ "Synthesized type " ++ show tp_r ++ " for " ++ show r ++ " is not a subtype of type " ++ show tp
 
--- TODO: change xs
 checkExpr :: TypEnv -> BranchPattern -> Expr -> RefType -> Either TypeError Expr
 -- (C-Syn)
 checkExpr γ pats (Reft r) tp = Reft <$> checkReft γ pats r tp
@@ -295,6 +330,8 @@ checkExpr γ pats e0@(Case r branches _) tp = do
       let ind = case r of
             Var x _ _
               | r `elem` pats ->
+                  -- Variables to generalize are those the parameters that have
+                  -- not been destructed
                   Induct $ reverse [z | Var z _ _ <- pats, z /= x && onTopLevel]
               where
                 onTopLevel = all (\case (Var {}) -> True; _ -> False) pats
