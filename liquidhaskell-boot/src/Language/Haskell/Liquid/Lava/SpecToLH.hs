@@ -11,7 +11,6 @@ module Language.Haskell.Liquid.Lava.SpecToLH (transSig, transType, showppStrippe
 import           Control.Monad (filterM)
 import           Control.Monad.Extra (allM, ifM)
 import           Control.Monad.Reader (Reader, asks, runReader)
-import           Data.Bifunctor (second)
 import qualified Data.Map.Strict as M
 
 import           Language.Fixpoint.Types (PPrint)
@@ -249,9 +248,11 @@ transExp modId = transExpr
           _ -> unsupported $ "Undefined expr translation: \n" ++ F.showpp term
 
 flattenFixApp :: F.Expr -> (F.Expr, [F.Expr])
-flattenFixApp v@F.EVar {} = (v, [])
-flattenFixApp (F.EApp f t) = second (++ [t]) (flattenFixApp f)
-flattenFixApp _ = unsupported "Application expected in flattenFixApp."
+flattenFixApp = go []
+  where
+    go acc v@F.EVar {} = (v, acc)
+    go acc (F.EApp f t) = go (t : acc) f
+    go _   _            = unsupported "Application expected in flattenFixApp."
 
 -- | Translation of an arrow type
 --

@@ -89,18 +89,19 @@ unBasic _                  = Nothing
 
 -- | The head of a flattened Core application.
 data AppHead
-  = VarHead HeadSymbol  -- ^ head is a classified variable
-  | ExprHead LHTerm     -- ^ head is a non-variable expression (already translated)
+  = VarHead HeadSymbol  -- ^ a classified variable
+  | ExprHead LHTerm     -- ^ a non-variable expression
 
 -- | Flatten and translate an application, returning a structured head.
 --
--- > flattenCoreApp((x e_1) … e_n) = (NamedHead x, [trans(e_1), …, trans(e_n)])
+-- > flattenCoreApp((x e_1) … e_n) = (VarHead x, [trans(e_1), …, trans(e_n)])
 -- > flattenCoreApp((e e_1) … e_n) = (ExprHead (trans e), [trans(e_1), …, trans(e_n)])
 flattenCoreApp :: CoreBinder b => Id -> AnnInfo SpecType -> Id -> Expr b -> (AppHead, [LHTerm])
-flattenCoreApp modId infTypes f (App g x) =
-  second (++ [trans modId infTypes f x]) $ flattenCoreApp modId infTypes f g
-flattenCoreApp modId _        _ (Var name) = (VarHead (classifyHead (stripLegalName modId $ show name)), [])
-flattenCoreApp modId infTypes f t          = (ExprHead (trans modId infTypes f t), [])
+flattenCoreApp modId infTypes f = go []
+  where
+    go acc (App g x)  = go (trans modId infTypes f x : acc) g
+    go acc (Var name) = (VarHead (classifyHead (stripLegalName modId $ show name)), acc)
+    go acc t          = (ExprHead (trans modId infTypes f t), acc)
 
 -- | Translate a flattened application to ILH.
 transFlattenedApp :: AppHead -> [LHTerm] -> LHTerm

@@ -2,14 +2,13 @@
 
 module Language.Haskell.Liquid.Lava.Translate (runLava, SrcInfo (..)) where
 
-import           Prelude
 import           Control.Monad (void, when)
 import           Data.Bifunctor (bimap)
 import           Data.Char (isSpace)
 import           Data.Foldable (traverse_)
-import           Data.List
 import qualified Data.Map.Strict as M
-import           System.Directory
+import qualified Data.Set as S
+import           System.Directory (createDirectoryIfMissing, getCurrentDirectory)
 import           System.FilePath ((</>), joinPath, splitDirectories, takeDirectory)
 
 import           GHC.Core
@@ -64,13 +63,13 @@ parseFile ::
 parseFile writeFlag sinfo filename = do
   -- \| Step 1: Setting up the environment
   workingPath <- getCurrentDirectory
-  let moduleId = takeWhile (not . isSpace) $ moduleNameString (s_moduleName sinfo)
-  let modulename = last $ split '.' moduleId
-  let examplesFolder = getSrcFolder moduleId filename workingPath
+  let moduleId       = takeWhile (not . isSpace) $ moduleNameString (s_moduleName sinfo)
+      modulename     = last $ split '.' moduleId
+      examplesFolder = getSrcFolder moduleId filename workingPath
 
   -- \| Step 2: Get information from LH:
-  let pb = getBindsAndSpecs moduleId sinfo
-  let importNames = getModIdsAndImports (pb_src pb)
+  let pb          = getBindsAndSpecs moduleId sinfo
+      importNames = getModIdsAndImports (pb_src pb)
 
   -- \| Step 3: Get the ILH source and the imported files
   -- This "translates" from Liquid Haskell and GHC data structures to lh-to-coq.InternalLH data structures,
@@ -79,12 +78,12 @@ parseFile writeFlag sinfo filename = do
 
   -- \| Translate the LH type constructors to ILH type constructors
   let dataDecls = parsePData moduleId (pb_decls pb)
-  -- \| Translate the LH specs of function/theorem definitions to ILH data structures
-  let specMap = SLH.transSig moduleId Nothing <$> M.fromList (pb_specs pb)
-  -- \| Translate the GHC binds of function/theorem definitions to ILH data structures
-  let lhDefs = CLH.transBind moduleId (s_infTypes sinfo) . simplify <$> filter (not . isIgnoredBind) (pb_binds pb)
-  -- \| Combine the translated LH specs and GHC binds for function/theorem definitions into ILH declarations
-  let defDecls = combineDefsAndLemmas $ pairLHDefsWithSigs moduleId lhDefs specMap (pb_vars pb)
+      -- \| Translate the LH specs of function/theorem definitions to ILH data structures
+      specMap   = SLH.transSig moduleId Nothing <$> M.fromList (pb_specs pb)
+      -- \| Translate the GHC binds of function/theorem definitions to ILH data structures
+      lhDefs    = CLH.transBind moduleId (s_infTypes sinfo) . simplify <$> filter (not . isIgnoredBind) (pb_binds pb)
+      -- \| Combine the translated LH specs and GHC binds for function/theorem definitions into ILH declarations
+      defDecls  = combineDefsAndLemmas $ pairLHDefsWithSigs moduleId lhDefs specMap (pb_vars pb)
 
   -- \| Figure out the ILH import declarations for the imported lhExample modules and their files
   importedSourceFiles <- getImportFiles examplesFolder importNames
@@ -218,5 +217,7 @@ getModIdsAndImports _ = []
 pairLHDefsWithSigs :: Id -> [Def] -> M.Map Id InternalLH.ArrType -> [Var] -> [(Def, Maybe InternalLH.ArrType, Bool)]
 pairLHDefsWithSigs modId defs specMap reflectedDecls = map single defs
   where
+    reflectedNames :: S.Set Id
+    reflectedNames = S.fromList $ map (stripLegalName modId . show . varName) reflectedDecls
     single :: Def -> (Def, Maybe InternalLH.ArrType, Bool)
-    single def = (def, M.lookup (defName def) specMap, any ((== defName def) . stripLegalName modId . show . varName) reflectedDecls)
+    single def = (def, M.lookup (defName def) specMap, defName def `S.member` reflectedNames)
