@@ -438,7 +438,7 @@ relFunctionhoodLemma f tpf e =
                 $ Coq.Bop Coq.Eq (Coq.Var f_res) (Coq.Var f_res')
             )
         )
-        (Coq.ProofBody undefined {- functionhoodTacs -})
+        (Coq.ProofBody functionhoodTacs)
         Coq.Opaque
       where
         f_res' = f_res ++ "'"
@@ -674,18 +674,20 @@ mkIndSkel e specIhs = go e True
       Concat $
         if specIhs then [] else Custom "fix_notations" : [poseIHCall call | call <- ihCalls] ++ [Try $ Clear ih | ih <- allIHs]
       where
+        -- recursive calls in r
+        findRecCalls :: [(Reft, [Reft])]
         findRecCalls = undefined -- recursive calls in r
-        recCalls = map (\(LH.Var _ _ (Recursive indVar pats), args) -> (indVar, pats, args)) $ findRecCalls r
+        recCalls = map (\(LH.Var _ _ (Recursive indVar pats), args) -> (indVar, pats, args)) findRecCalls
         ihCalls = map (\(indVar, pats, args) -> trRecCall indVar pats args) recCalls
         allIHs = map (\(indVar, _, _) -> ihName indVar) recCalls
-        poseIHCall :: CoqTerm -> Tactic
         poseIHCall ihCall = ProofPose ("IH_" ++ hashName ihCall) ihCall
     -- Comes from Cond, so maybe change it completely
     go (Case r alts LH.Destruct) _ =
       if unrefinedHeuristic r
-        then Coq.Destruct (Project $ trReft r) $ map (\(c, pat, caseBr) -> (c, (pat, [aux caseBr False]))) caseBrs
+        then Coq.Destruct (Project $ trReft r) $ map (\(c, pat, caseBr) -> (c, (pat, [go caseBr False]))) caseBrs
         else Concat []
       where
+        caseBrs = undefined
         unrefinedHeuristic LH.Var {} = True
         unrefinedHeuristic LH.DC {} = True
         unrefinedHeuristic (LH.Bop _ s t) = unrefinedHeuristic s && unrefinedHeuristic t
@@ -695,8 +697,11 @@ mkIndSkel e specIhs = go e True
     -- where we need to use generalize dependent, and false for the rest
     -- go (Lava.CoqUtil.Induct x xIndBrs' b) genTodo =
     go (Case r alts (LH.Induct genVars)) genTodo =
-      Concat $ gendep ++ [matchTac (Coq.Var x) xBranches, Intros [], Branches $ map aux otherBrs False]
+      Concat $ gendep ++ [matchTac (Coq.Var x) xBranches, Intros [], Branches $ map (`go` False) otherBrs]
       where
+        x = undefined
+        b = undefined
+        xIndBrs = undefined
         gendep = [GeneralizeDependent genVars | genTodo, not (null genVars)]
         matchTac = if b then Coq.Destruct else Induction
         xBranches = map (second (,[]) . fst) xIndBrs

@@ -1,6 +1,5 @@
 - translation of reflected definitions (two undefined in inversion lemmas)
 
-- freeVars Coq
 - turn induct into destruct if no IH introduced
 
 - use Text instead of strings (with a library)

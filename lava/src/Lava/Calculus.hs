@@ -395,7 +395,7 @@ instance Pretty Reft where
 instance Pretty Localization where
   pPrint Local = char 'L'
   pPrint Global = char 'G'
-  pPrint (Recursive _) = char 'Y'
+  pPrint (Recursive _ _) = char 'Y'
 
 instance Show Bop where
   show op = case op of

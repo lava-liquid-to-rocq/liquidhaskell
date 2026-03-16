@@ -96,7 +96,7 @@ chooseIndVar γ pats (hd, args) =
               -- We arbitrarily choose the first of the candidates to be the
               -- variable we do induction on
               indVar = case listToMaybe indVarCandidates of
-                Nothing -> error $ "No possible induction variable in term " ++ show ogTerm
+                Nothing -> error $ "No possible induction variable in term " ++ prettyShow ogTerm
                 Just y -> y
            in return (foldl App (Var x ar (Recursive indVar pats)) args', argsLast)
         _ -> return ogTerm
