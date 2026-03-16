@@ -1,8 +1,7 @@
-- translation of reflected definitions (two undefined in inversion lemmas)
+- undefined in Declaration
 
-- turn induct into destruct if no IH introduced
-
-- use Text instead of strings (with a library)
+- run tests
 
 - cleanup files
 - cleanup Rocq grammar
+- use pretty printer for Rocq
