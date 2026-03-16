@@ -18,9 +18,6 @@ import Lava.Translation
 import Lava.TypingEnvironment as TypEnv hiding (map)
 import Lava.Util (addParens, freshVar, hashName)
 
--- TOOD: maybe put all translations, vars, injArgs etc in a record that is
--- passed to all functions
-
 -- | Main function for the translation of declarations
 trDecl :: LH.Decl -> [Coq.Decl]
 -- An inductive data type gives an unrefined data type, a well-formedness predicate, some utility definitions and pseudo-constructors
@@ -35,25 +32,19 @@ trDecl (LH.Data tc alts) =
     -- if the graph relation is needed, we generate it on the fly
 trDecl (LH.Definition f tpf e False) = [trDefRefDef f tpf e]
 -- For a reflected definition, we generate the graph relation, packs and other lemmas
+-- TODO: create a record with all the necessary informations, to avoid computing
+-- them everytime (translation of the types, paths, parameters etc)
 trDecl (LH.Definition f tpf e True) =
   trDefRefDef f tpf e --                                  f
     : defGraphRelAndHints f tpf e --                      f_rel
-    ++ relFunctionhoodLemma f tpf e --                      f_rel_funct
-    ++ relConstrLems f undefined --                             inversion lemmas for f_rel
-    ++ defExLemma f tpf e --                                f_rel_ex
+    ++ relFunctionhoodLemma f tpf e --                    f_rel_funct
+    ++ relConstrLems f tpf e --                           inversion lemmas for f_rel
+    ++ defExLemma f tpf e --                              f_rel_ex
     ++ [CoqMarkVisibility $ ChangeVisibility f Opaque] -- Opaque f.
     ++ refRelRwLemma f tpf --                             f_rel_rw
     ++ refUnrefLemmas f tpf --                            f__f_rel and f__f_rel'
     ++ relMkLemma f tpf --                                f_rel_mk
     ++ packInstance f tpf --                              f_pack
-  where
-    -- Bindings of arguments
-    (args, ret) = arrs tpf
-    (argsT, retT) = (map (second trRefType) args, trRefType ret)
-    (argsUT, retUT) = (map (second utrRefType) args, utrRefType ret)
-    -- Name for the result of f (chosen different from the names of the arguments)
-    -- Actually always v since not an arrow
-    f_res = case ret of RefType v _ _ -> v; _ -> freshVar (map fst argsT)
 
 -- * Declarations generated for the translation of a datatype
 
@@ -447,9 +438,10 @@ relFunctionhoodLemma f tpf e =
         relInst x = Coq.App (Coq.Def $ relDefName f) (map (Coq.Var . fst) argsT ++ [Coq.Var x])
 
 -- | Inversion lemmas for the graph relation, one for each branch
-relConstrLems :: Id -> [FunctionPath] -> [Coq.Decl]
-relConstrLems f paths = concatMap (inversionLemma f) $ groupPaths paths
+relConstrLems :: Id -> RefType -> Expr -> [Coq.Decl]
+relConstrLems f tpf e = concatMap (inversionLemma f) $ groupPaths paths
   where
+    paths = functionPaths e (tpArgsArLoc tpf)
     -- Converts a list of function paths to a list of equations paths by grouping together paths that destruct arguments in the same way
     groupPaths :: [FunctionPath] -> [([(Id, Reft)], [([(Reft, Reft)], Reft)])]
     groupPaths branches =
