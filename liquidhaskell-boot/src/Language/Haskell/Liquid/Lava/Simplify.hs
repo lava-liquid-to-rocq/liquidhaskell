@@ -7,10 +7,11 @@ module Language.Haskell.Liquid.Lava.Simplify (simplify) where
 import Control.Monad.State.Strict
 import Data.Bifunctor (second)
 import Data.List (isPrefixOf)
+import qualified Data.Map.Strict as M
 
 import GHC.Core
 import GHC.Types.Var
-import Language.Haskell.Liquid.GHC.Misc (showPpr)
+import Language.Haskell.Liquid.GHC.Misc ()  -- needed for Show Var instance
 
 import Lava.Util (showStripped)
 
@@ -39,28 +40,17 @@ binds (Rec xes)    = map fst xes
 isANFVar :: Var -> Bool
 isANFVar = isPrefixOf "lq_anf" . showStripped
 
--- TODO use Map instead?
-type Subst = [(Var, CoreExpr)]
+type Subst = M.Map Var CoreExpr
 
 without :: Subst -> [Var] -> Subst
-without su xs = filter ((`notElem` xs) . fst) su
-
-eqSubst :: Subst -> Subst -> Bool
-eqSubst s1 s2 =
-  length s1 == length s2
-    && and (zipWith (\(v1, e1) (v2, e2) -> v1 == v2 && showPpr e1 == showPpr e2) s1 s2)
-
-fixpSubst :: Subst -> Subst
-fixpSubst su =
-  let su' = [(x, subst su ex) | (x, ex) <- su]
-  in if eqSubst su su' then su else fixpSubst su'
+without su = foldr M.delete su
 
 class Subable a where
   subst :: Subst -> a -> a
 
 instance Subable CoreExpr where
   subst su (Var x)
-    | Just e <- lookup x su = e
+    | Just e <- M.lookup x su = e
     | otherwise = Var x
   subst _ (Lit l) = Lit l
   subst su (App e1 e2) = App (subst su e1) (subst su e2)
@@ -91,13 +81,12 @@ instance Subable CoreBind where
 -------------------------------------------------------------------------------
 
 grapANFs :: CoreExpr -> (CoreExpr, Subst)
-grapANFs expr = (e', fixpSubst su)
+grapANFs expr = runState (go expr) M.empty
   where
-    (e', su) = runState (go expr) []
-
     go (Let (NonRec x ex) e)
       | isANFVar x = do ex' <- go ex
-                        modify ((x, ex') :)
+                        su <- get
+                        put $! M.insert x (subst su ex') su
                         go e
       | otherwise = do ex' <- go ex
                        Let (NonRec x ex') <$> go e

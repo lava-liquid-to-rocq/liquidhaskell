@@ -82,7 +82,7 @@ parseFile writeFlag sinfo filename = do
   -- \| Translate the LH specs of function/theorem definitions to ILH data structures
   let specMap = SLH.transSig moduleId Nothing <$> M.fromList (pb_specs pb)
   -- \| Translate the GHC binds of function/theorem definitions to ILH data structures
-  let lhDefs = CLH.transBind moduleId (s_infTypes sinfo) . simplify <$> (filter (not . isIgnoredBind) $ pb_binds pb)
+  let lhDefs = CLH.transBind moduleId (s_infTypes sinfo) . simplify <$> filter (not . isIgnoredBind) (pb_binds pb)
   -- \| Combine the translated LH specs and GHC binds for function/theorem definitions into ILH declarations
   let defDecls = combineDefsAndLemmas $ pairLHDefsWithSigs moduleId lhDefs specMap (pb_vars pb)
 
@@ -127,22 +127,21 @@ translateFile writeFlag sinfo arg = do
 
   let hasImports = not $ null imports
 
-      extendedCoqContent :: IO [Coq.Decl]
-      extendedCoqContent = case translateTyping ilhSource of
-        Left err ->
-          print err >> pure []
-        Right paper ->
-          putStrLn "—— Typechecking OK ——"
-            >> pure paper
+  -- Evaluate translateTyping once and reuse the result
+  coqResult <- case translateTyping ilhSource of
+    Left err ->
+      print err >> pure []
+    Right paper ->
+      putStrLn "—— Typechecking OK ——"
+        >> pure paper
 
   -- | Step 5: Write output files
   when writeFlag $ do
     let coqPreamble = if hasImports then [] else preamble
-    output <- extendedCoqContent
-    writeOut outputFolder modulename Coq coqPreamble output
+    writeOut outputFolder modulename Coq coqPreamble coqResult
   putStrLn ""
 
-  extendedCoqContent
+  pure coqResult
 
 writeOut :: (Show a) => FilePath -> String -> OUT -> [String] -> [a] -> IO ()
 writeOut outputFolder modulename outType pre ilhSource = do
