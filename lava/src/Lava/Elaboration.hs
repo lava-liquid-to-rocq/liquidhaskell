@@ -326,26 +326,23 @@ checkExpr γ pats e0@(Case r branches _) tp = do
   (tpr, r') <- synReft γ pats r
   case tpr of
     RefType v (TC tc) rv -> do
-      branches' <- mapM checkBranch branches
-      -- To translate using tactics, we include additional information in case
-      -- (not in the paper)
-      let ind = case r of
-            Var x _ _
-              | r `elem` pats ->
-                  -- Variables to generalize are those the parameters that have
-                  -- not been destructed
-                  Induct $ reverse [z | Var z _ _ <- pats, z /= x && onTopLevel]
-              where
-                onTopLevel = all (\case (Var {}) -> True; _ -> False) pats
-            _ -> Destruct
-      return (Case r' branches' ind)
+      -- We translate to induct when we destruct one of the parameters
+      let isInduct = case r of Var x 0 Local -> r `elem` pats; _ -> False
+      branches' <- mapM (`checkBranch` isInduct) branches
+      -- In the first induct, we generalize the other parameters
+      -- FIX: if the first destruction of a parameter is translated to destruct,
+      -- we never generalize the variables
+      let genVars =
+            let onTopLevel = all (\case (Var {}) -> True; _ -> False) pats
+             in reverse [z | zvar@(Var z 0 Local) <- pats, zvar /= r, onTopLevel, isInduct]
+      return (Case r' branches' genVars)
     _ -> Left . CheckingErr $ "Matched term is not of an inductive type in expression " ++ prettyShow e0
   where
     -- The booleans on the introduced variables are just placeholder, we
     -- instantiate them here for real
-    checkBranch :: ((Id, [(Id, Bool)]), Maybe Expr) -> Either TypeError ((Id, [(Id, Bool)]), Maybe Expr)
-    checkBranch (c, Nothing) = return (c, Nothing)
-    checkBranch br@((c, ys), Just e) = do
+    checkBranch :: ((Id, [(Id, Bool)]), Maybe Expr) -> Bool -> Either TypeError ((Id, [(Id, Bool)]), Maybe Expr)
+    checkBranch (c, Nothing) _ = return (c, Nothing)
+    checkBranch br@((c, ys), Just e) isInduct = do
       tpc <- lookupDC c γ
       -- Replace the binders in tpc by the names of the match in ys
       let tpcRenamed = renames (zip (map fst ys) (tpArgs tpc)) tpc
@@ -353,7 +350,7 @@ checkExpr γ pats e0@(Case r branches _) tp = do
       -- TODO: add additional type with z for occurence typing
       γ' <- foldM insertLocalVar γ argsc
       e' <- checkExpr γ' pats e tp
-      -- True for inductive variables in ys
-      let inductives = map (\case (_, RefType _ tc' _) -> tc' == tc; (_, ArrType {}) -> False) argsc
+      -- True for inductive variables in ys if isInduct
+      let inductives = map (\case (_, RefType _ tc' _) -> tc' == tc && isInduct; (_, ArrType {}) -> False) argsc
           ys' = zip (map fst ys) inductives
       return ((c, ys'), Just e')

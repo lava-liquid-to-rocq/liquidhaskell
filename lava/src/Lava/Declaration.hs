@@ -7,7 +7,7 @@ module Lava.Declaration where
 
 import Data.Bifunctor (bimap, first, second)
 import Data.Either (isLeft)
-import Data.List (groupBy, (\\))
+import Data.List (groupBy, union, (\\))
 import Data.Maybe (catMaybes, isNothing)
 import qualified Data.Set as Set
 import Lava.Calculus as LH
@@ -668,45 +668,35 @@ packInstance f tpf =
 -- | Generates the nested top-level inductive skeleton tactic used in the functionhood and existence lemma proofs.
 --   The flag indicates whether we should specialize induction hypotheses
 mkIndSkel :: Expr -> Bool -> Tactic
-mkIndSkel e specIhs = go e True
+mkIndSkel (Case r alts genVars) specIHs =
+  let -- we do not print anything for unreacheable branches in the inductive skeleton
+      trans Nothing = []
+      trans (Just e) = [mkIndSkel e specIHs]
+   in mkMatching trans r alts genVars
+-- TODO: handle inductive skeleton of ex
+mkIndSkel (LH.Let x tpx ex e) specIHs = mkIndSkel e specIHs
+mkIndSkel (Reft r) specIhs =
+  Concat $
+    if specIhs then [] else Custom "fix_notations" : [poseIHCall call | call <- ihCalls] ++ [Try $ Clear ih | ih <- allIHs]
   where
-    go (Reft r) _ =
-      Concat $
-        if specIhs then [] else Custom "fix_notations" : [poseIHCall call | call <- ihCalls] ++ [Try $ Clear ih | ih <- allIHs]
-      where
-        -- recursive calls in r
-        findRecCalls :: [(Reft, [Reft])]
-        findRecCalls = undefined -- recursive calls in r
-        recCalls = map (\(LH.Var _ _ (Recursive indVar pats), args) -> (indVar, pats, args)) findRecCalls
-        ihCalls = map (\(indVar, pats, args) -> trRecCall indVar pats args) recCalls
-        allIHs = map (\(indVar, _, _) -> ihName indVar) recCalls
-        poseIHCall ihCall = ProofPose ("IH_" ++ hashName ihCall) ihCall
-    -- Comes from Cond, so maybe change it completely
-    go (Case r alts LH.Destruct) _ =
-      if unrefinedHeuristic r
-        then Coq.Destruct (Project $ trReft r) $ map (\(c, pat, caseBr) -> (c, (pat, [go caseBr False]))) caseBrs
-        else Concat []
-      where
-        caseBrs = undefined
-        unrefinedHeuristic LH.Var {} = True
-        unrefinedHeuristic LH.DC {} = True
-        unrefinedHeuristic (LH.Bop _ s t) = unrefinedHeuristic s && unrefinedHeuristic t
-        unrefinedHeuristic (LH.App tm ts) = unrefinedHeuristic tm && unrefinedHeuristic ts
-        unrefinedHeuristic _ = specIhs
-    -- The flag is true for the first call to induction,
-    -- where we need to use generalize dependent, and false for the rest
-    -- go (Lava.CoqUtil.Induct x xIndBrs' b) genTodo =
-    go (Case r alts (LH.Induct genVars)) genTodo =
-      Concat $ gendep ++ [matchTac (Coq.Var x) xBranches, Intros [], Branches $ map (`go` False) otherBrs]
-      where
-        x = undefined
-        b = undefined
-        xIndBrs = undefined
-        gendep = [GeneralizeDependent genVars | genTodo, not (null genVars)]
-        matchTac = if b then Coq.Destruct else Induction
-        xBranches = map (second (,[]) . fst) xIndBrs
-        -- we assume that at this point the branches are sorted
-        {- xIndBrs = sortBy ordFunc xIndBrs'
-        ordFunc :: ((Id, CoqDestrPat), IndTree) -> ((Id, CoqDestrPat), IndTree) -> Ordering
-        ordFunc ((c1, _), _) ((c2, _), _) = compare c1 c2 -}
-        otherBrs = map snd xIndBrs
+    recCalls = map (\(LH.Var _ _ (Recursive indVar pats), args) -> (indVar, pats, args)) $ findRecCalls r
+    -- translation of recursive calls
+    ihCalls = map (\(indVar, pats, args) -> trRecCall indVar pats args) recCalls
+    -- all induction hypotheses used
+    allIHs = map (\(indVar, _, _) -> ihName indVar) recCalls
+    poseIHCall ihCall = ProofPose ("IH_" ++ hashName ihCall) ihCall
+
+    findRecCalls :: Reft -> [(Reft, [Reft])]
+    findRecCalls x@(LH.Var _ _ (Recursive {})) = [(x, [])]
+    findRecCalls r@(LH.App {}) =
+      case apps r of
+        (LH.Var _ _ (Recursive {}), _) -> [apps r]
+        _ -> []
+    findRecCalls (StringLit {}; IntLit {}; FloatLit {}; DC {}) = []
+    findRecCalls (LH.Neg r) = findRecCalls r
+    findRecCalls (LH.Bop _ r1 r2) = findRecCalls r1 `union` findRecCalls r2
+    findRecCalls (QMark r rh rp) = findRecCalls r `union` (findRecCalls rh `union` findRecCalls rp)
+    findRecCalls (Pop _ r1 r2) = findRecCalls r1 `union` findRecCalls r2
+    findRecCalls (Sub r _ _) = findRecCalls r
+    findRecCalls (Inj r _) = findRecCalls r
+    findRecCalls (Proj r) = findRecCalls r

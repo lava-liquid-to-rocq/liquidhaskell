@@ -285,40 +285,47 @@ trExprTacs (LH.Let x (Just tpx@(ArrType {})) e1 e2) =
     tpxT = trRefTypeTop tpx
     x' = "f_" ++ hashName tpxT
     assertF = Custom $ "unshelve refine (let " ++ x ++ " : ltac:(buildPackG_spec " ++ x' ++ ") := (ltac:(fun_to_pack " ++ x' ++ ")) in _)"
-trExprTacs (Case tm alts induct) =
-  case induct of
-    LH.Destruct -> [Coq.Destruct (Project $ trReft tm) (map trAlt alts)]
-    LH.Induct genVars ->
+trExprTacs (Case tm alts genVars) =
+  let -- translation of an unreachable branch as intros; exfalso; oracle.
+      trAltBody Nothing = [Concat [Intros [], Exfalso, Oracle]]
+      trAltBody (Just e) = trExprTacs e
+   in [mkMatching trAltBody tm alts genVars]
+
+-- | Translation of a case expression as destruct or as induct
+-- An induct such that none of the introduced IHs are used is transformed to destruct
+-- This function is factorized by the function to apply to the branches,
+-- in particular in the translation of a function we use trExprTacs
+mkMatching :: (Maybe Expr -> [Tactic]) -> Reft -> [((Id, [(Id, Bool)]), Maybe Expr)] -> [Id] -> Tactic
+mkMatching trans tm alts genVars =
+  if induct
+    then
       let gendep = [GeneralizeDependent genVars | not (null genVars)]
           -- we add intros in each branch to degeneralize the variables from genVars
           trAltIntros = second (second (Intros [] :)) . trAlt
-       in [Concat $ gendep ++ [Induction (trReft tm) (map trAltIntros alts)]]
+       in Concat $ gendep ++ [Induction (Project $ trReft tm) (map trAltIntros alts)]
+    else Coq.Destruct (Project $ trReft tm) (map trAlt alts)
   where
-    -- TODO: check if an induction hypothesis is introduced, otherwise use destruct
-    -- Also, destruct can be encoded as case with all booleans False and empty list of genvars
-    -- translation of an unreachable branch as intros; exfalso; oracle.
-    trAlt ((c, ys), Nothing) =
-      (c, (ysDesPat ys Nothing, [Concat [Intros [], Exfalso, Oracle]]))
-    trAlt ((c, ys), Just e) =
-      let eT = trExprTacs e
-       in (c, (ysDesPat ys (Just e), eT))
+    -- Compute what variables will be actually used for later inductions
+    indVars = map indVarsAlt alts
+    indVarsAlt ((c, ys), e) = map fst $ filter (\(y, isInd) -> isInd && y `isIndVar` e) ys
+    -- Whether y is used as an inductive variable, by checking the
+    -- information contained in the localization of the recursive variables
+    isIndVar y (Just e) = any (\(_, (_, Recursive y' _)) -> y == y') (freeVarsArLoc e)
+    isIndVar y Nothing = False
+    -- If an induction hypothesis is used, we translate to induct
+    induct = not (all null indVars)
+    -- Translation of the branches using the parametrized function
+    trAlt ((c, ys), e) = (c, (ysDesPat ys e, trans e))
     -- Build the patterns for the introduced variables.
     -- The second argument contains the free variables of the translated branch,
     -- to check what induction hypotheses are used
     ysDesPat :: [(Id, Bool)] -> Maybe Expr -> CoqDestrPat
-    ysDesPat ys e = ConjDestrPat $ case induct of
-      LH.Destruct -> map (SingleIdPat . fst) ys
-      LH.Induct _ -> concatMap varPattern ys
-        where
-          -- For inductive variables, in the pattern we add either the name of the IH if it is
-          -- used later, or a hole _
-          varPattern (y, isInd) =
-            let ihy = if y `isIndVar` e then SingleIdPat $ ihName y else UnnamedIdPat
-             in SingleIdPat y : [ihy | isInd]
-          -- Whether y is used as an inductive variable, by checking the
-          -- information contained in the localization of the recursive variables
-          isIndVar y Nothing = False
-          isIndVar y (Just e) = any (\(_, (_, Recursive y' _)) -> y == y') (freeVarsArLoc e)
+    ysDesPat ys e = ConjDestrPat $ concatMap varPattern ys
+      where
+        -- For inductive variables, in the pattern we add either the name of the IH if it is used later, or a hole _
+        varPattern (y, isInd) =
+          let ihy = if y `isIndVar` e then SingleIdPat $ ihName y else UnnamedIdPat
+           in SingleIdPat y : [ihy | isInd, induct]
 
 {- trExprTacs (LH.Case cond [("False", [], elseE), ("True", [], thenE)]) = do
   let

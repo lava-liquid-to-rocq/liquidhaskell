@@ -69,7 +69,8 @@ data Expr
     Let Id (Maybe RefType) Expr Expr
   | -- | Pattern matching (includes conditionals), with Maybe for optional branches.
     --   The boolean in the list of parameters is true if the parameter is inductive
-    Case Reft [((Id, [(Id, Bool)]), Maybe Expr)] IndCase
+    --   and we are destructing one of the parameters of the function
+    Case Reft [((Id, [(Id, Bool)]), Maybe Expr)] [Id]
   deriving (Data, Eq)
 
 -- | Simple LH terms including formulas.
@@ -134,10 +135,6 @@ data Bop
 --
 -- > pop ::= === | =<= | =>=
 data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq)
-
--- | Whether a case must be translated to induct or destruct.
--- In the first option, we store the names of variables to generalize
-data IndCase = Induct [Id] | Destruct deriving (Data, Eq)
 
 -- Builtin type and data constructors
 
@@ -306,8 +303,8 @@ instance HasVars Expr where
       | y `Set.member` freeVars r && x `Set.member` freeVars e' -> error err
     Let y tp ey e' | y == x -> Let y (subst r x <$> tp) (subst r x ey) e'
     Let y tp ey e' -> Let y (subst r x <$> tp) (subst r x ey) (subst r x e')
-    Case r' branches ind ->
-      Case (subst r x r') (map substBranch branches) ind
+    Case r' branches genVars ->
+      Case (subst r x r') (map substBranch branches) genVars
       where
         substBranch ((_, ys), _) | not (Set.fromList (map fst ys) `Set.disjoint` freeVars r) = error err
         substBranch br@((_, ys), _) | x `elem` map fst ys = br
@@ -371,7 +368,7 @@ instance Pretty Expr where
       ppTp = case tpx of
         Nothing -> text x
         Just tp -> parens (text x <> colon <+> pPrint tp)
-  pPrint (Case r alts ind) =
+  pPrint (Case r alts _) =
     vcat $ (text "case" <+> pPrint r <+> text "of") : map ppAlt alts
     where
       ppAlt (pat, e) = nest identNb $ sep [char '|' <+> ppPat pat <+> text "->", nest identNb $ pPrint e]
