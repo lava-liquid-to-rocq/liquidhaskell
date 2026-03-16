@@ -228,6 +228,18 @@ removeFOArgProjs (RefType y a reft) = RefType y a (aux reft)
     aux (Pop pop r1 r2) = Pop pop (aux r1) (aux r2)
     aux (Sub {}; Inj {}) = error "Subsumption or injection cast found in type refinement."
 
+-- ** Destructors
+
+-- | Extracts the elements out of a RefType constructor and raises an error for another type
+fromRefType :: RefType -> (Id, BaseType, Reft)
+fromRefType (RefType x tp r) = (x, tp, r)
+fromRefType _ = error "RefType expected"
+
+-- | Extracts the elements out of an ArrType and raises an error for another type
+fromArrType :: RefType -> (Id, RefType, RefType)
+fromArrType (ArrType x tpx tp) = (x, tpx, tp)
+fromArrType _ = error "ArrType expected"
+
 -- * Typeclass related to free variables
 
 -- To use Sets with Localization inside
