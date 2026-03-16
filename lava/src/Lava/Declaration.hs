@@ -16,7 +16,7 @@ import Lava.CoqSyntaxUtil (mkAnd, mkForallXs, mkOr, mkVarDestrPat, mkVarDestruct
 import Lava.CoqUtil
 import Lava.Translation
 import Lava.TypingEnvironment as TypEnv hiding (map)
-import Lava.Util (addParens, freshVar, hashName)
+import Lava.Util (addParens, freshVar, hashName, showP)
 
 -- | Main function for the translation of declarations
 trDecl :: LH.Decl -> [Coq.Decl]
@@ -469,12 +469,12 @@ inversionLemma f (σxs, paths) =
     -- Fresh variable for the result of relApp
     res = f_lem ++ "_res"
     relApp = Coq.App (Def $ relDefName f) (map (utrReft . snd) σxs ++ [Coq.Var res])
-    guardDisjunction = mkOr $ map (\(σp, rf) -> trPathGuard f (σxs, σp, rf) rv (Just res)) paths
-    -- TODO: we need RV in inversionLemma, but we also need to define it with
-    -- respect to several terms
-    rv = undefined
+    -- TODO: do we need something else than []?
+    guardDisjunction = mkOr $ map (\(σp, rf) -> trPathGuard f (σxs, σp, rf) [] (Just res)) paths
     -- argument of the tactic: the translation of the terms destructed in the guards
-    tacArg = unwords (map ((++ " _::_") . show . utrReft) undefined) ++ " _nil"
+    tacArg =
+      let withPatterns = concatMap fst paths
+       in unwords (map ((++ " _::_") . showP . utrReftProp . fst) withPatterns) ++ " _nil"
 
 -- | Name of the inversion lemma constructed from the patterns of the arguments in a path.
 -- This function is similar to `Declaration.namePath`
