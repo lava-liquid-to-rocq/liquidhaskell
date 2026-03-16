@@ -118,14 +118,6 @@ class (Show a) => PrettyPrintable a where
   includesBranches :: a -> Bool
   includesBranches = const False
 
--- -- | Pretty print using HughesPJ
--- class Pretty a where
---   pprint :: a -> Doc
-
--- | Number of spaces in the indentation
-identNb :: Int
-identNb = 2
-
 -- Get rid of module names.
 showStripped :: (Show a) => a -> String
 showStripped = strip . show

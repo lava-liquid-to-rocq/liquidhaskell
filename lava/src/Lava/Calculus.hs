@@ -6,12 +6,10 @@
 -- | Grammars, printer and suable functions for ILH
 module Lava.Calculus where
 
-import Data.Bifunctor (first, second)
+import Data.Bifunctor (first)
 import Data.Data
--- to avoid errors if forgetting Map.lookup
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Lava.Util hiding (Id, sub, subst)
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding (lookup, (<>))
@@ -139,17 +137,29 @@ data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq)
 -- Builtin type and data constructors
 
 {- ORMOLU_DISABLE -}
+ttTmName :: Id
 ttTmName = "true"
+ttTm :: Reft
 ttTm = DC ttTmName
+ffTmName :: Id
 ffTmName = "false"
+ffTm :: Reft
 ffTm = DC ffTmName
+boolTpName :: Id
 boolTpName = "Bool"
+boolTp :: BaseType
 boolTp = TC boolTpName
+unitTmName :: Id
 unitTmName = "unit"
+unitTm :: Reft
 unitTm = DC unitTmName
+unitTpName :: Id
 unitTpName = "Unit"
+unitTp :: BaseType
 unitTp = TC unitTpName
+builtinDCs :: [Reft]
 builtinDCs = [ttTm, ffTm, unitTm]
+builtinTCs :: [BaseType]
 builtinTCs = [boolTp, unitTp]
 {- ORMOLU_ENABLE -}
 
@@ -204,8 +214,9 @@ harmonizeBinderNames tp@(RefType {}) = tp
 -- Remove projections around the *first-order* arguments of the constructor, in
 -- a context where FO arguments are given unrefined types
 -- This function should be used at top-level, where only variables appear inside projections
+removeFOArgProjs :: RefType -> RefType
 removeFOArgProjs (ArrType x tpx tp) = ArrType x (removeFOArgProjs tpx) (removeFOArgProjs tp)
-removeFOArgProjs (RefType x a r) = RefType x a (aux r)
+removeFOArgProjs (RefType y a reft) = RefType y a (aux reft)
   where
     aux (Proj (Var x 0 Local)) = Var x 0 Local
     aux (Proj x) = x
@@ -221,9 +232,10 @@ removeFOArgProjs (RefType x a r) = RefType x a (aux r)
 
 -- To use Sets with Localization inside
 instance Ord Localization where
-  compare l1 l2 | l1 == l2 = EQ
   -- since we do not care about getting the branch pattern with
   -- freeVarsArLoc, we do not compare it
+  compare Local Local = EQ
+  compare Global Global = EQ
   compare (Recursive ih1 _) (Recursive ih2 _) = compare ih1 ih2
   compare Local (Global; Recursive _ _) = LT
   compare Global (Recursive _ _) = LT
@@ -293,7 +305,7 @@ instance HasVars Expr where
     freeVarsArLoc r `Set.union` Set.unions (map fvBranch branches)
     where
       fvBranch (_, Nothing) = Set.empty
-      fvBranch ((c, ys), Just ebr) =
+      fvBranch ((_, ys), Just ebr) =
         let ysSet = foldr (\(y, _) -> Set.insert (y, (0, Local))) Set.empty ys
          in freeVarsArLoc ebr Set.\\ ysSet
 
@@ -313,7 +325,7 @@ instance HasVars Expr where
       err = render $ text "Substitution" <+> braces (pPrint r <> char '/' <> text x) <> parens (pPrint e) <+> text "is not sound because of variable capture."
 
 instance HasVars RefType where
-  freeVarsArLoc (RefType x tp r) = Set.delete (x, (0, Local)) (freeVarsArLoc r)
+  freeVarsArLoc (RefType x _ r) = Set.delete (x, (0, Local)) (freeVarsArLoc r)
   freeVarsArLoc (ArrType x tpx tp) = freeVarsArLoc tpx `Set.union` Set.delete (x, (arity tpx, Local)) (freeVarsArLoc tp)
 
   subst r x tp = case tp of
@@ -334,6 +346,10 @@ instance (HasVars a) => HasVars (Maybe a) where
   subst r x = fmap (subst r x)
 
 -- * Printer for the grammar
+
+-- | Number of spaces in the indentation
+identNb :: Int
+identNb = 2
 
 instance Pretty Builtin where
   pPrint = text . show
@@ -385,7 +401,7 @@ instance Pretty Reft where
   pPrint (Bop bop r1 r2) = pPrint r1 <+> pPrint bop <+> pPrint r2
   pPrint (QMark r rh rp) = pPrint r <+> parens (pPrint rh <+> char '?' <+> pPrint rp)
   pPrint (Pop pop r1 r2) = pPrint r1 <+> pPrint pop <+> pPrint r2
-  pPrint (Sub r from to) = text "sub" <> parens (sep $ punctuate comma (map pPrint [from, to]))
+  pPrint (Sub _ from to) = text "sub" <> parens (sep $ punctuate comma (map pPrint [from, to]))
   pPrint (Inj r tp) = text "inj" <> parens (pPrint r <> comma <+> pPrint tp)
   pPrint (Proj r) = text "proj" <> parens (pPrint r)
 
