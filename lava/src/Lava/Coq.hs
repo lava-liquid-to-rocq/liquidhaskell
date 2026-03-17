@@ -78,8 +78,6 @@ module Lava.Coq
     UArgList (..),
     UArgListT (..),
     mkArgList, mkUArgList, mkArgListT, mkUArgListT,
-
-    freeVars
   )
 where
 
@@ -89,6 +87,9 @@ import Data.List (sortBy)
 import Lava.Util
 import qualified Data.Set as Set
 import Data.Set (Set)
+import Text.PrettyPrint
+import Text.PrettyPrint.HughesPJClass hiding (first)
+import Prelude hiding ((<>))
 
 unrefinedTCName :: Id -> Id
 unrefinedTCName name = name ++ "_u"
@@ -411,26 +412,6 @@ data RewriteDir
 
 data CoqIntroPat = DestrPat CoqDestrPat | RewritePat RewriteDir deriving (Data, Eq)
 
--- * Free variables
-
-class HasVars a where
-  freeVars :: (HasVars a) => a -> Set Id
-
-instance HasVars RocqType where
-  freeVars = undefined
-
-instance HasVars CoqTerm where
-  freeVars = undefined
-
-instance HasVars Tactic where
-  freeVars (Easy; Oracle; Exfalso) = Set.empty
-  freeVars (Destruct tm alts) = undefined
-  freeVars (Induction tm alts) = undefined
-  freeVars (Exact tm) = freeVars tm
-
-instance (HasVars a) => HasVars [a] where
-  freeVars tms = Set.unions $ map freeVars tms
-
 -- * Functions on the grammar
 
 -- | Regroup forall arguments
@@ -440,19 +421,88 @@ concatForalls tp = ([], tp)
 
 -- * Printer for grammar
 
+dot :: Doc
+dot = char '.'
+
+identNb :: Int
+identNb = 2
+
 showCoqArg :: (Show a) => ((Id, a), Bool) -> String
 showCoqArg ((x, tp), isImplicit) = if isImplicit then " [" ++ argBody ++ "]" else " (" ++ argBody ++ ")"
   where
     argBody = x ++ ": " ++ show tp
 
+pPrintArg :: (Pretty a) => ((Id, a), Bool) -> Doc
+pPrintArg ((x, tp), isImplicit) =
+  (if isImplicit then brackets else parens) (text x <> colon <+> pPrint tp)
+
+instance Pretty CoqModule where
+  pPrint (CoqModule name decls) =
+    text "module" <+> text name <+> vcat (punctuate (text "; ") (map pPrint decls))
+
 instance Show CoqModule where
   show (CoqModule name decls) = "module " ++ name ++ " " ++ intercalate "; " (map show decls)
+
+instance Pretty CoqConstr where
+  pPrint (Constr c tp) = text c <> colon <+> pPrint tp
 
 instance Show CoqConstr where
   show (Constr c tp) = c ++ ": " ++ show tp
 
+instance Pretty CoqTermTC where
+  pPrint (InductiveData n constrs) =
+    text "Inductive" <+> text n <> text ": Set :=" <+> sep (punctuate (char '|') (map pPrint constrs))
+
 instance Show CoqTermTC where
   show (InductiveData n constrs) = "Inductive " ++ n ++ ": Set := " ++ intercalate " | " (map show constrs)
+
+instance Pretty Decl where
+  pPrint (TCDecl n constrs) = text "Inductive" <+> text n <> text ": Set :=" <+> sep (punctuate (char '|') (map pPrint constrs))
+  pPrint (Definition f args ret body vis) = header <> bdy
+    where
+      header = case ret of
+        Prop {} | vis == Opaque -> text "Theorem" <+> sign
+        _ -> text "Definition" <+> sign
+      sign = text f <+> sep (map pPrintArg args) <> colon <+> pPrint ret
+      bdy = case body of
+        ProofBody tacs -> prfBody tacs
+        TermBody expr -> definien expr
+      prfBody tacs = dot
+          $$ text "Proof."
+          $$ nest identNb (hsep . punctuate dot $ map pPrint tacs) <> dot
+          $$ (if admitted tacs then text "Admitted" else text qedSym) <> dot
+      definien tm = text " :=" $$ nest identNb (pPrint tm <> dot)
+      qedSym = case vis of
+        Transparent -> "Defined"
+        Opaque -> "Qed"
+  pPrint (Fix f args ret tm) =
+    text "Fixpoint" <+> text f <+>
+    sep (map pPrintArg args) <> colon <+> pPrint ret <+> text ":="
+    $$ nest identNb (pPrint tm <> dot)
+  pPrint (Load m) = text "Load" <+> text m <> dot
+  pPrint (CoqAlias f e) =
+    sep [text "Notation" <+> text f <+> text ":=", pPrint e <> dot]
+  pPrint (CoqNewType t tp) =
+    text "Global Notation" <+> text t <+> text ":=" <+> undefined {- printRocqType tp False -} <> dot
+  pPrint (CoqAxiom ax args claim) =
+    text "Axiom" <+> text ax <> colon <+> undefined {- showForall (map fst args) claim -} <> dot
+  pPrint (CoqInductive f args k constrs) =
+    text "Inductive" <+> pPrint f <+>
+      hsep (map (\(x, tp) -> parens (pPrint x <> colon <+> pPrint tp)) args)
+      <> colon <+> parens (pPrint k) <+> text ":=" <+>
+      nest identNb ((sep . punctuate (char '|') $ map pPrint constrs) <> dot)
+  pPrint (CoqMarkVisibility v) = pPrint v
+  pPrint (AddHint kind ax db) =
+    text "#[global] Hint" <+> pPrint kind <+> text ax <> colon <+> pPrint db <> dot
+  pPrint (Instance instName tp opDefs) =
+    text "#[global] Instance" <+> text instName <> colon <+>
+    hsep (map text tp) <+> text ":=" <+>
+    (braces . nest identNb) (vcat . punctuate semi $
+      map (\(lookupOp, lookupRes) -> pPrint lookupOp <+> text ":=" <+> pPrint lookupRes) opDefs)
+    <> dot
+  pPrint (TacInstance instName tp tac) =
+    text "#[global] Instance" <+> pPrint instName <> colon <+> pPrint tp <> colon
+    $$ text "Proof." <+> pPrint tac <+> text "Defined."
 
 instance Show Decl where
   show (TCDecl n constrs) = "Inductive " ++ n ++ ": Set := " ++ intercalate " | " (map show constrs)
@@ -490,15 +540,34 @@ instance Show Decl where
   show (Instance instName tp opDefs) = "#[global] Instance " ++ instName ++ " : " ++ unwords tp ++ " := { " ++ intercalate ";" (map (\(lookupOp, lookupRes) -> showNewline 1 ++ lookupOp ++ " := " ++ show lookupRes) opDefs) ++ "\n}."
   show (TacInstance instName tp tac) = "#[global] Instance " ++ instName ++ " : " ++ tp ++ ".\nProof. " ++ show tac ++ "\nDefined."
 
+instance Pretty ChangeVisibility where
+  pPrint (ChangeVisibility f Transparent) = text "Transparent" <+> text f <> char '.'
+  pPrint (ChangeVisibility f Opaque) = text "Opaque" <+> text f <> char '.'
+
 instance Show ChangeVisibility where
   show (ChangeVisibility f Transparent) = "Transparent " ++ f ++ ". "
   show (ChangeVisibility f Opaque) = "Opaque " ++ f ++ ". "
+
+instance Pretty HintKind where
+  pPrint UnfoldHint = text "Unfold"
+  pPrint ConstructorsHint = text "Constructors"
+  pPrint ResolveHint = text "Resolve"
+  pPrint RewriteHint = text "Rewrite"
 
 instance Show HintKind where
   show UnfoldHint = "Unfold"
   show ConstructorsHint = "Constructors"
   show ResolveHint = "Resolve"
   show RewriteHint = "Rewrite"
+
+instance Pretty HintDatabase where
+  pPrint RefConstrDB = text "ref_constr_db"
+  pPrint WfDB = text "wf_constr_db"
+  pPrint GraphRelDB = text "f_rel_funct_db"
+  pPrint CoreDB = text "core_hint_db"
+  pPrint GraphRelBackDB = text "f_rel_back"
+  pPrint RelAxDB = text "rel_ax_db"
+  pPrint EqHintDb = text "eq_hint_db"
 
 instance Show HintDatabase where
   show RefConstrDB = "ref_constr_db"
@@ -508,6 +577,11 @@ instance Show HintDatabase where
   show GraphRelBackDB = "f_rel_back"
   show RelAxDB = "rel_ax_db"
   show EqHintDb = "eq_hint_db"
+
+instance Pretty Builtin where
+  pPrint CTInt = text "Z"
+  pPrint CTString = text "String"
+  pPrint CTFloat = text "Float"
 
 instance Show Builtin where
   show CTInt = "Z"
@@ -544,9 +618,13 @@ printRocqType (Pack argTps uargTps z t p) _ = addParens . unwords $
   [packName, showP argTps, showP uargTps, showP z, showP t, showP p]
 printRocqType Hole _ = "_"
 
+instance Pretty RocqType where
+  pPrint = undefined
+
 instance Show RocqType where
   show rt = printRocqType rt True
 
+-- TODO: put this somewhere else
 getTCRef :: Id -> Id -> CoqTerm
 getTCRef x tc = App (Def $ wfTCName tc) [Var x]
 
@@ -558,6 +636,11 @@ getTCRef x tc = App (Def $ wfTCName tc) [Var x]
 {- instance {-# OVERLAPPING #-} Eq RocqType where
   (==) (Subset x a q) (Subset y b r) = a == b && sub y (Var x) r == q -}
 
+instance Pretty BaseSort where
+  pPrint PropSort = text "Prop"
+  pPrint TypeSort = text "Type"
+  pPrint SetSort = text "Set"
+
 instance Show BaseSort where
   show PropSort = "Prop"
   show TypeSort = "Type"
@@ -568,6 +651,9 @@ instance Show BaseSort where
   show vars = "∅ , " ++ intercalate ", " (map (\(x, tp) -> x ++ ": " ++ show tp) vars) -}
 
 formatLong s = if length s > 60 then "\n\t\t" ++ s else s
+
+instance Pretty CoqTerm where
+  pPrint = undefined
 
 instance Show CoqTerm where
   show coqTerm = case coqTerm of
@@ -684,6 +770,9 @@ instance Show CoqTerm where
         App (Cr c) args -> App (Cr . unrefinedConstrName  $ c) (map projTm args)
         other -> Project other
 
+instance Pretty Bop where
+  pPrint = text . show
+
 instance Show Bop where
   show Eq = "="
   show EqProp = "<->"
@@ -722,6 +811,16 @@ instance Show Bop where
   show ConsR = "::R"
   show ConsU = "::U"
 
+instance Pretty ProofTerm where
+  pPrint (CoqProofTerm s) = text s
+  pPrint (TermWitness tm) | tm == unitTm = char '_'
+  pPrint (TermWitness t) = pPrint t
+  pPrint (RefWitness tm) = char '⌈' <+> pPrint tm <+> char '⌉'
+  pPrint (ProofHole Nothing) = text "ltac:" <> parens (pPrint Oracle)
+  pPrint (ProofHole (Just h)) = text "ltac:" <> parens (pPrint (Concat [Try (Clear h), Oracle]))
+  pPrint (ByTac tac) = text "ltac:" <> parens (pPrint tac)
+  pPrint (Conj l r) = text "conj" <+> parens (pPrint l) <+> parens (pPrint r)
+
 instance Show ProofTerm where
   show (CoqProofTerm s) = s
   show (TermWitness tm) | tm == unitTm = "_"
@@ -741,6 +840,12 @@ class (Show a) => PrntPat a where
 
 instance PrntPat CoqDestrPat
 
+instance Pretty CoqDestrPat where
+  pPrint (ConjDestrPat pats) = brackets (hsep $ map pPrint pats)
+  pPrint (DisjDestrPat pats) = brackets (hsep . punctuate (char '|') $ map undefined {- prntPat -} pats)
+  pPrint UnnamedIdPat = char '_'
+  pPrint (SingleIdPat n) = text n
+
 instance Show CoqDestrPat where
   show p = case p of
     ConjDestrPat pats -> "[" ++ unwords (map show pats) ++ "]"
@@ -748,9 +853,17 @@ instance Show CoqDestrPat where
     UnnamedIdPat -> "_"
     SingleIdPat n -> n
 
+instance Pretty RewriteDir where
+  pPrint RwLR = text "->"
+  pPrint RwRL = text "<-"
+
 instance Show RewriteDir where
   show RwLR = "->"
   show RwRL = "<-"
+
+instance Pretty CoqIntroPat where
+  pPrint (DestrPat p) = pPrint p
+  pPrint (RewritePat rwDir) = pPrint rwDir
 
 instance Show CoqIntroPat where
   show (DestrPat p) = show p
@@ -763,6 +876,11 @@ prntTpls (hd : tl) = showTpl hd ++ " _::_ " ++ prntTpls tl
   where
     -- (f, relDefName f, funcHoodLemName f, relDefThmName f, relDefRwLemName f, relDefLemName f, relDefMkLemName f)
     showTpl (f, f_rel {-}, f_func, f__f_rel, f_rel_rw, f__f_rel', f_rel_mk -}) = "(" ++ intercalate ", " [f, f_rel {-, f_func, f__f_rel, f_rel_rw, f__f_rel', f_rel_mk -}] ++ ")"
+
+instance Pretty Tactic where
+  pPrint Easy = text "quicksolve"
+  pPrint Oracle = text "solver"
+  pPrint _ = undefined
 
 instance PrettyPrintable Tactic where
   prettyPrint indent tac = case tac of
