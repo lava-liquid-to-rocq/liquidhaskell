@@ -137,29 +137,31 @@ data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq)
 -- Builtin type and data constructors
 
 {- ORMOLU_DISABLE -}
-ttTmName :: Id
-ttTmName = "true"
-ttTm :: Reft
-ttTm = DC ttTmName
-ffTmName :: Id
-ffTmName = "false"
-ffTm :: Reft
-ffTm = DC ffTmName
-boolTpName :: Id
-boolTpName = "Bool"
 boolTp :: BaseType
+boolTpName :: Id
+ttTm :: Reft
+ttTmName :: Id
+ffTm :: Reft
+ffTmName :: Id
 boolTp = TC boolTpName
-unitTmName :: Id
-unitTmName = "unit"
-unitTm :: Reft
-unitTm = DC unitTmName
-unitTpName :: Id
-unitTpName = "Unit"
+boolTpName = "Bool"
+ttTm = DC ttTmName
+ttTmName = "true"
+ffTm = DC ffTmName
+ffTmName = "false"
+
 unitTp :: BaseType
+unitTpName :: Id
+unitTm :: Reft
+unitTmName :: Id
 unitTp = TC unitTpName
+unitTpName = "Unit"
+unitTm = DC unitTmName
+unitTmName = "unit"
+
 builtinDCs :: [Reft]
-builtinDCs = [ttTm, ffTm, unitTm]
 builtinTCs :: [BaseType]
+builtinDCs = [ttTm, ffTm, unitTm]
 builtinTCs = [boolTp, unitTp]
 {- ORMOLU_ENABLE -}
 
