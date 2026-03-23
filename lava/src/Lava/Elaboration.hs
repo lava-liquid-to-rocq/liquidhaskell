@@ -367,6 +367,7 @@ checkExpr γ pats e0@(Case r branches _) tp = do
     checkBranch ((c, ys), Just e) isInduct = do
       tpc <- lookupDC c γ
       -- Replace the binders in tpc by the names of the match in ys
+      -- FIX: not working because the variables are bound, not free
       let tpcRenamed = renames (zip (map fst ys) (tpArgs tpc)) tpc
       let (argsc, (_, tc, _)) = second fromRefType $ arrs tpcRenamed
       -- TODO: add additional type with z for occurence typing
