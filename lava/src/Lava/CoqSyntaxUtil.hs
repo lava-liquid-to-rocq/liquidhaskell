@@ -97,6 +97,10 @@ mkVarDestrPat x = ConjDestrPat [SingleIdPat x, SingleIdPat $ subsetWitnessNm x]
 mkVarDestruct :: Id -> Tactic
 mkVarDestruct x = DestructSubsetTerm (Var x) (mkVarDestrPat x)
 
+-- | mkOpaque(x) = Opaque x.
+mkOpaque :: Id -> Decl
+mkOpaque x = CoqMarkVisibility $ ChangeVisibility x Opaque
+
 -- * Normalization of arrow types
 
 freshenArgs :: (AppSuable a CoqTerm) => [Id] -> Bool -> ([(Id, RocqType)], a) -> ([(Id, RocqType)], a)
