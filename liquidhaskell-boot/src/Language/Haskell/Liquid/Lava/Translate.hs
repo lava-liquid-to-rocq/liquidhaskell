@@ -51,14 +51,12 @@ runLava sinfo = do
 
 -- | parses file into [Calc.Decl]
 parseFile ::
-  -- | Whether output files should be generated
-  Bool ->
   -- | All information about the Liquid Haskell file to translate
   SrcInfo ->
   -- | Complete file name
   String ->
   IO ([Calc.Decl], ([String], Id, Id))
-parseFile writeFlag sinfo filename = do
+parseFile sinfo filename = do
   -- \| Step 1: Setting up the environment
   workingPath <- getCurrentDirectory
   let moduleId = takeWhile (not . isSpace) $ moduleNameString (s_moduleName sinfo)
@@ -99,11 +97,6 @@ parseFile writeFlag sinfo filename = do
 
   unless (null importNames) $ putStrLn ("Imported external files: " ++ intercalate ", " importedSourceFiles)
 
-  when writeFlag $ do
-    createDirectoryIfMissing True outputFolder
-    writeOut outputFolder modulename ILHC [] calcSource
-  putStrLn ""
-
   pure (calcSource, (importNames, outputFolder, modulename))
 
 -- | Calls translation function on source file and (optionally) writes (intermediate) output files in output folder
@@ -116,7 +109,7 @@ translateFile ::
   String ->
   IO [Coq.Decl]
 translateFile writeFlag sinfo arg = do
-  (calcSource, (importNames, outputFolder, modulename)) <- parseFile writeFlag sinfo arg
+  (calcSource, (importNames, outputFolder, modulename)) <- parseFile sinfo arg
 
   let hasImports = not $ null importNames
 
@@ -125,6 +118,10 @@ translateFile writeFlag sinfo arg = do
     Left err -> print err >> return []
     Right calcSourceElaborated -> do
       putStrLn "––Typechecking and elaboration OK––"
+      when writeFlag $ do
+        createDirectoryIfMissing True outputFolder
+        writeOut outputFolder modulename ILHC [] calcSourceElaborated
+      putStrLn ""
       -- Translate Calculus declarations to Coq declarations
       let coqImports = map Coq.Load importNames
           coqResult = coqImports ++ concatMap trDecl calcSourceElaborated
