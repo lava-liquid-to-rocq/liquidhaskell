@@ -13,6 +13,12 @@ import Lava.TypingEnvironment
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 
+-- * Entry point for elaboration and typing
+
+-- Typecheck and elaborate a list of declarations
+elaborate :: [Decl] -> Either TypeError [Decl]
+elaborate = wfDecls initial
+
 -- * Types of primitives
 
 -- | Singleton type of a literal

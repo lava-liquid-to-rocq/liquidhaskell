@@ -2,36 +2,33 @@
 
 module Language.Haskell.Liquid.Lava.Translate (runLava, SrcInfo (..)) where
 
-import           Control.Monad (void, unless, when)
-import           Data.Bifunctor (bimap)
-import           Data.Char (isSpace)
-import           Data.Foldable (traverse_)
+import Control.Monad (unless, void, when)
+import Data.Bifunctor (bimap)
+import Data.Char (isSpace)
+import Data.Foldable (traverse_)
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
-import           System.Directory (createDirectoryIfMissing, getCurrentDirectory)
-import           System.FilePath ((</>), joinPath, splitDirectories, takeDirectory)
-
-import           GHC.Core
-import           GHC.Plugins hiding (Id, split)
-
+import GHC.Core
+import GHC.Plugins hiding (Id, split)
 import qualified Language.Fixpoint.Types as F (val)
-import           Language.Haskell.Liquid.Types.RType (SpecType)
-import qualified Language.Haskell.Liquid.Types.Specs as Specs
-import           Language.Haskell.Liquid.Types.Types (AnnInfo (..))
-
-import qualified Lava.Calculus as Calc
-import qualified Lava.Coq as Coq (Decl, Decl (..))
-import           Lava.Declaration (trDecl)
-import           Lava.LH
-import           Lava.Misc (isIgnoredBind, stripLegalName)
-import           Lava.Util
-
-import           Language.Haskell.Liquid.Lava.Preamble (preamble)
-import           Language.Haskell.Liquid.Lava.Print
-import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
 import qualified Language.Haskell.Liquid.Lava.CoreToLH as CLH
-import           Language.Haskell.Liquid.Lava.Parse
-import           Language.Haskell.Liquid.Lava.Simplify (simplify)
+import Language.Haskell.Liquid.Lava.Parse
+import Language.Haskell.Liquid.Lava.Preamble (preamble)
+import Language.Haskell.Liquid.Lava.Print
+import Language.Haskell.Liquid.Lava.Simplify (simplify)
+import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
+import Language.Haskell.Liquid.Types.RType (SpecType)
+import qualified Language.Haskell.Liquid.Types.Specs as Specs
+import Language.Haskell.Liquid.Types.Types (AnnInfo (..))
+import qualified Lava.Calculus as Calc
+import qualified Lava.Coq as Coq (Decl (..))
+import Lava.Declaration (trDecl)
+import Lava.Elaboration (elaborate)
+import Lava.LH
+import Lava.Misc (isIgnoredBind, stripLegalName)
+import Lava.Util
+import System.Directory (createDirectoryIfMissing, getCurrentDirectory)
+import System.FilePath (joinPath, splitDirectories, takeDirectory, (</>))
 
 -- | Contains all information about the source Liquid Haskell file to translate
 data SrcInfo = SrcInfo
@@ -63,12 +60,12 @@ parseFile ::
 parseFile writeFlag sinfo filename = do
   -- \| Step 1: Setting up the environment
   workingPath <- getCurrentDirectory
-  let moduleId       = takeWhile (not . isSpace) $ moduleNameString (s_moduleName sinfo)
-      modulename     = last $ split '.' moduleId
+  let moduleId = takeWhile (not . isSpace) $ moduleNameString (s_moduleName sinfo)
+      modulename = last $ split '.' moduleId
       examplesFolder = getSrcFolder moduleId filename workingPath
 
   -- \| Step 2: Get information from LH:
-  let pb          = getBindsAndSpecs moduleId sinfo
+  let pb = getBindsAndSpecs moduleId sinfo
       importNames = getModIdsAndImports (pb_src pb)
 
   -- \| Step 3: Get the Calculus source and the imported files
@@ -79,11 +76,11 @@ parseFile writeFlag sinfo filename = do
   -- \| Translate the LH type constructors to Calculus declarations
   let dataDecls = parsePData moduleId (pb_decls pb)
       -- \| Translate the LH specs of function/theorem definitions to Calculus types
-      specMap   = SLH.transSig moduleId Nothing <$> M.fromList (pb_specs pb)
+      specMap = SLH.transSig moduleId Nothing <$> M.fromList (pb_specs pb)
       -- \| Translate the GHC binds of function/theorem definitions to Calculus expressions
-      lhDefs    = CLH.transBind moduleId (s_infTypes sinfo) . simplify <$> filter (not . isIgnoredBind) (pb_binds pb)
+      lhDefs = CLH.transBind moduleId (s_infTypes sinfo) . simplify <$> filter (not . isIgnoredBind) (pb_binds pb)
       -- \| Combine the translated LH specs and GHC binds for function/theorem definitions into Calculus declarations
-      defDecls  = combineDefsAndLemmas $ pairLHDefsWithSigs moduleId lhDefs specMap (pb_vars pb)
+      defDecls = combineDefsAndLemmas $ pairLHDefsWithSigs moduleId lhDefs specMap (pb_vars pb)
 
   -- \| Figure out the import declarations for the imported lhExample modules and their files
   importedSourceFiles <- getImportFiles examplesFolder importNames
@@ -122,17 +119,19 @@ translateFile writeFlag sinfo arg = do
 
   let hasImports = not $ null importNames
 
-  -- Translate Calculus declarations to Coq declarations
-  let coqImports = map Coq.Load importNames
-      coqResult  = coqImports ++ concatMap trDecl calcSource
-
-  -- | Step 5: Write output files
-  when writeFlag $ do
-    let coqPreamble = if hasImports then [] else preamble
-    writeOut outputFolder modulename Coq coqPreamble coqResult
-  putStrLn ""
-
-  pure coqResult
+  -- Elaborate of the Calculus declarations before translation
+  case elaborate calcSource of
+    Left err -> print err >> return []
+    Right calcSourceElaborated -> do
+      putStrLn "––Typechecking and elaboration OK––"
+      -- Translate Calculus declarations to Coq declarations
+      let coqImports = map Coq.Load importNames
+          coqResult = coqImports ++ concatMap trDecl calcSourceElaborated
+      when writeFlag $ do
+        let coqPreamble = if hasImports then [] else preamble
+        writeOut outputFolder modulename Coq coqPreamble coqResult
+      putStrLn ""
+      pure coqResult
 
 writeOut :: (Show a) => FilePath -> String -> OUT -> [String] -> [a] -> IO ()
 writeOut outputFolder modulename outType pre ilhSource = do
@@ -154,6 +153,7 @@ data ParsedBinds = ParsedBinds
     -- | Specs: variables with refined types
     pb_specs :: [SpecPair]
   }
+
 -- \^ ?? LP:What are the variables for which we get the refined types?
 
 -- | Get the stuff that we need from LH parser, namely: Binds and Specs.
@@ -162,11 +162,11 @@ getBindsAndSpecs modId sinfo =
   let (Specs.TargetInfo src specs) = s_targetInfo sinfo
       refls = Specs.gsReflects $ Specs.gsRefl specs
    in ParsedBinds
-        { pb_src   = src
-        , pb_vars  = refls
-        , pb_decls = getDataDecls (Specs.gsData specs, Specs.gsName specs)
-        , pb_binds = Specs.giCbs src
-        , pb_specs = getSpecPairs specs
+        { pb_src = src,
+          pb_vars = refls,
+          pb_decls = getDataDecls (Specs.gsData specs, Specs.gsName specs),
+          pb_binds = Specs.giCbs src,
+          pb_specs = getSpecPairs specs
         }
   where
     getSpecPairs :: Specs.TargetSpec -> [SpecPair]
@@ -192,7 +192,7 @@ getSrcFolder moduleId filename workingPath = joinPath (getSrcPath moduleId filen
 -- | Returns the output directory for generated files
 getOutputFolder :: String -> String -> String -> FilePath
 getOutputFolder moduleId filename workingPath =
-    implementationFolder </> "lava" </> "out" </> subfolder
+  implementationFolder </> "lava" </> "out" </> subfolder
   where
     modulePrefixes = init $ split '.' moduleId
     exampleFolderPath = getSrcPath moduleId filename workingPath
