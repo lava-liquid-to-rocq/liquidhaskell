@@ -29,6 +29,7 @@ import Lava.Misc (isIgnoredBind, stripLegalName)
 import Lava.Util
 import System.Directory (createDirectoryIfMissing, getCurrentDirectory)
 import System.FilePath (joinPath, splitDirectories, takeDirectory, (</>))
+import Text.PrettyPrint.HughesPJClass (Pretty (), prettyShow)
 
 -- | Contains all information about the source Liquid Haskell file to translate
 data SrcInfo = SrcInfo
@@ -133,11 +134,15 @@ translateFile writeFlag sinfo arg = do
       putStrLn ""
       pure coqResult
 
-writeOut :: (Show a) => FilePath -> String -> OUT -> [String] -> [a] -> IO ()
+writeOut :: (Show a) => (Pretty a) => FilePath -> String -> OUT -> [String] -> [a] -> IO ()
 writeOut outputFolder modulename outType pre ilhSource = do
   let ilhOutputPath = outputFolder </> (modulename ++ outPostfix outType)
   putStrLn ("Writing " ++ show outType ++ " output to file at " ++ ilhOutputPath)
-  let ilhOutput = intercalate "\n" (pre ++ map show ilhSource)
+  -- TODO: change once we have pretty print for Rocq
+  let ilhOutput =
+        case outType of
+          ILHC -> intercalate "\n\n" (pre ++ map prettyShow ilhSource)
+          _ -> intercalate "\n\n" (pre ++ map show ilhSource)
   writeFile ilhOutputPath ilhOutput
 
 -- | Parsed binds and specs extracted from LH.

@@ -386,7 +386,7 @@ instance Pretty RefType where
 
 instance Pretty Decl where
   pPrint (Data tc constrs) =
-    sep [ppTC, nest identNb . sep $ punctuate (char '|') (map ppConstr constrs)]
+    sep [ppTC, nest identNb . sep $ map (\dc -> char '|' <+> ppConstr dc) constrs]
     where
       ppTC = text "data" <+> text tc <+> text ":="
       ppConstr (c, tpc) = text c <+> text "::" <+> pPrint tpc
@@ -407,7 +407,7 @@ instance Pretty Expr where
   pPrint (Case r alts _) =
     vcat $ (text "case" <+> pPrint r <+> text "of") : map ppAlt alts
     where
-      ppAlt (pat, e) = nest identNb $ sep [char '|' <+> ppPat pat <+> text "->", nest identNb $ pPrint e]
+      ppAlt (pat, e) = sep [char '|' <+> ppPat pat <+> text "->", nest identNb $ pPrint e]
       ppPat (c, ys) = text c <+> hsep (map (text . fst) ys)
 
 instance Pretty Reft where
