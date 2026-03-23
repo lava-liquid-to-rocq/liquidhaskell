@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OrPatterns #-}
 
 {- HLINT ignore "Use section" -}
@@ -6,13 +7,12 @@
 -- Unrefined and refined translations are mutually dependent, so they are all in the same file
 module Lava.Translation where
 
-import Data.Bifunctor (first, second)
-import qualified Data.Set as Set (empty, member)
+import Data.Bifunctor (second)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil (mkIsTrue, packGetF, packGetRel, upackGetRel)
-import Lava.CoqUtil (funcHoodLemName, ihName, packInstanceName, relDefLemName, relDefName, relDefThmName, relPostfix, toPack, toUPack, upackInstanceName)
-import Lava.Util (hashName, isSuffixOf, safeHead)
+import Lava.CoqUtil (ihName, packInstanceName, relDefName, relPostfix, toPack, toUPack, upackInstanceName)
+import Lava.Util (hashName, isSuffixOf)
 import Text.PrettyPrint.HughesPJClass
 
 -- * Generic translations
@@ -124,12 +124,12 @@ operatorsWithGraph =
 -- For operators, we only extract the ones in the list operatorsWithGraph
 -- Ex: extractApps ((f 0 1) + (f 0 1) + x) = ([(f 0 1, f_res)], f_res + f_res + x)
 extractApps :: Reft -> ([(Reft, Id)], Reft)
-extractApps r = go [] r
+extractApps r0 = go [] r0
   where
     go :: [(Reft, Id)] -> Reft -> ([(Reft, Id)], Reft)
     go env r = case r of
       -- top-level constant
-      LH.Var x 0 Global -> updateEnv env r
+      LH.Var _ 0 Global -> updateEnv env r
       (LH.Var {}; StringLit {}; FloatLit {}; IntLit {}; DC {}) -> (env, r)
       LH.Neg r' -> second LH.Neg $ go env r'
       LH.Bop bop r1 r2 ->
@@ -143,7 +143,7 @@ extractApps r = go [] r
           let (env', args') = foldr seqNames (env, []) args
            in (env', foldr LH.App (LH.DC c) args')
         -- why is this case necessary?
-        (LH.Var f_rel ar loc, args) | relPostfix `isSuffixOf` f_rel -> (env, r)
+        (LH.Var f_rel _ _, _) | relPostfix `isSuffixOf` f_rel -> (env, r)
         (LH.Var f ar loc, args) ->
           let (env', args') = foldr seqNames (env, []) args
               r' = foldr LH.App (LH.Var f ar loc) args'
@@ -157,14 +157,15 @@ extractApps r = go [] r
       QMark r' rh rp -> second (\r'' -> QMark r'' rh rp) $ go env r'
       Pop pop r1 r2 -> second (Pop pop r1) $ go env r2
       Inj r' tp -> second (`Inj` tp) $ go env r'
+      Sub r' from to -> second (\r'' -> Sub r'' from to) $ go env r'
       Proj r' -> second Proj $ go env r'
       where
         seqNames arg (curEnv, curArgs) = second (: curArgs) $ go curEnv arg
         -- If r is in env, returns its associated variable,
         -- otherwise creates a fresh variable, update env and returns the variable
-        updateEnv env r = case lookup r env of
-          Just z -> (env, LH.Var z 0 Local)
-          Nothing -> let z = fresh z env in (env ++ [(r, z)], LH.Var z 0 Local)
+        updateEnv env' r' = case lookup r' env' of
+          Just z -> (env', LH.Var z 0 Local)
+          Nothing -> let z = fresh z env' in (env' ++ [(r', z)], LH.Var z 0 Local)
         fresh f zs =
           -- Number of calls to f
           let nbOfCalls = foldr ((+) . isF) 0 zs
@@ -181,7 +182,7 @@ extractApps r = go [] r
 -- The flag indicates if we want to use foralls and implications or exists with conjunctions.
 -- The first case is for building the graph relation, the second the backward reasoning lemmas
 hypsRV :: [(Reft, Id)] -> Bool -> CoqTerm -> CoqTerm
-hypsRV rv graphRel p = foldr hyp p rv
+hypsRV rv graphRel = \p -> foldr hyp p rv
   where
     -- hyp(f r1 … rn, z) p = forall z, (f_rel/get(U)PackRelName f) RtoU(r1) … RtoU(rn) z -> p
     hyp :: (Reft, Id) -> CoqTerm -> CoqTerm
@@ -280,45 +281,52 @@ trExprTacs (LH.Let x (Just tpx@(ArrType {})) e1 e2) =
   ]
     ++ trExprTacs e2
   where
-    (args, ret) = arrs tpx
+    (args, _) = arrs tpx
     intros = Intros $ map (\(xi, _) -> DestrPat $ ConjDestrPat [SingleIdPat xi, SingleIdPat $ subsetWitnessNm xi]) args
     tpxT = trRefTypeTop tpx
     x' = "f_" ++ hashName tpxT
     assertF = Custom $ "unshelve refine (let " ++ x ++ " : ltac:(buildPackG_spec " ++ x' ++ ") := (ltac:(fun_to_pack " ++ x' ++ ")) in _)"
-trExprTacs (Case tm alts induct) =
-  case induct of
-    LH.Destruct -> [Coq.Destruct (Project $ trReft tm) (map trAlt alts)]
-    LH.Induct genVars ->
+trExprTacs (Case tm alts genVars) =
+  let -- translation of an unreachable branch as intros; exfalso; oracle.
+      trAltBody Nothing = [Concat [Intros [], Exfalso, Oracle]]
+      trAltBody (Just e) = trExprTacs e
+   in [mkMatching trAltBody tm alts genVars]
+
+-- | Translation of a case expression as destruct or as induct
+-- An induct such that none of the introduced IHs are used is transformed to destruct
+-- This function is factorized by the function to apply to the branches,
+-- in particular in the translation of a function we use trExprTacs
+mkMatching :: (Maybe Expr -> [Tactic]) -> Reft -> [((Id, [(Id, Bool)]), Maybe Expr)] -> [Id] -> Tactic
+mkMatching trans tm alts genVars =
+  if induct
+    then
       let gendep = [GeneralizeDependent genVars | not (null genVars)]
           -- we add intros in each branch to degeneralize the variables from genVars
           trAltIntros = second (second (Intros [] :)) . trAlt
-       in [Concat $ gendep ++ [Induction (trReft tm) (map trAltIntros alts)]]
+       in Concat $ gendep ++ [Induction (Project $ trReft tm) (map trAltIntros alts)]
+    else Coq.Destruct (Project $ trReft tm) (map trAlt alts)
   where
-    -- TODO: check if an induction hypothesis is introduced, otherwise use destruct
-    -- Also, destruct can be encoded as case with all booleans False and empty list of genvars
-    -- translation of an unreachable branch as intros; exfalso; oracle.
-    trAlt ((c, ys), Nothing) =
-      (c, (ysDesPat ys Nothing, [Concat [Intros [], Exfalso, Oracle]]))
-    trAlt ((c, ys), Just e) =
-      let eT = trExprTacs e
-       in (c, (ysDesPat ys (Just e), eT))
+    -- Compute what variables will be actually used for later inductions
+    indVars = map indVarsAlt alts
+    indVarsAlt ((_, ys), e) = map fst $ filter (\(y, isInd) -> isInd && y `isIndVar` e) ys
+    -- Whether y is used as an inductive variable, by checking the
+    -- information contained in the localization of the recursive variables
+    isIndVar y (Just e) = any (\case (_, (_, Recursive y' _)) -> y == y'; _ -> False) (freeVarsArLoc e)
+    isIndVar _ Nothing = False
+    -- If an induction hypothesis is used, we translate to induct
+    induct = not (all null indVars)
+    -- Translation of the branches using the parametrized function
+    trAlt ((c, ys), e) = (c, (ysDesPat ys e, trans e))
     -- Build the patterns for the introduced variables.
     -- The second argument contains the free variables of the translated branch,
     -- to check what induction hypotheses are used
     ysDesPat :: [(Id, Bool)] -> Maybe Expr -> CoqDestrPat
-    ysDesPat ys e = ConjDestrPat $ case induct of
-      LH.Destruct -> map (SingleIdPat . fst) ys
-      LH.Induct _ -> concatMap varPattern ys
-        where
-          -- For inductive variables, in the pattern we add either the name of the IH if it is
-          -- used later, or a hole _
-          varPattern (y, isInd) =
-            let ihy = if y `isIndVar` e then SingleIdPat $ ihName y else UnnamedIdPat
-             in SingleIdPat y : [ihy | isInd]
-          -- Whether y is used as an inductive variable, by checking the
-          -- information contained in the localization of the recursive variables
-          isIndVar y Nothing = False
-          isIndVar y (Just e) = any (\(_, (_, Recursive y' _)) -> y == y') (freeVarsArLoc e)
+    ysDesPat ys e = ConjDestrPat $ concatMap varPattern ys
+      where
+        -- For inductive variables, in the pattern we add either the name of the IH if it is used later, or a hole _
+        varPattern (y, isInd) =
+          let ihy = if y `isIndVar` e then SingleIdPat $ ihName y else UnnamedIdPat
+           in SingleIdPat y : [ihy | isInd, induct]
 
 {- trExprTacs (LH.Case cond [("False", [], elseE), ("True", [], thenE)]) = do
   let

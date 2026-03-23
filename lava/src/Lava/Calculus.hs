@@ -6,12 +6,10 @@
 -- | Grammars, printer and suable functions for ILH
 module Lava.Calculus where
 
-import Data.Bifunctor (first, second)
+import Data.Bifunctor (first)
 import Data.Data
--- to avoid errors if forgetting Map.lookup
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Lava.Util hiding (Id, sub, subst)
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding (lookup, (<>))
@@ -69,7 +67,8 @@ data Expr
     Let Id (Maybe RefType) Expr Expr
   | -- | Pattern matching (includes conditionals), with Maybe for optional branches.
     --   The boolean in the list of parameters is true if the parameter is inductive
-    Case Reft [((Id, [(Id, Bool)]), Maybe Expr)] IndCase
+    --   and we are destructing one of the parameters of the function
+    Case Reft [((Id, [(Id, Bool)]), Maybe Expr)] [Id]
   deriving (Data, Eq, Show)
 
 -- | Simple LH terms including formulas.
@@ -135,23 +134,33 @@ data Bop
 -- > pop ::= === | =<= | =>=
 data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq)
 
--- | Whether a case must be translated to induct or destruct.
--- In the first option, we store the names of variables to generalize
-data IndCase = Induct [Id] | Destruct deriving (Data, Eq, Show)
-
 -- Builtin type and data constructors
 
 {- ORMOLU_DISABLE -}
-ttTmName = "true"
-ttTm = DC ttTmName
-ffTmName = "false"
-ffTm = DC ffTmName
-boolTpName = "Bool"
+boolTp :: BaseType
+boolTpName :: Id
+ttTm :: Reft
+ttTmName :: Id
+ffTm :: Reft
+ffTmName :: Id
 boolTp = TC boolTpName
-unitTmName = "unit"
-unitTm = DC unitTmName
-unitTpName = "Unit"
+boolTpName = "Bool"
+ttTm = DC ttTmName
+ttTmName = "true"
+ffTm = DC ffTmName
+ffTmName = "false"
+
+unitTp :: BaseType
+unitTpName :: Id
+unitTm :: Reft
+unitTmName :: Id
 unitTp = TC unitTpName
+unitTpName = "Unit"
+unitTm = DC unitTmName
+unitTmName = "unit"
+
+builtinDCs :: [Reft]
+builtinTCs :: [BaseType]
 builtinDCs = [ttTm, ffTm, unitTm]
 builtinTCs = [boolTp, unitTp]
 {- ORMOLU_ENABLE -}
@@ -211,8 +220,9 @@ harmonizeBinderNames tp@(RefType {}) = tp
 -- Remove projections around the *first-order* arguments of the constructor, in
 -- a context where FO arguments are given unrefined types
 -- This function should be used at top-level, where only variables appear inside projections
+removeFOArgProjs :: RefType -> RefType
 removeFOArgProjs (ArrType x tpx tp) = ArrType x (removeFOArgProjs tpx) (removeFOArgProjs tp)
-removeFOArgProjs (RefType x a r) = RefType x a (aux r)
+removeFOArgProjs (RefType y a reft) = RefType y a (aux reft)
   where
     aux (Proj (Var x 0 Local)) = Var x 0 Local
     aux (Proj x) = x
@@ -224,13 +234,26 @@ removeFOArgProjs (RefType x a r) = RefType x a (aux r)
     aux (Pop pop r1 r2) = Pop pop (aux r1) (aux r2)
     aux (Sub {}; Inj {}) = error "Subsumption or injection cast found in type refinement."
 
+-- ** Destructors
+
+-- | Extracts the elements out of a RefType constructor and raises an error for another type
+fromRefType :: RefType -> (Id, BaseType, Reft)
+fromRefType (RefType x tp r) = (x, tp, r)
+fromRefType _ = error "RefType expected"
+
+-- | Extracts the elements out of an ArrType and raises an error for another type
+fromArrType :: RefType -> (Id, RefType, RefType)
+fromArrType (ArrType x tpx tp) = (x, tpx, tp)
+fromArrType _ = error "ArrType expected"
+
 -- * Typeclass related to free variables
 
 -- To use Sets with Localization inside
 instance Ord Localization where
-  compare l1 l2 | l1 == l2 = EQ
   -- since we do not care about getting the branch pattern with
   -- freeVarsArLoc, we do not compare it
+  compare Local Local = EQ
+  compare Global Global = EQ
   compare (Recursive ih1 _) (Recursive ih2 _) = compare ih1 ih2
   compare Local (Global; Recursive _ _) = LT
   compare Global (Recursive _ _) = LT
@@ -300,7 +323,7 @@ instance HasVars Expr where
     freeVarsArLoc r `Set.union` Set.unions (map fvBranch branches)
     where
       fvBranch (_, Nothing) = Set.empty
-      fvBranch ((c, ys), Just ebr) =
+      fvBranch ((_, ys), Just ebr) =
         let ysSet = foldr (\(y, _) -> Set.insert (y, (0, Local))) Set.empty ys
          in freeVarsArLoc ebr Set.\\ ysSet
 
@@ -310,8 +333,8 @@ instance HasVars Expr where
       | y `Set.member` freeVars r && x `Set.member` freeVars e' -> error err
     Let y tp ey e' | y == x -> Let y (subst r x <$> tp) (subst r x ey) e'
     Let y tp ey e' -> Let y (subst r x <$> tp) (subst r x ey) (subst r x e')
-    Case r' branches ind ->
-      Case (subst r x r') (map substBranch branches) ind
+    Case r' branches genVars ->
+      Case (subst r x r') (map substBranch branches) genVars
       where
         substBranch ((_, ys), _) | not (Set.fromList (map fst ys) `Set.disjoint` freeVars r) = error err
         substBranch br@((_, ys), _) | x `elem` map fst ys = br
@@ -320,7 +343,7 @@ instance HasVars Expr where
       err = render $ text "Expression substitution" <+> braces (pPrint r <> char '/' <> text x) <> parens (pPrint e) <+> text "is not sound because of variable capture."
 
 instance HasVars RefType where
-  freeVarsArLoc (RefType x tp r) = Set.delete (x, (0, Local)) (freeVarsArLoc r)
+  freeVarsArLoc (RefType x _ r) = Set.delete (x, (0, Local)) (freeVarsArLoc r)
   freeVarsArLoc (ArrType x tpx tp) = freeVarsArLoc tpx `Set.union` Set.delete (x, (arity tpx, Local)) (freeVarsArLoc tp)
 
   subst r x tp = case tp of
@@ -341,6 +364,10 @@ instance (HasVars a) => HasVars (Maybe a) where
   subst r x = fmap (subst r x)
 
 -- * Printer for the grammar
+
+-- | Number of spaces in the indentation
+identNb :: Int
+identNb = 2
 
 instance Pretty Builtin where
   pPrint = text . show
@@ -375,7 +402,7 @@ instance Pretty Expr where
       ppTp = case tpx of
         Nothing -> text x
         Just tp -> parens (text x <> colon <+> pPrint tp)
-  pPrint (Case r alts ind) =
+  pPrint (Case r alts _) =
     vcat $ (text "case" <+> pPrint r <+> text "of") : map ppAlt alts
     where
       ppAlt (pat, e) = nest identNb $ sep [char '|' <+> ppPat pat <+> text "->", nest identNb $ pPrint e]
@@ -392,7 +419,7 @@ instance Pretty Reft where
   pPrint (Bop bop r1 r2) = pPrint r1 <+> pPrint bop <+> pPrint r2
   pPrint (QMark r rh rp) = pPrint r <+> parens (pPrint rh <+> char '?' <+> pPrint rp)
   pPrint (Pop pop r1 r2) = pPrint r1 <+> pPrint pop <+> pPrint r2
-  pPrint (Sub r from to) = text "sub" <> parens (sep $ punctuate comma (map pPrint [from, to]))
+  pPrint (Sub _ from to) = text "sub" <> parens (sep $ punctuate comma (map pPrint [from, to]))
   pPrint (Inj r tp) = text "inj" <> parens (pPrint r <> comma <+> pPrint tp)
   pPrint (Proj r) = text "proj" <> parens (pPrint r)
 

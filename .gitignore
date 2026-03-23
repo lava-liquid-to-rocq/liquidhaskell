@@ -77,6 +77,11 @@ lava/coqDeps/*.vos
 lava/.CoqMakefile.d
 lava/out/Todo
 lava/out/PLE
+lava/out/*/*.ilh
+lava/out/Benchmark/*.v
+lava/out/*/*.vo
+lava/out/*/*.vok
+lava/out/*/*.vos
 lava/out/*.log
 lava/out/**/*.ilh
 lava/out/**/.*.aux

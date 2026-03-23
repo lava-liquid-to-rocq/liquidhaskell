@@ -4,11 +4,7 @@ module Lava.TypingEnvironment where
 -- import qualified Data.Map.Strict as Map
 
 import Control.Monad (foldM)
-import Data.Bifunctor (second)
-import Debug.Trace (trace)
 import Lava.Calculus
-import Lava.CoqUtil (relDefName)
-import Lava.PaperUtils hiding (TransError (..))
 import qualified Lava.Util as Util (mkFresh)
 
 data TypeError
