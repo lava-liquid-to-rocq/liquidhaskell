@@ -201,7 +201,11 @@ wfRefType γ pats (ArrType x tpx tp) = do
 wfDecls :: TypEnv -> [Decl] -> Either TypeError [Decl]
 -- (WF-DTC)
 wfDecls γ (Data tc constrs : decls) = do
-  γ' <- foldM checkBranch γ constrs
+  -- We add TC with no constructors in the environment,
+  -- and will add the constructors one by one,
+  -- so that refinements can depend on previous constructors
+  γtc <- insertTC γ (tc, [])
+  γ' <- foldM checkBranch γtc constrs
   -- NOTE: Here we used to replace all refinements of the constructors by ttTm in the new context. Why??
   wfDecls γ' decls
   where
