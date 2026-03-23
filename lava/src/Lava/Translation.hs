@@ -187,11 +187,11 @@ hypsRV rv graphRel = \p -> foldr hyp p rv
     -- hyp(f r1 … rn, z) p = forall z, (f_rel/get(U)PackRelName f) RtoU(r1) … RtoU(rn) z -> p
     hyp :: (Reft, Id) -> CoqTerm -> CoqTerm
     hyp (app, z) p =
-      quantifier (z, Nothing) $
+      quantifier [(z, Hole)] $
         link (Coq.App hdT (map utrReft args ++ [Coq.Var z])) p
       where
         (quantifier, link) =
-          if graphRel then (FATerm, Coq.Impl) else (ExTerm, Coq.And)
+          if graphRel then (Forall, Coq.Impl) else (Exists, Coq.And)
         (hd, args) = apps app
         hdT = case hd of
           -- f -> f_rel for global FO/HO variables (includes operators in `operatorsWithGraph`)

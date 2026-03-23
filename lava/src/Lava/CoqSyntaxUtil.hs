@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OrPatterns #-}
+{-# LANGUAGE TupleSections #-}
 
 -- | Utility functions manipulating Rocq terms and types
 module Lava.CoqSyntaxUtil where
@@ -35,7 +36,7 @@ mkForall args r = if null args then r else Forall args r
 
 -- | Build forall (x)_{x in xs}, cqtm
 mkForallXs :: [Id] -> CoqTerm -> CoqTerm
-mkForallXs xs cqtm = foldr (\x -> FATerm (x, Nothing)) cqtm xs
+mkForallXs xs cqtm = Forall (map (,Hole) xs) cqtm
 
 -- | Wrapper for Exists, defined as id for empty argument list
 mkExists :: [(Id, RocqType)] -> CoqTerm -> CoqTerm

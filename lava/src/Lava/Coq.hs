@@ -301,10 +301,7 @@ instance Show UArgList where
 -- >     | _ | p
 data CoqTerm
   = Forall [(Id, RocqType)] CoqTerm
-  -- FIX: remove duplicates
-  | FATerm (Id, Maybe RocqType) CoqTerm
   | Exists [(Id, RocqType)] CoqTerm
-  | ExTerm (Id, Maybe RocqType) CoqTerm
   | And CoqTerm CoqTerm
   | Or CoqTerm CoqTerm
   | Impl CoqTerm CoqTerm
@@ -717,10 +714,8 @@ instance Pretty CoqTerm where
     let b' = simplifyIsTrue b
      in if b' == b then text "is_true" <+> pPrintP b else pPrint b'
   pPrint (Forall vars p) = pPrintForall vars p
-  pPrint (FATerm {}) = undefined
   pPrint (Exists vars p) =
      sep [if null vars then empty else text "exists" <+> pPrintArgs vars <> comma, pPrint p]
-  pPrint (ExTerm {}) = undefined
   pPrint (And p q) = pPrintP p <+> text "/\\" <+> pPrintP q
   pPrint (Or p q) = pPrintP p <+> text " \\/" <+> pPrintP q
   pPrint (Impl p q) = pPrintP p <+> text "->" <+> pPrintP q

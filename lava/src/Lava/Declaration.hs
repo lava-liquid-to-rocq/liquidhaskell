@@ -11,9 +11,6 @@ import Data.Either (isLeft)
 import Data.List (groupBy, union, (\\))
 import Data.Maybe (isNothing)
 import qualified Data.Set as Set
-import Text.PrettyPrint
-import Text.PrettyPrint.HughesPJClass hiding (first)
-
 import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil (mkAnd, mkForallXs, mkOpaque, mkOr, mkVarDestruct)
@@ -21,6 +18,8 @@ import Lava.CoqUtil
 import Lava.Translation
 import Lava.TypingEnvironment as TypEnv
 import Lava.Util (addParens, hashName, showP)
+import Text.PrettyPrint
+import Text.PrettyPrint.HughesPJClass hiding (first)
 
 -- | Main function for the translation of declarations
 trDecl :: LH.Decl -> [Coq.Decl]
@@ -160,7 +159,7 @@ wfDecl tc alts =
       where
         (args, (vv, _, retRef)) = second fromRefType . arrs . removeFOArgProjs $ harmonizeBinderNames tp
         -- Proposition for the refinement of the return type, with C x1 … xn in the refinement
-        retRefT = trReft (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef)  -- TODO use utrReftProp instead?
+        retRefT = trReft (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef) -- TODO use utrReftProp instead?
         -- Proposition for each argument
         argProp (x, tpArg) =
           case trRefType tpArg of
@@ -519,7 +518,7 @@ inversionLemma f (σxs, paths) =
   [ Coq.Definition
       f_lem
       []
-      (Coq.Prop . mkForallXs argsVars $ FATerm (res, Nothing) (Equiv relApp guardDisjunction))
+      (Coq.Prop . mkForallXs (argsVars ++ [res]) $ Equiv relApp guardDisjunction)
       (ProofBody [Custom $ "rel_back' " ++ addParens tacArg])
       Opaque,
     AddHint RewriteHint f_lem GraphRelBackDB
