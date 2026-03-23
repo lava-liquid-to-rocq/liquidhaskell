@@ -129,10 +129,13 @@ smpTpCheck γ _ r@(DC c) = do
 smpTpCheck γ pats r@(App {}) = do
   (r1, r2) <- chooseIndVar γ pats (apps r)
   (tp1, r1') <- smpTpCheck γ pats r1
-  (tp2, r2') <- smpTpCheck γ pats r1
+  (tp2, r2') <- smpTpCheck γ pats r2
   case tp1 of
     SmpArrow tpx tp | tpx == tp2 -> return (tp, App r1' r2')
-    _ -> Left . SmpTpErr $ "Too many arguments given in the application " ++ prettyShow (App r1 r2)
+    _ ->
+      Left . SmpTpErr . render $
+        text "Too many arguments given in the application" <+> pPrint (App r1' r2') <+> colon
+          $$ pPrint r1' <+> text "has type" <+> pPrint r1'
 smpTpCheck γ pats (Neg r) = do
   (tp, r') <- smpTpCheck γ pats r
   if tp == SmpTC boolTpName
@@ -182,17 +185,17 @@ wfRefType :: TypEnv -> BranchPattern -> RefType -> Either TypeError RefType
 -- (E-TRef)
 wfRefType γ pats (RefType x tp r) =
   case tp of
-    TC tc | not (tc `member` γ) -> Left . WfErr $ "Unknown type " ++ tc
+    TC tc | tc `notMember` γ -> Left . WfErr $ "Unknown type " ++ tc
     _ -> do
-      γ' <- insertLocalVar γ (x, RefType x tp ttTm)
+      let γ' = insertLocalVar (x, RefType x tp ttTm) γ
       (tp_r, r') <- smpTpCheck γ' pats r
       if tp_r == SmpTC boolTpName
         then return $ RefType x tp r'
-        else Left . WfErr $ "Refinement of type " ++ prettyShow (RefType x tp r) ++ " is not boolean"
+        else Left . WfErr $ "Refinement of type " ++ prettyShow (RefType x tp r') ++ " is not boolean"
 -- (E-TFun)
 wfRefType γ pats (ArrType x tpx tp) = do
   tpx' <- wfRefType γ pats tpx
-  γ' <- insertLocalVar γ (x, tpx')
+  let γ' = insertLocalVar (x, tpx') γ
   tp' <- wfRefType γ' pats tp
   return $ ArrType x tpx' (subst (Proj (Var x (arity tpx') Local)) x tp')
 
@@ -204,7 +207,7 @@ wfDecls γ (Data tc constrs : decls) = do
   -- We add TC with no constructors in the environment,
   -- and will add the constructors one by one,
   -- so that refinements can depend on previous constructors
-  γtc <- insertTC γ (tc, [])
+  let γtc = insertTC (tc, []) γ
   γ' <- foldM checkBranch γtc constrs
   -- NOTE: Here we used to replace all refinements of the constructors by ttTm in the new context. Why??
   wfDecls γ' decls
@@ -213,7 +216,7 @@ wfDecls γ (Data tc constrs : decls) = do
     checkBranch γi (ci, tpi) = do
       checkFOandTC tpi
       tpi' <- wfRefType γi [] tpi
-      insertDCinTC γi (ci, tpi') tc
+      insertDCinTC (ci, tpi') tc γi
     checkFOandTC :: RefType -> Either TypeError ()
     checkFOandTC tp =
       let (args, (_, tc', _)) = second fromRefType $ arrs tp
@@ -223,12 +226,13 @@ wfDecls γ (Data tc constrs : decls) = do
 -- (WF-DDef)
 wfDecls γ (Definition f tpf e isRefl : decls) = do
   tpf' <- wfRefType γ [] tpf
-  γf <- insertRecVar γ (f, tpf')
+  let γf = insertRecVar (f, tpf') γ
   let (args, ret) = arrs tpf'
-  γfargs <- foldM insertLocalVar γf args
+  let γfargs = insertLocalVars args γf
   let initBrPat = map (\(x, tpx) -> Var x (arity tpx) Local) args
   e' <- checkExpr γfargs initBrPat e ret
-  decls' <- wfDecls γf decls
+  γf' <- changeRecToGlobal f γf
+  decls' <- wfDecls γf' decls
   return $ Definition f tpf e' isRefl : decls'
 wfDecls _ [] = return []
 
@@ -288,7 +292,7 @@ synReft γ pats r0@(QMark r rh _) = do
   (tph, rh') <- synReft γ pats rh
   case tph of
     RefType x u rp | u == unitTp -> do
-      γ' <- insertLocalVar γ (x, tph)
+      let γ' = insertLocalVar (x, tph) γ
       (tp, r') <- synReft γ' pats r
       return (tp, QMark r' rh' rp)
     _ -> Left . SynErr $ "Wrong type (not a refinement of unit) found for the hint in " ++ prettyShow r0
@@ -326,16 +330,16 @@ checkExpr γ pats (Let x (Just tpx) ex e) tp = do
   _ <- wfRefType γ pats tp -- check that tp does not depend on x
   tpx' <- wfRefType γ pats tpx
   let (args, ret) = arrs tpx'
-  γx <- foldM insertLocalVar γ args
+  let γx = insertLocalVars args γ
   ex' <- checkExpr γx pats ex ret
-  γ' <- insertLocalVar γ (x, tpx')
+  let γ' = insertLocalVar (x, tpx') γ
   e' <- checkExpr γ' pats e tp
   return (Let x (Just tpx') ex' e')
 -- Not in the paper, but in case we have no annotation
 checkExpr γ pats (Let x Nothing (Reft r) e) tp = do
   _ <- wfRefType γ pats tp -- check that tp does not depend on x
   (tpr, r') <- synReft γ pats r
-  γ' <- insertLocalVar γ (x, tpr)
+  let γ' = insertLocalVar (x, tpr) γ
   e' <- checkExpr γ' pats e tp
   return (Let x (Just tpr) (Reft r') e')
 checkExpr _ _ e@(Let {}) _ = Left . CheckingErr $ "Type annotation expected for the let-binding " ++ prettyShow e
@@ -366,7 +370,7 @@ checkExpr γ pats e0@(Case r branches _) tp = do
       let tpcRenamed = renames (zip (map fst ys) (tpArgs tpc)) tpc
       let (argsc, (_, tc, _)) = second fromRefType $ arrs tpcRenamed
       -- TODO: add additional type with z for occurence typing
-      γ' <- foldM insertLocalVar γ argsc
+      let γ' = insertLocalVars argsc γ
       e' <- checkExpr γ' pats e tp
       -- True for inductive variables in ys if isInduct
       let inductives = map (\case (_, RefType _ tc' _) -> tc' == tc && isInduct; (_, ArrType {}) -> False) argsc
