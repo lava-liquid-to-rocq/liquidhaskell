@@ -287,6 +287,7 @@ renames :: (HasVars a) => [(Id, Id)] -> a -> a
 renames = flip (foldr (uncurry rename))
 
 -- | Apply a list of substitutions, starting from the right
+-- TODO: handle variable capture
 substs :: (HasVars a) => [(Reft, Id)] -> a -> a
 substs = flip (foldr (uncurry subst))
 
@@ -336,8 +337,9 @@ instance HasVars Expr where
     Case r' branches genVars ->
       Case (subst r x r') (map substBranch branches) genVars
       where
+        substBranch br@((_, ys), ebr)
+          | x `elem` map fst ys || maybe True (notElem x . freeVars) ebr = br
         substBranch ((_, ys), _) | not (Set.fromList (map fst ys) `Set.disjoint` freeVars r) = error err
-        substBranch br@((_, ys), _) | x `elem` map fst ys = br
         substBranch ((c, ys), ebr) = ((c, ys), subst r x <$> ebr)
     where
       err = render $ text "Expression substitution" <+> braces (pPrint r <> char '/' <> text x) <> parens (pPrint e) <+> text "is not sound because of variable capture."
