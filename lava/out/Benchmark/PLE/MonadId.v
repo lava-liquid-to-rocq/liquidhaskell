@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive Identity_u : Set := 
+Inductive Identity_u : Type := 
 	 | Val_u: Z -> Identity_u. 
 Fixpoint Identity_eq (x: Identity_u) (y: Identity_u): bool := 
 	match (x, y) with (Val_u x, Val_u x') => (true && (x ==? x')) end. 

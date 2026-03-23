@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive SFBool_u : Set := 
+Inductive SFBool_u : Type := 
 	 | SFFalse_u: SFBool_u
 	 | SFTrue_u: SFBool_u. 
 Fixpoint SFBool_eq (x: SFBool_u) (y: SFBool_u): bool := 
@@ -736,7 +736,7 @@ Proof.
 	solver | refine (exist _ b2 _); 
 	solver]. 
 Defined. 
-Inductive SFBit_u : Set := 
+Inductive SFBit_u : Type := 
 	 | B0_u: SFBit_u
 	 | B1_u: SFBit_u. 
 Fixpoint SFBit_eq (x: SFBit_u) (y: SFBit_u): bool := 
@@ -781,7 +781,7 @@ Definition B1: SFBit :=
 #[global] Hint Resolve SFBit_eq : ref_constr_db.
 #[global] Hint Unfold B0 : ref_constr_db.
 #[global] Hint Unfold B1 : ref_constr_db.
-Inductive SFBin_u : Set := 
+Inductive SFBin_u : Type := 
 	 | Bin0_u: SFBin_u -> SFBin_u
 	 | Bin1_u: SFBin_u -> SFBin_u
 	 | SoftwareFoundations__Z_u: SFBin_u. 
@@ -1088,7 +1088,7 @@ Proof.
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Inductive RGB_u : Set := 
+Inductive RGB_u : Type := 
 	 | Blue_u: RGB_u
 	 | Green_u: RGB_u
 	 | Red_u: RGB_u. 
@@ -1141,7 +1141,7 @@ Definition Red: RGB :=
 #[global] Hint Unfold Blue : ref_constr_db.
 #[global] Hint Unfold Green : ref_constr_db.
 #[global] Hint Unfold Red : ref_constr_db.
-Inductive OtherNat_u : Set := 
+Inductive OtherNat_u : Type := 
 	 | Stop_u: OtherNat_u
 	 | Tick_u: OtherNat_u -> OtherNat_u. 
 Fixpoint OtherNat_eq (x: OtherNat_u) (y: OtherNat_u): bool := 
@@ -1191,7 +1191,7 @@ Defined.
 #[global] Hint Resolve wf_Tick_VV : ref_constr_db.
 #[global] Hint Unfold Stop : ref_constr_db.
 #[global] Hint Unfold Tick : ref_constr_db.
-Inductive Nibble_u : Set := 
+Inductive Nibble_u : Type := 
 	 | Bits_u: SFBit_u -> (SFBit_u -> (SFBit_u -> (SFBit_u -> Nibble_u))). 
 Fixpoint Nibble_eq (x: Nibble_u) (y: Nibble_u): bool := 
 	match (x, y) with (Bits_u x x_1 x_2 x_3, Bits_u x' x_1' x_2' x_3') => ((((true && (x ==? x')) && (x_1 ==? x_1')) && (x_2 ==? x_2')) && (x_3 ==? x_3')) end. 
@@ -1256,7 +1256,7 @@ Proof.
 			refine (subsumptionCast _ _ SFFalse _); 
 			solver.   
 Defined. 
-Inductive MyNat_u : Set := 
+Inductive MyNat_u : Type := 
 	 | O_u: MyNat_u
 	 | S_u: MyNat_u -> MyNat_u. 
 Fixpoint MyNat_eq (x: MyNat_u) (y: MyNat_u): bool := 
@@ -1306,7 +1306,7 @@ Defined.
 #[global] Hint Resolve wf_S_VV : ref_constr_db.
 #[global] Hint Unfold O : ref_constr_db.
 #[global] Hint Unfold S : ref_constr_db.
-Inductive Natprod_u : Set := 
+Inductive Natprod_u : Type := 
 	 | Pair_u: MyNat_u -> (MyNat_u -> Natprod_u). 
 Fixpoint Natprod_eq (x: Natprod_u) (y: Natprod_u): bool := 
 	match (x, y) with (Pair_u x x_1, Pair_u x' x_1') => ((true && (x ==? x')) && (x_1 ==? x_1')) end. 
@@ -3667,7 +3667,7 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Inductive Modifier_u : Set := 
+Inductive Modifier_u : Type := 
 	 | Minus_u: Modifier_u
 	 | Natural_u: Modifier_u
 	 | Plus_u: Modifier_u. 
@@ -3720,7 +3720,7 @@ Definition Plus: Modifier :=
 #[global] Hint Unfold Minus : ref_constr_db.
 #[global] Hint Unfold Natural : ref_constr_db.
 #[global] Hint Unfold Plus : ref_constr_db.
-Inductive Letter_u : Set := 
+Inductive Letter_u : Type := 
 	 | A_u: Letter_u
 	 | B_u: Letter_u
 	 | C_u: Letter_u
@@ -3910,7 +3910,7 @@ Proof.
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Inductive Grades_u : Set := 
+Inductive Grades_u : Type := 
 	 | Grade_u: Letter_u -> (Modifier_u -> Grades_u). 
 Fixpoint Grades_eq (x: Grades_u) (y: Grades_u): bool := 
 	match (x, y) with (Grade_u x x_1, Grade_u x' x_1') => ((true && (x ==? x')) && (x_1 ==? x_1')) end. 
@@ -4241,7 +4241,7 @@ Proof.
 	solver | refine (exist _ h _); 
 	solver]. 
 Qed. 
-Inductive Day_u : Set := 
+Inductive Day_u : Type := 
 	 | Friday_u: Day_u
 	 | Monday_u: Day_u
 	 | Saturday_u: Day_u
@@ -4467,7 +4467,7 @@ Proof.
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Inductive Comparison_u : Set := 
+Inductive Comparison_u : Type := 
 	 | Eq_u: Comparison_u
 	 | Gt_u: Comparison_u
 	 | Lt_u: Comparison_u. 
@@ -5091,7 +5091,7 @@ Qed.
 Proof. 
 	buildPackG modifier_comparison modifier_comparison_rel modifier_comparison__modifier_comparison_rel modifier_comparison_rel_funct. 
 Defined.
-Inductive Color_u : Set := 
+Inductive Color_u : Type := 
 	 | Black_u: Color_u
 	 | Primary_u: RGB_u -> Color_u
 	 | White_u: Color_u. 

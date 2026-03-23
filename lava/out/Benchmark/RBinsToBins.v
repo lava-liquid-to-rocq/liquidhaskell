@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive RBin_u : Set := 
+Inductive RBin_u : Type := 
 	 | RB0_u: RBin_u -> RBin_u
 	 | RB1_u: RBin_u -> RBin_u
 	 | RZ_u: RBin_u. 
@@ -64,7 +64,7 @@ Defined.
 #[global] Hint Unfold RB0 : ref_constr_db.
 #[global] Hint Unfold RB1 : ref_constr_db.
 #[global] Hint Unfold RZ : ref_constr_db.
-Inductive Bin_u : Set := 
+Inductive Bin_u : Type := 
 	 | B0_u: Bin_u -> Bin_u
 	 | B1_u: Bin_u -> Bin_u
 	 | RBinsToBins__Z_u: Bin_u. 

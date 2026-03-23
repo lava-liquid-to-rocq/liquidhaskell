@@ -80,13 +80,6 @@ Definition uPack_wf (argTps:ArgListT) {uargTps:UArgListT} (z:projectsArgListT ar
   exists (f: forall (args:ArgList argTps), {v:T | p args v}),
     forall (args:ArgList argTps) (v:T), proj1_sig (f args) = v <-> upack.(rel_u) (prArgList args uargTps z) v.
 
-Ltac uPack_wf :=
-  match goal with
-  | [f_frel : (forall (args : ArgList ?argTps) (v : ?tp), ⌊ ?f args _⌋ = v <->
-      ?frel (prArgList args ?uargTps _) v) |- uPack_wf ?argTps ?z ?p ?upack] => 
-    exists f;
-    exact f_frel
-  end.
 
 Inductive SubArgList: ArgListT -> ArgListT -> Type :=
   | noArgsSub: SubArgList noArgsT noArgsT

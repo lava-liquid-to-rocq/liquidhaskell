@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive MaybeInt_u : Set := 
+Inductive MaybeInt_u : Type := 
 	 | Just_u: Z -> MaybeInt_u
 	 | Nothing_u: MaybeInt_u. 
 Fixpoint MaybeInt_eq (x: MaybeInt_u) (y: MaybeInt_u): bool := 

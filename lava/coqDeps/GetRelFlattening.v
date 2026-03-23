@@ -3,6 +3,129 @@ Load GetRelInterface.
 
 (* This file contains the instances and definitions for packs *)
 
+Lemma noUArgsLemma (uargs: UArgList nilUT): uargs = nilU.
+Proof. 
+  Check consUArgs.
+  unshelve refine (
+  match uargs as a1 in (UArgList a) return (forall 
+    (teq:a = nilUT),
+    uargs = eq_rect a UArgList a1 noUArgsT teq -> _) with
+  | noUArgs => fun teq eq => @eq_ind_r (UArgList noUArgsT) _ _ eq _ 
+    (eq_rect_eq _ _ _ _ teq)
+  | @consUArgs _ X tlT tl => fun teq eq => _
+  end eq_refl eq_refl
+  ). inversion teq.
+Qed.
+Lemma noUArgsEq: forall s t : UArgList nilUT, s = t.
+  intros s t. 
+  rewrite noUArgsLemma. clear t.
+  apply noUArgsLemma.
+Qed.
+#[global] Instance nilUEq: @LeibnitzEqB (@UArgList nilUT) := 
+  {| equalB' := fun _ _ => true; refl' := fun _ => eq_refl; eqb_eq' := fun s t _ => noUArgsEq s t|}.
+
+Definition unucons {X:Type} {uargTps': UArgListT} (uargs: UArgList (consUArgsT X uargTps')):
+  X * (UArgList uargTps').
+Proof.
+  refine (match uargs as a1 in (UArgList a0) return (forall 
+    (teq : a0 = consUArgsT X uargTps') (eq: uargs = eq_rect _ _ a1 _ teq), 
+    X * (UArgList uargTps')) with
+  | noUArgs => fun teq => False_rect _ (@eq_ind UArgListT noUArgsT
+                   (fun e : UArgListT =>
+                    match e with
+                    | noUArgsT => True
+                    | consUArgsT _ _ => False
+                    end) I (consUArgsT X uargTps') teq)
+  | @consUArgs X x tlT tl => fun teq eq => _
+  end eq_refl (eq_rect_eq _ _ _ _ _)
+  ). 
+  refine (pair _ _).
+    + refine (eq_rect X _ x X0 (@f_equal UArgListT Type (fun l => match l with
+      | noUArgsT => X
+      | consUArgsT Y _ => Y
+      end) _ _ teq)).
+    + refine (eq_rect _ _ tl _ (@f_equal UArgListT UArgListT (fun l => match l with
+      | noUArgsT => uargTps'
+      | consUArgsT _ Y => Y
+      end) _ _ teq)).
+Defined. 
+Lemma unucons_correct_aux {X:Type} {uargTps': UArgListT} (x:X)
+  (uargs':UArgList uargTps'):
+  unucons (@consUArgs X x uargTps' uargs') = (x, uargs'). 
+Proof.
+  reflexivity.
+Qed.
+Lemma unucons_correct {X:Type} {uargTps': UArgListT} (uargs: UArgList (consUArgsT X uargTps')):
+  uargs = @consUArgs X (fst (unucons uargs)) uargTps' (snd (unucons uargs)).
+Proof.
+  refine (match uargs as a1 in (UArgList a0) return (forall 
+    (teq : a0 = consUArgsT X uargTps') (eq: uargs = eq_rect _ _ a1 _ teq), 
+    _) with
+  | noUArgs => fun teq => False_rect _ (@eq_ind UArgListT noUArgsT
+                   (fun e : UArgListT =>
+                    match e with
+                    | noUArgsT => True
+                    | consUArgsT _ _ => False
+                    end) I (consUArgsT X uargTps') teq)
+  | @consUArgs X x tlT tl => fun teq => _
+  end eq_refl (eq_rect_eq _ _ _ _ _)
+  ). 
+  intros ->.
+  pose proof (@f_equal UArgListT Type (fun l => match l with
+      | noUArgsT => X
+      | consUArgsT Y _ => Y
+      end) _ _ teq) as H; simpl in H. revert H; intros <-.
+  pose proof (@f_equal UArgListT UArgListT (fun l => match l with
+      | noUArgsT => uargTps'
+      | consUArgsT _ Y => Y
+      end) _ _ teq) as H; simpl in H; revert H; intros ->.
+  rewrite <- eq_rect_eq.
+  rewrite unucons_correct_aux.
+  reflexivity.
+Qed.
+
+#[global] Instance uconsEq [utlT: UArgListT] (rec: @LeibnitzEqB (UArgList utlT)) [T:Type] (teq: @LeibnitzEqB T): 
+  @LeibnitzEqB (@UArgList (T ::UT utlT)).
+Proof.
+  unshelve refine {| equalB' := _; refl' := _; eqb_eq' := _|}.
+  - intros s t. 
+    destruct (unucons s) as [x xs].
+    destruct (unucons t) as [y ys].
+    exact (teq.(equalB') x y && rec.(equalB') xs ys).
+  - intros s. unfold is_true.
+    rewrite (unucons_correct s).
+    destruct (unucons s) as [x xs].
+    simpl. rewrite (teq.(refl') x). rewrite (rec.(refl') xs).
+    easy.
+  - intros s t.
+    rewrite (unucons_correct s).
+    destruct (unucons s) as [x xs].
+    rewrite (unucons_correct t).
+    destruct (unucons t) as [y ys].
+    simpl. intro H.
+    destruct (equalB' x y) eqn:E; [rewrite (teq.(eqb_eq') x y E)|easy]. 
+    destruct (equalB' xs ys) eqn:F; [rewrite (rec.(eqb_eq') xs ys F)|]; easy.
+Qed.
+
+(*Axiom forallb: forall [T:Type], (T -> bool) -> bool.
+Axiom forallb_def: forall [T:Type] (p: T -> bool), is_true (forallb p) <-> forall x, is_true (p x).*)
+
+Ltac uPack_wf :=
+  match goal with
+  | [f_frel : (forall (args : ArgList ?argTps) (v : ?tp), ⌊ ?f args _⌋ = v <->
+      ?frel (prArgList args ?uargTps _) v) |- uPack_wf ?argTps ?z ?p ?upack] => 
+    exists f;
+    exact f_frel
+  end.
+
+Definition uPack_wf_ {uargTps:UArgListT}
+  {T: Type} (upack:uPack uargTps T): Prop :=
+  exists (argTps:ArgListT) (z:projectsArgListT argTps uargTps) 
+    (p: forall (args: ArgList argTps), T -> Prop) 
+    (f: forall (args:ArgList argTps), {v:T | p args v}),
+    forall (args:ArgList argTps) (v:T), proj1_sig (f args) = v <-> upack.(rel_u) (prArgList args uargTps z) v.
+
+
 (* Since destruct and inversion cannot handle ArgLists correctly *)
 Lemma existT_inj {A:Type} {P:A->Type} (x:A) (p q:P x):
   existT P x p = existT P x q -> p = q.
@@ -273,66 +396,6 @@ Opaque uncons.
 Definition convArgList (args args':ArgListT) (teq: args=args'):
   ArgList args -> ArgList args' := fun l => eq_rect args ArgList l args' teq.
 
-Definition unucons {X:Type} {uargTps': UArgListT} (uargs: UArgList (consUArgsT X uargTps')):
-  X * (UArgList uargTps').
-Proof.
-  refine (match uargs as a1 in (UArgList a0) return (forall 
-    (teq : a0 = consUArgsT X uargTps') (eq: uargs = eq_rect _ _ a1 _ teq), 
-    X * (UArgList uargTps')) with
-  | noUArgs => fun teq => False_rect _ (@eq_ind UArgListT noUArgsT
-                   (fun e : UArgListT =>
-                    match e with
-                    | noUArgsT => True
-                    | consUArgsT _ _ => False
-                    end) I (consUArgsT X uargTps') teq)
-  | @consUArgs X x tlT tl => fun teq eq => _
-  end eq_refl (eq_rect_eq _ _ _ _ _)
-  ). 
-  refine (pair _ _).
-    + refine (eq_rect X _ x X0 (@f_equal UArgListT Type (fun l => match l with
-      | noUArgsT => X
-      | consUArgsT Y _ => Y
-      end) _ _ teq)).
-    + refine (eq_rect _ _ tl _ (@f_equal UArgListT UArgListT (fun l => match l with
-      | noUArgsT => uargTps'
-      | consUArgsT _ Y => Y
-      end) _ _ teq)).
-Defined. 
-Lemma unucons_correct_aux {X:Type} {uargTps': UArgListT} (x:X)
-  (uargs':UArgList uargTps'):
-  unucons (@consUArgs X x uargTps' uargs') = (x, uargs'). 
-Proof.
-  reflexivity.
-Qed.
-Lemma unucons_correct {X:Type} {uargTps': UArgListT} (uargs: UArgList (consUArgsT X uargTps')):
-  uargs = @consUArgs X (fst (unucons uargs)) uargTps' (snd (unucons uargs)).
-Proof.
-  refine (match uargs as a1 in (UArgList a0) return (forall 
-    (teq : a0 = consUArgsT X uargTps') (eq: uargs = eq_rect _ _ a1 _ teq), 
-    _) with
-  | noUArgs => fun teq => False_rect _ (@eq_ind UArgListT noUArgsT
-                   (fun e : UArgListT =>
-                    match e with
-                    | noUArgsT => True
-                    | consUArgsT _ _ => False
-                    end) I (consUArgsT X uargTps') teq)
-  | @consUArgs X x tlT tl => fun teq => _
-  end eq_refl (eq_rect_eq _ _ _ _ _)
-  ). 
-  intros ->.
-  pose proof (@f_equal UArgListT Type (fun l => match l with
-      | noUArgsT => X
-      | consUArgsT Y _ => Y
-      end) _ _ teq) as H; simpl in H. revert H; intros <-.
-  pose proof (@f_equal UArgListT UArgListT (fun l => match l with
-      | noUArgsT => uargTps'
-      | consUArgsT _ Y => Y
-      end) _ _ teq) as H; simpl in H; revert H; intros ->.
-  rewrite <- eq_rect_eq.
-  rewrite unucons_correct_aux.
-  reflexivity.
-Qed.
-
 Definition projectsArgListCons {X X' prX} {argTps': forall (x':X'), ArgListT} 
   (x':X') (uargTps':UArgListT)
   (z:projectsArgListT (@consArgsT X X' prX argTps') (consUArgsT X uargTps')):
@@ -396,6 +459,16 @@ Qed.
 #[global] Instance gprArgList {argTps: ArgListT} {uargTps:UArgListT} {p:projectsArgListT argTps uargTps}: 
   (ArgList argTps) ⤖ (UArgList uargTps) := 
   {| proj:=fun args => prArgList args uargTps p; po:=gprArgList_po |}.
+
+
+#[global] Instance argListEq {argTps: ArgListT} {uargTps:UArgListT} (z: projectsArgListT argTps uargTps)
+  (ueq: @LeibnitzEqB (UArgList uargTps)): @LeibnitzEqB (ArgList argTps) :=
+  {| 
+    equalB' := fun args args' => ueq.(equalB') (prArgList args _ z) (prArgList args' _ z); 
+    refl' := fun x => (ueq.(refl') (prArgList x uargTps z)); 
+    eqb_eq' := fun s t H => 
+      @gprArgList_po _ _ z s t (ueq.(eqb_eq') (prArgList s uargTps z) (prArgList t uargTps z) H)
+  |}.
 
 Lemma instantiate_frel_res: forall {argTps} {uargTps:UArgListT} {z:projectsArgListT argTps uargTps}
   {T: Type} {p: forall (args: ArgList argTps), T -> Prop}

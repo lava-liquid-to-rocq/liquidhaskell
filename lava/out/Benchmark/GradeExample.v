@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive Modifier_u : Set := 
+Inductive Modifier_u : Type := 
 	 | Minus_u: Modifier_u
 	 | Natural_u: Modifier_u
 	 | Plus_u: Modifier_u. 
@@ -54,7 +54,7 @@ Definition Plus: Modifier :=
 #[global] Hint Unfold Minus : ref_constr_db.
 #[global] Hint Unfold Natural : ref_constr_db.
 #[global] Hint Unfold Plus : ref_constr_db.
-Inductive Letter_u : Set := 
+Inductive Letter_u : Type := 
 	 | A_u: Letter_u
 	 | B_u: Letter_u
 	 | C_u: Letter_u
@@ -244,7 +244,7 @@ Proof.
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Inductive Grades_u : Set := 
+Inductive Grades_u : Type := 
 	 | Grade_u: Letter_u -> (Modifier_u -> Grades_u). 
 Fixpoint Grades_eq (x: Grades_u) (y: Grades_u): bool := 
 	match (x, y) with (Grade_u x x_1, Grade_u x' x_1') => ((true && (x ==? x')) && (x_1 ==? x_1')) end. 
@@ -575,7 +575,7 @@ Proof.
 	solver | refine (exist _ h _); 
 	solver]. 
 Qed. 
-Inductive Comparison_u : Set := 
+Inductive Comparison_u : Type := 
 	 | Eq_u: Comparison_u
 	 | Gt_u: Comparison_u
 	 | Lt_u: Comparison_u. 

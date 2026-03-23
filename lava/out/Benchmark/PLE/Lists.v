@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive L_u : Set := 
+Inductive L_u : Type := 
 	 | C_u: Z -> (L_u -> L_u)
 	 | Emp_u: L_u. 
 Fixpoint L_eq (x: L_u) (y: L_u): bool := 

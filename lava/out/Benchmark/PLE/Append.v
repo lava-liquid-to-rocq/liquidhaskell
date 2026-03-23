@@ -69,7 +69,7 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve flip_rel_mk : f_rel_funct_db.
-Inductive Pair_u : Set := 
+Inductive Pair_u : Type := 
 	 | MkPair_u: Z -> (Z -> Pair_u). 
 Fixpoint Pair_eq (x: Pair_u) (y: Pair_u): bool := 
 	match (x, y) with (MkPair_u x x_1, MkPair_u x' x_1') => ((true && (x ==? x')) && (x_1 ==? x_1')) end. 
@@ -106,7 +106,7 @@ Definition MkPair (VV: {VV: Z | True}) (VV_: {VV: Z | True}): Pair :=
 #[global] Hint Unfold Pair_wf : wf_constr_db.
 #[global] Hint Resolve Pair_eq : ref_constr_db.
 #[global] Hint Unfold MkPair : ref_constr_db.
-Inductive Nats_u : Set := 
+Inductive Nats_u : Type := 
 	 | Suc_u: Nats_u -> Nats_u
 	 | Zero_u: Nats_u. 
 Fixpoint Nats_eq (x: Nats_u) (y: Nats_u): bool := 
@@ -272,7 +272,7 @@ Qed.
 Proof. 
 	buildPackG geqN geqN_rel geqN__geqN_rel geqN_rel_funct. 
 Defined.
-Inductive L2_u : Set := 
+Inductive L2_u : Type := 
 	 | App2_u: Pair_u -> (L2_u -> L2_u)
 	 | Emp2_u: L2_u. 
 Fixpoint L2_eq (x: L2_u) (y: L2_u): bool := 
@@ -414,7 +414,7 @@ Qed.
 Proof. 
 	buildPackG length2 length2_rel length2__length2_rel length2_rel_funct. 
 Defined.
-Inductive L_u : Set := 
+Inductive L_u : Type := 
 	 | App_u: Z -> (L_u -> L_u)
 	 | Emp_u: L_u. 
 Fixpoint L_eq (x: L_u) (y: L_u): bool := 
@@ -464,7 +464,7 @@ Defined.
 #[global] Hint Resolve wf_App_VV_ : ref_constr_db.
 #[global] Hint Unfold App : ref_constr_db.
 #[global] Hint Unfold Emp : ref_constr_db.
-Inductive PairL_u : Set := 
+Inductive PairL_u : Type := 
 	 | MkPairL_u: L_u -> (L_u -> PairL_u). 
 Fixpoint PairL_eq (x: PairL_u) (y: PairL_u): bool := 
 	match (x, y) with (MkPairL_u x x_1, MkPairL_u x' x_1') => ((true && (x ==? x')) && (x_1 ==? x_1')) end. 

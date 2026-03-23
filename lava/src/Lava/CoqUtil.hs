@@ -134,11 +134,14 @@ uPackWfName = "uPack_wf"
 
 -- | elaborate a refined inductive data type from ECoq to an unrefined data type, a well-formedness predicate, some utility definitions and pseudo-constructors in ECoq
 transRefTC :: [CoqDecl] -> Id -> [CoqConstr] -> [CoqDecl]
-transRefTC decls' tc constrs = unrefTCDecl : (eqDecl : eqReflLem : eqReflHint : eqbEqLem : eqbEqLemHint : eqbInstanceDecl : tcRefDecls ++ constrDecls ++ constrWfDecls ++ hints) -- ++[rectThm, indThm]
+transRefTC decls' tc constrs = unrefTCDecl : (eqDecls ++ tcRefDecls ++ constrDecls ++ constrWfDecls ++ hints) -- ++[rectThm, indThm]
   where
     decls = decls' ++ [unrefTCDecl, TCDecl tc constrs]
     unrefConstr (Constr c tp) = Constr (unrefinedConstrName c) (unrefRocqType tp)
-    unrefTCDecl = CoqInductive (unrefinedTCName tc) [] (Sort SetSort) $ map unrefConstr constrs
+    unrefTCDecl = CoqInductive (unrefinedTCName tc) [] (Sort TypeSort) $ map unrefConstr constrs
+
+    noHOConstr = all (\(Constr c cTp) -> all (\case (_, Pack{}) -> False; _ -> True) (fst $ matchFunctionType [] cTp)) constrs
+    eqDecls = if noHOConstr then eqDecl : eqReflLem : eqReflHint : eqbEqLem : eqbEqLemHint : [eqbInstanceDecl] else []
 
     mkIntDecl :: Id -> [((Id, RocqType), Bool)] -> RocqType -> Either [CoqTactic] CoqTerm -> CoqDecl
     mkIntDecl g args ret def = Definition g args ret defBody Transparent
@@ -238,7 +241,7 @@ transRefTC decls' tc constrs = unrefTCDecl : (eqDecl : eqReflLem : eqReflHint : 
             argReqs ((_, Subset x _ r), _) = [ref]
               where
                 ref = replaceSubterm (IdPat x, True) (Var $ indPatVarName x) r
-            argReqs ((f, Pack {}), _) = [App (Def uPackWfName) [Var f]] -- TODO: add required conditions
+            argReqs ((f, Pack argTps uargTps z t p), _) = [App (Def uPackWfName) [Var f, mkArgListT argTps, z, p]] -- TODO: add required conditions
     tm = (tmV, Subset v unrefTC $ And (wfVar v) (App (Var p) [Var v]))
     wfLem = mkCoqLemma (wfLemName tc) [((p, Arrow unrefTC (Sort PropSort)), True), (tm, False)] (Prop $ App (Def $ wfTCName tc) [Project $ Var tmV]) [destructSubsetArg tmV, Oracle]
 

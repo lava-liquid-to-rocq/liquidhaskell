@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive IList_u : Set := 
+Inductive IList_u : Type := 
 	 | Cons_u: Z -> (IList_u -> IList_u)
 	 | Nil_u: IList_u. 
 Fixpoint IList_eq (x: IList_u) (y: IList_u): bool := 
