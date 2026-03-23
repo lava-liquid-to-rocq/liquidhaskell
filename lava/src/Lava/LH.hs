@@ -15,6 +15,7 @@ module Lava.LH
 where
 
 import Data.Graph
+import qualified Lava.Calculus as Calc
 import Lava.InternalLH (ArrType (..), CaseBranch (..), LHDecl (..), LHSimpleTerm (..), LHTerm (..), LHType (Buildin, TDat), RefType (..))
 import qualified Lava.InternalLH as ILH
 import Lava.Util
@@ -22,13 +23,13 @@ import Prelude
 
 -- * type aliases for intermediate data during LH/GHC -> ILH parsing
 
-type Lemma = (Def, ArrType, Bool)
+type Lemma = (Def, Calc.RefType, Bool)
 
 -- * A top-level definition extracted from GHC Core
 data Def = Def
   { defName  :: Id       -- ^ the name of the definition
   , defArgs  :: [Id]     -- ^ the argument names
-  , defBody  :: LHTerm   -- ^ the translated body
+  , defBody  :: Calc.Expr -- ^ the translated body
   , defIsRec :: Bool     -- ^ whether the definition is recursive
   } deriving (Eq, Show)
 
@@ -89,6 +90,46 @@ instance Binder LHDecl where
   bindName (Import n _) = n
   bindName (Data n _) = n
   bindName (Definition n _ _ _) = n
+
+-- * 'Dependencies' and 'Binder' instances for 'Calc.Decl'
+
+instance Dependencies Calc.BaseType where
+  dependsOn (Calc.TC typ) name = typ == name
+  dependsOn (Calc.Builtin _) _ = False
+
+instance Dependencies Calc.Reft where
+  dependsOn (Calc.Var n _ _) name = n == name
+  dependsOn (Calc.App f t) name = dependsOn f name || dependsOn t name
+  dependsOn (Calc.Neg p) name = dependsOn p name
+  dependsOn (Calc.Bop _ s t) name = dependsOn s name || dependsOn t name
+  dependsOn (Calc.QMark r rh rp) name = dependsOn r name || dependsOn rh name || dependsOn rp name
+  dependsOn (Calc.Pop _ r1 r2) name = dependsOn r1 name || dependsOn r2 name
+  dependsOn (Calc.Sub r _ _) name = dependsOn r name
+  dependsOn (Calc.Inj r _) name = dependsOn r name
+  dependsOn (Calc.Proj r) name = dependsOn r name
+  dependsOn _ _ = False
+
+instance Dependencies Calc.RefType where
+  dependsOn (Calc.RefType _ t reft) name = dependsOn t name || dependsOn reft name
+  dependsOn (Calc.ArrType x dom codom) name = (dom `dependsOn` name || codom `dependsOn` name) && x /= name
+
+dependsBranchCalc :: ((Id, [(Id, Bool)]), Maybe Calc.Expr) -> Id -> Bool
+dependsBranchCalc ((c, ys), body) name = (c == name || body `dependsOn` name) && name `notElem` map fst ys
+
+instance Dependencies Calc.Expr where
+  dependsOn (Calc.Reft r) name = dependsOn r name
+  dependsOn (Calc.Let x tp df tm) name = (df `dependsOn` name || tm `dependsOn` name || tp `dependsOn` name) && x /= name
+  dependsOn (Calc.Case r branches _) name = dependsOn r name || any (`dependsBranchCalc` name) branches
+
+instance Dependencies Calc.Decl where
+  dependsOn (Calc.Data n constrs) name =
+    n == name || any (\(c, tp) -> c == name || dependsOn tp name) constrs
+  dependsOn (Calc.Definition f tp expr _) name =
+    f == name || dependsOn tp name || dependsOn expr name
+
+instance Binder Calc.Decl where
+  bindName (Calc.Data n _) = n
+  bindName (Calc.Definition n _ _ _) = n
 
 -- * implementing topological sorting for 'LHDecl' using 'Dependencies' and 'Binder' instances
 

@@ -33,7 +33,7 @@ data Builtin = Integer | Double | String deriving (Data, Eq, Show)
 -- | Base Types
 --
 -- > A ::= B | TC
-data BaseType = Builtin Builtin | TC Id deriving (Data, Eq)
+data BaseType = Builtin Builtin | TC Id deriving (Data, Eq, Show)
 
 -- | Refinement types
 --
@@ -41,7 +41,7 @@ data BaseType = Builtin Builtin | TC Id deriving (Data, Eq)
 data RefType
   = RefType {argName :: Id, argTp :: BaseType, argRef :: Reft}
   | ArrType {parName :: Id, parTp :: RefType, retTp :: RefType}
-  deriving (Data, Eq)
+  deriving (Data, Eq, Show)
 
 -- ** Declaration-level grammar
 
@@ -54,7 +54,7 @@ data Decl
     Data Id [(Id, RefType)]
   | -- | (function) definition: name, type, body, is it reflected
     Definition Id RefType Expr Bool
-  deriving (Data, Eq)
+  deriving (Data, Eq, Show)
 
 -- | Structural expressions
 --
@@ -70,7 +70,7 @@ data Expr
   | -- | Pattern matching (includes conditionals), with Maybe for optional branches.
     --   The boolean in the list of parameters is true if the parameter is inductive
     Case Reft [((Id, [(Id, Bool)]), Maybe Expr)] IndCase
-  deriving (Data, Eq)
+  deriving (Data, Eq, Show)
 
 -- | Simple LH terms including formulas.
 --   Terms of this type can occur as (sub)terms in refinements
@@ -97,14 +97,14 @@ data Reft
   | Sub Reft RefType RefType
   | Inj Reft RefType
   | Proj Reft
-  deriving (Data, Eq)
+  deriving (Data, Eq, Show)
 
 -- | Localization of the variables.
 -- The recursive variables take the name of the induction variable
 -- (this is used to clean up unused IHs) and the current branch pattern
 --
 -- loc ::= L | G | Y (x, σ)
-data Localization = Local | Global | Recursive Id BranchPattern deriving (Data, Eq)
+data Localization = Local | Global | Recursive Id BranchPattern deriving (Data, Eq, Show)
 
 -- | Branch pattern: patterns of the current branch obtained
 -- by destructing the parameters of the function.
@@ -137,7 +137,7 @@ data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq)
 
 -- | Whether a case must be translated to induct or destruct.
 -- In the first option, we store the names of variables to generalize
-data IndCase = Induct [Id] | Destruct deriving (Data, Eq)
+data IndCase = Induct [Id] | Destruct deriving (Data, Eq, Show)
 
 -- Builtin type and data constructors
 
@@ -171,6 +171,10 @@ defaultRef tp = RefType "VV" tp ttTm
 arrs :: RefType -> ([(Id, RefType)], RefType)
 arrs tp@(RefType {}) = ([], tp)
 arrs (ArrType x tpx tp) = ((x, tpx) :) `first` arrs tp
+
+-- | Make a local variable reference
+mkVar :: Id -> Reft
+mkVar s = Var s 0 Local
 
 -- | tpArgs(x_i:R_i|r_i)_{i ≤ n} -> R) = [x_i]_{i ≤ n}
 tpArgs :: RefType -> [Id]
@@ -313,7 +317,7 @@ instance HasVars Expr where
         substBranch br@((_, ys), _) | x `elem` map fst ys = br
         substBranch ((c, ys), ebr) = ((c, ys), subst r x <$> ebr)
     where
-      err = render $ text "Substitution" <+> braces (pPrint r <> char '/' <> text x) <> parens (pPrint e) <+> text "is not sound because of variable capture."
+      err = render $ text "Expression substitution" <+> braces (pPrint r <> char '/' <> text x) <> parens (pPrint e) <+> text "is not sound because of variable capture."
 
 instance HasVars RefType where
   freeVarsArLoc (RefType x tp r) = Set.delete (x, (0, Local)) (freeVarsArLoc r)
@@ -324,7 +328,7 @@ instance HasVars RefType where
     RefType y b reft -> RefType y b $ subst r x reft
     ArrType y _ tp'
       | y `Set.member` freeVars r && x `Set.member` freeVars tp' ->
-          error . render $ text "Substitution" <+> braces (pPrint r <> char '/' <> text x) <> parens (pPrint tp) <+> text "is not sound because of variable capture."
+          error . render $ text "Type substitution" <+> braces (pPrint r <> char '/' <> text x) <> parens (pPrint tp) <+> text "is not sound because of variable capture."
     ArrType y tpx tp' | y == x -> ArrType y (subst r x tpx) tp'
     ArrType y tpx tp' -> ArrType y (subst r x tpx) (subst r x tp')
 

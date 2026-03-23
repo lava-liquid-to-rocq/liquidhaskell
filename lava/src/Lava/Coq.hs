@@ -71,7 +71,7 @@ module Lava.Coq
     packName,
     projPackName,
     subsetWitnessNm,
-    
+
     -- | argList related stuff
     ArgList (..),
     ArgListT (..),
@@ -250,7 +250,7 @@ data RocqType
   | Sort BaseSort
   | Subset Id RocqType CoqTerm
   | TC Id [RocqType]
-  -- | (simple-typed) arrow type 
+  -- | (simple-typed) arrow type
   | Arrow RocqType RocqType
   -- | Pi type
   | FAType (Id, RocqType) RocqType
@@ -534,7 +534,9 @@ printRocqType (Subset x (TC tc []) e) True = case tc of
     builtin = elem tc $ map fst3 coqBuiltinInductDataTypes
 printRocqType (Subset x tp e) _ = "{" ++ x ++ ": " ++ show tp ++ " | " ++ show e ++ "}"
 printRocqType (TC tn []) _ | any ((== tn) . fst3) coqBuiltinInductDataTypes = tn
-printRocqType (TC typeName tpArgs) _ = unrefinedTCName typeName ++ unwords (map show tpArgs)
+printRocqType (TC typeName tpArgs) _ =
+     unrefinedTCName typeName -- prints double _u sometimes!
+  ++ unwords (map show tpArgs)
 printRocqType (Arrow tp1 tp2) _ = showP tp1 ++ " -> " ++ showP tp2
 printRocqType tp@(FAType {}) _ = let (args, ret) = concatForalls tp in showForall args ret
 printRocqType (Prop p) _ = show p
@@ -600,7 +602,7 @@ instance Show CoqTerm where
     Or p q -> showP p ++ " \\/ " ++ showP q
     Impl p q -> showP p ++ " -> " ++ showP q
     Equiv p q -> showP p ++ " <-> " ++ showP q
-    Neg (IsTrue (Bop EqualB s t)) -> show . IsTrue $ Bop Neqb s t 
+    Neg (IsTrue (Bop EqualB s t)) -> show . IsTrue $ Bop Neqb s t
     App neg [Bop EqualB s t] | neg == Def negb -> show $ Bop NEqualB s t
     Neg (Neg p) -> show p
     Neg p -> "not " ++ showP p

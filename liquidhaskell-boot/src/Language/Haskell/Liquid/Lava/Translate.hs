@@ -2,7 +2,7 @@
 
 module Language.Haskell.Liquid.Lava.Translate (runLava, SrcInfo (..)) where
 
-import           Control.Monad (void, when)
+import           Control.Monad (void, unless, when)
 import           Data.Bifunctor (bimap)
 import           Data.Char (isSpace)
 import           Data.Foldable (traverse_)
@@ -19,19 +19,19 @@ import           Language.Haskell.Liquid.Types.RType (SpecType)
 import qualified Language.Haskell.Liquid.Types.Specs as Specs
 import           Language.Haskell.Liquid.Types.Types (AnnInfo (..))
 
-import qualified Lava.Coq as Coq (Decl)
-import qualified Lava.InternalLH as InternalLH (ArrType, LHDecl (Import))
+import qualified Lava.Calculus as Calc
+import qualified Lava.Coq as Coq (Decl, Decl (..))
+import           Lava.Declaration (trDecl)
 import           Lava.LH
 import           Lava.Misc (isIgnoredBind, stripLegalName)
-import           Lava.TypedTranslation (translateTyping)
 import           Lava.Util
 
-import           Language.Haskell.Liquid.Lava.Parse
 import           Language.Haskell.Liquid.Lava.Preamble (preamble)
 import           Language.Haskell.Liquid.Lava.Print
-import           Language.Haskell.Liquid.Lava.Simplify (simplify)
 import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
 import qualified Language.Haskell.Liquid.Lava.CoreToLH as CLH
+import           Language.Haskell.Liquid.Lava.Parse
+import           Language.Haskell.Liquid.Lava.Simplify (simplify)
 
 -- | Contains all information about the source Liquid Haskell file to translate
 data SrcInfo = SrcInfo
@@ -51,15 +51,15 @@ runLava sinfo = do
   let filepath = Specs.giTarget $ Specs.giSrc $ s_targetInfo sinfo
   void $ translateFile True sinfo filepath
 
--- | parses file into [InternalLH.LHDecl]
+-- | parses file into [Calc.Decl]
 parseFile ::
-  -- | Whether output files for ILH should be generated
+  -- | Whether output files should be generated
   Bool ->
   -- | All information about the Liquid Haskell file to translate
   SrcInfo ->
   -- | Complete file name
   String ->
-  IO ([InternalLH.LHDecl], ([InternalLH.LHDecl], Id, Id))
+  IO ([Calc.Decl], ([String], Id, Id))
 parseFile writeFlag sinfo filename = do
   -- \| Step 1: Setting up the environment
   workingPath <- getCurrentDirectory
@@ -71,50 +71,46 @@ parseFile writeFlag sinfo filename = do
   let pb          = getBindsAndSpecs moduleId sinfo
       importNames = getModIdsAndImports (pb_src pb)
 
-  -- \| Step 3: Get the ILH source and the imported files
-  -- This "translates" from Liquid Haskell and GHC data structures to lh-to-coq.InternalLH data structures,
+  -- \| Step 3: Get the Calculus source and the imported files
+  -- This translates from Liquid Haskell and GHC data structures to Calculus data structures,
   -- furthermore transSig removes LH internal refinements from data constructors (like no-junk and no-confusion refinements)
   -- and parseSourceContent gives arguments a unique name in specs
 
-  -- \| Translate the LH type constructors to ILH type constructors
+  -- \| Translate the LH type constructors to Calculus declarations
   let dataDecls = parsePData moduleId (pb_decls pb)
-      -- \| Translate the LH specs of function/theorem definitions to ILH data structures
+      -- \| Translate the LH specs of function/theorem definitions to Calculus types
       specMap   = SLH.transSig moduleId Nothing <$> M.fromList (pb_specs pb)
-      -- \| Translate the GHC binds of function/theorem definitions to ILH data structures
+      -- \| Translate the GHC binds of function/theorem definitions to Calculus expressions
       lhDefs    = CLH.transBind moduleId (s_infTypes sinfo) . simplify <$> filter (not . isIgnoredBind) (pb_binds pb)
-      -- \| Combine the translated LH specs and GHC binds for function/theorem definitions into ILH declarations
+      -- \| Combine the translated LH specs and GHC binds for function/theorem definitions into Calculus declarations
       defDecls  = combineDefsAndLemmas $ pairLHDefsWithSigs moduleId lhDefs specMap (pb_vars pb)
 
-  -- \| Figure out the ILH import declarations for the imported lhExample modules and their files
+  -- \| Figure out the import declarations for the imported lhExample modules and their files
   importedSourceFiles <- getImportFiles examplesFolder importNames
-  importedDecls <- map fst <$> mapM (parseFile False sinfo) importedSourceFiles
-  let imports = zipWith InternalLH.Import importNames importedDecls
 
-  -- \| Step 4: Do the translation to ECoq
+  -- \| Step 4: Do the translation to Coq
   putStrLn $ "Input file: " ++ filename
 
   -- Thanks to sinfo, this will also produce declarations from this rather than from the imported modules
   traverse_ (translateFile False sinfo) importedSourceFiles
 
-  let hasImports = not $ null imports
-      sortedImports = topologicalSort imports
-      ilhSource :: [InternalLH.LHDecl]
-      ilhSource = sortedImports ++ topologicalSort (dataDecls ++ defDecls)
+  let calcSource :: [Calc.Decl]
+      calcSource = topologicalSort (dataDecls ++ defDecls)
 
       outputFolder = getOutputFolder moduleId filename workingPath
 
-  when hasImports $ putStrLn ("Imported external files: " ++ intercalate ", " importedSourceFiles)
+  unless (null importNames) $ putStrLn ("Imported external files: " ++ intercalate ", " importedSourceFiles)
 
   when writeFlag $ do
     createDirectoryIfMissing True outputFolder
-    writeOut outputFolder modulename ILH [] ilhSource
+    writeOut outputFolder modulename ILHC [] calcSource
   putStrLn ""
 
-  pure (ilhSource, (sortedImports, outputFolder, modulename))
+  pure (calcSource, (importNames, outputFolder, modulename))
 
 -- | Calls translation function on source file and (optionally) writes (intermediate) output files in output folder
 translateFile ::
-  -- | Whether output files for ILH, ECoq and Coq should be generated
+  -- | Whether output files for Calculus and Coq should be generated
   Bool ->
   -- | All information about the Liquid Haskell file to translate
   SrcInfo ->
@@ -122,17 +118,13 @@ translateFile ::
   String ->
   IO [Coq.Decl]
 translateFile writeFlag sinfo arg = do
-  (ilhSource, (imports, outputFolder, modulename)) <- parseFile writeFlag sinfo arg
+  (calcSource, (importNames, outputFolder, modulename)) <- parseFile writeFlag sinfo arg
 
-  let hasImports = not $ null imports
+  let hasImports = not $ null importNames
 
-  -- Evaluate translateTyping once and reuse the result
-  coqResult <- case translateTyping ilhSource of
-    Left err ->
-      print err >> pure []
-    Right paper ->
-      putStrLn "—— Typechecking OK ——"
-        >> pure paper
+  -- Translate Calculus declarations to Coq declarations
+  let coqImports = map Coq.Load importNames
+      coqResult  = coqImports ++ concatMap trDecl calcSource
 
   -- | Step 5: Write output files
   when writeFlag $ do
@@ -214,10 +206,10 @@ getModIdsAndImports :: Specs.TargetSrc -> [String]
 -- getModIdsAndImports src = error $ "TODO: imports"
 getModIdsAndImports _ = []
 
-pairLHDefsWithSigs :: Id -> [Def] -> M.Map Id InternalLH.ArrType -> [Var] -> [(Def, Maybe InternalLH.ArrType, Bool)]
+pairLHDefsWithSigs :: Id -> [Def] -> M.Map Id Calc.RefType -> [Var] -> [(Def, Maybe Calc.RefType, Bool)]
 pairLHDefsWithSigs modId defs specMap reflectedDecls = map single defs
   where
     reflectedNames :: S.Set Id
     reflectedNames = S.fromList $ map (stripLegalName modId . show . varName) reflectedDecls
-    single :: Def -> (Def, Maybe InternalLH.ArrType, Bool)
+    single :: Def -> (Def, Maybe Calc.RefType, Bool)
     single def = (def, M.lookup (defName def) specMap, defName def `S.member` reflectedNames)

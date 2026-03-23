@@ -10,6 +10,9 @@ import Data.Either (isLeft)
 import Data.List (groupBy, (\\))
 import Data.Maybe (catMaybes, isNothing)
 import qualified Data.Set as Set
+import Text.PrettyPrint
+import Text.PrettyPrint.HughesPJClass hiding (first)
+
 import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil (mkAnd, mkForallXs, mkOr, mkVarDestrPat, mkVarDestruct)
@@ -163,7 +166,7 @@ wfDecl tc alts =
       where
         (args, RefType vv _ retRef) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
         -- Proposition for the refinement of the return type, with C x1 … xn in the refinement
-        retRefT = trReft (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef)
+        retRefT = trReft (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef)  -- TODO use utrReftProp instead?
         -- Proposition for each argument
         argProp (x, argTp) =
           case trRefType argTp of
@@ -411,7 +414,9 @@ namePath f (pats, _, _) takeVars =
     pats' = map snd pats
     -- TODO: deal with nested constructors (as in invLemName)
     getConstructor (LH.Var x _ _) = if takeVars then "_" ++ x else ""
+    getConstructor (LH.DC c) = "_" ++ c
     getConstructor (LH.App (DC c) _) = "_" ++ c
+    getConstructor r = error $ render $ text "Unexpected refinement " <+> pPrint r <+> text " in namePath for " <+> pPrint f
     base = if all (null . getConstructor) pats' then relDefBranchName f else f
 
 -- ** Generated lemmas
