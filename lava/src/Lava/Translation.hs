@@ -8,12 +8,13 @@
 module Lava.Translation where
 
 import Data.Bifunctor (second)
+import Debug.Trace (trace)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil (mkIsTrue, packGetF, packGetRel, upackGetRel)
 import Lava.CoqUtil (ihName, packInstanceName, relDefName, relPostfix, toPack, toUPack, upackInstanceName)
 import Lava.Util (hashName, isSuffixOf)
-import Text.PrettyPrint.HughesPJClass
+import Text.PrettyPrint.HughesPJClass as PP
 
 -- * Generic translations
 
@@ -207,11 +208,13 @@ hypsRV rv graphRel = \p -> foldr hyp p rv
 -- | Translation of refinement types
 --   Function TtoR (def 3.6) of the paper
 trRefType :: LH.RefType -> RocqType
+-- trRefType tp@(RefType {}) | trace (render $ text "trRefType" PP.<> parens (pPrint tp)) False = undefined
 trRefType (RefType x tp r) =
   Coq.Subset x (trBaseType tp) rT
   where
     rT = case tp of
       (LH.Builtin {}) -> utrReftProp r
+      _ | tp `elem` builtinTCs -> utrReftProp r
       (LH.TC tc) -> Coq.And (getTCRef x tc) (utrReftProp r)
 trRefType tp@(ArrType {}) =
   let (args, ret) = arrs tp
@@ -266,6 +269,7 @@ trReft tm@(LH.App {}) = case apps tm of
 -- Some other cases might be necessary because of branches coming from Core.
 -- Function EtoTac (def 3.7) of the paper
 trExprTacs :: LH.Expr -> [Tactic]
+-- trExprTacs e | trace (render $ text "trExprTacs" PP.<> parens (pPrint e)) False = undefined
 trExprTacs (LH.Reft tm) = [Coq.Exact $ trReft tm]
 trExprTacs (LH.Let _ Nothing _ _) = error "Found let-binding with annotation while translating."
 trExprTacs (LH.Let x (Just tpx@(RefType {})) e1 e2) =

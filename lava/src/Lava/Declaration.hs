@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OrPatterns #-}
@@ -48,7 +49,7 @@ trDecl (LH.Definition f tpf e isRefl) =
           ++ refRelRwLemma fdata --        f_rel_rw
           ++ refUnrefLemmas fdata --       f__f_rel and f__f_rel'
           ++ relMkLemma fdata --           f_rel_mk
-          ++ packInstance fdata --         f_pack
+          -- ++ packInstance fdata --         f_pack
       else []
   where
     fdata = mkFuncData f tpf e
@@ -303,6 +304,7 @@ data FuncData = FuncData
   }
 
 mkFuncData :: Id -> RefType -> Expr -> FuncData
+-- mkFuncData name _ _ | trace ("mkFuncData(" ++ name ++ ")") False = undefined
 mkFuncData name tpf body =
   FuncData
     { name,
@@ -334,8 +336,6 @@ traceTC s tc = trace ("Defining " ++ s ++ "(" ++ tc ++ ")") False
 
 traceDC :: String -> Id -> Id -> Bool
 traceDC s tc dc = trace ("Defining " ++ s ++ "(" ++ tc ++ "." ++ dc ++ ")") False
-
--- (proj(x_i) if FO or x_i if HO)_{x_i: R_i in args}
 
 -- ** Refined definition
 
@@ -704,14 +704,14 @@ relMkLemma f = [refRelMkLem, AddHint ResolveHint (relDefMkLemName $ name f) Grap
 --
 -- > #[global] Instance f_pack : ….
 -- > Proof. buildPackG f f_rel f__f_rel f_rel_funct. Defined.
-packInstance :: FuncData -> [Coq.Decl]
+{- packInstance :: FuncData -> [Coq.Decl]
 packInstance f | traceF "packInstance" f = undefined
 packInstance f =
   [TacInstance (packInstanceName $ name f) (show $ toPack argsT_r (retT f)) def | firstOrder]
   where
     argsT_r = map (first (++ "_r")) (argsT f)
     def = Custom $ unwords ["\n\tbuildPackG", name f, relDefName $ name f, relDefThmName $ name f, funcHoodLemName $ name f] ++ ". "
-    firstOrder = all (\case (_, RefType {}) -> True; (_, ArrType {}) -> False) (args f)
+    firstOrder = all (\case (_, RefType {}) -> True; (_, ArrType {}) -> False) (args f) -}
 
 -- ** Utility functions
 
