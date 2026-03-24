@@ -231,9 +231,10 @@ utrArrType (ArrType args ret) = foldr buildFun (utrRefType ret) args
 -- * Refined translations
 
 -- | Refined translation of RefType
--- the flag indicates whether free variables are assumed to be refined
+-- the second flag indicates whether free variables are assumed to be refined
 --  (as is the case in specs) and thus projected in the translated refinements
--- the first flag indicates whether this is the argument type of a larger function type
+-- the first flag indicates whether this is the argument type of a larger function/data type
+--  and thus function types must be translated as packs
 trRefTypeAux :: Bool -> Bool -> Ctx.TypingCtx -> RefType -> Coq.RocqType
 trRefTypeAux argTp inSpec γ rt0@(RefType x0 tp0 r0) = case tp0 of
   Buildin b -> Coq.Subset x0 (Coq.Builtin $ trBuiltin b) r'
@@ -250,12 +251,12 @@ trRefTypeAux argTp inSpec γ rt0@(RefType x0 tp0 r0) = case tp0 of
           (trRefTypeAux False inSpec γ ret)
           (map (\(y, RefType y0 yTp py) -> trRefTypeAux False inSpec γ (RefType y yTp (sub y0 (Var y) py))) xRTps)
     where
-      xTpT = trRefTypeAux False inSpec γ (RefType x xTp (sub x' (Var x) xRef))
+      xTpT = trRefTypeAux argTp inSpec γ (RefType x xTp (sub x' (Var x) xRef))
       (xs, finalRet) = unapplyPi ret
       xsT :: [(Id, Coq.RocqType)]
       xsT = map (uncurry transRT) xs
 
-      transRT y (RefType y0 yTp py) = (y, trRefTypeAux False inSpec γ (RefType y yTp (sub y0 (Var y) py)))
+      transRT y (RefType y0 yTp py) = (y, trRefTypeAux argTp inSpec γ (RefType y yTp (sub y0 (Var y) py)))
       fixProjs tm = foldr (\y -> replaceSubterm (TermPat (Coq.Project (Coq.Def y)), True) (Coq.Var y)) tm boundVars
   where
     (xRTps, ret@(RefType x _ _)) = unapplyPi rt0

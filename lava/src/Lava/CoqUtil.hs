@@ -134,7 +134,7 @@ uPackWfName = "uPack_wf"
 
 -- | elaborate a refined inductive data type from ECoq to an unrefined data type, a well-formedness predicate, some utility definitions and pseudo-constructors in ECoq
 transRefTC :: [CoqDecl] -> Id -> [CoqConstr] -> [CoqDecl]
-transRefTC decls' tc constrs = unrefTCDecl : (eqDecls ++ tcRefDecls ++ constrDecls ++ constrWfDecls ++ hints) -- ++[rectThm, indThm]
+transRefTC decls' tc constrs = {-traceFuncRet ["transRefTC", "...", tc, show constrs] $ -} unrefTCDecl : (eqDecls ++ tcRefDecls ++ constrDecls ++ constrWfDecls ++ hints) -- ++[rectThm, indThm]
   where
     decls = decls' ++ [unrefTCDecl, TCDecl tc constrs]
     unrefConstr (Constr c tp) = Constr (unrefinedConstrName c) (unrefRocqType tp)
@@ -241,7 +241,7 @@ transRefTC decls' tc constrs = unrefTCDecl : (eqDecls ++ tcRefDecls ++ constrDec
             argReqs ((_, Subset x _ r), _) = [ref]
               where
                 ref = replaceSubterm (IdPat x, True) (Var $ indPatVarName x) r
-            argReqs ((f, Pack argTps uargTps z t p), _) = [App (Def uPackWfName) [Var f, mkArgListT argTps, z, p]] -- TODO: add required conditions
+            argReqs ((f, Pack argTps uargTps z t p), _) = [App (Def uPackWfName) [mkArgListT argTps, z, p, Var f]] -- TODO: add required conditions
     tm = (tmV, Subset v unrefTC $ And (wfVar v) (App (Var p) [Var v]))
     wfLem = mkCoqLemma (wfLemName tc) [((p, Arrow unrefTC (Sort PropSort)), True), (tm, False)] (Prop $ App (Def $ wfTCName tc) [Project $ Var tmV]) [destructSubsetArg tmV, Oracle]
 

@@ -401,7 +401,7 @@ Definition projectsArgListCons {X X' prX} {argTps': forall (x':X'), ArgListT}
   (z:projectsArgListT (@consArgsT X X' prX argTps') (consUArgsT X uargTps')):
   projectsArgListT (argTps' x') uargTps' := (pr2 z) x'.
 
-Lemma prArgListCons {X X' prX} {argTps': forall (x':X'), ArgListT} 
+Lemma prArgListCons {X X': Type} {prX: X' ⤖ X} {argTps': forall (x':X'), ArgListT} 
   (x':X') (args':ArgList (argTps' x')) (uargTps':UArgListT) (z:_): 
   prArgList (@consArgs X X' prX x' argTps' args') (consUArgsT X uargTps') z = 
   consUArgs (prX.(proj) x') (prArgList args' uargTps' (projectsArgListCons x' uargTps' z)).

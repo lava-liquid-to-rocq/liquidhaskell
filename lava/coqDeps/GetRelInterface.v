@@ -5,9 +5,9 @@ Load SimpleTacticUtils.
 
 (** Typeclass for functions *)
 
-Inductive UArgListT : Type :=
+Polymorphic Inductive UArgListT@{u} : Type@{u+1} :=
   | noUArgsT: UArgListT
-  | consUArgsT (X:Type) (tl:UArgListT): UArgListT.
+  | consUArgsT (X:Type@{u}) (tl:UArgListT): UArgListT.
 Inductive ArgListT : Type := 
   | noArgsT : ArgListT
   | consArgsT (X X':Type): (X' ⤖ X) -> (forall (x:X'), ArgListT) -> ArgListT.
@@ -16,10 +16,13 @@ Inductive ArgList: ArgListT -> Type :=
   | noArgs: ArgList noArgsT
   | consArgs {X X':Type} {prX: X' ⤖ X} (x:X') {tlT: forall (x:X'), ArgListT} (tl: ArgList (tlT x)): 
       ArgList (consArgsT X X' prX tlT).
-Inductive UArgList: UArgListT -> Type :=
-  | noUArgs: UArgList noUArgsT
-  | consUArgs {X:Type} (x:X) {tlT: UArgListT} (tl:UArgList tlT):
-      UArgList (consUArgsT X tlT).
+Inductive UArgList@{u v} : UArgListT@{u} -> Type@{u+1} :=
+    noUArgs : UArgList noUArgsT@{u}
+  | consUArgs : forall {X : Type@{u} },
+                X ->
+                forall {tlT : UArgListT },
+                UArgList tlT ->
+                UArgList (consUArgsT@{u} X tlT).
 
 Global Notation "X ::UT tl" := (consUArgsT X tl) (at level 2, right associativity).
 Global Notation "X' ::RT tl" := (consArgsT _ X' _ tl) (at level 2, right associativity).
@@ -69,7 +72,7 @@ Class Pack (argTps:ArgListT) {uargTps:UArgListT} {z:projectsArgListT argTps uarg
   funct (uargs: UArgList uargTps) v v': frel uargs v -> frel uargs v' -> v = v'
 }.
 
-Class uPack (uargTps: UArgListT) (T: Type) := {
+Class uPack@{u} (uargTps: UArgListT@{u}) (T: Type@{u}) : Type@{u+1} := {
 	rel_u (uargs: UArgList uargTps): T -> Prop; (* The graph relation *)
 	funct_u (uargs:UArgList uargTps) (v v':T): rel_u uargs v -> rel_u uargs v' -> v = v'
 }.
