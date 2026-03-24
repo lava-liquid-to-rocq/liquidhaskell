@@ -100,6 +100,7 @@ mkVarDestruct x = DestructSubsetTerm (Var x) (mkVarDestrPat x)
 
 -- | mkOpaque(x) = Opaque x.
 mkOpaque :: Id -> Decl
+mkOpaque x | trace ("mkOpaque(" ++ x ++ ")") False = undefined
 mkOpaque x = CoqMarkVisibility $ ChangeVisibility x Opaque
 
 -- * Normalization of arrow types

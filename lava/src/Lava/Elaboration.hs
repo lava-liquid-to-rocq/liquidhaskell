@@ -233,7 +233,7 @@ wfDecls γ (Definition f tpf e isRefl : decls) = do
   e' <- checkExpr γfargs initBrPat e ret
   γf' <- changeRecToGlobal f γf
   decls' <- wfDecls γf' decls
-  return $ Definition f tpf e' isRefl : decls'
+  return $ Definition f tpf' e' isRefl : decls'
 wfDecls _ [] = return []
 
 -- * Type synthesis for refinements

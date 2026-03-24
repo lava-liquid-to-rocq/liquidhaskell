@@ -39,8 +39,7 @@ trDecl (LH.Data tc alts) =
 trDecl (LH.Definition f tpf e isRefl) =
   trDefRefDef fdata --                     f
     : if isRefl
-      then []
-      else
+      then
         defGraphRelAndHints fdata --       f_rel
           ++ relFunctionhoodLemma fdata -- f_rel_funct
           ++ relConstrLems fdata --        inversion lemmas for f_rel
@@ -50,6 +49,7 @@ trDecl (LH.Definition f tpf e isRefl) =
           ++ refUnrefLemmas fdata --       f__f_rel and f__f_rel'
           ++ relMkLemma fdata --           f_rel_mk
           ++ packInstance fdata --         f_pack
+      else []
   where
     fdata = mkFuncData f tpf e
 
@@ -320,12 +320,16 @@ mkFuncData name tpf body =
     injArg (x, ArrType {}) = Coq.Var x
     injArg (x, RefType {}) = Exist TermHole (Coq.Var x) (TermWitness $ Coq.Var (subsetWitnessNm x))
 
+traceF :: String -> FuncData -> Bool
+traceF s f = trace ("Defining " ++ s ++ "(" ++ name f ++ ")") False
+
 -- (proj(x_i) if FO or x_i if HO)_{x_i: R_i in args}
 
 -- ** Refined definition
 
 -- | Translation of a definition `f` to the refined definition `f` (defined with tactics)
 trDefRefDef :: FuncData -> Coq.Decl
+trDefRefDef f | traceF "trDefRefDef" f = undefined
 trDefRefDef f =
   Coq.Definition (name f) (map (,False) (argsT f)) (retT f) (ProofBody tacs) Transparent
   where
@@ -345,6 +349,7 @@ trDefRefDef f =
 -- > #[global] Instance f_lookup_rel : dictionary rel f := { lookup' := f_rel }.
 -- > #[global] Instance f_getF : getFunc f_rel := { getF' := f }.
 defGraphRelAndHints :: FuncData -> [Coq.Decl]
+defGraphRelAndHints f | traceF "defGraphRelAndHints" f = undefined
 defGraphRelAndHints f =
   [ trDefGraphRel, -- f_rel
     AddHint ConstructorsHint (relDefName $ name f) CoreDB,
@@ -478,6 +483,7 @@ namePath f (pats, _, _) takeVars =
 -- > Definition f_rel_funct [args] (v v': Z) : f_rel [args] v -> f_rel [args] v' -> v = v'.
 -- > #[global] Hint Resolve f_rel_funct : f_rel_funct_db.
 relFunctionhoodLemma :: FuncData -> [Coq.Decl]
+relFunctionhoodLemma f | traceF "relFunctionhoodLemma" f = undefined
 relFunctionhoodLemma f =
   [functionhoodLemma, AddHint ResolveHint (funcHoodLemName $ name f) GraphRelDB]
   where
@@ -503,6 +509,7 @@ relFunctionhoodLemma f =
 
 -- | Inversion lemmas for the graph relation, one for each branch
 relConstrLems :: FuncData -> [Coq.Decl]
+relConstrLems f | traceF "relConstrLems" f = undefined
 relConstrLems f = concatMap (inversionLemma $ name f) $ groupPaths (paths f)
   where
     -- Converts a list of function paths to a list of equations paths by grouping together paths that destruct arguments in the same way
@@ -554,6 +561,7 @@ invLemName f pats =
 -- > Theorem f_rel_ex [args argsp]: f_rel [args] ⌊ f (exist args argsp) -⌋.
 -- > #[global] Hint Resolve f_rel_ex : rel_ax_db.
 defExLemma :: FuncData -> [Coq.Decl]
+defExLemma f | traceF "defExLemma" f = undefined
 defExLemma f = [exLem, AddHint ResolveHint (exLemName $ name f) RelAxDB]
   where
     exLem =
@@ -580,6 +588,7 @@ defExLemma f = [exLem, AddHint ResolveHint (exLemName $ name f) RelAxDB]
 -- > #[global] Hint Resolve f__f_rel_rw : rel_ax_db.
 -- > #[global] Instance f_lookup_rw : dictionary rwLem f := { lookup' := f__f_rel_rw }.
 refRelRwLemma :: FuncData -> [Coq.Decl]
+refRelRwLemma f | traceF "refRelRwLemma" f = undefined
 refRelRwLemma f =
   [ refRelRwLem,
     AddHint RewriteHint (relDefRwLemName $ name f) GraphRelDB,
@@ -606,6 +615,7 @@ refRelRwLemma f =
 -- > Theorem f__f_rel' [args_u unrefined] [args refined] f_res : [args_u = proj(args)] -> (⌊ f [args] -⌋ = f_res <-> f_rel [args_u] f_res).
 -- > #[global] Hint Resolve f__f_rel' : f_rel_funct_db.
 refUnrefLemmas :: FuncData -> [Coq.Decl]
+refUnrefLemmas f | traceF "refUnrefLemmas" f = undefined
 refUnrefLemmas f =
   [ refUnrefLemma,
     Coq.AddHint Coq.RewriteHint (relDefThmName $ name f) Coq.GraphRelDB,
@@ -651,6 +661,7 @@ refUnrefLemmas f =
 -- > Definition f_rel_mk [args argsp] : {f_res: _ | f_rel [args] f_res}.
 -- > #[global] Hint Resolve f_rel_mk : f_rel_funct_db.
 relMkLemma :: FuncData -> [Coq.Decl]
+relMkLemma f | traceF "relMkLemma" f = undefined
 relMkLemma f = [refRelMkLem, AddHint ResolveHint (relDefMkLemName $ name f) GraphRelDB]
   where
     refRelMkLem =
@@ -682,6 +693,7 @@ relMkLemma f = [refRelMkLem, AddHint ResolveHint (relDefMkLemName $ name f) Grap
 -- > #[global] Instance f_pack : ….
 -- > Proof. buildPackG f f_rel f__f_rel f_rel_funct. Defined.
 packInstance :: FuncData -> [Coq.Decl]
+packInstance f | traceF "packInstance" f = undefined
 packInstance f =
   [TacInstance (packInstanceName $ name f) (show $ toPack argsT_r (retT f)) def | firstOrder]
   where
