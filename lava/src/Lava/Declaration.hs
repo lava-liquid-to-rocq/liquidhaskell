@@ -11,6 +11,7 @@ import Data.Either (isLeft)
 import Data.List (groupBy, union, (\\))
 import Data.Maybe (isNothing)
 import qualified Data.Set as Set
+import Debug.Trace (trace)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil (mkAnd, mkForallXs, mkOpaque, mkOr, mkVarDestruct)
@@ -24,6 +25,7 @@ import Text.PrettyPrint.HughesPJClass hiding (first)
 -- | Main function for the translation of declarations
 trDecl :: LH.Decl -> [Coq.Decl]
 -- An inductive data type gives an unrefined data type, a well-formedness predicate, some utility definitions and pseudo-constructors
+trDecl decl | trace (render $ text "Translating" <+> pPrint decl) False = undefined
 trDecl (LH.Data tc alts) =
   unrefTCDecl tc alts --                     TC_u: unrefined datatype declaration
     : tcEqDecls tc alts --                   TC_eq: equality for TC_u and associated declarations

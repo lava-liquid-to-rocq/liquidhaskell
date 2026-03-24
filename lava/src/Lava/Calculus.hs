@@ -441,7 +441,7 @@ instance Pretty Reft where
   pPrint (Bop bop r1 r2) = pPrint r1 <+> pPrint bop <+> pPrint r2
   pPrint (QMark r rh rp) = pPrint r <+> parens (pPrint rh <+> char '?' <+> pPrint rp)
   pPrint (Pop pop r1 r2) = pPrint r1 <+> pPrint pop <+> pPrint r2
-  pPrint (Sub _ from to) = text "sub" <> parens (sep $ punctuate comma (map pPrint [from, to]))
+  pPrint (Sub r from to) = text "sub" <> parens (sep $ punctuate comma (pPrint r : map pPrint [from, to]))
   pPrint (Inj r tp) = text "inj" <> parens (pPrint r <> comma <+> pPrint tp)
   pPrint (Proj r) = text "proj" <> parens (pPrint r)
 
