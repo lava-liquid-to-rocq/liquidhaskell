@@ -166,9 +166,9 @@ smpTpCheck γ pats r@(Pop pop r1 r2) = do
   if tp1 == tp2
     then return (tp1, Pop pop r1' r2')
     else Left . SmpTpErr $ "Different types on both sides of proof combinators " ++ prettyShow r ++ ": found " ++ prettyShow tp1 ++ " and " ++ prettyShow tp2
+smpTpCheck γ pats (Proj r) = second Proj <$> smpTpCheck γ pats r
 smpTpCheck _ _ (Sub {}) = error "Constructor Sub found in type refinement"
 smpTpCheck _ _ (Inj {}) = error "Constructor Inj found in type refinement"
-smpTpCheck _ _ (Proj {}) = error "Constructor Proj found in type refinement"
 
 -- * Subtyping
 
