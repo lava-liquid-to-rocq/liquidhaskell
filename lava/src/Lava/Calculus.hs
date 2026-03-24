@@ -146,9 +146,9 @@ ffTmName :: Id
 boolTp = TC boolTpName
 boolTpName = "Bool"
 ttTm = DC ttTmName
-ttTmName = "true"
+ttTmName = "True"
 ffTm = DC ffTmName
-ffTmName = "false"
+ffTmName = "False"
 
 unitTp :: BaseType
 unitTpName :: Id
