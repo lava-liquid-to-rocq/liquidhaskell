@@ -8,6 +8,7 @@ import Control.Monad (foldM, when)
 import Data.Bifunctor (second)
 import Data.List (unsnoc)
 import Data.Maybe (fromJust, listToMaybe)
+import Debug.Trace (trace)
 import Lava.Calculus
 import Lava.TypingEnvironment
 import Text.PrettyPrint
@@ -208,15 +209,15 @@ wfDecls γ (Data tc constrs : decls) = do
   -- and will add the constructors one by one,
   -- so that refinements can depend on previous constructors
   let γtc = insertTC (tc, []) γ
-  γ' <- foldM checkBranch γtc constrs
-  -- NOTE: Here we used to replace all refinements of the constructors by ttTm in the new context. Why??
-  wfDecls γ' decls
+  (γ', constrs') <- foldM checkBranch (γtc, []) constrs
+  decls' <- wfDecls γ' decls
+  return $ Data tc (reverse constrs') : decls'
   where
-    checkBranch :: TypEnv -> (Id, RefType) -> Either TypeError TypEnv
-    checkBranch γi (ci, tpi) = do
+    checkBranch :: (TypEnv, [(Id, RefType)]) -> (Id, RefType) -> Either TypeError (TypEnv, [(Id, RefType)])
+    checkBranch (γi, dcs) (ci, tpi) = do
       checkFOandTC tpi
       tpi' <- wfRefType γi [] tpi
-      insertDCinTC (ci, tpi') tc γi
+      (,(ci, tpi') : dcs) <$> insertDCinTC (ci, tpi') tc γi
     checkFOandTC :: RefType -> Either TypeError ()
     checkFOandTC tp =
       let (args, (_, tc', _)) = second fromRefType $ arrs tp

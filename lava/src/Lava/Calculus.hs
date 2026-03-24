@@ -399,6 +399,8 @@ instance Pretty BaseType where
   pPrint (TC tc) = text tc
 
 instance Pretty RefType where
+  pPrint (RefType _ a r) | r == ttTm = braces $ pPrint a
+  pPrint (RefType _ a r) | a == unitTp = braces . braces $ pPrint r
   pPrint (RefType x a r) =
     braces (text x <> colon <+> pPrint a <+> char '|' <+> pPrint r)
   pPrint (ArrType x tpx tp) =
@@ -413,8 +415,8 @@ instance Pretty Decl where
   pPrint (Definition f tp e isRefl) =
     sep [ppRefl <+> ppF, nest identNb (pPrint e)]
     where
-      ppRefl = if isRefl then text "Refl" else empty
-      ppF = text "Def" <+> text f <+> text "::" <+> pPrint tp <+> text ":="
+      ppRefl = if isRefl then text "refl" else empty
+      ppF = text "def" <+> text f <+> text "::" <+> pPrint tp <+> text ":="
 
 instance Pretty Expr where
   pPrint (Reft r) = pPrint r

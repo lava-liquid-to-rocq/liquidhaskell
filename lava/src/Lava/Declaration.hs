@@ -65,6 +65,7 @@ unrefTC tc = Coq.TC (unrefinedTCName tc) []
 
 -- | Unrefined datatype declaration TC_u
 unrefTCDecl :: Id -> [(Id, RefType)] -> Coq.Decl
+unrefTCDecl tc _ | traceTC "unrefTCDecl" tc = undefined
 unrefTCDecl tc alts =
   CoqInductive (unrefinedTCName tc) [] (Sort SetSort) $ map trConstr alts
 
@@ -72,6 +73,7 @@ unrefTCDecl tc alts =
 
 -- | Declarations related to the equality on unrefined constructors
 tcEqDecls :: Id -> [(Id, RefType)] -> [Coq.Decl]
+tcEqDecls tc _ | traceTC "tcEqDecls" tc = undefined
 tcEqDecls tc alts = eqDecl tc alts : eqReflLem tc ++ eqbEqLem tc ++ [eqbInstanceDecl tc]
 
 -- | Fixpoint definition of equality of two inductives
@@ -146,6 +148,7 @@ eqbInstanceDecl tc =
 -- ** Definition of the refined datatype (well-formedness predicate and type alias)
 
 tcRefDecls :: Id -> [(Id, RefType)] -> [Coq.Decl]
+tcRefDecls tc _ | traceTC "tcRefDecls" tc = undefined
 tcRefDecls tc alts = [wfDecl tc alts, wfLem tc, refTCDecl tc]
 
 -- | Well-formedness predicate TC_wf, defined as a fixpoint
@@ -197,6 +200,7 @@ refTCDecl tc = CoqNewType tc (Subset "x" (Coq.TC tc []) (Coq.And (Coq.App (Def $
 -- > Definition C_lem [args]: TC_wf (C_u [args]) /\ True.
 -- > Definition C [args]: TC := exist _ (C_u [args]) (C_lem [args]).
 mkPseudoConstr :: Id -> (Id, RefType) -> [Coq.Decl]
+mkPseudoConstr tc (c, _) | traceDC "mkPseudoConstr" tc c = undefined
 mkPseudoConstr tc (c, tp) =
   [ Coq.Definition (psConstrLemName c) argsT retLem bodyLem Transparent,
     Coq.Definition c argsT retT bodyConstr Transparent
@@ -228,6 +232,7 @@ mkPseudoConstr tc (c, tp) =
 -- > Definition wf_C_argIndn [args] (p: TC_wf (C [args])): IList_wf [inductive arg n].
 -- > #[global] Hint Resolve wf_C_argIndn : ref_constr_db.
 mkConstrWf :: Id -> (Id, RefType) -> [Coq.Decl]
+mkConstrWf tc (c, _) | traceDC "mkConstrWf" tc c = undefined
 mkConstrWf tc (c, tp) =
   concatMap mkConstrWfArg (concatMap userTCs args)
   where
@@ -255,6 +260,7 @@ mkConstrWf tc (c, tp) =
 -- ** Final hints from a datatype translation
 
 tcHints :: Id -> [(Id, RefType)] -> [Coq.Decl]
+tcHints tc _ | traceTC "tcHints" tc = undefined
 tcHints tc alts = map (\(a, b, c) -> AddHint a b c) hints
   where
     hints =
@@ -322,6 +328,12 @@ mkFuncData name tpf body =
 
 traceF :: String -> FuncData -> Bool
 traceF s f = trace ("Defining " ++ s ++ "(" ++ name f ++ ")") False
+
+traceTC :: String -> Id -> Bool
+traceTC s tc = trace ("Defining " ++ s ++ "(" ++ tc ++ ")") False
+
+traceDC :: String -> Id -> Id -> Bool
+traceDC s tc dc = trace ("Defining " ++ s ++ "(" ++ tc ++ "." ++ dc ++ ")") False
 
 -- (proj(x_i) if FO or x_i if HO)_{x_i: R_i in args}
 
