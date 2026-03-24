@@ -357,6 +357,26 @@ instance HasVars RefType where
     ArrType y tpx tp' | y == x -> ArrType y (subst r x tpx) tp'
     ArrType y tpx tp' -> ArrType y (subst r x tpx) (subst r x tp')
 
+-- | Rename all the arguments of an arrow:
+--
+-- > renameArgs([y1,y2], x1:{x1:B | True} -> x2:{x2:B | x1 == x2} -> {v:B | v = x1 + x2})
+-- >   = y1:{x1:B | True} -> y2:{x2:B | y1 == x2} -> {v:B | v = y1 + y2}
+renameArgs :: [Id] -> RefType -> RefType
+renameArgs = aux []
+  where
+    aux :: [(Id, Id)] -> [Id] -> RefType -> RefType
+    aux σ _ tp@(RefType {}) = renames σ tp
+    aux σ [] tp = renames σ tp
+    aux σ (y : ys) (ArrType x tpx tp)
+      | x `notElem` freeVars tp =
+          ArrType y (renames σ tpx) (aux σ ys tp)
+    -- TODO: handle by renaming
+    aux _ (y : _) tp0@(ArrType x _ tp)
+      | y `elem` freeVars tp =
+          error . render $ text "Name clash while renaming variable" <+> pPrint x <+> text "to" <+> pPrint y <+> text "in" <+> pPrint tp0
+    aux σ (y : ys) (ArrType x tpx tp) =
+      ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
+
 instance (HasVars a) => HasVars [a] where
   freeVarsArLoc tms = Set.unions $ map freeVarsArLoc tms
   subst r x = fmap (subst r x)
