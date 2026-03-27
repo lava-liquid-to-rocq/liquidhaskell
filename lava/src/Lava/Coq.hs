@@ -611,7 +611,7 @@ printRocqType (Subset x (TC tc []) e) True = case tc of
   _ -> case e of
     _ | builtin -> "{" ++ x ++ ": " ++ tc ++ " | " ++ show e ++ "}"
     And (App (Def wf) [Var x']) true | x == x' && wf == wfTCName tc && isTriv true -> tc
-    _ -> "{" ++ x ++ ": " ++ unrefinedTCName tc ++ " | " ++ show e ++ "}"
+    _ -> "{" ++ x ++ ": " ++ tc ++ " | " ++ show e ++ "}"
   where
     isTriv TT = True
     isTriv (IsTrue b) = show b == btrueTmName
@@ -620,8 +620,7 @@ printRocqType (Subset x (TC tc []) e) True = case tc of
 printRocqType (Subset x tp e) _ = "{" ++ x ++ ": " ++ show tp ++ " | " ++ show e ++ "}"
 printRocqType (TC tn []) _ | any ((== tn) . fst3) coqBuiltinInductDataTypes = tn
 printRocqType (TC typeName tpArgs) _ =
-     unrefinedTCName typeName -- prints double _u sometimes!
-  ++ unwords (map show tpArgs)
+     typeName ++ unwords (map show tpArgs)
 printRocqType (Arrow tp1 tp2) _ = showP tp1 ++ " -> " ++ showP tp2
 printRocqType tp@(FAType {}) _ = let (args, ret) = concatForalls tp in showForall args ret
 printRocqType (Prop p) _ = show p
@@ -643,7 +642,7 @@ pPrintRocqType (Subset x (TC tc []) e) True = case tc of
   _ -> case e of
     _ | builtin -> braces (pPrintArg (x, tc) <+> mid <+> pPrint e)
     And (App (Def wf) [Var x']) true | x == x' && wf == wfTCName tc && isTriv true -> pPrint tc
-    _ -> braces (pPrintArg (x, unrefinedTCName tc) <+> mid <+> pPrint e)
+    _ -> braces (pPrintArg (x, tc) <+> mid <+> pPrint e)
   where
     isTriv TT = True
     isTriv (IsTrue b) = show b == btrueTmName
@@ -653,7 +652,7 @@ pPrintRocqType (Subset x tp e) _ =
   braces (pPrintArg (x, tp) <+> mid <+> pPrint e)
 pPrintRocqType (TC tc []) _ | tc `elem` map fst3 coqBuiltinInductDataTypes = text tc
 pPrintRocqType (TC typeName tpArgs) _ =
-  hsep $ text (unrefinedTCName typeName) : map pPrint tpArgs
+  hsep $ text (typeName) : map pPrint tpArgs
 pPrintRocqType (Arrow tp1 tp2) _ = pPrintP tp1 <+> text "->" <+> pPrintP tp2
 pPrintRocqType tp@(FAType {}) _ = let (args, ret) = concatForalls tp in pPrintForall args ret
 pPrintRocqType (Prop p) _ = pPrint p

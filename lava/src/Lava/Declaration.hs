@@ -1,4 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OrPatterns #-}
@@ -192,7 +191,7 @@ wfLem tc =
 --
 -- > Global Notation TC := {x: TC_u | TC_wf x /\ True}.
 refTCDecl :: Id -> Coq.Decl
-refTCDecl tc = CoqNewType tc (Subset "x" (Coq.TC tc []) (Coq.And (Coq.App (Def $ wfTCName tc) [Coq.Var "x"]) TT))
+refTCDecl tc = CoqNewType tc (Subset "x" (Coq.TC (unrefinedConstrName tc) []) (Coq.And (Coq.App (Def $ wfTCName tc) [Coq.Var "x"]) TT))
 
 -- ** Definition of the refined constructors
 

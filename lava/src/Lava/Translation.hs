@@ -24,13 +24,6 @@ trBuiltin Integer = Coq.CTInt
 trBuiltin Double = error "Doubles not yet supported in Coq (function Translation.trBuiltin)"
 trBuiltin String = error "Strings not yet supported in Coq (function Translation.trBuiltin)"
 
--- | Translation of datatypes
-trDC :: Id -> Id
-trDC c | c == LH.unitTmName = Coq.unitTmName
-trDC c | c == LH.ttTmName = Coq.btrueTmName
-trDC c | c == LH.ffTmName = Coq.bfalseTmName
-trDC c = c
-
 -- | Translation of base types
 trBaseType :: LH.BaseType -> RocqType
 trBaseType (LH.Builtin b) = Coq.Builtin $ trBuiltin b
@@ -62,6 +55,13 @@ trBop LH.Impl = Coq.ImplB
 
 -- ** Main functions
 
+-- | Translation of datatypes
+utrDC :: Id -> Id
+utrDC c | c == LH.unitTmName = Coq.unitTmName
+utrDC c | c == LH.ttTmName = Coq.btrueTmName
+utrDC c | c == LH.ffTmName = Coq.bfalseTmName
+utrDC c = unrefinedConstrName c
+
 -- | Translation of refinement types
 --   Function TtoU (def 3.1) of the paper
 utrRefType :: LH.RefType -> RocqType
@@ -90,8 +90,7 @@ utrReft r0 = case r0 of
   LH.StringLit s -> Coq.StringLiteral s
   LH.IntLit n -> Coq.IntLiteral n
   LH.FloatLit d -> Coq.FloatLiteral d
-  -- FIX: translation of builtin DC
-  LH.DC c -> Coq.Cr (unrefinedConstrName c)
+  LH.DC c -> Coq.Cr $ utrDC c
   LH.App r1 r2 -> Coq.App (utrReft r1) [utrReft r2]
   LH.Neg r -> Coq.App (Coq.Def Coq.negb) [utrReft r]
   LH.Bop op r1 r2 -> Coq.Bop (trBop op) (utrReft r1) (utrReft r2)
@@ -209,6 +208,13 @@ hypsRV rv graphRel = \p -> foldr hyp p rv
 
 -- * Refined translations
 
+-- | Translation of datatypes
+trDC :: Id -> Id
+trDC c | c == LH.unitTmName = Coq.unitTmName
+trDC c | c == LH.ttTmName = Coq.btrueTmName
+trDC c | c == LH.ffTmName = Coq.bfalseTmName
+trDC c = c
+
 -- | Translation of refinement types
 --   Function TtoR (def 3.6) of the paper
 trRefType :: LH.RefType -> RocqType
@@ -260,7 +266,9 @@ trReft (LH.Pop pop tm1 tm2) =
    in Coq.Let "_" popProp (PrfTerm Hole $ ProofHole Nothing) (trReft tm2)
 trReft (LH.Sub tm from to) = Coq.SubCast (trRefType to) (trRefType from) (trReft tm) (Coq.ProofHole Nothing)
 trReft (LH.Inj tm tp) = Coq.Exist (TypeArg $ trRefType tp) (trReft tm) (Coq.ProofHole Nothing)
-trReft tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of refinements in Translation.trReft"
+-- trReft tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
+-- FIX: we get this error. For now, I translate to try to see what is going on
+trReft (LH.Proj tm) = Project $ trReft tm
 trReft tm@(LH.App {}) = case apps tm of
   (LH.Var _ _ (Recursive indVar pats), args) ->
     trRecCall indVar pats args
