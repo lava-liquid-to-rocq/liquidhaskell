@@ -1111,6 +1111,8 @@ instance Pretty Tactic where
     sep . punctuate semi $ map (\x -> text "try revert" <+> pPrint (subsetWitnessNm x) <> semi <+> text "generalize dependent" <+> pPrint x) xs
   pPrint (Clear hyp) =
     text "clear" <+> pPrint hyp
+  pPrint (AssertTacs x tp tacs) =
+    sep [text "assert" <+> pPrintArg (x, tp) <> dot, braces (sep . punctuate dot $ map pPrint tacs)]
 
 -- | comparison operator to alphabetically order branches of Induction/Destruct
 ordFunc :: (Id, (CoqDestrPat, [Tactic])) -> (Id, (CoqDestrPat, [Tactic])) -> Ordering
@@ -1181,6 +1183,7 @@ instance PrettyPrintable Tactic where
     Intros pats -> "intros " ++ unwords (map show pats)
     GeneralizeDependent xs -> intercalate "; " $ map (\x -> "try revert " ++ subsetWitnessNm x ++ "; generalize dependent " ++x) xs
     Clear hyp -> "clear " ++ hyp
+    AssertTacs x tp tacs -> "assert (" ++ x ++ ": " ++ show tp ++ ").\n{ " ++ unwords (map show tacs) ++ " }"
 
   includesBranches tac = case tac of
     Concat [] -> False
