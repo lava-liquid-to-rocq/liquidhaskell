@@ -73,6 +73,7 @@ mkApp f ts = App f ts
 
 -- | Wrapper for Is_true with some simplifications
 mkIsTrue :: CoqTerm -> CoqTerm
+-- mkIsTrue tm | trace ("mkIsTrue(" ++ show tm ++ ")") False = undefined
 mkIsTrue tm = case tm of
   Var "true" -> TT
   Cr "true" -> TT

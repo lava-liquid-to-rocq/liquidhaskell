@@ -10,6 +10,7 @@ import Data.Bifunctor (first)
 import Data.Data
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Debug.Trace (trace)
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding (lookup, (<>))
@@ -479,3 +480,8 @@ instance Show ProofOp where
 
 instance Pretty ProofOp where
   pPrint = text . show
+
+traceFunc :: Id -> [Doc] -> Bool
+traceFunc f args =
+  let doc = text f <> parens (hsep $ punctuate comma args)
+   in trace (render doc) False

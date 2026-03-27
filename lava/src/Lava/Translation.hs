@@ -83,12 +83,14 @@ utrRefTypeTopProp (ArrType _ tpx tp) = Coq.Arrow (utrRefType tpx) (utrRefTypeTop
 -- | Translation of refinements
 --   Function RtoU (def 3.2) of the paper
 utrReft :: LH.Reft -> Coq.CoqTerm
+-- utrReft r | traceFunc "utrReft" [pPrint r] = undefined
 utrReft r0 = case r0 of
   LH.Var x n Global | n > 0 -> Coq.Var $ upackInstanceName x
   LH.Var x _ _ -> Coq.Var x
   LH.StringLit s -> Coq.StringLiteral s
   LH.IntLit n -> Coq.IntLiteral n
   LH.FloatLit d -> Coq.FloatLiteral d
+  -- FIX: translation of builtin DC
   LH.DC c -> Coq.Cr (unrefinedConstrName c)
   LH.App r1 r2 -> Coq.App (utrReft r1) [utrReft r2]
   LH.Neg r -> Coq.App (Coq.Def Coq.negb) [utrReft r]
@@ -102,6 +104,7 @@ utrReft r0 = case r0 of
 -- | Translation of refinements to propositions
 --   Function RtoP (def 3.4) of the paper
 utrReftProp :: LH.Reft -> Coq.CoqTerm
+-- utrReftProp r | traceFunc "utrReftProp" [pPrint r] = undefined
 utrReftProp r =
   let (rv, r') = extractApps r
    in hypsRV rv True (mkIsTrue (utrReft r'))
@@ -125,6 +128,7 @@ operatorsWithGraph =
 -- For operators, we only extract the ones in the list operatorsWithGraph
 -- Ex: extractApps ((f 0 1) + (f 0 1) + x) = ([(f 0 1, f_res)], f_res + f_res + x)
 extractApps :: Reft -> ([(Reft, Id)], Reft)
+-- extractApps r | traceFunc "extractApps" [pPrint r] = undefined
 extractApps r0 = go [] r0
   where
     go :: [(Reft, Id)] -> Reft -> ([(Reft, Id)], Reft)
@@ -143,17 +147,16 @@ extractApps r0 = go [] r0
         (DC c, args) ->
           let (env', args') = foldr seqNames (env, []) args
            in (env', foldr LH.App (LH.DC c) args')
-        -- why is this case necessary?
-        (LH.Var f_rel _ _, _) | relPostfix `isSuffixOf` f_rel -> (env, r)
+        -- (LH.Var f_rel _ _, _) | relPostfix `isSuffixOf` f_rel -> (env, r)
         (LH.Var f ar loc, args) ->
           let (env', args') = foldr seqNames (env, []) args
-              r' = foldr LH.App (LH.Var f ar loc) args'
+              r' = foldl LH.App (LH.Var f ar loc) args'
            in updateEnv env' r'
         (Proj (LH.Var f ar loc), args) ->
           let (env', args') = foldr seqNames (env, []) args
               r' = foldr LH.App (Proj (LH.Var f ar loc)) args'
            in updateEnv env' r'
-        _ -> error $ "LH application " ++ prettyShow r ++ " not starting with an identifier."
+        _ -> error . render $ text "LH application" <+> pPrint r <+> text "not starting with an identifier."
       -- We do not extract applications of the subterms we will erase in QMark and Pop
       QMark r' rh rp -> second (\r'' -> QMark r'' rh rp) $ go env r'
       Pop pop r1 r2 -> second (Pop pop r1) $ go env r2
@@ -161,12 +164,13 @@ extractApps r0 = go [] r0
       Sub r' from to -> second (\r'' -> Sub r'' from to) $ go env r'
       Proj r' -> second Proj $ go env r'
       where
+        -- apply the function on a list of arguments
         seqNames arg (curEnv, curArgs) = second (: curArgs) $ go curEnv arg
         -- If r is in env, returns its associated variable,
         -- otherwise creates a fresh variable, update env and returns the variable
         updateEnv env' r' = case lookup r' env' of
           Just z -> (env', LH.Var z 0 Local)
-          Nothing -> let z = fresh z env' in (env' ++ [(r', z)], LH.Var z 0 Local)
+          Nothing -> let z = fresh "z" env' in (env' ++ [(r', z)], LH.Var z 0 Local)
         fresh f zs =
           -- Number of calls to f
           let nbOfCalls = foldr ((+) . isF) 0 zs
@@ -208,7 +212,7 @@ hypsRV rv graphRel = \p -> foldr hyp p rv
 -- | Translation of refinement types
 --   Function TtoR (def 3.6) of the paper
 trRefType :: LH.RefType -> RocqType
--- trRefType tp@(RefType {}) | trace (render $ text "trRefType" PP.<> parens (pPrint tp)) False = undefined
+-- trRefType tp@(RefType {}) | traceFunc "trRefType" [pPrint tp] = undefined
 trRefType (RefType x tp r) =
   Coq.Subset x (trBaseType tp) rT
   where
@@ -269,7 +273,7 @@ trReft tm@(LH.App {}) = case apps tm of
 -- Some other cases might be necessary because of branches coming from Core.
 -- Function EtoTac (def 3.7) of the paper
 trExprTacs :: LH.Expr -> [Tactic]
--- trExprTacs e | trace (render $ text "trExprTacs" PP.<> parens (pPrint e)) False = undefined
+-- trExprTacs e | traceFunc "trExprTacs" [pPrint e] = undefined
 trExprTacs (LH.Reft tm) = [Coq.Exact $ trReft tm]
 trExprTacs (LH.Let _ Nothing _ _) = error "Found let-binding with annotation while translating."
 trExprTacs (LH.Let x (Just tpx@(RefType {})) e1 e2) =
