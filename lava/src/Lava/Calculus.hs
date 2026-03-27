@@ -6,8 +6,10 @@
 -- | Grammars, printer and suable functions for ILH
 module Lava.Calculus where
 
-import Data.Bifunctor (first)
+import Data.Bifunctor (first, second)
 import Data.Data
+import Data.List (find)
+import Data.Maybe (fromJust)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Debug.Trace (trace)
@@ -40,7 +42,7 @@ data BaseType = Builtin Builtin | TC Id deriving (Data, Eq, Show)
 data RefType
   = RefType {argName :: Id, argTp :: BaseType, argRef :: Reft}
   | ArrType {parName :: Id, parTp :: RefType, retTp :: RefType}
-  deriving (Data, Eq, Show)
+  deriving (Data, Show)
 
 -- ** Declaration-level grammar
 
@@ -70,7 +72,7 @@ data Expr
     --   The boolean in the list of parameters is true if the parameter is inductive
     --   and we are destructing one of the parameters of the function
     Case Reft [((Id, [(Id, Bool)]), Maybe Expr)] [Id]
-  deriving (Data, Eq, Show)
+  deriving (Data, Show)
 
 -- | Simple LH terms including formulas.
 --   Terms of this type can occur as (sub)terms in refinements
@@ -168,6 +170,32 @@ builtinTCs = [boolTp, unitTp]
 
 -- * Functions on the terms
 
+-- ** Constructions
+
+-- | Make a local variable reference
+mkVar :: Id -> Reft
+mkVar s = Var s 0 Local
+
+-- | mkSub(r, from, to) makes a subsumption cast unless tp1 = tp2
+--   Should we collapse casts? Would it hide intermediate properties needed for automation?
+mkSub :: Reft -> RefType -> RefType -> Reft
+mkSub r from to | from == to = r
+mkSub r from to = Sub r from to
+
+-- ** Destructions
+
+-- | Extracts the elements out of a RefType constructor and raises an error for another type
+fromRefType :: RefType -> (Id, BaseType, Reft)
+fromRefType (RefType x tp r) = (x, tp, r)
+fromRefType _ = error "RefType expected"
+
+-- | Extracts the elements out of an ArrType and raises an error for another type
+fromArrType :: RefType -> (Id, RefType, RefType)
+fromArrType (ArrType x tpx tp) = (x, tpx, tp)
+fromArrType _ = error "ArrType expected"
+
+-- ** Other functions
+
 -- | Arity of a refinement type
 arity :: RefType -> Integer
 arity (ArrType _ _ tp) = 1 + arity tp
@@ -181,10 +209,6 @@ defaultRef tp = RefType "VV" tp ttTm
 arrs :: RefType -> ([(Id, RefType)], RefType)
 arrs tp@(RefType {}) = ([], tp)
 arrs (ArrType x tpx tp) = ((x, tpx) :) `first` arrs tp
-
--- | Make a local variable reference
-mkVar :: Id -> Reft
-mkVar s = Var s 0 Local
 
 -- | tpArgs(x_i:R_i|r_i)_{i ≤ n} -> R) = [x_i]_{i ≤ n}
 tpArgs :: RefType -> [Id]
@@ -235,18 +259,6 @@ removeFOArgProjs (RefType y a reft) = RefType y a (aux reft)
     aux (Pop pop r1 r2) = Pop pop (aux r1) (aux r2)
     aux (Sub {}; Inj {}) = error "Subsumption or injection cast found in type refinement."
 
--- ** Destructors
-
--- | Extracts the elements out of a RefType constructor and raises an error for another type
-fromRefType :: RefType -> (Id, BaseType, Reft)
-fromRefType (RefType x tp r) = (x, tp, r)
-fromRefType _ = error "RefType expected"
-
--- | Extracts the elements out of an ArrType and raises an error for another type
-fromArrType :: RefType -> (Id, RefType, RefType)
-fromArrType (ArrType x tpx tp) = (x, tpx, tp)
-fromArrType _ = error "ArrType expected"
-
 -- * Typeclass related to free variables
 
 -- To use Sets with Localization inside
@@ -265,13 +277,34 @@ class HasVars a where
   -- | Return the free variables with their arity and localization
   freeVarsArLoc :: a -> Set (Id, (Integer, Localization))
 
+  -- | Return the bound variables with their arity (they are all local)
+  boundVarsArLoc :: a -> Set (Id, Integer)
+
   -- | subst r x tm is {r/x}tm
   subst :: Reft -> Id -> a -> a
 
 freeVars :: (HasVars a) => a -> Set Id
 freeVars tm = Set.map fst $ freeVarsArLoc tm
 
--- | Rename `old` to `new` in `tm`
+boundVars :: (HasVars a) => a -> Set Id
+boundVars tm = Set.map fst $ freeVarsArLoc tm
+
+-- | return a variable fresh wrt to a set of Id
+freshVar :: Id -> Set Id -> Id
+freshVar x vars =
+  let start :: Integer
+      start = 1
+      names = x : [x ++ "_" ++ show i | i <- [start ..]]
+   in -- there was also something with indPatVarName x (currently = x) `notElem` vars
+      fromJust $ find (`notElem` vars) names
+
+-- | return a variable fresh wrt to the free and bound variables in the second argument
+fresh :: (HasVars a) => Id -> a -> Id
+fresh x tm = freshVar x (freeVars tm `Set.union` boundVars tm)
+
+-- | Rename the second argument to the first in the third
+--
+-- > rename y x tm = {y/x}tm
 rename :: (HasVars a) => Id -> Id -> a -> a
 rename new old tm =
   let olds = Set.filter ((==) old . fst) $ freeVarsArLoc tm
@@ -283,26 +316,40 @@ rename new old tm =
           let (_, (ar, loc)) = Set.elemAt 0 olds
            in subst (Var new ar loc) old tm
 
+-- | renameFresh(x,tm) gives x a fresh name in tm
+renameFresh :: (HasVars a) => Id -> a -> a
+renameFresh x tm = rename (fresh x tm) x tm
+
 -- | Apply a list of renamings, starting from the right
 renames :: (HasVars a) => [(Id, Id)] -> a -> a
 renames = flip (foldr (uncurry rename))
 
 -- | Apply a list of substitutions, starting from the right
--- TODO: handle variable capture
 substs :: (HasVars a) => [(Reft, Id)] -> a -> a
 substs = flip (foldr (uncurry subst))
 
 instance HasVars Reft where
   freeVarsArLoc (Var x ar loc) = Set.singleton (x, (ar, loc))
-  freeVarsArLoc (App hd arg) = freeVarsArLoc hd `Set.union` freeVarsArLoc arg
-  freeVarsArLoc (Bop _ r1 r2) = freeVarsArLoc r1 `Set.union` freeVarsArLoc r2
+  freeVarsArLoc (App hd arg) = freeVarsArLoc [hd, arg]
+  freeVarsArLoc (Bop _ r1 r2) = freeVarsArLoc [r1, r2]
   freeVarsArLoc (Neg r) = freeVarsArLoc r
   freeVarsArLoc (StringLit _; IntLit _; FloatLit _; DC _) = Set.empty
-  freeVarsArLoc (QMark r rh rp) = freeVarsArLoc r `Set.union` (freeVarsArLoc rh `Set.union` freeVarsArLoc rp)
-  freeVarsArLoc (Pop _ r1 r2) = freeVarsArLoc r1 `Set.union` freeVarsArLoc r2
-  freeVarsArLoc (Sub r _ _) = freeVarsArLoc r
-  freeVarsArLoc (Inj r _) = freeVarsArLoc r
+  freeVarsArLoc (QMark r rh rp) = freeVarsArLoc [r, rh, rp]
+  freeVarsArLoc (Pop _ r1 r2) = freeVarsArLoc [r1, r2]
+  freeVarsArLoc (Sub r from to) = freeVarsArLoc r `Set.union` freeVarsArLoc [from, to]
+  freeVarsArLoc (Inj r tp) = freeVarsArLoc r `Set.union` freeVarsArLoc tp
   freeVarsArLoc (Proj r) = freeVarsArLoc r
+
+  -- Empty on unelaborated refinements, but has the bound variables of the types in casts
+  boundVarsArLoc (Var {}; StringLit _; IntLit _; FloatLit _; DC _) = Set.empty
+  boundVarsArLoc (App hd arg) = boundVarsArLoc [hd, arg]
+  boundVarsArLoc (Bop _ r1 r2) = boundVarsArLoc [r1, r2]
+  boundVarsArLoc (Neg r) = boundVarsArLoc r
+  boundVarsArLoc (QMark r rh rp) = boundVarsArLoc [r, rh, rp]
+  boundVarsArLoc (Pop _ r1 r2) = boundVarsArLoc [r1, r2]
+  boundVarsArLoc (Sub r from to) = boundVarsArLoc r `Set.union` boundVarsArLoc [from, to]
+  boundVarsArLoc (Inj r tp) = boundVarsArLoc r `Set.union` boundVarsArLoc tp
+  boundVarsArLoc (Proj r) = boundVarsArLoc r
 
   subst r' x r0 = case r0 of
     Var y _ _ | y == x -> r'
@@ -319,44 +366,76 @@ instance HasVars Reft where
 instance HasVars Expr where
   freeVarsArLoc (Reft r) = freeVarsArLoc r
   freeVarsArLoc (Let x tp ex e) =
-    Set.unions
-      [maybe Set.empty freeVarsArLoc tp, freeVarsArLoc ex, Set.delete (x, (maybe 0 arity tp, Local)) (freeVarsArLoc e)]
+    freeVarsArLoc tp `Set.union` Set.delete (x, (maybe 0 arity tp, Local)) (freeVarsArLoc [ex, e])
   freeVarsArLoc (Case r branches _) =
     freeVarsArLoc r `Set.union` Set.unions (map fvBranch branches)
     where
-      fvBranch (_, Nothing) = Set.empty
-      fvBranch ((_, ys), Just ebr) =
+      fvBranch ((_, ys), ebr) =
         let ysSet = foldr (\(y, _) -> Set.insert (y, (0, Local))) Set.empty ys
          in freeVarsArLoc ebr Set.\\ ysSet
 
+  boundVarsArLoc (Reft r) = boundVarsArLoc r
+  boundVarsArLoc (Let x tp ex e) =
+    Set.singleton (x, maybe 0 arity tp) `Set.union` boundVarsArLoc tp `Set.union` boundVarsArLoc [ex, e]
+  boundVarsArLoc (Case r branches _) =
+    boundVarsArLoc r `Set.union` Set.unions (map bvBranch branches)
+    where
+      bvBranch ((_, ys), e) =
+        Set.fromList (map (second $ const 0) ys) `Set.union` boundVarsArLoc e
+
   subst r x e = case e of
     Reft re -> Reft $ subst r x re
-    Let y _ _ e'
-      | y `Set.member` freeVars r && x `Set.member` freeVars e' -> error err
-    Let y tp ey e' | y == x -> Let y (subst r x <$> tp) (subst r x ey) e'
-    Let y tp ey e' -> Let y (subst r x <$> tp) (subst r x ey) (subst r x e')
+    Let y tp ey e' | y == x -> Let y (subst r x tp) (subst r x ey) e'
+    Let y tp ey e'
+      | y `Set.member` freeVars r && x `Set.member` freeVars e' ->
+          let z = freshVar y fvre in Let z (subst r x tp) (subst r x ey) (subst r x $ rename z y e')
+    Let y tp ey e' -> Let y (subst r x tp) (subst r x ey) (subst r x e')
     Case r' branches genVars ->
       Case (subst r x r') (map substBranch branches) genVars
       where
         substBranch br@((_, ys), ebr)
           | x `elem` map fst ys || maybe True (notElem x . freeVars) ebr = br
-        substBranch ((_, ys), _) | not (Set.fromList (map fst ys) `Set.disjoint` freeVars r) = error err
-        substBranch ((c, ys), ebr) = ((c, ys), subst r x <$> ebr)
+        substBranch ((c, ys), ebr) =
+          let freshYs = foldr freshVars [] ys
+              α = filter (uncurry (/=)) $ zipWith (\(y, _) z -> (z, y)) ys freshYs
+              ys' = zipWith (\(_, b) z -> (z, b)) ys freshYs
+           in ((c, ys'), subst r x $ renames α ebr)
+          where
+            freshVars (y, _) vars =
+              if y `elem` freeVars r
+                then freshVar y (fvre `Set.union` Set.fromList vars) : vars
+                else y : vars
     where
-      err = render $ text "Expression substitution" <+> braces (pPrint r <> char '/' <> text x) <> parens (pPrint e) <+> text "is not sound because of variable capture."
+      fvre = freeVars r `Set.union` freeVars e
 
 instance HasVars RefType where
   freeVarsArLoc (RefType x _ r) = Set.delete (x, (0, Local)) (freeVarsArLoc r)
-  freeVarsArLoc (ArrType x tpx tp) = freeVarsArLoc tpx `Set.union` Set.delete (x, (arity tpx, Local)) (freeVarsArLoc tp)
+  freeVarsArLoc (ArrType x tpx tp) =
+    freeVarsArLoc tpx `Set.union` Set.delete (x, (arity tpx, Local)) (freeVarsArLoc tp)
+
+  boundVarsArLoc (RefType x _ r) = Set.singleton (x, 0) `Set.union` boundVarsArLoc r
+  boundVarsArLoc (ArrType x tpx tp) =
+    Set.singleton (x, arity tpx) `Set.union` boundVarsArLoc [tpx, tp]
 
   subst r x tp = case tp of
     RefType y _ _ | y == x -> tp
     RefType y b reft -> RefType y b $ subst r x reft
-    ArrType y _ tp'
+    ArrType y tpy tp' | y == x -> ArrType y (subst r x tpy) tp'
+    ArrType y tpy tp'
       | y `Set.member` freeVars r && x `Set.member` freeVars tp' ->
-          error . render $ text "Type substitution" <+> braces (pPrint r <> char '/' <> text x) <> parens (pPrint tp) <+> text "is not sound because of variable capture."
-    ArrType y tpx tp' | y == x -> ArrType y (subst r x tpx) tp'
-    ArrType y tpx tp' -> ArrType y (subst r x tpx) (subst r x tp')
+          let z = freshVar y (freeVars r `Set.union` freeVars tp)
+           in ArrType y (subst r x tpy) (subst r x $ rename z y tp')
+    ArrType y tpy tp' -> ArrType y (subst r x tpy) (subst r x tp')
+
+instance (HasVars a) => HasVars [a] where
+  freeVarsArLoc tms = Set.unions $ map freeVarsArLoc tms
+  boundVarsArLoc tms = Set.unions $ map boundVarsArLoc tms
+  subst r x = fmap (subst r x)
+
+instance (HasVars a) => HasVars (Maybe a) where
+  freeVarsArLoc = maybe Set.empty freeVarsArLoc
+  boundVarsArLoc = maybe Set.empty boundVarsArLoc
+  subst r x = fmap (subst r x)
 
 -- | Rename all the arguments of an arrow:
 --
@@ -378,13 +457,38 @@ renameArgs = aux []
     aux σ (y : ys) (ArrType x tpx tp) =
       ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
 
-instance (HasVars a) => HasVars [a] where
-  freeVarsArLoc tms = Set.unions $ map freeVarsArLoc tms
-  subst r x = fmap (subst r x)
+-- * Equality instance using α-renaming
 
-instance (HasVars a) => HasVars (Maybe a) where
-  freeVarsArLoc = maybe Set.empty freeVarsArLoc
-  subst r x = fmap (subst r x)
+instance Eq RefType where
+  tp1@(RefType x tpx rx) == tp2@(RefType y tpy ry) =
+    let z = fresh x [tp1, tp2]
+        (α1, α2) = if x /= y then ([(z, x)], [(z, y)]) else ([], [])
+     in tpx == tpy && renames α1 rx == renames α2 ry
+  tp1@(ArrType x tpx tp1') == tp2@(ArrType y tpy tp2') =
+    let z = fresh x [tp1, tp2]
+        (α1, α2) = if x /= y then ([(z, x)], [(z, y)]) else ([], [])
+     in tpx == tpy && renames α1 tp1' == renames α2 tp2'
+  _ == _ = False
+
+instance Eq Expr where
+  Reft r1 == Reft r2 = r1 == r2
+  e1@(Let x tpx ex e1') == e2@(Let y tpy ey e2') =
+    let z = fresh x [e1, e2]
+        (α1, α2) = if x /= y then ([(z, x)], [(z, y)]) else ([], [])
+     in tpx == tpy && ex == ey && renames α1 e1' == renames α2 e2'
+  e1@(Case r1 alts1 genVars1) == e2@(Case r2 alts2 genVars2) =
+    -- Equality is sensitive to the order of the alternatives
+    r1 == r2 && all eqBranch (zip alts1 alts2) && genVars1 == genVars2
+    where
+      eqBranch (((c1, ys1), ebr1), ((c2, ys2), ebr2)) =
+        let freshYs = foldr freshVars [] (zip ys1 ys2)
+            α ys = filter (uncurry (/=)) $ zipWith (\(y, _) z -> (z, y)) ys freshYs
+         in c1 == c2 && renames (α ys1) ebr1 == renames (α ys2) ebr2
+      freshVars ((y1, _), (y2, _)) vars =
+        if y1 /= y2
+          then freshVar y1 (freeVars [e1, e2] `Set.union` Set.fromList vars) : vars
+          else y1 : vars
+  _ == _ = False
 
 -- * Printer for the grammar
 

@@ -170,8 +170,8 @@ extractApps r0 = go [] r0
         -- otherwise creates a fresh variable, update env and returns the variable
         updateEnv env' r' = case lookup r' env' of
           Just z -> (env', LH.Var z 0 Local)
-          Nothing -> let z = fresh "z" env' in (env' ++ [(r', z)], LH.Var z 0 Local)
-        fresh f zs =
+          Nothing -> let z = freshName "z" env' in (env' ++ [(r', z)], LH.Var z 0 Local)
+        freshName f zs =
           -- Number of calls to f
           let nbOfCalls = foldr ((+) . isF) 0 zs
            in if nbOfCalls == 0

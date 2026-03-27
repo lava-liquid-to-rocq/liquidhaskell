@@ -320,7 +320,7 @@ checkReft :: TypEnv -> BranchPattern -> Reft -> RefType -> Either TypeError Reft
 checkReft γ pats r tp = do
   (tp_r, r') <- synReft γ pats r
   if isSubtype tp_r tp
-    then return (Sub r' tp_r tp)
+    then return (mkSub r' tp_r tp)
     else Left . SubtypingErr $ "Synthesized type " ++ prettyShow tp_r ++ " for " ++ prettyShow r ++ " is not a subtype of type " ++ prettyShow tp
 
 checkExpr :: TypEnv -> BranchPattern -> Expr -> RefType -> Either TypeError Expr
