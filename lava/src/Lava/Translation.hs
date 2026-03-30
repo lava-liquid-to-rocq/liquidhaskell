@@ -142,20 +142,18 @@ extractApps r0 = go [] r0
          in case lookup bop operatorsWithGraph of
               Nothing -> (env2, LH.Bop bop r1' r2')
               Just bopVar -> updateEnv env2 (LH.App (LH.App bopVar r1') r2')
-      LH.App {} -> case apps r of
-        (DC c, args) ->
-          let (env', args') = foldr seqNames (env, []) args
-           in (env', foldr LH.App (LH.DC c) args')
-        -- (LH.Var f_rel _ _, _) | relPostfix `isSuffixOf` f_rel -> (env, r)
-        (LH.Var f ar loc, args) ->
-          let (env', args') = foldr seqNames (env, []) args
-              r' = foldl LH.App (LH.Var f ar loc) args'
-           in updateEnv env' r'
-        (Proj (LH.Var f ar loc), args) ->
-          let (env', args') = foldr seqNames (env, []) args
-              r' = foldr LH.App (Proj (LH.Var f ar loc)) args'
-           in updateEnv env' r'
+      LH.App {} -> case hd of
+        (DC _; LH.Var _ _ (Recursive {})) -> extractInAppArgs
+        (LH.Var {}; Proj (LH.Var {})) -> extractApp
         _ -> error . render $ text "LH application" <+> pPrint r <+> text "not starting with an identifier."
+        where
+          (hd, args) = apps r
+          extractInAppArgs =
+            let (env', args') = foldr seqNames (env, []) args
+             in (env', foldr LH.App hd args')
+          extractApp = uncurry updateEnv extractInAppArgs
+          -- apply the function on a list of arguments
+          seqNames arg (curEnv, curArgs) = second (: curArgs) $ go curEnv arg
       -- We do not extract applications of the subterms we will erase in QMark and Pop
       QMark r' rh rp -> second (\r'' -> QMark r'' rh rp) $ go env r'
       Pop pop r1 r2 -> second (Pop pop r1) $ go env r2
@@ -163,8 +161,6 @@ extractApps r0 = go [] r0
       Sub r' from to -> second (\r'' -> Sub r'' from to) $ go env r'
       Proj r' -> second Proj $ go env r'
       where
-        -- apply the function on a list of arguments
-        seqNames arg (curEnv, curArgs) = second (: curArgs) $ go curEnv arg
         -- If r is in env, returns its associated variable,
         -- otherwise creates a fresh variable, update env and returns the variable
         updateEnv env' r' = case lookup r' env' of

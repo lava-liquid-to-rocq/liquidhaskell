@@ -6,8 +6,8 @@ module Lava.Elaboration where
 
 import Control.Monad (foldM, when)
 import Data.Bifunctor (second)
-import Data.List (unsnoc)
-import Data.Maybe (fromJust, listToMaybe)
+import Data.List (uncons, unsnoc)
+import Data.Maybe (fromJust, isJust, listToMaybe)
 import Debug.Trace (trace)
 import Lava.Calculus
 import Lava.TypingEnvironment
@@ -88,12 +88,13 @@ refTptoSmpTp (ArrType _ tpx tp) = SmpArrow (refTptoSmpTp tpx) (refTptoSmpTp tp)
 -- We return a term App r1 r2 (without App constructor) to avoid a partial
 -- pattern matching in the main functions
 chooseIndVar :: TypEnv -> BranchPattern -> (Reft, [Reft]) -> Either TypeError (Reft, Reft)
+-- chooseIndVar _ pats (hd, args) | traceFunc "chooseIndVar" [text "pats :=" <+> pPrint pats, text "app :=" <+> pPrint (hd, args)] = undefined
 chooseIndVar γ pats (hd, args) =
   case hd of
     Var x ar _ -> do
       (loc, _) <- lookupVar x γ
       case loc of
-        Recursive {} ->
+        Recursive {} -> do
           let -- The inductive variables are those that appear after a single
               -- destruction of a parameter and that are used as an argument
               -- of the application we are translating in the same position
@@ -105,12 +106,12 @@ chooseIndVar γ pats (hd, args) =
                   -- destruction, rather than using freeVars ys
                   y `elem` [y' | Var y' _ _ <- ys]
                 ]
-              -- We arbitrarily choose the first of the candidates to be the
-              -- variable we do induction on
-              indVar = case listToMaybe indVarCandidates of
-                Nothing -> error $ "No possible induction variable in term " ++ prettyShow ogTerm
-                Just y -> y
-           in return (foldl App (Var x ar (Recursive indVar pats)) args', argsLast)
+          -- We arbitrarily choose the first of the candidates to be the
+          -- variable we do induction on
+          indVar <- case listToMaybe indVarCandidates of
+            Nothing -> Left . SynErr $ "No possible induction variable in term " ++ prettyShow ogTerm
+            Just y -> return y
+          return (foldl App (Var x ar (Recursive indVar pats)) args', argsLast)
         _ -> return ogTerm
     _ -> return ogTerm
   where
@@ -261,7 +262,7 @@ synReft γ pats r@(App {}) = do
     ArrType x tpx tp -> do
       r2' <- checkReft γ pats r2 tpx
       return (subst r2' x tp, App r1' r2')
-    _ -> Left . SynErr $ "Too many arguments given in the application " ++ prettyShow (App r1 r2)
+    _ -> Left . SynErr . render $ text "Too many arguments given in the application" <+> pPrint (App r1 r2)
 -- (S-Neg)
 synReft γ pats (Neg r) = do
   let (x, tpx, tp) = fromArrType negType
@@ -350,30 +351,36 @@ checkExpr γ pats e0@(Case r branches _) tp = do
   case tpr of
     RefType _ (TC _) _ -> do
       -- We translate to induct when we destruct one of the parameters
-      let isInduct = case r of Var _ 0 Local -> r `elem` pats; _ -> False
-      branches' <- mapM (`checkBranch` isInduct) branches
+      let indVar = case r of Var _ 0 Local | r `elem` pats -> Just r; _ -> Nothing
+      branches' <- mapM (`checkBranch` indVar) branches
       -- In the first induct, we generalize the other parameters
       -- FIX: if the first destruction of a parameter is translated to destruct,
       -- we never generalize the variables
       let genVars =
             let onTopLevel = all (\case (Var {}) -> True; _ -> False) pats
-             in reverse [z | zvar@(Var z 0 Local) <- pats, zvar /= r, onTopLevel, isInduct]
+             in reverse [z | zvar@(Var z 0 Local) <- pats, zvar /= r, onTopLevel, isJust indVar]
       return (Case r' branches' genVars)
     _ -> Left . CheckingErr $ "Matched term is not of an inductive type in expression " ++ prettyShow e0
   where
     -- The booleans on the introduced variables are just placeholder, we
     -- instantiate them here for real
-    checkBranch :: ((Id, [(Id, Bool)]), Maybe Expr) -> Bool -> Either TypeError ((Id, [(Id, Bool)]), Maybe Expr)
+    checkBranch :: ((Id, [(Id, Bool)]), Maybe Expr) -> Maybe Reft -> Either TypeError ((Id, [(Id, Bool)]), Maybe Expr)
     checkBranch (c, Nothing) _ = return (c, Nothing)
-    checkBranch ((c, ys), Just e) isInduct = do
+    checkBranch ((c, ys), Just e) indVar = do
       tpc <- lookupDC c γ
       -- Replace the binders in tpc by the names of the match in ys
       let tpcRenamed = renameArgs (map fst ys) tpc
       let (argsc, (_, tc, _)) = second fromRefType $ arrs tpcRenamed
+      -- True for inductive variables in ys if isInduct
+      let inductives = map (\case (_, RefType _ tc' _) -> tc' == tc && isJust indVar; (_, ArrType {}) -> False) argsc
+          ys' = zip (map fst ys) inductives
+          pats' = updatePats indVar (foldl App (DC c) (map (mkVar . fst) ys'))
       -- TODO: add additional type with z for occurence typing
       let γ' = insertLocalVars argsc γ
-      e' <- checkExpr γ' pats e tp
-      -- True for inductive variables in ys if isInduct
-      let inductives = map (\case (_, RefType _ tc' _) -> tc' == tc && isInduct; (_, ArrType {}) -> False) argsc
-          ys' = zip (map fst ys) inductives
+      e' <- checkExpr γ' pats' e tp
       return ((c, ys'), Just e')
+    -- Update pats to replace r = fromJust indVar by pat
+    updatePats Nothing _ = pats
+    updatePats (Just x) pat =
+      let (pre, (_, post)) = second (fromJust . uncons) $ break (x ==) pats
+       in pre ++ pat : post
