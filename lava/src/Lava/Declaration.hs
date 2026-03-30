@@ -221,7 +221,7 @@ mkPseudoConstr tc (c, tp) =
     -- The constructor is defined as an `exist`
     bodyConstr =
       let lemCrApp = Coq.App (Def $ psConstrLemName c) (map (Coq.Var . fst) args)
-       in TermBody $ Exist TermHole (trReft unrefCrApp) (TermWitness lemCrApp)
+       in TermBody $ Exist TermHole (utrReft unrefCrApp) (TermWitness lemCrApp)
 
 -- | Lemmas giving well-formedness of inductive subterms, for each of the
 -- inductive subterms.

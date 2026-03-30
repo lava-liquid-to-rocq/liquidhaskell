@@ -266,9 +266,7 @@ trReft (LH.Pop pop tm1 tm2) =
    in Coq.Let "_" popProp (PrfTerm Hole $ ProofHole Nothing) (trReft tm2)
 trReft (LH.Sub tm from to) = Coq.SubCast (trRefType to) (trRefType from) (trReft tm) (Coq.ProofHole Nothing)
 trReft (LH.Inj tm tp) = Coq.Exist (TypeArg $ trRefType tp) (trReft tm) (Coq.ProofHole Nothing)
--- trReft tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
--- FIX: we get this error. For now, I translate to try to see what is going on
-trReft (LH.Proj tm) = Project $ trReft tm
+trReft tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
 trReft tm@(LH.App {}) = case apps tm of
   (LH.Var _ _ (Recursive indVar pats), args) ->
     trRecCall indVar pats args
