@@ -29,6 +29,7 @@ import Lava.Misc (isIgnoredBind, stripLegalName)
 import Lava.Util
 import System.Directory (createDirectoryIfMissing, getCurrentDirectory)
 import System.FilePath (joinPath, splitDirectories, takeDirectory, (</>))
+import System.IO
 import Text.PrettyPrint.HughesPJClass (Pretty (), prettyShow)
 
 -- | Contains all information about the source Liquid Haskell file to translate
@@ -47,6 +48,8 @@ data SrcInfo = SrcInfo
 runLava :: SrcInfo -> IO ()
 runLava sinfo = do
   let filepath = Specs.giTarget $ Specs.giSrc $ s_targetInfo sinfo
+  -- For debugging: no buffer on the output
+  hSetBuffering stdout NoBuffering
   void $ translateFile True sinfo filepath
 
 -- | parses file into [Calc.Decl]
