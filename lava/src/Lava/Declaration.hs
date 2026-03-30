@@ -506,7 +506,7 @@ relFunctionhoodLemma f =
     functionhoodLemma =
       Coq.Definition
         (funcHoodLemName $ name f)
-        (map (,True) $ argsT f)
+        (map (,True) $ argsUT f)
         ( mkForallT
             [(retName f, retUT f), (retName', retUT f)]
             ( Coq.Prop
