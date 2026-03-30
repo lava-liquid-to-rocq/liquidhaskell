@@ -750,10 +750,11 @@ instance Pretty CoqTerm where
             sep [text "subsumptionCast", pPrintP a, pPrintP (Lambda n a need), pPrintP t, pPrintP z]
           _ -> sep [text "subCast", pPrintP from, pPrintP to, pPrintP t, pPrintP z]
       else pPrint tm'
+  pPrint (Exist _ t (CoqProofTerm "I")) = char '#' <+> pPrint t
   pPrint (Exist p t z) = text "exist" <+> pPrintP p <+> pPrintP t <+> pPrintP z
   pPrint (Match ts _ cases) =
     sep $ (text "match" <+> parens (hsep $ punctuate comma (map pPrint ts)) <+> text "with") :
-      punctuate (mid) (map printCase cases) ++ [text "end."]
+      punctuate mid (map printCase cases) ++ [text "end."]
     where
       printCase (pat, tm) =
         parens (hsep . punctuate comma $ map (\(c, args) -> hsep $ map pPrint (c : args)) pat)
@@ -913,6 +914,7 @@ instance Show CoqTerm where
     SubCast (Subset n b need) (Subset _ a _) t z | a == b -> addParens $ unwords ["subsumptionCast", formatLong $ showP a, formatLong $ showP (Lambda n a need), formatLong $ showP t, formatLong $ showP z]
     SubCast to from t z -> addParens $ unwords ["subCast", formatLong $ showP from, formatLong $ showP to, formatLong $ showP t, formatLong $ showP z]
     -- SubCast a b t p -> "subsumptionCast "++showP a++" "++showP b++" "++showP t++" "++showP p
+    Exist _ t (CoqProofTerm "I") -> "# " ++ showP t
     Exist p t z -> "exist " ++ showP p ++ " " ++ showP t ++ " " ++ showP z
     Match ts _ cases -> "match " ++ addParens (intercalate ", " (map show ts)) ++ " with " ++ intercalate " | " (map ((\(x, y) -> x ++ " => " ++ y) . bimap (addParens . intercalate ", " . map (\(c, args) -> unwords (c : args))) showP) cases) ++ " end"
     Ite r s t -> "if " ++ show r ++ " then " ++ show s ++ " else " ++ showP t

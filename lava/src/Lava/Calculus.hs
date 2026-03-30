@@ -534,7 +534,7 @@ instance Pretty Expr where
   pPrint (Case r alts _) =
     vcat $ (text "case" <+> pPrint r <+> text "of") : map ppAlt alts
     where
-      ppAlt (pat, e) = sep [char '|' <+> ppPat pat <+> text "->", nest identNb $ pPrint e]
+      ppAlt (pat, e) = sep [char '|' <+> ppPat pat <+> text "->", nest identNb $ maybe (text "undefined") pPrint e]
       ppPat (c, ys) = text c <+> hsep (map (text . fst) ys)
 
 instance Pretty Reft where

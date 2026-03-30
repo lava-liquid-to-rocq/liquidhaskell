@@ -11,7 +11,7 @@ import Data.Bifunctor (second)
 import Debug.Trace (trace)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
-import Lava.CoqSyntaxUtil (mkIsTrue, packGetF, packGetRel, upackGetRel)
+import Lava.CoqSyntaxUtil (mkExist, mkIsTrue, packGetF, packGetRel, upackGetRel)
 import Lava.CoqUtil (ihName, packInstanceName, relDefName, relPostfix, toPack, toUPack, upackInstanceName)
 import Lava.Util (hashName, isSuffixOf)
 import Text.PrettyPrint.HughesPJClass as PP
@@ -261,7 +261,7 @@ trReft (LH.Pop pop tm1 tm2) =
   let popProp = Just . Prop $ Coq.Bop (trBop $ popToBop pop) (Project $ trReft tm1) (Project $ trReft tm2)
    in Coq.Let "_" popProp (PrfTerm Hole $ ProofHole Nothing) (trReft tm2)
 trReft (LH.Sub tm from to) = Coq.SubCast (trRefType to) (trRefType from) (trReft tm) (Coq.ProofHole Nothing)
-trReft (LH.Inj tm tp) = Coq.Exist (TypeArg $ trRefType tp) (trReft tm) (Coq.ProofHole Nothing)
+trReft (LH.Inj tm tp) = mkExist (trRefType tp) (trReft tm)
 trReft tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
 trReft tm@(LH.App {}) = case apps tm of
   (LH.Var _ _ (Recursive indVar pats), args) ->

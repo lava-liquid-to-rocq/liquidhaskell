@@ -254,9 +254,13 @@ synReft γ _ (Var x _ locx) = do
     -- (S-Var)
     (ar, _) -> return (tp, Var x ar locγ)
 -- (S-Lit)
-synReft _ _ r@(StringLit _) = return (litType String r, r)
-synReft _ _ r@(IntLit _) = return (litType Integer r, r)
-synReft _ _ r@(FloatLit _) = return (litType Double r, r)
+synReft _ _ r@(StringLit _) = let tp = litType String r in return (tp, Inj r tp)
+synReft _ _ r@(IntLit _) = let tp = litType Integer r in return (tp, Inj r tp)
+synReft _ _ r@(FloatLit _) = let tp = litType Double r in return (tp, Inj r tp)
+-- Builtin data constructors (supposed unrefined, in contrary to the others)
+synReft γ _ r@(DC c) | r `elem` builtinDCs = do
+  tp <- lookupDC c γ
+  return (tp, Inj r tp)
 -- (S-Data)
 synReft γ _ r@(DC c) = (,r) <$> lookupDC c γ
 -- (S-App)

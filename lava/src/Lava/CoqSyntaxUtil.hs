@@ -91,6 +91,13 @@ mkIsTrue tm = case tm of
           Geqb -> "gebZ_rel"
           Gtb -> "gtbZ_rel"
 
+-- | Wrapper for exist, using the proof term I for a trivial refinement
+mkExist :: RocqType -> CoqTerm -> CoqTerm
+mkExist (Subset x tp r) tm = Exist (Lambda x tp r) tm proof
+  where
+    proof = if r == TT || r == IsTrue btrue then CoqProofTerm "I" else ProofHole Nothing
+mkExist tp _ = error $ "Subset type expected to build exist, found " ++ show tp
+
 -- | Create a destruction pattern [x x_p] for the variable x
 mkVarDestrPat :: Id -> CoqDestrPat
 mkVarDestrPat x = ConjDestrPat [SingleIdPat x, SingleIdPat $ subsetWitnessNm x]
