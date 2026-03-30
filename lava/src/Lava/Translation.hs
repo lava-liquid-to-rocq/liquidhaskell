@@ -143,14 +143,18 @@ extractApps r0 = go [] r0
               Nothing -> (env2, LH.Bop bop r1' r2')
               Just bopVar -> updateEnv env2 (LH.App (LH.App bopVar r1') r2')
       LH.App {} -> case hd of
-        (DC _; LH.Var _ _ (Recursive {})) -> extractInAppArgs
+        -- TODO: in the applications of recursive calls appearing in the refined
+        -- definition inside type refinments, we can't use the relation,
+        -- but must use either the IH or the function itself
+        -- (DC _; LH.Var _ _ (Recursive {})) -> extractInAppArgs
+        DC _ -> extractInAppArgs
         (LH.Var {}; Proj (LH.Var {})) -> extractApp
         _ -> error . render $ text "LH application" <+> pPrint r <+> text "not starting with an identifier."
         where
           (hd, args) = apps r
           extractInAppArgs =
             let (env', args') = foldr seqNames (env, []) args
-             in (env', foldr LH.App hd args')
+             in (env', foldl LH.App hd args')
           extractApp = uncurry updateEnv extractInAppArgs
           -- apply the function on a list of arguments
           seqNames arg (curEnv, curArgs) = second (: curArgs) $ go curEnv arg
@@ -198,6 +202,11 @@ hypsRV rv graphRel = \p -> foldr hyp p rv
           LH.Var f _ Global -> Coq.Def $ relDefName f
           -- f -> getUPackRelName f for local HO variables
           LH.Var f n Local | n > 0 -> upackGetRel (Coq.Def f)
+          -- TODO: this is not correct, but is a placeholder that does not
+          -- prevent translation since this only appears in places that are not
+          -- printed in Rocq (inside casts) or inside specifications, but no
+          -- specifications uses the name of the function being defined
+          LH.Var f _ (Recursive {}) -> Coq.Def $ relDefName f
           -- proj f -> getPackRelName f for local HO variables
           Proj (LH.Var f n _) | n > 0 -> packGetRel (Coq.Def f)
           _ -> error . render $ text "Unexpected extract term" <+> pPrint app <+> text "in Translation.hypsRV."
