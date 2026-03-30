@@ -84,7 +84,7 @@ refTptoSmpTp (ArrType _ tpx tp) = SmpArrow (refTptoSmpTp tpx) (refTptoSmpTp tp)
 
 -- | If the application in argument is a recursive call,
 -- choose an induction variable and updates the localization with
--- the variable and the current branch pattern
+-- the variable and the current branch pattern.
 -- We return a term App r1 r2 (without App constructor) to avoid a partial
 -- pattern matching in the main functions
 chooseIndVar :: TypEnv -> BranchPattern -> (Reft, [Reft]) -> Either TypeError (Reft, Reft)
@@ -118,10 +118,13 @@ chooseIndVar γ pats (hd, args) =
     (args', argsLast) = fromJust (unsnoc args)
     ogTerm = (foldl App hd args', argsLast)
 
+-- | Type checking in a simple type system, used to typecheck type refinements
 smpTpCheck :: TypEnv -> BranchPattern -> Reft -> Either TypeError (SimpleType, Reft)
-smpTpCheck γ _ (Var x _ _) = do
-  (loc, tp) <- lookupVar x γ
-  return (refTptoSmpTp tp, Var x (arity tp) loc)
+smpTpCheck γ _ (Var x _ locx) = do
+  (locγ, tp) <- lookupVar x γ
+  -- For recursive variables, the localization has been correctly modified in chooseIndVar
+  let loc = case locx of Recursive {} -> locx; _ -> locγ
+   in return (refTptoSmpTp tp, Var x (arity tp) loc)
 smpTpCheck _ _ r@(StringLit _) = return (SmpBuiltin String, r)
 smpTpCheck _ _ r@(IntLit _) = return (SmpBuiltin Integer, r)
 smpTpCheck _ _ r@(FloatLit _) = return (SmpBuiltin Double, r)
@@ -241,13 +244,15 @@ wfDecls _ [] = return []
 -- * Type synthesis for refinements
 
 synReft :: TypEnv -> BranchPattern -> Reft -> Either TypeError (RefType, Reft)
-synReft γ _ (Var x _ _) = do
-  (loc, tp) <- lookupVar x γ
-  case (arity tp, loc) of
+synReft γ _ (Var x _ locx) = do
+  (locγ, tp) <- lookupVar x γ
+  case (arity tp, locγ) of
     -- (S-VarL)
     (0, Local) -> return (tp, Inj (Var x 0 Local) tp)
+    -- For recursive variables, the localization has been correctly modified in chooseIndVar
+    (ar, Recursive {}) -> return (tp, Var x ar locx)
     -- (S-Var)
-    (ar, _) -> return (tp, Var x ar loc)
+    (ar, _) -> return (tp, Var x ar locγ)
 -- (S-Lit)
 synReft _ _ r@(StringLit _) = return (litType String r, r)
 synReft _ _ r@(IntLit _) = return (litType Integer r, r)

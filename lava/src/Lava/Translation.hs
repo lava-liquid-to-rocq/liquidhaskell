@@ -307,6 +307,7 @@ trExprTacs (Case tm alts genVars) =
 -- This function is factorized by the function to apply to the branches,
 -- in particular in the translation of a function we use trExprTacs
 mkMatching :: (Maybe Expr -> [Tactic]) -> Reft -> [((Id, [(Id, Bool)]), Maybe Expr)] -> [Id] -> Tactic
+-- mkMatching _ tm alts genVars | traceFunc "mkMatching" [pPrint tm, pPrint alts, pPrint genVars] = undefined
 mkMatching trans tm alts genVars =
   if induct
     then
@@ -378,7 +379,7 @@ trRecCall indVar pats args =
       trArg _ = []
       -- The number of parameters that have been destructed gives us
       -- the number of ltac:(oracle) we need for the induction
-      -- hypothesis, one for each of those plus one for the induction variable
-      nbOracles = length [ri | (ri, (LH.DC _, _)) <- argsAndPats] + 1
+      -- hypothesis, this includes one for the induction variable itself
+      nbOracles = length [ri | (ri, (LH.DC _, _)) <- argsAndPats]
       argsT = replicate nbOracles oracleTac ++ concatMap trArg argsAndPats
    in Coq.App (Coq.Var $ ihName indVar) argsT

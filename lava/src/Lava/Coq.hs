@@ -1142,10 +1142,13 @@ instance PrettyPrintable Tactic where
         ++ if all ((== "") . intercalate "; " . map (prettyPrint indent) . snd . snd) branchesS then "" else "; [" ++ intercalate " | " (map (prettyPrint indent . Concat . snd . snd) branchesS) ++ "]"
       where
         branchesS = sortBy ordFunc branches
-    Induction t branches | all ((== "") . intercalate "; " . map (prettyPrint indent) . snd . snd) branches -> matchTac ++ show t ++ " as [" ++ intercalate " | " (map (\br -> "(*" ++ fst br ++ "*) " ++ (prntPat . fst $ snd br)) branchesS) ++ "]"
+    Induction t branches | all ((== "") . intercalate "; " . map (prettyPrint indent) . snd . snd) branches ->
+      matchTac ++ show t ++ " as [" ++ intercalate " | " (map (\br -> "(*" ++ fst br ++ "*) " ++ (prntPat . fst $ snd br)) branchesS) ++ "]"
       where
         branchesS = sortBy ordFunc branches
-        matchTac = if all ((== ConjDestrPat []) . fst . snd) branches then "destruct " else "induction "
+        matchTac = if all ((== ConjDestrPat []) . fst . snd) branches
+          then trace "Replacing induction by destruction" "destruct "
+          else "induction "
     Induction tm branches -> "induction " ++ show tm ++ " as [" ++ intercalate " | " (map (\br -> "(*" ++ fst br ++ "*) " ++ (prntPat . fst $ snd br)) branchesS) ++ "]. " ++ showTacBranches (indent + 1) (map snd branchesS)
       where
         branchesS = sortBy ordFunc branches
