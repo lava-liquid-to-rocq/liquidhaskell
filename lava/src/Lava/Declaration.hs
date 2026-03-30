@@ -101,15 +101,15 @@ eqDecl tc alts =
 
 -- | Lemma TC_eq_refl: reflexivity of TC_eq, with associated hint:
 --
--- > Definition TC_eq_refl (x: TC_u): is_true (TC_eq x x).
+-- > Definition TC_eq_refl: forall (x: TC_u), is_true (TC_eq x x).
 -- > Proof. eq_refl. Qed.
 -- > #[global] Hint Resolve TC_eq_refl : eq_hint_db.
 eqReflLem :: Id -> [Coq.Decl]
 eqReflLem tc =
   [ Coq.Definition
       (eqReflLemName tc)
-      [(("x", unrefTC tc), False)]
-      (Prop . IsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["x", "x"]))
+      []
+      (FAType ("x", unrefTC tc) . Prop . IsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["x", "x"]))
       (ProofBody [Custom "eq_refl"])
       Opaque,
     AddHint ResolveHint (eqReflLemName tc) EqHintDb
@@ -124,9 +124,11 @@ eqbEqLem :: Id -> [Coq.Decl]
 eqbEqLem tc =
   [ Coq.Definition
       (eqEqbEqLemName tc)
-      [(("s", unrefTC tc), False), (("t", unrefTC tc), False)]
-      ( Prop $
-          Coq.Impl
+      []
+      ( FAType ("s", unrefTC tc)
+          . FAType ("t", unrefTC tc)
+          . Prop
+          $ Coq.Impl
             (IsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["s", "t"]))
             (Coq.Bop Coq.Eq (Coq.Var "s") (Coq.Var "t"))
       )
@@ -568,7 +570,7 @@ invLemName :: Id -> [(Id, Reft)] -> Id
 invLemName f pats =
   if all (\case (_, LH.Var {}) -> True; _ -> False) pats
     then relBranchLemName f
-    else relBranchLemName $ "f" ++ concatMap ((++) "_" . printConstructors . apps . snd) pats
+    else relBranchLemName $ f ++ concatMap ((++) "_" . printConstructors . apps . snd) pats
   where
     printConstructors (DC c, args) = c ++ concatMap (printConstructors . apps) args
     printConstructors _ = ""
@@ -659,7 +661,7 @@ refUnrefLemmas f =
         unrLemTp
         ( Coq.ProofBody
             [ Coq.Intros $ replicate (length $ args f) (Coq.RewritePat Coq.RwLR),
-              Coq.Exact (Coq.App (Coq.Def . relDefThmName' $ name f) (params ++ [Coq.Var $ retName f]))
+              Coq.Exact (Coq.App (Coq.Def . relDefThmName $ name f) (params ++ [Coq.Var $ retName f]))
             ]
         )
         Coq.Opaque
