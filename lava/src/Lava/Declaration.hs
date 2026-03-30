@@ -164,7 +164,7 @@ wfDecl tc alts =
       where
         (args, (vv, _, retRef)) = second fromRefType . arrs . removeFOArgProjs $ harmonizeBinderNames tp
         -- Proposition for the refinement of the return type, with C x1 … xn in the refinement
-        retRefT = trReft (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef) -- TODO use utrReftProp instead?
+        retRefT = utrReftProp (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef)
         -- Proposition for each argument
         argProp (x, tpArg) =
           case trRefType tpArg of
@@ -200,7 +200,7 @@ refTCDecl tc = CoqNewType tc (Subset "x" (Coq.TC (unrefinedConstrName tc) []) (C
 -- > Definition C_lem [args]: TC_wf (C_u [args]) /\ True.
 -- > Definition C [args]: TC := exist _ (C_u [args]) (C_lem [args]).
 mkPseudoConstr :: Id -> (Id, RefType) -> [Coq.Decl]
-mkPseudoConstr tc (c, _) | traceDC "mkPseudoConstr" tc c = undefined
+-- mkPseudoConstr tc (c, _) | traceDC "mkPseudoConstr" tc c = undefined
 mkPseudoConstr tc (c, tp) =
   [ Coq.Definition (psConstrLemName c) argsT retLem bodyLem Transparent,
     Coq.Definition c argsT retT bodyConstr Transparent
@@ -217,7 +217,7 @@ mkPseudoConstr tc (c, tp) =
     -- NOTE: instead of inlining the translation of the refinement of an
     -- inductive type, we could use a substitution in Rocq, but I want to avoid
     -- implementing it
-    retLem = Prop $ Coq.And (Coq.App (Def $ wfTCName tc) [utrReft unrefCrApp]) (trReft $ subst unrefCrApp x retRef)
+    retLem = Prop $ Coq.And (Coq.App (Def $ wfTCName tc) [utrReft unrefCrApp]) (utrReftProp $ subst unrefCrApp x retRef)
     -- The constructor is defined as an `exist`
     bodyConstr =
       let lemCrApp = Coq.App (Def $ psConstrLemName c) (map (Coq.Var . fst) args)

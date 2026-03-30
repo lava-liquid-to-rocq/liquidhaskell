@@ -2684,8 +2684,8 @@ executable benchmark-lava
                     -- , TranslationTests.FunctorList
                     -- , TranslationTests.FunctorMaybe
                     -- , TranslationTests.MonadList
-                    Benchmark.GradeExample
-                    -- , Benchmark.Half
+                    -- , Benchmark.GradeExample
+                    Benchmark.Half
                     -- , Benchmark.Overview
                     -- , Benchmark.PeanoNats
                     -- , Benchmark.RBinsToBins

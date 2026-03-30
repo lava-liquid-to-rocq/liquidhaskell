@@ -652,7 +652,7 @@ pPrintRocqType (Subset x tp e) _ =
   braces (pPrintArg (x, tp) <+> mid <+> pPrint e)
 pPrintRocqType (TC tc []) _ | tc `elem` map fst3 coqBuiltinInductDataTypes = text tc
 pPrintRocqType (TC typeName tpArgs) _ =
-  hsep $ text (typeName) : map pPrint tpArgs
+  hsep $ text typeName : map pPrint tpArgs
 pPrintRocqType (Arrow tp1 tp2) _ = pPrintP tp1 <+> text "->" <+> pPrintP tp2
 pPrintRocqType tp@(FAType {}) _ = let (args, ret) = concatForalls tp in pPrintForall args ret
 pPrintRocqType (Prop p) _ = pPrint p

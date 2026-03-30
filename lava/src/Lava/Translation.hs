@@ -204,7 +204,7 @@ hypsRV rv graphRel = \p -> foldr hyp p rv
           LH.Var f n Local | n > 0 -> upackGetRel (Coq.Def f)
           -- proj f -> getPackRelName f for local HO variables
           Proj (LH.Var f n _) | n > 0 -> packGetRel (Coq.Def f)
-          _ -> error "Unexpected extract term in Translation.hypsRV."
+          _ -> error . render $ text "Unexpected extract term" <+> pPrint app <+> text "in Translation.hypsRV."
 
 -- * Refined translations
 
