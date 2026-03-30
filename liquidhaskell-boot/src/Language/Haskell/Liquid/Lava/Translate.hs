@@ -1,3 +1,4 @@
+{-# LANGUAGE OrPatterns #-}
 {-# OPTIONS_GHC -Wall #-}
 
 module Language.Haskell.Liquid.Lava.Translate (runLava, SrcInfo (..)) where
@@ -116,6 +117,10 @@ translateFile writeFlag sinfo arg = do
 
   let hasImports = not $ null importNames
 
+  when writeFlag $ do
+    createDirectoryIfMissing True outputFolder
+    writeOut outputFolder modulename ILH [] calcSource
+
   -- Elaborate of the Calculus declarations before translation
   case elaborate calcSource of
     Left err -> print err >> return []
@@ -141,7 +146,7 @@ writeOut outputFolder modulename outType pre ilhSource = do
   -- TODO: change once we have pretty print for Rocq
   let ilhOutput =
         case outType of
-          ILHC -> intercalate "\n\n" (pre ++ map prettyShow ilhSource)
+          ILHC; ILH -> intercalate "\n\n" (pre ++ map prettyShow ilhSource)
           _ -> intercalate "\n\n" (pre ++ map show ilhSource)
   writeFile ilhOutputPath ilhOutput
 

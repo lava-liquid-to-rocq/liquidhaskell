@@ -1,23 +1,21 @@
-{-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE LambdaCase #-}
+{-# OPTIONS_GHC -Wall #-}
 
 -- TODO: maybe move defaultBind somewhere else
 module Language.Haskell.Liquid.Lava.SpecToLH (transSig, transType, showppStripped, defaultBind, bops, buildins, InternalCont (..)) where
 
-import           Control.Monad (filterM)
-import           Control.Monad.Extra (allM, ifM)
-import           Control.Monad.Reader (Reader, asks, runReader)
-import           Data.Char (isUpper)
+import Control.Monad (filterM)
+import Control.Monad.Extra (allM, ifM)
+import Control.Monad.Reader (Reader, asks, runReader)
+import Data.Char (isUpper)
 import qualified Data.Map.Strict as M
-
-import           Language.Fixpoint.Types (PPrint)
+import Language.Fixpoint.Types (PPrint)
 import qualified Language.Fixpoint.Types as F
-import           Language.Haskell.Liquid.Types.RType (PVarV (PV), RTVar (RTVar), RTyCon (RTyCon), RTyVar (RTV), RTypeV (..), SpecType, UReftV (MkUReft), UReft)
-
+import Language.Haskell.Liquid.Types.RType (PVarV (PV), RTVar (RTVar), RTyCon (RTyCon), RTyVar (RTV), RTypeV (..), SpecType, UReft, UReftV (MkUReft))
 import qualified Lava.Calculus as Calc
-import           Lava.Misc
-import           Lava.Util
+import Lava.Misc
+import Lava.Util
 
 -- | Helper for unsupported constructs
 unsupported :: String -> a
@@ -33,7 +31,6 @@ transCon modId (RTyCon tc [] _) =
   where
     name = showppStripped modId tc
 transCon _ c = unsupported $ "Type constructor with type args not supported (no polymorphism): " ++ show c
-
 
 showppStripped :: (PPrint a) => Id -> a -> String
 showppStripped modId = stripLegalName modId . F.showpp
@@ -76,8 +73,10 @@ getFuncArgName modId symb = go sym
 
 transVarName :: (PPrint a) => Id -> a -> String
 transVarName modId x = case getFuncArgName modId x of
-  (Just n, func)  -> stripLegalName modId $ func ++ "." ++ n
-  (Nothing, "")   -> "illegalInternalName"
+  -- FIX: lq_tmp0 -> f just to make things work, but there's a problem somewhere
+  (_, "lq_tmp0") -> "f"
+  (Just n, func) -> stripLegalName modId $ func ++ "." ++ n
+  (Nothing, "") -> "illegalInternalName"
   (Nothing, func) -> func
 
 parseConstrPred :: (PPrint a) => Id -> a -> (Maybe Id, Id)
@@ -102,14 +101,14 @@ defaultBind a@(Calc.ArrType nm _ _) = (nm, a)
 transType :: Id -> InternalCont -> SpecType -> Calc.RefType
 -- \| Type variables
 transType modId intCont (RVar n ref) = case x of
-    "()" -> Calc.RefType x Calc.unitTp reft
-    _ -> Calc.RefType x (Calc.TC x) reft
+  "()" -> Calc.RefType x Calc.unitTp reft
+  _ -> Calc.RefType x (Calc.TC x) reft
   where
     x = showName modId n
     reft = transRef modId intCont x ref
 -- \| Functions
 transType modId intCont (RFun f _ arg ret _) =
---  trace ("transType RFun" ++ show (ur_reft ref)) $
+  --  trace ("transType RFun" ++ show (ur_reft ref)) $
   Calc.ArrType x argTp' retTp'
   where
     x = transVarName modId f
@@ -119,7 +118,7 @@ transType modId intCont (RFun f _ arg ret _) =
 transType modId intCont (RAllT (RTVar (RTV n) _) typ ref) =
   case transType modId intCont typ of
     Calc.RefType _ tp _ -> Calc.RefType x tp r
-    arr@Calc.ArrType {}  -> Calc.ArrType x arr (Calc.RefType "_" Calc.unitTp r)
+    arr@Calc.ArrType {} -> Calc.ArrType x arr (Calc.RefType "_" Calc.unitTp r)
   where
     x = showName modId n
     r = transRef modId intCont x ref
@@ -127,7 +126,7 @@ transType modId intCont (RAllT (RTVar (RTV n) _) typ ref) =
 transType modId intCont (RAllP (PV n _ _ _) typ) =
   case transType modId intCont typ of
     Calc.RefType _ tp _ -> Calc.RefType x tp Calc.ttTm
-    arr@Calc.ArrType {}  -> Calc.ArrType x arr (Calc.RefType "_" Calc.unitTp Calc.ttTm)
+    arr@Calc.ArrType {} -> Calc.ArrType x arr (Calc.RefType "_" Calc.unitTp Calc.ttTm)
   where
     x = showName modId n
 -- \| Application of type constructor/builtin to types
@@ -136,12 +135,12 @@ transType modId intCont (RApp f _ _ reft) = Calc.RefType x transT r
     transT = transCon modId f
     x = refVar modId intCont reft
     r = transRef modId intCont x reft
-transType _ _ (RAllE {})    = unsupported "transType: unsupported RAllE"
-transType _ _ (REx {})      = unsupported "transType: unsupported REx"
+transType _ _ (RAllE {}) = unsupported "transType: unsupported RAllE"
+transType _ _ (REx {}) = unsupported "transType: unsupported REx"
 transType _ _ (RExprArg {}) = unsupported "transType: unsupported RExprArg"
-transType _ _ (RAppTy {})   = unsupported "transType: unsupported RAppTy"
-transType _ _ (RRTy {})     = unsupported "transType: unsupported RRTy"
-transType _ _ (RHole {})    = unsupported "transType: unsupported RHole"
+transType _ _ (RAppTy {}) = unsupported "transType: unsupported RAppTy"
+transType _ _ (RRTy {}) = unsupported "transType: unsupported RRTy"
+transType _ _ (RHole {}) = unsupported "transType: unsupported RHole"
 
 showName :: (Show a) => Id -> a -> String
 showName modId = transVarName modId . show
@@ -149,12 +148,13 @@ showName modId = transVarName modId . show
 -- MkUReft (F.Reft (s, tm)) is the representation of {s:_ | tm}
 transRefType :: Id -> InternalCont -> UReft F.Reft -> (F.Symbol, Calc.Reft)
 transRefType modId intCont (MkUReft (F.Reft (s, tm)) _) = (s, runReader (transExp modId binder tm) intCont)
-  where binder = transVarName modId s
+  where
+    binder = transVarName modId s
 
 transRef :: Id -> InternalCont -> String -> UReft F.Reft -> Calc.Reft
 transRef modId intCont x r =
-  let (s, ref') = transRefType modId intCont r in
-  Calc.subst (Calc.mkVar x) (transVarName modId s) ref'
+  let (s, ref') = transRefType modId intCont r
+   in Calc.subst (Calc.mkVar x) (transVarName modId s) ref'
 
 refVar :: Id -> InternalCont -> UReft F.Reft -> String
 refVar modId intCont = transVarName modId . fst . transRefType modId intCont
@@ -163,12 +163,12 @@ internal :: Id -> F.Expr -> Reader InternalCont Bool
 internal modId = go
   where
     go (F.PAtom _ e1 e2) = (||) <$> go e1 <*> go e2
-    go (F.EApp f t')     = (||) <$> go f <*> go t'
-    go (F.EVar sym)      = internalConstrRef modId sym
-    go (F.PAnd es)       = allM go es
-    go (F.PNot form)     = go form
-    go F.EBin {}         = pure False
-    go _                 = pure False
+    go (F.EApp f t') = (||) <$> go f <*> go t'
+    go (F.EVar sym) = internalConstrRef modId sym
+    go (F.PAnd es) = allM go es
+    go (F.PNot form) = go form
+    go F.EBin {} = pure False
+    go _ = pure False
 
 -- | Translation of an LH-fixpoint Types.Expr (predicates used for refinements)
 --
@@ -195,9 +195,10 @@ transExp modId binder = transExpr
     -- the current refinement binder (e.g. "VV").
     mkVarOrDC :: Id -> Calc.Reft
     mkVarOrDC s = case s of
-      "True"  -> Calc.ttTm
+      "True" -> Calc.ttTm
       "False" -> Calc.ffTm
-      _ | s /= binder, c:_ <- s, isUpper c -> Calc.DC s
+      _
+        | s /= binder, c : _ <- s, isUpper c -> Calc.DC s
         | otherwise -> Calc.mkVar s
     transExpr :: F.Expr -> Reader InternalCont Calc.Reft
     transExpr term =
@@ -206,8 +207,9 @@ transExp modId binder = transExpr
           F.PAtom brel e1 e2 ->
             Calc.Bop (transBrel brel) <$> transExpr e1 <*> transExpr e2
           app@(F.EApp {}) -> case flattenFixApp app of
-            (F.EVar f, ts) -> do args <- mapM transExpr ts
-                                 pure $ foldl Calc.App (mkVarOrDC (transVarName modId f)) args
+            (F.EVar f, ts) -> do
+              args <- mapM transExpr ts
+              pure $ foldl Calc.App (mkVarOrDC (transVarName modId f)) args
             (other, _) -> unsupported $ "Expected variable at head of application in transExp, got: " ++ F.showpp other
           F.EVar sym -> pure $ mkVarOrDC (transVarName modId sym)
           F.PAnd es -> do
@@ -245,7 +247,7 @@ flattenFixApp = go []
   where
     go acc v@F.EVar {} = (v, acc)
     go acc (F.EApp f t) = go (t : acc) f
-    go _   _            = unsupported "Application expected in flattenFixApp."
+    go _ _ = unsupported "Application expected in flattenFixApp."
 
 -- | Translation of an arrow type
 --
@@ -280,30 +282,30 @@ transBrel F.Ge = Calc.Geq
 transBrel F.Le = Calc.Leq
 transBrel F.Gt = Calc.Gt
 transBrel F.Lt = Calc.Lt
-transBrel rel  = unsupported $ "Undefined brel translation: " ++ show rel
+transBrel rel = unsupported $ "Undefined brel translation: " ++ show rel
 
 -- | LH builtin binary operators (on Int) (in Fixpoint, also RTimes (*.) and RDiv (/.), but not in CoreToLogic)
 bops :: M.Map String Calc.Bop
 bops =
   M.fromList
-    [ ("+" , Calc.Plus)
-    , ("-" , Calc.Minus)
-    , ("*" , Calc.Times)
-    , ("/" , Calc.Div)
-    , ("%" , Calc.Mod)
-    , ("==", Calc.Eq)
-    , ("/=", Calc.Neq)
-    , (">=", Calc.Geq)
-    , (">" , Calc.Gt)
-    , ("<=", Calc.Leq)
-    , ("<" , Calc.Lt)
+    [ ("+", Calc.Plus),
+      ("-", Calc.Minus),
+      ("*", Calc.Times),
+      ("/", Calc.Div),
+      ("%", Calc.Mod),
+      ("==", Calc.Eq),
+      ("/=", Calc.Neq),
+      (">=", Calc.Geq),
+      (">", Calc.Gt),
+      ("<=", Calc.Leq),
+      ("<", Calc.Lt)
     ]
 
 -- | LH builtin types
 buildins :: M.Map String Calc.Builtin
 buildins =
   M.fromList
-    [ ("Integer", Calc.Integer)
-    , ("Int"    , Calc.Integer)
-    , ("Float"  , Calc.Double)
+    [ ("Integer", Calc.Integer),
+      ("Int", Calc.Integer),
+      ("Float", Calc.Double)
     ]

@@ -375,6 +375,9 @@ checkExpr γ pats e0@(Case r branches _) tp = do
     -- instantiate them here for real
     checkBranch :: ((Id, [(Id, Bool)]), Maybe Expr) -> Maybe Reft -> Either TypeError ((Id, [(Id, Bool)]), Maybe Expr)
     checkBranch (c, Nothing) _ = return (c, Nothing)
+    -- TODO: we should not use a variable name to translate from Core, we should
+    -- not have this case
+    checkBranch (c, Just (Reft (Var "undefined" 0 Local))) _ = return (c, Nothing)
     checkBranch ((c, ys), Just e) indVar = do
       tpc <- lookupDC c γ
       -- Replace the binders in tpc by the names of the match in ys
