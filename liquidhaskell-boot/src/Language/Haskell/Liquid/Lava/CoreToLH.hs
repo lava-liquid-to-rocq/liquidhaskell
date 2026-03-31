@@ -160,7 +160,8 @@ transFlattenedApp (ExprHead g) args = case traverse unReft (g : args) of
   Just (h : hargs) -> Calc.Reft $ foldl Calc.App h hargs
   _ -> unexpected "expression head" (g : args)
 transFlattenedApp (VarHead HNot) [Calc.Reft tm] = Calc.Reft $ Calc.Neg tm
-transFlattenedApp (VarHead HLambda) [Calc.Reft (Calc.Var x _ _), e] = Calc.Let x Nothing (Calc.Reft Calc.unitTm) e
+-- This is not needed:
+-- transFlattenedApp (VarHead HLambda) [Calc.Reft (Calc.Var x _ _), e] = Calc.Let x Nothing (Calc.Reft Calc.unitTm) e
 transFlattenedApp (VarHead HEqChain) [_, fstTerm, Calc.Reft lstTerm] = transEqns (parseExpr fstTerm) lstTerm
 transFlattenedApp (VarHead HCast) [_, eqChain, qed]
   | qed == Calc.Reft (Calc.mkVar "QED") = case parseExpr eqChain of
@@ -238,9 +239,6 @@ trans modId _ _ (Var n)
   where
     strippedName = stripLegalName modId $ show n
 trans modId infTypes f app@App {} = transApp modId infTypes f app
-trans modId infTypes f (Lam x e) =
-  -- TODO is this correct? We don't seem to have lambdas in Calculus anymore
-  Calc.Let (stripLegalName modId $ show x) Nothing (Calc.Reft Calc.unitTm) $ trans modId infTypes f e
 trans modId infTypes f (Case e _ _ alts) = transCase modId infTypes f e alts
 trans _ _ _ c@Cast {} = error $ "cast expression not supported: " ++ toStr c
 trans modId infTypes f (Tick _ e) = trans modId infTypes f e
@@ -248,6 +246,9 @@ trans _ _ _ (Type t) = transGHCType t
 trans _ _ _ c@Coercion {} = error $ "coercion expression not supported: " ++ toStr c
 trans modId infTypes f (Let bind e) = transLet modId infTypes f bind e
 trans _ _ _ (Lit lit) = Calc.Reft $ transLit lit
+trans modId infTypes f (Lam x e) = error $ "lambda-abstraction outside of let-binding not supported"
+
+{- Calc.Let (stripLegalName modId $ show x) Nothing (Calc.Reft Calc.unitTm) $ trans modId infTypes f e -}
 
 -- | Translate type arguments.
 transGHCType :: Type -> Calc.Expr
@@ -293,16 +294,24 @@ transCase modId infTypes f e alts = case eT of
 
 -- | Translate let bindings.
 transLet :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Bind b -> Expr b -> Calc.Expr
-transLet modId infTypes f bind e =
-  let (x, e') = deconstructBind bind
-   in case e' of
-        Lit {} -> trans modId infTypes f e -- ignore let lit (part of patError)
+transLet modId infTypes f bind body =
+  let (x, ex) = deconstructBind bind
+   in case ex of
+        Lit {} -> trans modId infTypes f body -- ignore let lit (part of patError)
         _ ->
-          Calc.Let
-            (stripLegalName modId $ show x)
-            (Just $ SLH.transType "" (SLH.ConstrArgsCtx Nothing []) $ binderType infTypes x)
-            (trans modId infTypes f e')
-            (trans modId infTypes f e)
+          -- Since λ-abstractions are encoded in lets, we simply rename the
+          -- variables bound in the translated type using the names introduced
+          -- by the λs in Core
+          let (ys, ex') = collectLambdas ex
+              tp = SLH.transType "" (SLH.ConstrArgsCtx Nothing []) $ binderType infTypes x
+           in Calc.Let
+                (stripLegalName modId $ show x)
+                (Just $ Calc.renameParams ys tp)
+                (trans modId infTypes f ex')
+                (trans modId infTypes f body)
+  where
+    collectLambdas (Lam y e) = first ((stripLegalName modId $ show y) :) $ collectLambdas e
+    collectLambdas e = ([], e)
 
 -- | Trivial translation of literals
 transLit :: Literal -> Calc.Reft
@@ -313,10 +322,10 @@ transLit (LitDouble x) = Calc.FloatLit $ fromRational x
 transLit other = error $ "Unsupported literal " ++ toStr other
 
 -- | Fall back to non-mutually recursive binds.
--- NB: silently ignores mutually recursive groups.
 deconstructBind :: (NamedThing b) => Bind b -> (b, Expr b)
 deconstructBind (NonRec b e) = (b, e)
-deconstructBind (Rec ((b, e) : _)) = (b, e)
+deconstructBind (Rec [(b, e)]) = (b, e)
+deconstructBind (Rec (_ : _)) = error "Found list of mutually recursive binders while translating."
 deconstructBind (Rec []) = error "Found empty list of mutually recursive binders while translating."
 
 -- | Retrieves the type inferred by Liquid Haskell for a variable

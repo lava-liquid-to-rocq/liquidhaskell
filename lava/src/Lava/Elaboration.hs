@@ -387,7 +387,7 @@ checkExpr γ pats e0@(Case r branches _) tp = do
     checkBranch ((c, ys), Just e) indVar = do
       tpc <- lookupDC c γ
       -- Replace the binders in tpc by the names of the match in ys
-      let tpcRenamed = renameArgs (map fst ys) tpc
+      let tpcRenamed = renameParams (map fst ys) tpc
       let (argsc, (_, tc, _)) = second fromRefType $ arrs tpcRenamed
       -- True for inductive variables in ys if isInduct
       let inductives = map (\case (_, RefType _ tc' _) -> tc' == tc && isJust indVar; (_, ArrType {}) -> False) argsc

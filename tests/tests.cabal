@@ -2669,7 +2669,7 @@ executable benchmark-lava
     ghc-options: -fforce-recomp
     other-modules:
                     -- Benchmark.PLE.Compose
-                    -- , Benchmark.PLE.Lambdas
+                    -- Benchmark.PLE.Lambdas
                     -- , Benchmark.PLE.Lists
                     -- , Benchmark.PLE.MonadId
                     -- , Benchmark.PLE.MonadMaybe
@@ -2686,11 +2686,11 @@ executable benchmark-lava
                     -- , TranslationTests.MonadList
                     -- , Benchmark.GradeExample
                     -- , Benchmark.Half
-                    Benchmark.Overview
+                    -- , Benchmark.Overview
                     -- , Benchmark.PeanoNats
                     -- , Benchmark.RBinsToBins
                     -- , Benchmark.SafeIndexing
-                    -- , Benchmark.SoftwareFoundations
+                    Benchmark.SoftwareFoundations
     build-depends:    base
                     , liquid-prelude
                     -- , containers

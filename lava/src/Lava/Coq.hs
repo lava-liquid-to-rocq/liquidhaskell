@@ -1189,7 +1189,9 @@ instance PrettyPrintable Tactic where
     Intros pats -> "intros " ++ unwords (map show pats)
     GeneralizeDependent xs -> intercalate "; " $ map (\x -> "try revert " ++ subsetWitnessNm x ++ "; generalize dependent " ++x) xs
     Clear hyp -> "clear " ++ hyp
-    AssertTacs x tp tacs -> "assert (" ++ x ++ ": " ++ show tp ++ ").\n{ " ++ unwords (map show tacs) ++ " }"
+    AssertTacs x tp tacs ->
+      "assert (" ++ x ++ ": " ++ show tp ++ ")."
+      ++ showNewline indent ++ "{ " ++ intercalate ". " (map (prettyPrint indent) tacs) ++ " }"
 
   includesBranches tac = case tac of
     Concat [] -> False

@@ -242,6 +242,26 @@ harmonizeBinderNames (ArrType x tpx tp) =
    in ArrType x tpx' $ harmonizeBinderNames tp
 harmonizeBinderNames tp@(RefType {}) = tp
 
+-- | Rename all the arguments of an arrow:
+--
+-- > renameParams([y1,y2], x1:{x1:B | True} -> x2:{x2:B | x1 == x2} -> {v:B | v = x1 + x2})
+-- >   = y1:{x1:B | True} -> y2:{x2:B | y1 == x2} -> {v:B | v = y1 + y2}
+renameParams :: [Id] -> RefType -> RefType
+renameParams = aux []
+  where
+    aux :: [(Id, Id)] -> [Id] -> RefType -> RefType
+    aux σ _ tp@(RefType {}) = renames σ tp
+    aux σ [] tp = renames σ tp
+    aux σ (y : ys) (ArrType x tpx tp)
+      | x `notElem` freeVars tp || x == y =
+          ArrType y (renames σ tpx) (aux σ ys tp)
+    -- TODO: handle by renaming
+    aux _ (y : _) tp0@(ArrType x _ tp)
+      | y `elem` freeVars tp =
+          error . render $ text "Name clash while renaming variable" <+> pPrint x <+> text "to" <+> pPrint y <+> text "in" <+> pPrint tp0
+    aux σ (y : ys) (ArrType x tpx tp) =
+      ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
+
 -- Remove projections around the *first-order* arguments of the constructor, in
 -- a context where FO arguments are given unrefined types
 -- This function should be used at top-level, where only variables appear inside projections
@@ -436,26 +456,6 @@ instance (HasVars a) => HasVars (Maybe a) where
   freeVarsArLoc = maybe Set.empty freeVarsArLoc
   boundVarsArLoc = maybe Set.empty boundVarsArLoc
   subst r x = fmap (subst r x)
-
--- | Rename all the arguments of an arrow:
---
--- > renameArgs([y1,y2], x1:{x1:B | True} -> x2:{x2:B | x1 == x2} -> {v:B | v = x1 + x2})
--- >   = y1:{x1:B | True} -> y2:{x2:B | y1 == x2} -> {v:B | v = y1 + y2}
-renameArgs :: [Id] -> RefType -> RefType
-renameArgs = aux []
-  where
-    aux :: [(Id, Id)] -> [Id] -> RefType -> RefType
-    aux σ _ tp@(RefType {}) = renames σ tp
-    aux σ [] tp = renames σ tp
-    aux σ (y : ys) (ArrType x tpx tp)
-      | x `notElem` freeVars tp =
-          ArrType y (renames σ tpx) (aux σ ys tp)
-    -- TODO: handle by renaming
-    aux _ (y : _) tp0@(ArrType x _ tp)
-      | y `elem` freeVars tp =
-          error . render $ text "Name clash while renaming variable" <+> pPrint x <+> text "to" <+> pPrint y <+> text "in" <+> pPrint tp0
-    aux σ (y : ys) (ArrType x tpx tp) =
-      ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
 
 -- * Equality instance using α-renaming
 

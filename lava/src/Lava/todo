@@ -1,5 +1,23 @@
-- run tests
+PLE/Lambdas:
+—— Subtyping failed with error: Synthesized type {Unit} for y/(0,L) is not a subtype of type {Integer} ——
+
+PeanoNats:
+—— Environment lookup failed with error: Constructor "()" not bound in context ——
+
+RBinsToBins:
+—— Environment lookup failed with error: Constructor "RZ" not bound in context ——
+
+Software foundations
+
+- bug with lq_tmp0 instead of HO parameter name
+- use Nothing instead of Var "undefined" 0 Local for patErr
+
+- higher-order constructors (for polymorphism):
+  TranslationTests.ApplicativeId, TranslationTests.ApplicativeList,
+  TranslationTests.ApplicativeMaybe,
+
 
 - cleanup files
 - cleanup Rocq grammar
 - use pretty printer for Rocq
+
