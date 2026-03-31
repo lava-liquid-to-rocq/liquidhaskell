@@ -83,7 +83,7 @@ data Expr
 -- >     | r r
 -- >     | ¬r
 -- >     | r `op` r
--- >     | r ? r
+-- >     | r ? (r proves r)
 -- >     | r `pop` r
 data Reft
   = Var Id Integer Localization
@@ -496,6 +496,10 @@ instance Eq Expr where
 identNb :: Int
 identNb = 2
 
+-- | Prints and adds parenthesis. Can be optimized to not always add parenthesis
+pPrintP :: (Pretty a) => a -> Doc
+pPrintP = parens . pPrint
+
 instance Pretty Builtin where
   pPrint = text . show
 
@@ -543,10 +547,10 @@ instance Pretty Reft where
   pPrint (IntLit i) = integer i
   pPrint (FloatLit f) = double f
   pPrint (DC c) = text c
-  pPrint (App r1 r2) = pPrint r1 <+> pPrint r2
+  pPrint (App r1 r2) = pPrint r1 <+> pPrintP r2
   pPrint (Neg r) = text "not" <+> parens (pPrint r)
   pPrint (Bop bop r1 r2) = pPrint r1 <+> pPrint bop <+> pPrint r2
-  pPrint (QMark r rh rp) = pPrint r <+> parens (pPrint rh <+> char '?' <+> pPrint rp)
+  pPrint (QMark r rh rp) = pPrint r <+> char '?' <+> parens (pPrint rh <+> text "proves" <+> pPrint rp)
   pPrint (Pop pop r1 r2) = pPrint r1 <+> pPrint pop <+> pPrint r2
   pPrint (Sub r from to) = text "sub" <> parens (hsep $ punctuate comma (pPrint r : map pPrint [from, to]))
   pPrint (Inj r tp) = text "inj" <> parens (pPrint r <> comma <+> pPrint tp)

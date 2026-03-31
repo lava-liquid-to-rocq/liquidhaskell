@@ -1,6 +1,3 @@
-PLE/Lambdas:
-—— Subtyping failed with error: Synthesized type {Unit} for y/(0,L) is not a subtype of type {Integer} ——
-
 PeanoNats:
 —— Environment lookup failed with error: Constructor "()" not bound in context ——
 

@@ -164,7 +164,10 @@ smpTpCheck γ pats r@(Bop bop r1 r2) = do
   if tp1' == tp1 && tp2' == tp2
     then return (tp, Bop bop r1' r2')
     else Left . SmpTpErr $ "Wrong types for the arguments of the operator " ++ prettyShow r
-smpTpCheck γ pats r0@(QMark r rh rp) = do
+smpTpCheck γ pats (Proj r) = second Proj <$> smpTpCheck γ pats r
+smpTpCheck _ _ (Sub {}) = error "Constructor Sub found in type refinement"
+smpTpCheck _ _ (Inj {}) = error "Constructor Inj found in type refinement"
+{- smpTpCheck γ pats r0@(QMark r rh rp) = do
   (tph, rh') <- smpTpCheck γ pats rh
   (tp, r') <- smpTpCheck γ pats r
   if tph == SmpTC boolTpName
@@ -175,10 +178,9 @@ smpTpCheck γ pats r@(Pop pop r1 r2) = do
   (tp2, r2') <- smpTpCheck γ pats r2
   if tp1 == tp2
     then return (tp1, Pop pop r1' r2')
-    else Left . SmpTpErr $ "Different types on both sides of proof combinators " ++ prettyShow r ++ ": found " ++ prettyShow tp1 ++ " and " ++ prettyShow tp2
-smpTpCheck γ pats (Proj r) = second Proj <$> smpTpCheck γ pats r
-smpTpCheck _ _ (Sub {}) = error "Constructor Sub found in type refinement"
-smpTpCheck _ _ (Inj {}) = error "Constructor Inj found in type refinement"
+    else Left . SmpTpErr $ "Different types on both sides of proof combinators " ++ prettyShow r ++ ": found " ++ prettyShow tp1 ++ " and " ++ prettyShow tp2 -}
+smpTpCheck _ _ (QMark {}) = error "Constructor ? found in type refinement"
+smpTpCheck _ _ (Pop {}) = error "Binary proof operator found in type refinement"
 
 -- * Subtyping
 
@@ -308,11 +310,11 @@ synReft γ pats (Bop bop r1 r2) = do
 synReft γ pats r0@(QMark r rh _) = do
   (tph, rh') <- synReft γ pats rh
   case tph of
-    RefType x u rp | u == unitTp -> do
+    RefType x _ rp -> do
       let γ' = insertLocalVar (x, tph) γ
       (tp, r') <- synReft γ' pats r
       return (tp, QMark r' rh' rp)
-    _ -> Left . SynErr $ "Wrong type (not a refinement of unit) found for the hint in " ++ prettyShow r0
+    _ -> Left . SynErr $ "Higher-order value found as a hint in " ++ prettyShow r0
 -- Not in the paper
 synReft γ pats r@(Pop pop r1 r2) = do
   (tp1, r1') <- synReft γ pats r1

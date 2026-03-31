@@ -160,11 +160,9 @@ transFlattenedApp (ExprHead g) args = case traverse unReft (g : args) of
   Just (h : hargs) -> Calc.Reft $ foldl Calc.App h hargs
   _ -> unexpected "expression head" (g : args)
 transFlattenedApp (VarHead HNot) [Calc.Reft tm] = Calc.Reft $ Calc.Neg tm
--- This is not needed:
--- transFlattenedApp (VarHead HLambda) [Calc.Reft (Calc.Var x _ _), e] = Calc.Let x Nothing (Calc.Reft Calc.unitTm) e
 transFlattenedApp (VarHead HEqChain) [_, fstTerm, Calc.Reft lstTerm] = transEqns (parseExpr fstTerm) lstTerm
 transFlattenedApp (VarHead HCast) [_, eqChain, qed]
-  | qed == Calc.Reft (Calc.mkVar "QED") = case parseExpr eqChain of
+  | qed == Calc.Reft (Calc.DC "QED") = case parseExpr eqChain of
       Eqn firstTerm lastTerm -> transEqns firstTerm lastTerm
       _ -> eqChain
 transFlattenedApp (VarHead HQmark) (_ : _ : firstArg : secondArg : _)
@@ -246,9 +244,7 @@ trans _ _ _ (Type t) = transGHCType t
 trans _ _ _ c@Coercion {} = error $ "coercion expression not supported: " ++ toStr c
 trans modId infTypes f (Let bind e) = transLet modId infTypes f bind e
 trans _ _ _ (Lit lit) = Calc.Reft $ transLit lit
-trans modId infTypes f (Lam x e) = error $ "lambda-abstraction outside of let-binding not supported"
-
-{- Calc.Let (stripLegalName modId $ show x) Nothing (Calc.Reft Calc.unitTm) $ trans modId infTypes f e -}
+trans _ _ _ l@(Lam {}) = error $ "lambda-abstraction outside of let-binding not supported: " ++ toStr l
 
 -- | Translate type arguments.
 transGHCType :: Type -> Calc.Expr
@@ -264,7 +260,7 @@ transApp modId infTypes f app = transFlattenedApp appHead args
 -- | Collect the last Reft from an equational chain expression
 collectReft :: Calc.Expr -> Calc.Reft
 collectReft (Calc.Reft (Calc.Pop _ _ t)) = t
-collectReft (Calc.Reft (Calc.QMark _ _ r)) = r
+collectReft (Calc.Reft (Calc.QMark _ r _)) = r
 collectReft (Calc.Reft r) = r
 collectReft _ = error "[CoreToLH] collectReft: expected simple proof term"
 
@@ -356,7 +352,7 @@ flattenFun modId infTypes f e = ([], trans modId infTypes f e)
 
 -- | Build a QMark Reft pairing a proof/hint with a term
 mkQmarkPair :: Calc.Expr -> Calc.Reft -> Calc.Reft
-mkQmarkPair hint proof = Calc.QMark proof (go hint) Calc.ttTm
+mkQmarkPair hint proof = Calc.QMark (go hint) proof Calc.ttTm
   where
     go :: Calc.Expr -> Calc.Reft
     go e = fromMaybe (error $ "[CoreToLH] mkQmarkPair: expected simple term, got: " ++ show e) (unReft e)
