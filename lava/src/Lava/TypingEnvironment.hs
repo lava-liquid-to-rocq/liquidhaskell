@@ -70,8 +70,11 @@ insertRecVar (x, tp) = insertVar (x, Recursive "" [], tp)
 changeRecToGlobal :: Id -> TypEnv -> Either TypeError TypEnv
 changeRecToGlobal f γ =
   case Map.lookup f γ of
-    Just (ΓVar _ tp) -> return $ Map.adjust (const $ ΓVar Global tp) f γ
-    _ -> Left . LookupErr $ "Supposed variable " ++ f ++ " found as type constructor in environment."
+    Just (ΓVar (Recursive {}) tp) -> return $ Map.adjust (const $ ΓVar Global tp) f γ
+    _ -> Left . LookupErr $ "Variable " ++ f ++ " is not recursive in the environment."
+
+adjust :: (Image -> Image) -> Id -> TypEnv -> TypEnv
+adjust = Map.adjust
 
 insertTC :: (Id, [(Id, RefType)]) -> TypEnv -> TypEnv
 insertTC (x, alts) = Map.insert x (ΓTC alts)

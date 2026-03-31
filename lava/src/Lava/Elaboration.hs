@@ -86,15 +86,18 @@ refTptoSmpTp (ArrType _ tpx tp) = SmpArrow (refTptoSmpTp tpx) (refTptoSmpTp tp)
 -- choose an induction variable and updates the localization with
 -- the variable and the current branch pattern.
 -- We return a term App r1 r2 (without App constructor) to avoid a partial
--- pattern matching in the main functions
-chooseIndVar :: TypEnv -> BranchPattern -> (Reft, [Reft]) -> Either TypeError (Reft, Reft)
+-- pattern matching in the main functions.
+-- We also update the environment for the recursive variable and return it
+chooseIndVar :: TypEnv -> BranchPattern -> (Reft, [Reft]) -> Either TypeError (TypEnv, Reft, Reft)
 -- chooseIndVar _ pats (hd, args) | traceFunc "chooseIndVar" [text "pats :=" <+> pPrint pats, text "app :=" <+> pPrint (hd, args)] = undefined
 chooseIndVar γ pats (hd, args) =
   case hd of
     Var x ar _ -> do
       (loc, _) <- lookupVar x γ
       case loc of
-        Recursive {} -> do
+        -- We assume that inductive variable is initialized with "",
+        -- if different we already applied chooseIndVar
+        Recursive "" _ -> do
           let -- The inductive variables are those that appear after a single
               -- destruction of a parameter and that are used as an argument
               -- of the application we are translating in the same position
@@ -109,14 +112,16 @@ chooseIndVar γ pats (hd, args) =
           -- We arbitrarily choose the first of the candidates to be the
           -- variable we do induction on
           indVar <- case listToMaybe indVarCandidates of
-            Nothing -> Left . SynErr $ "No possible induction variable in term " ++ prettyShow ogTerm
+            Nothing -> Left . SynErr $ "No possible induction variable in term " ++ prettyShow (foldl App hd args)
             Just y -> return y
-          return (foldl App (Var x ar (Recursive indVar pats)) args', argsLast)
+          let newLoc = Recursive indVar pats
+          let γ' = adjust (\case (ΓVar _ tp) -> ΓVar newLoc tp; l -> l) x γ
+          return (γ', foldl App (Var x ar newLoc) args', argsLast)
         _ -> return ogTerm
     _ -> return ogTerm
   where
     (args', argsLast) = fromJust (unsnoc args)
-    ogTerm = (foldl App hd args', argsLast)
+    ogTerm = (γ, foldl App hd args', argsLast)
 
 -- | Type checking in a simple type system, used to typecheck type refinements
 smpTpCheck :: TypEnv -> BranchPattern -> Reft -> Either TypeError (SimpleType, Reft)
@@ -132,9 +137,9 @@ smpTpCheck γ _ r@(DC c) = do
   tpc <- lookupDC c γ
   return (refTptoSmpTp tpc, r)
 smpTpCheck γ pats r@(App {}) = do
-  (r1, r2) <- chooseIndVar γ pats (apps r)
-  (tp1, r1') <- smpTpCheck γ pats r1
-  (tp2, r2') <- smpTpCheck γ pats r2
+  (γ', r1, r2) <- chooseIndVar γ pats (apps r)
+  (tp1, r1') <- smpTpCheck γ' pats r1
+  (tp2, r2') <- smpTpCheck γ' pats r2
   case tp1 of
     SmpArrow tpx tp | tpx == tp2 -> return (tp, App r1' r2')
     _ ->
@@ -264,9 +269,10 @@ synReft γ _ r@(DC c) | r `elem` builtinDCs = do
 -- (S-Data)
 synReft γ _ r@(DC c) = (,r) <$> lookupDC c γ
 -- (S-App)
+-- synReft γ pats r@(App {}) | traceFunc "synReft" [pPrint r] = undefined
 synReft γ pats r@(App {}) = do
-  (r1, r2) <- chooseIndVar γ pats (apps r)
-  (tp1, r1') <- synReft γ pats r1
+  (γ', r1, r2) <- chooseIndVar γ pats (apps r)
+  (tp1, r1') <- synReft γ' pats r1
   case tp1 of
     ArrType x tpx tp -> do
       r2' <- checkReft γ pats r2 tpx
