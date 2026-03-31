@@ -4,7 +4,7 @@ PeanoNats:
 RBinsToBins:
 —— Environment lookup failed with error: Constructor "RZ" not bound in context ——
 
-Software foundations
+Software foundations: fix generation of hints
 
 - bug with lq_tmp0 instead of HO parameter name
 - use Nothing instead of Var "undefined" 0 Local for patErr

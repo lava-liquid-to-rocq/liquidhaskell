@@ -228,8 +228,7 @@ transName n = Calc.mkVar n
 -- > trans(λx.e | cast | coercion) = unsupported
 trans :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> Calc.Expr
 trans modId _ _ (Var n)
-  -- TODO should we special-case for True/False/()?
-  --  | strippedName `elem` ["()", "True", "False"] = Calc.Reft $ transName strippedName
+  | strippedName `elem` ["()", "True", "False"] = Calc.Reft $ transName strippedName
   | isDataConId n = Calc.Reft $ Calc.DC strippedName
   | otherwise =
       -- trace ("VAR: " ++ show n ++ " -> " ++ strippedName ++ " isDC=" ++ show (isDataConId n)) $

@@ -35,7 +35,10 @@ stripLegalName moduleId s = removeIllegalCharacters $ if strip s `elem` illegalN
     -- \| Unfortunately Coq doesn't let us use "." prefixes in names, so we use "__" instead
     prefixedS = if length prefS > 1 then intercalate "__" . drop (length prefS - 2) $ prefS else stripLegalName "" (moduleId ++ "." ++ s) -- error $ "clashing:" ++ s
 
-illegalNames = ["Z", "N", "sub"]
+-- FIX: there is a bug in the interaction of stripLegalName and dependency order
+-- (in PeanoNats, sub is put too late if we use the prefixed name)
+-- illegalNames = ["Z", "N", "sub"]
+illegalNames = []
 
 -- | Whether a String is a built-in datatype
 isBuiltinDatatype :: String -> Bool
