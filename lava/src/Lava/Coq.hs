@@ -899,6 +899,7 @@ instance Show CoqTerm where
     Project (Cr c) -> showP . Cr $ unrefinedConstrName c
     Project (NegB p) -> show $ Neg (Project p)
     Project t -> "⌊ " ++ show t ++ " -⌋"
+    Proj2sig t -> "⌈ " ++ show t ++ " ⌉"
     SubCast (Subset n b need) _ (Exist _ tm ProofHole{}) (ProofHole idO) ->
       show $ Exist (Lambda n b need) tm (ProofHole idO)
     SubCast (Subset n b need) _ (Exist _ tm CoqProofTerm{}) (ProofHole idO) ->

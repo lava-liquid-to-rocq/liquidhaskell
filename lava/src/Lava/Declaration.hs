@@ -374,6 +374,7 @@ defGraphRelAndHints f =
     trDefGraphRel =
       -- trace (render $ text "trDefGraphRel" <+> text "paths :=" <+> pPrint (paths f)) $
       CoqInductive (relDefName $ name f) [] (utrRefTypeTopProp $ tpf f) (map pathConstr (paths f))
+    -- TODO: check that the constructor names are not already used
     pathConstr path = Coq.Constr (namePath (name f) path False) (trPathToConstr (name f) path)
 
 -- | Represents one path for a function.
@@ -469,13 +470,13 @@ trPathGuard f (σxs, [], rf) hs relRes =
       result =
         case relRes of
           Nothing -> Coq.App (Coq.Def $ relDefName f) (map utrReft (map snd σxs ++ [r']))
-          Just z -> Coq.Bop EqProp (Coq.Var z) (utrReft rf)
+          Just z -> Coq.Bop Equal (Coq.Var z) (utrReft rf)
    in hypsRV currentHyps (isNothing relRes) result
 trPathGuard f (σxs, (r, rp) : σp', rf) hs relRes =
   let (hyps_r, r') = extractApps r
       currentHyps = hyps_r \\ hs
       foralls = mkForallXs . Set.toList $ LH.freeVars rp
-      equality = Coq.Bop EqProp (utrReft r') (utrReft rp)
+      equality = Coq.Bop Equal (utrReft r') (utrReft rp)
       recCall = trPathGuard f (σxs, σp', rf) (hs ++ currentHyps) relRes
    in hypsRV currentHyps (isNothing relRes) . foralls $ Coq.Impl equality recCall
 
@@ -483,16 +484,23 @@ trPathGuard f (σxs, (r, rp) : σp', rf) hs relRes =
 -- The flag takeVars indicates if we want the variables alone between the constructors.
 -- It is used with True to create names of IH and with False to create names for the relation and inversion lemmas.
 namePath :: Id -> FunctionPath -> Bool -> Id
-namePath f (pats, _, _) takeVars =
-  foldl (++) base $ map getConstructor pats'
+namePath f (pats, guards, _) takeVars = foldl (++) base namesPats
   where
-    pats' = map snd pats
+    namesPats = map (getConstructor . apps) (map snd pats ++ map snd guards)
     -- TODO: deal with nested constructors (as in invLemName)
-    getConstructor (LH.Var x _ _) = if takeVars then "_" ++ x else ""
-    getConstructor (LH.DC c) = "_" ++ c
-    getConstructor (LH.App (DC c) _) = "_" ++ c
-    getConstructor r = error $ render $ text "Unexpected refinement " <+> pPrint r <+> text " in namePath for " <+> pPrint f
-    base = if all (null . getConstructor) pats' then relDefBranchName f else f
+    getConstructor (LH.Var x _ _, _) = if takeVars then "_" ++ x else ""
+    getConstructor (LH.DC c, _) = "_" ++ c
+    getConstructor r = error . render $ text "Unexpected refinement " <+> pPrint r <+> text " in Declaration.namePath for " <+> pPrint f
+    base = if all null namesPats then relDefBranchName f else f
+
+{- invLemName :: Id -> [(Id, Reft)] -> Id
+invLemName f pats =
+  if all (\case (_, LH.Var {}) -> True; _ -> False) pats
+    then relBranchLemName f
+    else relBranchLemName $ f ++ concatMap ((++) "_" . printConstructors . apps . snd) pats
+  where
+    printConstructors (DC c, args) = c ++ concatMap (printConstructors . apps) args
+    printConstructors _ = "" -}
 
 -- ** Generated lemmas
 
