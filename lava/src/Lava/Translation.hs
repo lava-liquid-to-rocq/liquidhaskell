@@ -348,24 +348,6 @@ mkMatching trans tm alts genVars =
           let ihy = if y `isIndVar` e then SingleIdPat $ ihName y else UnnamedIdPat
            in SingleIdPat y : [ihy | isInd, induct]
 
-{- trExprTacs (LH.Case cond [("False", [], elseE), ("True", [], thenE)]) = do
-  let
-    condT = utrSmpTerm (fetchFuncts γ) cond
-    transBrExpr _ expr = checkTerm γ expr tp (f, mCtx)
-  elseET <- transBrExpr Coq.btrue elseE
-  thenET <- transBrExpr Coq.btrue thenE
-  return [Coq.Destruct condT [("true", (Coq.ConjDestrPat [], thenET)), ("false", (Coq.ConjDestrPat [], elseET))]] -}
--- An if
-{- trExprTacs (LH.Let x _ (Reft cond) (LH.Case (LH.Var x' _ _) [("False", [], elseE), ("True", [], thenE)]) | x == x') =  do
-  let
-    condT = utrSmpTerm (fetchFuncts γ) cond
-    transBrExpr _ expr = checkTerm γ expr tp (f, mCtx)
-  elseET <- transBrExpr Coq.btrue elseE
-  thenET <- transBrExpr Coq.btrue thenE
-  return [Coq.Destruct condT [("true", (Coq.ConjDestrPat [], thenET)), ("false", (Coq.ConjDestrPat [], elseET))]] -}
--- A destruct
--- trExprTacs (LH.Let x _ (Reft r) (LH.Case (LH.Var x' _ _) alts)) | x == x' -> trExprTacs γ (Case r (mapThd (sub x r) alts))
-
 -- ** Utility functions for the refined translation
 
 -- | Given an inductive variable y, the branch pattern and arguments,

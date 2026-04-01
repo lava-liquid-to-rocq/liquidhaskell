@@ -363,29 +363,45 @@ checkExpr γ pats (Let x Nothing (Reft r) e) tp = do
   return (Let x (Just tpr) (Reft r') e')
 checkExpr _ _ e@(Let {}) _ = Left . CheckingErr $ "Type annotation expected for the let-binding " ++ prettyShow e
 -- (C-Case)
-checkExpr γ pats e0@(Case r branches _) tp = do
-  (tpr, r') <- synReft γ pats r
-  case tpr of
-    RefType _ (TC _) _ -> do
-      -- We translate to induct when we destruct one of the parameters
-      let indVar = case r of Var _ 0 Local | r `elem` pats -> Just r; _ -> Nothing
-      branches' <- mapM (`checkBranch` indVar) branches
-      -- In the first induct, we generalize the other parameters
-      -- FIX: if the first destruction of a parameter is translated to destruct,
-      -- we never generalize the variables
-      let genVars =
-            let onTopLevel = all (\case (Var {}) -> True; _ -> False) pats
-             in reverse [z | zvar@(Var z 0 Local) <- pats, zvar /= r, onTopLevel, isJust indVar]
-      return (Case r' branches' genVars)
-    _ -> Left . CheckingErr $ "Matched term is not of an inductive type in expression " ++ prettyShow e0
+checkExpr γ pats e0@(Case r branches _) tp =
+  -- we remove redundant pattern matchings
+  case redundantMatch of
+    Just e -> checkExpr γ pats e tp
+    Nothing -> do
+      (tpr, r') <- synReft γ pats r
+      case tpr of
+        RefType _ (TC _) _ -> do
+          -- We translate to induct when we destruct one of the parameters
+          let indVar = case r of Var _ 0 Local | r `elem` pats -> Just r; _ -> Nothing
+          branches' <- mapM (`checkBranch` indVar) branches
+          -- In the first induct, we generalize the other parameters
+          -- FIX: if the first destruction of a parameter is translated to destruct,
+          -- we never generalize the variables
+          let genVars =
+                let onTopLevel = all (\case (Var {}) -> True; _ -> False) pats
+                 in reverse [z | zvar@(Var z 0 Local) <- pats, zvar /= r, onTopLevel, isJust indVar]
+          return (Case r' branches' genVars)
+        _ -> Left . CheckingErr $ "Matched term is not of an inductive type in expression " ++ prettyShow e0
   where
+    -- returns Just e if the match is done on a data constructor,
+    -- where e is the branch of that constructor with the bound variables substituted correctly
+    redundantMatch =
+      case apps r of
+        (DC c, argsc) ->
+          let br = filter ((==) c . fst . fst) branches
+           in case br of
+                -- same remark as below: should be Nothing instead of "undefined"
+                (_, Just (Reft (Var "undefined" _ _))) : _ -> Nothing
+                ((_, ys), Just ebr) : _ -> Just $ substs (zip argsc (map fst ys)) ebr
+                _ -> Nothing
+        _ -> Nothing
     -- The booleans on the introduced variables are just placeholder, we
     -- instantiate them here for real
     checkBranch :: ((Id, [(Id, Bool)]), Maybe Expr) -> Maybe Reft -> Either TypeError ((Id, [(Id, Bool)]), Maybe Expr)
     checkBranch (c, Nothing) _ = return (c, Nothing)
     -- TODO: we should not use a variable name to translate from Core, we should
     -- not have this case
-    checkBranch (c, Just (Reft (Var "undefined" 0 Local))) _ = return (c, Nothing)
+    checkBranch (c, Just (Reft (Var "undefined" _ _))) _ = return (c, Nothing)
     checkBranch ((c, ys), Just e) indVar = do
       tpc <- lookupDC c γ
       -- Replace the binders in tpc by the names of the match in ys
