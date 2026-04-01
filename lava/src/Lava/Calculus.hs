@@ -496,9 +496,34 @@ instance Eq Expr where
 identNb :: Int
 identNb = 2
 
--- | Prints and adds parenthesis. Can be optimized to not always add parenthesis
-pPrintP :: (Pretty a) => a -> Doc
-pPrintP = parens . pPrint
+-- ** Precedence levels
+
+arrPrec :: Rational
+arrPrec = 0
+
+appPrec :: Rational
+appPrec = 10
+
+bopPrec :: Bop -> Rational
+bopPrec Mod = 7
+bopPrec Plus = 6
+bopPrec Minus = 6
+bopPrec Times = 7
+bopPrec Div = 7
+bopPrec Eq = 4
+bopPrec Neq = 4
+bopPrec Leq = 4
+bopPrec Geq = 4
+bopPrec Lt = 4
+bopPrec Gt = 4
+bopPrec And = 3
+bopPrec Or = 2
+bopPrec Impl = 1
+
+popPrec :: ProofOp -> Rational
+popPrec _ = 4
+
+-- ** Instances
 
 instance Pretty Builtin where
   pPrint = text . show
@@ -508,12 +533,12 @@ instance Pretty BaseType where
   pPrint (TC tc) = text tc
 
 instance Pretty RefType where
-  pPrint (RefType _ a r) | r == ttTm = braces $ pPrint a
-  pPrint (RefType _ a r) | a == unitTp = braces . braces $ pPrint r
-  pPrint (RefType x a r) =
+  pPrintPrec _ _ (RefType _ a r) | r == ttTm = braces $ pPrint a
+  pPrintPrec _ _ (RefType _ a r) | a == unitTp = braces . braces $ pPrint r
+  pPrintPrec _ _ (RefType x a r) =
     braces (text x <> colon <+> pPrint a <+> char '|' <+> pPrint r)
-  pPrint (ArrType x tpx tp) =
-    sep [parens (text x <> colon <+> pPrint tpx), text "->" <+> pPrint tp]
+  pPrintPrec l p (ArrType x tpx tp) =
+    maybeParens (p > arrPrec) $ sep [text x <> colon <+> pPrintPrec l (arrPrec + 1) tpx, text "->" <+> pPrintPrec l p tp]
 
 instance Pretty Decl where
   pPrint (Data tc constrs) =
@@ -542,19 +567,27 @@ instance Pretty Expr where
       ppPat (c, ys) = text c <+> hsep (map (text . fst) ys)
 
 instance Pretty Reft where
-  pPrint (Var x ar loc) = text x <> char '/' <> parens (integer ar <> comma <> pPrint loc)
-  pPrint (StringLit s) = quotes $ text s
-  pPrint (IntLit i) = integer i
-  pPrint (FloatLit f) = double f
-  pPrint (DC c) = text c
-  pPrint (App r1 r2) = pPrint r1 <+> pPrintP r2
-  pPrint (Neg r) = text "not" <+> parens (pPrint r)
-  pPrint (Bop bop r1 r2) = pPrint r1 <+> pPrint bop <+> pPrint r2
-  pPrint (QMark r rh rp) = pPrint r <+> char '?' <+> parens (pPrint rh <+> text "proves" <+> pPrint rp)
-  pPrint (Pop pop r1 r2) = pPrint r1 <+> pPrint pop <+> pPrint r2
-  pPrint (Sub r from to) = text "sub" <> parens (hsep $ punctuate comma (pPrint r : map pPrint [from, to]))
-  pPrint (Inj r tp) = text "inj" <> parens (pPrint r <> comma <+> pPrint tp)
-  pPrint (Proj r) = text "proj" <> parens (pPrint r)
+  pPrintPrec _ _ (Var x ar loc) = text x <> char '/' <> parens (integer ar <> comma <> pPrint loc)
+  pPrintPrec _ _ (StringLit s) = quotes $ text s
+  pPrintPrec _ _ (IntLit i) = integer i
+  pPrintPrec _ _ (FloatLit f) = double f
+  pPrintPrec _ _ (DC c) = text c
+  pPrintPrec l p (App r1 r2) =
+    maybeParens (p > appPrec) $ pPrintPrec l p r1 <+> pPrintPrec l (appPrec + 1) r2
+  pPrintPrec l p (Neg r) =
+    maybeParens (p > appPrec) $ text "not" <+> pPrintPrec l (appPrec + 1) r
+  pPrintPrec l p (Bop bop r1 r2) =
+    maybeParens (p > bopPrec bop) $ pPrintPrec l (bopPrec bop) r1 <+> pPrint bop <+> pPrintPrec l (bopPrec bop) r2
+  pPrintPrec l p (QMark r rh rp) =
+    maybeParens (p > appPrec) $ pPrintPrec l p r <+> char '?' <+> parens (pPrint rh <+> text "proves" <+> pPrint rp)
+  pPrintPrec l p (Pop pop r1 r2) =
+    maybeParens (p > popPrec pop) $ pPrintPrec l (popPrec pop) r1 <+> pPrint pop <+> pPrintPrec l (popPrec pop) r2
+  pPrintPrec _ p (Sub r from to) =
+    maybeParens (p > appPrec) $ text "sub" <+> parens (hsep $ punctuate comma (pPrint r : map pPrint [from, to]))
+  pPrintPrec _ p (Inj r tp) =
+    maybeParens (p > appPrec) $ text "inj" <+> parens (pPrint r <> comma <+> pPrint tp)
+  pPrintPrec l p (Proj r) =
+    maybeParens (p > appPrec) $ text "proj" <+> pPrintPrec l (appPrec + 1) r
 
 instance Pretty Localization where
   pPrint Local = char 'L'
