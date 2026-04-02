@@ -1,6 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
+Set Universe Polymorphism.
 Definition fvInLambda (x: {x: Z | True}): {VV: Z | True}. 
 Proof. 
 	destruct x as [x x_p]. 

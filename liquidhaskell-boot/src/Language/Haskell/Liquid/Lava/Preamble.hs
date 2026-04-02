@@ -4,12 +4,13 @@ import Prelude
 
 -- | Preamble for final Coq file
 preamble :: [String]
-preamble = [load_tactics, zscope, intscope]
+preamble = [load_tactics, zscope, intscope, univ_poly]
   where
     -- Add LoadPath \"out\" as Project. \n" ++
     load_tactics = "From coqDeps Require Export LiquidPreludeUtil." -- \nNotation \"x ↠ H p\" := (subCast _ _ H x p) (at level 60).\nNotation \"x ↠ H\" := (subCast _ _ H x _) (at level 60)." --"Require LHCoqTactics."
     zscope = "Open Scope Z_scope."
     intscope = "Open Scope Int_scope."
+    univ_poly = "Set Universe Polymorphism."
 
 {-
 ltacs = [ple, smtTrivial, smtApp, smtSolve]

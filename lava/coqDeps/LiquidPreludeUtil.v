@@ -124,7 +124,8 @@ Ltac solver := repeat first [
 Ltac solver_loop :=
   repeat_or_fail concat_either (quick_wff_wit) (
     concat_either (quicksolve) (
-      concat_either (timeout 1200 cleanup_after_hints) (lia_preprocessor
+      concat_either (simpl in *; timeout 1200 cleanup_after_hints) (
+        lia_preprocessor
         (*concat_either (lia_preprocessor) (split_hyps)*)
       )
     )

@@ -1,6 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
+Set Universe Polymorphism.
 Inductive RBin_u : Type := 
 	 | RB0_u: RBin_u -> RBin_u
 	 | RB1_u: RBin_u -> RBin_u

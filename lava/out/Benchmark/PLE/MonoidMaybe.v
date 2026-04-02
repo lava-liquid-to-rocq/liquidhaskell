@@ -1,6 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
+Set Universe Polymorphism.
 Inductive MaybeInt_u : Type := 
 	 | Just_u: Z -> MaybeInt_u
 	 | Nothing_u: MaybeInt_u. 

@@ -665,7 +665,7 @@ Ltac unconsSubArgList_pre X X' prX tlT X'0 g a subArgs :=
   pose proof (consArgsT_inj4 eqA0) as ->;
   pose proof (consArgsT_inj4 eqA1) as ->.
 
-Definition unconsSubArgList1 {X X' prX tlT X'0 g a} 
+(*Definition unconsSubArgList1 {X X' prX tlT X'0 g a} 
   (subArgs: SubArgList (consArgsT X X' prX tlT) (consArgsT X X'0 g a)):
   forall (x:X'), X'0 ↼ x. 
 Proof.
@@ -678,7 +678,7 @@ Definition unconsSubArgList2 {X X' prX tlT X'0 g a}
 Proof.
   unconsSubArgList_pre X X' prX tlT X'0 g a subArgs.
   refine x.
-Defined.
+Defined.*)
 
 Definition unconsSubArgList {X X' prX tlT X'0 g a} 
   (subArgs: SubArgList (consArgsT X X' prX tlT) (consArgsT X X'0 g a)):
@@ -688,9 +688,9 @@ Proof.
   unconsSubArgList_pre X X' prX tlT X'0 g a subArgs.
   refine (existT _ castX (existT _ x x0)).
 Defined.
-Definition unconsSubArgList3 {X X' prX tlT X'0 g a} 
+(* Definition unconsSubArgList3 {X X' prX tlT X'0 g a} 
   (subArgs: SubArgList (consArgsT X X' prX tlT) (consArgsT X X'0 g a)):=
-  projT2 (projT2 (unconsSubArgList subArgs)).
+  projT2 (projT2 (unconsSubArgList subArgs)).*)
 
 Lemma unconsSubArgList_correct {X X' prX tlT X'0 g a} 
   (subArgs: SubArgList (consArgsT X X' prX tlT) (consArgsT X X'0 g a)):
@@ -1327,7 +1327,7 @@ Ltac returnRefTp f :=
     pose (temp x) as fApp; subst temp
   | {_:?T | ?p} => let v := fresh "v" in
     exact (forall (v:T), Prop)
-  | {v:?T | ?pApp v} => exact (forall (v:T), Prop)
+  | {v:?T | _} => exact (forall (v:T), Prop)
   end).
 
 Ltac returnRef f :=
@@ -1345,6 +1345,7 @@ Ltac returnRef f :=
   | {_:?T | ?p} => let v := fresh "v" in
     exact (fun (v:T) => p)
   | {v:?T | ?pApp v} => exact (fun (v:T) => pApp v)
+  | sig ?pApp => exact (pApp)
   end).
 
 Ltac synthesizePrInstance := quicksolve.
@@ -1406,6 +1407,7 @@ Ltac returnUTp rel :=
 
 Ltac returnUTpPZTp PZTp :=
   pose PZTp as res; 
+  try unfold PZTp in res;
   repeat (
     let temp := fresh "temp" in
     assert (res = res) as temp by reflexivity; subst res;

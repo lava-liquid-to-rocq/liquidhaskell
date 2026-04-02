@@ -1,6 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
+Set Universe Polymorphism.
 Inductive IList_u : Type := 
 	 | Cons_u: Z -> (IList_u -> IList_u)
 	 | Nil_u: IList_u. 

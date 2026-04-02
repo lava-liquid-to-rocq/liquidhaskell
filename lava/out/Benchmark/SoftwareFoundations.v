@@ -1,6 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
+Set Universe Polymorphism.
 Inductive SFBool_u : Type := 
 	 | SFFalse_u: SFBool_u
 	 | SFTrue_u: SFBool_u. 

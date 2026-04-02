@@ -1,7 +1,6 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Set Universe Polymorphism.
 Inductive L_u : Type := 
 	 | C_u: Z -> (L_u -> L_u)
 	 | Emp_u: L_u. 
@@ -169,7 +168,7 @@ Proof.
 		refine (subsumptionCast _ _ Emp _); 
 		solver.  
 Defined. 
-Inductive bind_rel : (L_u -> ((@uPack (Z ::UT nilUT) L_u) -> (L_u -> Prop))) := 
+Polymorphic Inductive bind_rel : (L_u -> ((@uPack (Z ::UT nilUT) L_u) -> (L_u -> Prop))) := 
 	 | bind_Emp: (forall (lq_tmp1: @uPack (Z ::UT nilUT) L_u) , bind_rel Emp_u lq_tmp1 Emp_u)
 	 | bind_C: (forall (lq_tmp1: @uPack (Z ::UT nilUT) L_u) x xs , forall (bindres: L_u), (bind_rel xs lq_tmp1 bindres) -> (forall (lq_tmp1res: _), ((getUPackRel lq_tmp1) x lq_tmp1res) -> (forall (appendres: L_u), (append_rel lq_tmp1res bindres appendres) -> (bind_rel (C_u x xs) lq_tmp1 appendres)))). 
 #[global] Hint Constructors bind_rel : core_hint_db.
@@ -338,11 +337,14 @@ Proof.
 		((getPackF f) (exist (fun (lq_tmp0: Z) => True) x (ltac: (solver)))) (ltac: (solver)))) _); 
 	solver. 
 Qed. 
-Polymorphic Definition right_identity_tp (x: L): Type := {{forall (bindres: L_u), (bind_rel (⌊ x -⌋) 
+
+Polymorphic Definition right_identity_tp (x: L): Type :=
+  {{forall (bindres: L_u), (bind_rel (⌊ x -⌋) 
 		(ltac: (pose retrn_rel as Rel; 
 	pose retrn_rel_funct as Funct; 
 	buildUPackG Rel Funct)) bindres) -> (bindres = (⌊ x -⌋))}}.
-Theorem right_identity (x: L): right_identity_tp x. 
+
+Polymorphic Theorem right_identity (x: L): right_identity_tp x. 
 Proof. 
 	destruct x as [x x_p]. 
 	induction x as [(*C*) x xs IH_xs | (*Emp*) ]. 

@@ -1,6 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
+Set Universe Polymorphism.
 Inductive Modifier_u : Type := 
 	 | Minus_u: Modifier_u
 	 | Natural_u: Modifier_u

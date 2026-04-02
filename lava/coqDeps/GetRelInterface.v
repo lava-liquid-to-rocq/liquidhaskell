@@ -5,9 +5,22 @@ Load SimpleTacticUtils.
 
 (** Typeclass for functions *)
 
-Polymorphic Inductive UArgListT@{u} : Type@{u+1} :=
+Inductive UArgListT : Type :=
   | noUArgsT: UArgListT
-  | consUArgsT (X:Type@{u}) (tl:UArgListT): UArgListT.
+  | consUArgsT (X:Type) (tl:UArgListT): UArgListT.
+Inductive UArgList : UArgListT -> Type :=
+    noUArgs : UArgList noUArgsT
+  | consUArgs : forall {X : Type },
+                X ->
+                forall {tlT : UArgListT },
+                UArgList tlT ->
+                UArgList (consUArgsT X tlT).
+
+Class uPack (uargTps: UArgListT) (T: Type) : Type := {
+	rel_u (uargs: UArgList uargTps): T -> Prop; (* The graph relation *)
+	funct_u (uargs:UArgList uargTps) (v v':T): rel_u uargs v -> rel_u uargs v' -> v = v'
+}.
+
 Inductive ArgListT : Type := 
   | noArgsT : ArgListT
   | consArgsT (X X':Type): (X' ⤖ X) -> (forall (x:X'), ArgListT) -> ArgListT.
@@ -16,13 +29,7 @@ Inductive ArgList: ArgListT -> Type :=
   | noArgs: ArgList noArgsT
   | consArgs {X X':Type} {prX: X' ⤖ X} (x:X') {tlT: forall (x:X'), ArgListT} (tl: ArgList (tlT x)): 
       ArgList (consArgsT X X' prX tlT).
-Inductive UArgList@{u v} : UArgListT@{u} -> Type@{u+1} :=
-    noUArgs : UArgList noUArgsT@{u}
-  | consUArgs : forall {X : Type@{u} },
-                X ->
-                forall {tlT : UArgListT },
-                UArgList tlT ->
-                UArgList (consUArgsT@{u} X tlT).
+
 
 Global Notation "X ::UT tl" := (consUArgsT X tl) (at level 2, right associativity).
 Global Notation "X' ::RT tl" := (consArgsT _ X' _ tl) (at level 2, right associativity).
@@ -64,25 +71,19 @@ destruct args.
     refine ((prX.(proj) x) ::U (prArgList (tlT x) args uargTps (p x))).
 Defined.
 
-Class Pack (argTps:ArgListT) {uargTps:UArgListT} {z:projectsArgListT argTps uargTps}
-  (T: Type) (p: forall (args: ArgList argTps), T -> Prop) := {
-  f (args:ArgList argTps): {v:T | p args v};
-  frel (uargs: UArgList uargTps) (v:T): Prop;
-  f_frel (args:ArgList argTps) (v:T): proj1_sig (f args) = v <-> frel (prArgList args uargTps z) v;
-  funct (uargs: UArgList uargTps) v v': frel uargs v -> frel uargs v' -> v = v'
-}.
-
-Class uPack@{u} (uargTps: UArgListT@{u}) (T: Type@{u}) : Type@{u+1} := {
-	rel_u (uargs: UArgList uargTps): T -> Prop; (* The graph relation *)
-	funct_u (uargs:UArgList uargTps) (v v':T): rel_u uargs v -> rel_u uargs v' -> v = v'
-}.
-
 Definition uPack_wf (argTps:ArgListT) {uargTps:UArgListT} (z:projectsArgListT argTps uargTps)
   {T: Type} (p: forall (args: ArgList argTps), T -> Prop)
   (upack:uPack uargTps T): Prop :=
   exists (f: forall (args:ArgList argTps), {v:T | p args v}),
     forall (args:ArgList argTps) (v:T), proj1_sig (f args) = v <-> upack.(rel_u) (prArgList args uargTps z) v.
 
+Class Pack (argTps:ArgListT) {uargTps:UArgListT} {z:projectsArgListT argTps uargTps}
+  (T: Type) (p: forall (args: ArgList argTps), T -> Prop) : Type := {
+  f (args:ArgList argTps): {v:T | p args v};
+  frel (uargs: UArgList uargTps) (v:T): Prop;
+  f_frel (args:ArgList argTps) (v:T): proj1_sig (f args) = v <-> frel (prArgList args uargTps z) v;
+  funct (uargs: UArgList uargTps) v v': frel uargs v -> frel uargs v' -> v = v'
+}.
 
 Inductive SubArgList: ArgListT -> ArgListT -> Type :=
   | noArgsSub: SubArgList noArgsT noArgsT
