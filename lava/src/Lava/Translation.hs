@@ -7,13 +7,12 @@
 -- Unrefined and refined translations are mutually dependent, so they are all in the same file
 module Lava.Translation where
 
-import Data.Bifunctor (second)
+import Data.Bifunctor (bimap, second)
 import Debug.Trace (trace)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
-import Lava.CoqSyntaxUtil (mkExist, mkIsTrue, packGetF, packGetRel, upackGetRel)
-import Lava.CoqUtil (ihName, packInstanceName, relDefName, relPostfix, toPack, toUPack, upackInstanceName)
-import Lava.Util (hashName, isSuffixOf)
+import Lava.CoqSyntaxUtil
+import Lava.Names
 import Text.PrettyPrint.HughesPJClass as PP
 
 -- * Generic translations
@@ -67,8 +66,8 @@ utrDC c = unrefinedConstrName c
 utrRefType :: LH.RefType -> RocqType
 utrRefType (RefType _ tp _) = trBaseType tp
 utrRefType tp@(ArrType {}) =
-  let (args, ret) = arrs tp
-   in toUPack (map (utrRefType . snd) args) (utrRefType ret)
+  let (argsUT, retUT) = bimap (map (utrRefType . snd)) utrRefType $ arrs tp
+   in UPack (UArgListT argsUT) retUT
 
 -- | Translation of refinement types at top-level (with arrows)
 utrRefTypeTop :: LH.RefType -> RocqType
@@ -230,10 +229,24 @@ trRefType (RefType x tp r) =
     rT = case tp of
       (LH.Builtin {}) -> utrReftProp r
       _ | tp `elem` builtinTCs -> utrReftProp r
-      (LH.TC tc) -> Coq.And (getTCRef x tc) (utrReftProp r)
+      (LH.TC tc) -> Coq.And (Coq.App (Def $ wfTCName tc) [Coq.Var x]) (utrReftProp r)
 trRefType tp@(ArrType {}) =
-  let (args, ret) = arrs tp
-   in toPack (map (second trRefType) args) (trRefType ret)
+  Pack argTps uargTps (argListCorPrf argTps uargTps) tpx p_
+  where
+    {- substs = map (\(w, _) -> (removeSuffix "_r" w, projectTm $ Var w)) args_
+       cleanupSubst substs_ = subst substs_
+       args = map (\(x, xTp) -> (x, cleanupSubst (filter (\(y, _) -> x /= y) substs) xTp)) args_
+       tpx = cleanupSubst substs tpx_
+       rx = subst substs rx_ -}
+    (args, ret) = arrs tp
+    (x, tpx, rx) = fromSubset $ trRefType ret
+    argsT = map (second utrRefType) args
+    argTps = ArgListT argsT
+    uargTps = UArgListT $ map (utrRefType . snd) args
+    p = mkLam argsT (Lambda x tpx rx)
+    argsNm = "x_" ++ hashName argTps
+    v = "v_" ++ argsNm
+    p_ = Lambda argsNm (ArgumentList argTps) (Lambda v tpx (PrfTerm Hole (ByTac . Custom $ unwords ["flattenP", prettyShow p, argsNm, v])))
 
 -- | Translation of refinement types at top-level (with foralls)
 trRefTypeTop :: LH.RefType -> RocqType

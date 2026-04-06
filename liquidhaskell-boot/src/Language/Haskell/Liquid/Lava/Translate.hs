@@ -7,15 +7,15 @@ import Control.Monad (unless, void, when)
 import Data.Bifunctor (bimap)
 import Data.Char (isSpace)
 import Data.Foldable (traverse_)
+import Data.List (intercalate)
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import GHC.Core
 import GHC.Plugins hiding (Id, split)
 import qualified Language.Fixpoint.Types as F (val)
 import qualified Language.Haskell.Liquid.Lava.CoreToLH as CLH
+import Language.Haskell.Liquid.Lava.Misc (isIgnoredBind, removeSuffix, split, stripLegalName)
 import Language.Haskell.Liquid.Lava.Parse
-import Language.Haskell.Liquid.Lava.Preamble (preamble)
-import Language.Haskell.Liquid.Lava.Print
 import Language.Haskell.Liquid.Lava.Simplify (simplify)
 import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
 import Language.Haskell.Liquid.Types.RType (SpecType)
@@ -25,13 +25,12 @@ import qualified Lava.Calculus as Calc
 import qualified Lava.Coq as Coq (Decl (..))
 import Lava.Declaration (trDecl)
 import Lava.Elaboration (elaborate)
-import Lava.LH
-import Lava.Misc (isIgnoredBind, stripLegalName)
-import Lava.Util
+import Lava.Names (Id, OUT (..), outPostfix, preamble)
+import Lava.TopologicalSort
 import System.Directory (createDirectoryIfMissing, getCurrentDirectory)
 import System.FilePath (joinPath, splitDirectories, takeDirectory, (</>))
 import System.IO
-import Text.PrettyPrint.HughesPJClass (Pretty (), prettyShow)
+import qualified Text.PrettyPrint.HughesPJClass as PP
 
 -- | Contains all information about the source Liquid Haskell file to translate
 data SrcInfo = SrcInfo
@@ -119,7 +118,7 @@ translateFile writeFlag sinfo arg = do
 
   when writeFlag $ do
     createDirectoryIfMissing True outputFolder
-    writeOut outputFolder modulename ILH [] calcSource
+    writeOut outputFolder modulename ILHNoElab PP.empty calcSource
 
   -- Elaborate of the Calculus declarations before translation
   case elaborate calcSource of
@@ -128,27 +127,23 @@ translateFile writeFlag sinfo arg = do
       putStrLn "––Typechecking and elaboration OK––"
       when writeFlag $ do
         createDirectoryIfMissing True outputFolder
-        writeOut outputFolder modulename ILHC [] calcSourceElaborated
+        writeOut outputFolder modulename ILH PP.empty calcSourceElaborated
       putStrLn ""
       -- Translate Calculus declarations to Coq declarations
       let coqImports = map Coq.Load importNames
           coqResult = coqImports ++ concatMap trDecl calcSourceElaborated
       when writeFlag $ do
-        let coqPreamble = if hasImports then [] else preamble
-        writeOut outputFolder modulename Coq coqPreamble coqResult
+        let coqPreamble = if hasImports then PP.empty else preamble
+        writeOut outputFolder modulename Rocq coqPreamble coqResult
       putStrLn ""
       pure coqResult
 
-writeOut :: (Show a) => (Pretty a) => FilePath -> String -> OUT -> [String] -> [a] -> IO ()
+writeOut :: (PP.Pretty a) => FilePath -> String -> OUT -> PP.Doc -> [a] -> IO ()
 writeOut outputFolder modulename outType pre ilhSource = do
   let ilhOutputPath = outputFolder </> (modulename ++ outPostfix outType)
   putStrLn ("Writing " ++ show outType ++ " output to file at " ++ ilhOutputPath)
-  -- TODO: change once we have pretty print for Rocq
-  let ilhOutput =
-        case outType of
-          ILHC; ILH -> intercalate "\n\n" (pre ++ map prettyShow ilhSource)
-          _ -> intercalate "\n\n" (pre ++ map show ilhSource)
-  writeFile ilhOutputPath ilhOutput
+  let ilhOutput = PP.vcat (pre : PP.char '\n' : map ((PP.<> PP.char '\n') . PP.pPrint) ilhSource)
+  writeFile ilhOutputPath (PP.render ilhOutput)
 
 -- | Parsed binds and specs extracted from LH.
 data ParsedBinds = ParsedBinds
@@ -216,10 +211,10 @@ getModIdsAndImports :: Specs.TargetSrc -> [String]
 -- getModIdsAndImports src = error $ "TODO: imports"
 getModIdsAndImports _ = []
 
-pairLHDefsWithSigs :: Id -> [Def] -> M.Map Id Calc.RefType -> [Var] -> [(Def, Maybe Calc.RefType, Bool)]
+pairLHDefsWithSigs :: Id -> [CLH.Def] -> M.Map Id Calc.RefType -> [Var] -> [(CLH.Def, Maybe Calc.RefType, Bool)]
 pairLHDefsWithSigs modId defs specMap reflectedDecls = map single defs
   where
     reflectedNames :: S.Set Id
     reflectedNames = S.fromList $ map (stripLegalName modId . show . varName) reflectedDecls
-    single :: Def -> (Def, Maybe Calc.RefType, Bool)
-    single def = (def, M.lookup (defName def) specMap, defName def `S.member` reflectedNames)
+    single :: CLH.Def -> (CLH.Def, Maybe Calc.RefType, Bool)
+    single def = (def, M.lookup (CLH.defName def) specMap, CLH.defName def `S.member` reflectedNames)

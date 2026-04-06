@@ -1,14 +1,27 @@
--- | Miscellaneous LH-related functions
-module Lava.Misc
-  ( isIgnoredBind,
-    stripLegalName,
-    isBuiltinDatatype,
-  )
-where
+-- TODO: rename the module
 
-import Data.List (intercalate)
+-- | Functions used in the translation from Core and Spec
+module Language.Haskell.Liquid.Lava.Misc where
+
+import Data.List (intercalate, stripPrefix)
+import Data.Maybe (fromMaybe)
 import GHC.Core
-import Lava.Util (showStripped, split, strip)
+
+strip :: String -> String
+strip s = case split '.' s of
+  [] -> ""
+  parts -> last parts
+
+split :: Char -> String -> [String]
+split c s = case rest of
+  [] -> [chunk]
+  _ : tl -> chunk : split c tl
+  where
+    (chunk, rest) = break (== c) s
+
+-- Get rid of module names.
+showStripped :: (Show a) => a -> String
+showStripped = strip . show
 
 -- | tests whether an GHC bind starts with '$' or '?' and should thus not be translated
 isIgnoredBind :: (Show b) => Bind b -> Bool
@@ -49,3 +62,8 @@ isBuiltinDatatype tc = tc == "[]" || tc == "Maybe" || isTuple tc
     isTuple' (',' : s) = isTuple' s
     isTuple' [')'] = True
     isTuple' _ = False
+
+removeSuffix :: (Eq a) => [a] -> [a] -> [a]
+removeSuffix suffix orig = reverse $ removePrefix (reverse suffix) (reverse orig)
+
+removePrefix prefix orig = fromMaybe orig $ stripPrefix prefix orig

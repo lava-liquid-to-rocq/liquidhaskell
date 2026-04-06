@@ -1,6 +1,6 @@
-{-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# OPTIONS_GHC -Wall #-}
 
 module Language.Haskell.Liquid.Lava.Simplify (simplify) where
 
@@ -8,24 +8,23 @@ import Control.Monad.State.Strict
 import Data.Bifunctor (second)
 import Data.List (isPrefixOf)
 import qualified Data.Map.Strict as M
-
 import GHC.Core
 import GHC.Types.Var
-import Language.Haskell.Liquid.GHC.Misc ()  -- needed for Show Var instance
-
-import Lava.Util (showStripped)
+-- needed for Show Var instance
+import Language.Haskell.Liquid.GHC.Misc ()
+import Language.Haskell.Liquid.Lava.Misc (showStripped)
 
 class Simplifiable a where
   simplify :: a -> a
 
 instance Simplifiable CoreBind where
   simplify (NonRec x e) = NonRec x (simplify e)
-  simplify (Rec xes)    = Rec (map (second simplify) xes)
+  simplify (Rec xes) = Rec (map (second simplify) xes)
 
 instance Simplifiable CoreExpr where
   simplify e =
     let (e', su) = grapANFs e
-    in subst su e'
+     in subst su e'
 
 -------------------------------------------------------------------------------
 
@@ -35,7 +34,7 @@ instance Simplifiable CoreExpr where
 
 binds :: CoreBind -> [Var]
 binds (NonRec x _) = [x]
-binds (Rec xes)    = map fst xes
+binds (Rec xes) = map fst xes
 
 isANFVar :: Var -> Bool
 isANFVar = isPrefixOf "lq_anf" . showStripped
@@ -65,7 +64,7 @@ instance Subable CoreExpr where
 instance Subable CoreAlt where
   subst su (Alt c xs e) = Alt c xs (subst (su `without` xs) e)
 
-instance Subable a => Subable [a] where
+instance (Subable a) => Subable [a] where
   subst su = map (subst su)
 
 instance Subable CoreBind where
@@ -84,24 +83,27 @@ grapANFs :: CoreExpr -> (CoreExpr, Subst)
 grapANFs expr = runState (go expr) M.empty
   where
     go (Let (NonRec x ex) e)
-      | isANFVar x = do ex' <- go ex
-                        su <- get
-                        put $! M.insert x (subst su ex') su
-                        go e
-      | otherwise = do ex' <- go ex
-                       Let (NonRec x ex') <$> go e
-    go (Let (Rec xes) e) = do xes' <- traverse (traverse go) xes
-                              Let (Rec xes') <$> go e
-    go (App e1 e2)       = App <$> go e1 <*> go e2
-    go (Lam x e)         = Lam x <$> go e
-    go (Case e x t alts) = do e' <- go e
-                              Case e' x t <$> traverse goAlt alts
-    go (Cast e c)         = (`Cast` c) <$> go e
-    go (Tick t e)         = Tick t <$> go e
-    go e@(Type _)         = pure e
-    go e@(Coercion _)     = pure e
-    go e@(Lit _)          = pure e
-    go e@(Var _)          = pure e
+      | isANFVar x = do
+          ex' <- go ex
+          su <- get
+          put $! M.insert x (subst su ex') su
+          go e
+      | otherwise = do
+          ex' <- go ex
+          Let (NonRec x ex') <$> go e
+    go (Let (Rec xes) e) = do
+      xes' <- traverse (traverse go) xes
+      Let (Rec xes') <$> go e
+    go (App e1 e2) = App <$> go e1 <*> go e2
+    go (Lam x e) = Lam x <$> go e
+    go (Case e x t alts) = do
+      e' <- go e
+      Case e' x t <$> traverse goAlt alts
+    go (Cast e c) = (`Cast` c) <$> go e
+    go (Tick t e) = Tick t <$> go e
+    go e@(Type _) = pure e
+    go e@(Coercion _) = pure e
+    go e@(Lit _) = pure e
+    go e@(Var _) = pure e
 
     goAlt (Alt c xs e) = Alt c xs <$> go e
-

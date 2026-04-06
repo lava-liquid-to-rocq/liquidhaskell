@@ -121,9 +121,8 @@ library
                       Language.Haskell.Liquid.GHC.Plugin.SpecFinder
                       Language.Haskell.Liquid.GHC.Plugin.Types
                       Language.Haskell.Liquid.Lava.CoreToLH
+                      Language.Haskell.Liquid.Lava.Misc
                       Language.Haskell.Liquid.Lava.Parse
-                      Language.Haskell.Liquid.Lava.Preamble
-                      Language.Haskell.Liquid.Lava.Print
                       Language.Haskell.Liquid.Lava.SpecToLH
                       Language.Haskell.Liquid.Lava.Simplify
   hs-source-dirs:     src src-ghc src-ghc-9.10

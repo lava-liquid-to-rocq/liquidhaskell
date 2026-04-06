@@ -20,23 +20,15 @@ source-repository head
 
 library
   exposed-modules:
-      Lava
       Lava.Calculus
       Lava.Coq
       Lava.CoqSyntaxUtil
-      Lava.CoqUtil
       Lava.Declaration
       Lava.Elaboration
-      Lava.InternalLH
-      Lava.LH
-      Lava.Misc
-      Lava.PaperUtils
+      Lava.Names
+      Lava.TopologicalSort
       Lava.Translation
-      Lava.TypedTranslation
-      Lava.TypingContext
       Lava.TypingEnvironment
-      Lava.UntypedTranslations
-      Lava.Util
   other-modules:
       Paths_lava
   autogen-modules:

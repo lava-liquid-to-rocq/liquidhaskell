@@ -10,6 +10,7 @@ import Data.List (uncons, unsnoc)
 import Data.Maybe (fromJust, isJust, listToMaybe)
 import Debug.Trace (trace)
 import Lava.Calculus
+import Lava.Names (Id)
 import Lava.TypingEnvironment
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)

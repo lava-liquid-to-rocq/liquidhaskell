@@ -3,8 +3,9 @@ module Lava.TypingEnvironment where
 
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
+import Data.Set (fromList)
 import Lava.Calculus
-import qualified Lava.Util as Util (mkFresh)
+import Lava.Names (Id, freshVar)
 
 data TypeError
   = WfErr String
@@ -110,7 +111,7 @@ lookupDC x γ =
     findTypes _ acc = acc
 
 mkFresh :: Id -> TypEnv -> Id
-mkFresh x γ = Util.mkFresh x (Map.keys γ)
+mkFresh x γ = freshVar x (fromList $ Map.keys γ)
 
 member :: Id -> TypEnv -> Bool
 member = Map.member

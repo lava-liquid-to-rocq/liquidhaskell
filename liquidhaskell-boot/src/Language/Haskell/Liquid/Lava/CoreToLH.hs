@@ -1,39 +1,56 @@
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE TupleSections #-}
 {-# OPTIONS_GHC -Wall #-}
 
 -- |
 -- - Main module for the translation between GHC Core Haskell and Lava Calculus
-module Language.Haskell.Liquid.Lava.CoreToLH (transBind) where
+module Language.Haskell.Liquid.Lava.CoreToLH (transBind, Def (..)) where
 
 import Control.Exception (assert)
 import Data.Bifunctor (first, second)
 -- import           Data.Char (isUpper)
-import Data.Data (Data)
-import qualified Data.HashMap.Strict as HM
-import qualified Data.Map.Strict as M
-import qualified Data.Set as S
-import qualified Data.Text as Text
+
 -- import GHC.Parser.Annotation
 -- import GHC.Types.Var hiding (Id)
 -- import GHC.Types.SrcLoc
+
+import Data.Char (isDigit)
+import Data.Data (Data, showConstr, toConstr)
+import qualified Data.HashMap.Strict as HM
+import Data.List (find, intercalate, isPrefixOf)
+import qualified Data.Map.Strict as M
+import Data.Maybe (fromMaybe, mapMaybe)
+import qualified Data.Set as S
+import qualified Data.Text as Text
+import Debug.Trace (trace)
 import GHC.Core
 import GHC.Core.TyCo.Rep
 import GHC.Types.Literal
 import GHC.Types.Name (NamedThing, getSrcSpan)
 import GHC.Utils.Outputable (ppr, showSDocUnsafe)
 import Language.Haskell.Liquid.GHC.Misc (isDataConId)
+import Language.Haskell.Liquid.Lava.Misc
 import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
 import Language.Haskell.Liquid.Types.RType (SpecType)
 import Language.Haskell.Liquid.Types.Types (AnnInfo (..))
 import qualified Language.Haskell.Liquid.Types.Types ()
 import qualified Lava.Calculus as Calc
-import qualified Lava.LH as LH
-import Lava.Misc
-import Lava.Util hiding (sub, subst)
+import Lava.Names (Id, hashName)
 
 -- | Constraint synonym for GHC Core binder variables
 type CoreBinder b = (Data b, Show b, NamedThing b)
+
+-- | A top-level definition extracted from GHC Core
+data Def = Def
+  { -- | the name of the definition
+    defName :: Id,
+    -- | the argument names
+    defArgs :: [Id],
+    -- | the translated body
+    defBody :: Calc.Expr,
+    -- | whether the definition is recursive
+    defIsRec :: Bool
+  }
+  deriving (Eq, Show)
 
 -- TODO move these to Calculus
 
@@ -70,14 +87,14 @@ undefinedExpr = Calc.Reft (Calc.mkVar "undefined")
 --
 -- > transBind(NonRec f = e) = trans(f,e)
 -- > transBind(Rec [f_1 = e_1, …, f_n = e_n]) = trans(f_1,e_1)
-transBind :: (CoreBinder b) => String -> AnnInfo SpecType -> Bind b -> LH.Def
+transBind :: (CoreBinder b) => String -> AnnInfo SpecType -> Bind b -> Def
 transBind modId infTypes binds = case binds of
   NonRec b e ->
     let (args, body) = flattenFun modId infTypes (f b) e
-     in LH.Def (f b) args body False
+     in Def (f b) args body False
   Rec [(b, e)] ->
     let (args, body) = flattenFun modId infTypes (f b) e
-     in LH.Def (f b) args body True
+     in Def (f b) args body True
   Rec defs -> error $ "Mutually recursive definitions " ++ show (map fst defs) ++ " not yet supported."
   where
     f b = stripLegalName modId $ show b
@@ -202,6 +219,9 @@ transName "True" = Calc.ttTm
 transName "False" = Calc.ffTm
 transName "?" = error "Impossible: '?'"
 transName n = Calc.mkVar n
+
+toStr :: (Data a) => a -> String
+toStr = showConstr . toConstr
 
 -- | Translate Haskell expressions.
 -- The first argument is the name of the top-level binder we are translating.
@@ -484,6 +504,7 @@ transCaseExpr = recurse []
                 (True, False) -> Just (x, Calc.mkVar y) -- if variable is specified now, but not earlier use current name throughout
                 (False, True) -> Just (y, Calc.mkVar x) -- if variable was specified before, but not now use previous name here as well
                 (_, _) -> Nothing
+              unspecName x = ("lq_anf" `isPrefixOf` x && all isDigit (removePrefix "lq_anf" x)) || "ds_d" `isPrefixOf` x
           _ -> []
         -- \| The translation of the only branch in which the pattern is consistent with the previously matched pattern matched against the same expression
         recO =

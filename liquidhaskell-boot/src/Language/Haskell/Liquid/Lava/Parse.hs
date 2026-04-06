@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
+
 module Language.Haskell.Liquid.Lava.Parse
   ( -- ** type aliases for intermediate data
     SpecPair,
@@ -17,23 +18,22 @@ module Language.Haskell.Liquid.Lava.Parse
   )
 where
 
-import           Control.Monad (filterM)
-import           Data.List (sortOn)
-import           System.Directory (doesFileExist)
-import           System.FilePath ((</>), (<.>), joinPath)
-
+import Control.Monad (filterM)
 -- import GHC.Core.DataCon
-import           GHC.Types.Var (Var, varName)
+
+import Data.Bifunctor (first)
+import Data.List (sortOn)
+import Data.Set (fromList)
+import GHC.Types.Var (Var, varName)
 import qualified Language.Fixpoint.Types as F (Located (..))
-import qualified Language.Haskell.Liquid.Types.RType as LhLib
-
-import qualified Lava.Calculus as Calc
-import           Lava.LH
-import           Lava.Misc
-import           Lava.Util
-
+import Language.Haskell.Liquid.Lava.CoreToLH (Def (..))
+import Language.Haskell.Liquid.Lava.Misc
 import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
-
+import qualified Language.Haskell.Liquid.Types.RType as LhLib
+import qualified Lava.Calculus as Calc
+import Lava.Names (Id, freshVar)
+import System.Directory (doesFileExist)
+import System.FilePath (joinPath, (<.>), (</>))
 
 -- ** LH -> Calculus parsing
 
@@ -41,8 +41,10 @@ type SpecPair = (Id, LhLib.SpecType)
 
 -- | Parsed data declarations extracted from Liquid Haskell
 data PData = PData
-  { pdCtors  :: [(Var, F.Located LhLib.SpecType)]  -- ^ refined types of data constructors
-  , pdTyCons :: [LhLib.TyConP]                     -- ^ refined types of type constructors
+  { -- | refined types of data constructors
+    pdCtors :: [(Var, F.Located LhLib.SpecType)],
+    -- | refined types of type constructors
+    pdTyCons :: [LhLib.TyConP]
   }
 
 -- , [LhLib.Located DataCon], [F.DataDecl]) -- more data type info, in case they are needed
@@ -61,9 +63,11 @@ parsePData modId (PData cs typConstrs) =
     parseSpec (c, sig) =
       let sigT = SLH.transSig modId (Just c) sig
           (args', ret) = signatureToArgsRet sigT
-          args_ = map SLH.defaultBind args'
-          args = mkDistinct args_    -- TODO comes from Lava.Util
+          args_ = map defaultBind args'
+          args = mkDistinct args_
        in (c, foldr (\(n, t) acc -> Calc.ArrType n t acc) ret args)
+    mkDistinct [] = []
+    mkDistinct ((x, xData) : tl) = (x, xData) : mkDistinct (map (first (\y -> if y == x then y ++ "_" else y)) tl)
     -- we translate every type constructor that is not already built-in
     typeNames = map (\(LhLib.TyConP _ con _ _ _ _ _) -> SLH.showppStripped modId con) typConstrs
     -- find the translated branches corresponding to typeName
@@ -105,7 +109,7 @@ parseDef :: (Def, Maybe Calc.RefType, Bool) -> Calc.Decl
 parseDef (Def dname args body _, Just sig, b) =
   Calc.Definition dname fullTp (Calc.substs renSubs body) b
   where
-    fullTp = foldr (\(n, t) acc -> Calc.ArrType n t acc) tp (map SLH.defaultBind sigArgs)
+    fullTp = foldr (\(n, t) acc -> Calc.ArrType n t acc) tp (map defaultBind sigArgs)
     tp =
       if isLemma sig
         then case sRes of
@@ -125,10 +129,16 @@ signatureToArgsRet sig = (args, ret)
     (sigArgs, sRes) = Calc.arrs sig
     names = map fst sigArgs
     v0 = Calc.argName sRes
-    v = mkFresh v0 names
+    v = freshVar v0 (fromList names)
     ret = Calc.subst (Calc.mkVar v) v0 . Calc.subst (Calc.mkVar v) (Calc.argName sRes) $ sRes
     args = map renameArg sigArgs
     renameArg (n, Calc.RefType x tp reft) = Calc.RefType m tp (Calc.subst (Calc.mkVar m) x reft)
       where
         m = if n /= "" then n else x
-    renameArg (_, arr@Calc.ArrType{}) = arr
+    renameArg (_, arr@Calc.ArrType {}) = arr
+
+-- > defaultBind({x:A | r})  = (x, {x:A | r})
+-- > defaultBind(x: Tx -> Y) = (x, (x: Tx -> Y)
+defaultBind :: Calc.RefType -> (Id, Calc.RefType)
+defaultBind r@(Calc.RefType nm _ _) = (nm, r)
+defaultBind a@(Calc.ArrType nm _ _) = (nm, a)

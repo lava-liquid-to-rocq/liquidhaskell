@@ -1,10 +1,11 @@
-PeanoNats:
-—— Environment lookup failed with error: Constructor "()" not bound in context ——
+Change return type of arrs to ([RefType], (Id, BaseType, Reft))
 
 RBinsToBins:
 —— Environment lookup failed with error: Constructor "RZ" not bound in context ——
 
 Software foundations: fix generation of hints
+
+- fix translated outputs
 
 - bug with lq_tmp0 instead of HO parameter name
 - use Nothing instead of Var "undefined" 0 Local for patErr
@@ -13,8 +14,4 @@ Software foundations: fix generation of hints
   TranslationTests.ApplicativeId, TranslationTests.ApplicativeList,
   TranslationTests.ApplicativeMaybe,
 
-
-- cleanup files
 - cleanup Rocq grammar
-- use pretty printer for Rocq
-

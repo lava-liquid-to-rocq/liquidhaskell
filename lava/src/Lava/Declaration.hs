@@ -14,11 +14,10 @@ import qualified Data.Set as Set
 import Debug.Trace (trace)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
-import Lava.CoqSyntaxUtil (mkAnd, mkForallXs, mkOpaque, mkOr, mkVarDestruct)
-import Lava.CoqUtil
+import Lava.CoqSyntaxUtil
+import Lava.Names
 import Lava.Translation
 import Lava.TypingEnvironment as TypEnv
-import Lava.Util (addParens, hashName, showP)
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 
@@ -188,6 +187,7 @@ wfLem tc =
   where
     tm = ("tm", Subset "v" (unrefTC tc) $ Coq.And wfV (Coq.App (Coq.Var "p") [Coq.Var "v"]))
     wfV = Coq.App (Def $ wfTCName tc) [Coq.Var "v"]
+    destructSubsetArg x = DestructSubsetTerm (Coq.Var x) (ConjDestrPat [SingleIdPat x, SingleIdPat $ subsetWitnessNm x])
 
 -- | Definition of the refined TC as a notation:
 --
@@ -554,7 +554,7 @@ inversionLemma f (σxs, paths) =
       f_lem
       []
       (Coq.Prop . mkForallXs (argsVars ++ [res]) $ Equiv relApp guardDisjunction)
-      (ProofBody [Custom $ "rel_back' " ++ addParens tacArg])
+      (ProofBody [Custom $ "rel_back' (" ++ tacArg ++ ")"])
       Opaque,
     AddHint RewriteHint f_lem GraphRelBackDB
   ]
@@ -570,7 +570,7 @@ inversionLemma f (σxs, paths) =
     -- argument of the tactic: the translation of the terms destructed in the guards
     tacArg =
       let withPatterns = concatMap fst paths
-       in unwords (map ((++ " _::_") . showP . utrReftProp . fst) withPatterns) ++ " _nil"
+       in unwords (map ((++ " _::_") . prettyShow . utrReftProp . fst) withPatterns) ++ " _nil"
 
 -- | Name of the inversion lemma constructed from the patterns of the arguments in a path.
 -- This function is similar to `Declaration.namePath`
@@ -718,14 +718,13 @@ relMkLemma f = [refRelMkLem, AddHint ResolveHint (relDefMkLemName $ name f) Grap
 --
 -- > #[global] Instance f_pack : ….
 -- > Proof. buildPackG f f_rel f__f_rel f_rel_funct. Defined.
-{- packInstance :: FuncData -> [Coq.Decl]
+packInstance :: FuncData -> [Coq.Decl]
 packInstance f | traceF "packInstance" f = undefined
 packInstance f =
-  [TacInstance (packInstanceName $ name f) (show $ toPack argsT_r (retT f)) def | firstOrder]
+  [TacInstance (packInstanceName $ name f) (trRefType $ tpf f) def | firstOrder]
   where
-    argsT_r = map (first (++ "_r")) (argsT f)
     def = Custom $ unwords ["\n\tbuildPackG", name f, relDefName $ name f, relDefThmName $ name f, funcHoodLemName $ name f] ++ ". "
-    firstOrder = all (\case (_, RefType {}) -> True; (_, ArrType {}) -> False) (args f) -}
+    firstOrder = all (\case (_, RefType {}) -> True; (_, ArrType {}) -> False) (args f)
 
 -- ** Utility functions
 

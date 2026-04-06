@@ -2,20 +2,21 @@
 {-# LANGUAGE LambdaCase #-}
 {-# OPTIONS_GHC -Wall #-}
 
--- TODO: maybe move defaultBind somewhere else
-module Language.Haskell.Liquid.Lava.SpecToLH (transSig, transType, showppStripped, defaultBind, bops, buildins, InternalCont (..)) where
+module Language.Haskell.Liquid.Lava.SpecToLH (transSig, transType, showppStripped, bops, buildins, InternalCont (..)) where
 
 import Control.Monad (filterM)
 import Control.Monad.Extra (allM, ifM)
 import Control.Monad.Reader (Reader, asks, runReader)
 import Data.Char (isUpper)
+import Data.List (isInfixOf)
 import qualified Data.Map.Strict as M
+import Data.Maybe (fromMaybe)
 import Language.Fixpoint.Types (PPrint)
 import qualified Language.Fixpoint.Types as F
+import Language.Haskell.Liquid.Lava.Misc
 import Language.Haskell.Liquid.Types.RType (PVarV (PV), RTVar (RTVar), RTyCon (RTyCon), RTyVar (RTV), RTypeV (..), SpecType, UReft, UReftV (MkUReft))
 import qualified Lava.Calculus as Calc
-import Lava.Misc
-import Lava.Util
+import Lava.Names (Id)
 
 -- | Helper for unsupported constructs
 unsupported :: String -> a
@@ -84,12 +85,6 @@ parseConstrPred modId symb = case split '$' $ F.showpp symb of
   [n, func] -> (Just (stripLegalName modId n), stripLegalName modId func)
   [func] -> (Nothing, stripLegalName modId func)
   _ -> unsupported $ "parseConstrPred: " ++ F.showpp symb
-
--- | defaultBind({x:A | r})   = (x, {x:A | r})
--- | defaultBind(x: Tx -> Y) = (x, (x: Tx -> Y)
-defaultBind :: Calc.RefType -> (Id, Calc.RefType)
-defaultBind r@(Calc.RefType nm _ _) = (nm, r)
-defaultBind a@(Calc.ArrType nm _ _) = (nm, a)
 
 -- | Translation of a LH SpecType to a refined argument {x: A | r}
 --

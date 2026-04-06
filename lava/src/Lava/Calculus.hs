@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OrPatterns #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- | Grammars, printer and suable functions for ILH
 module Lava.Calculus where
@@ -13,13 +14,12 @@ import Data.Maybe (fromJust)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Debug.Trace (trace)
+import Lava.Names (Id, freshVar)
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding (lookup, (<>))
 
 -- * The grammar
-
-type Id = String
 
 -- ** Types
 
@@ -258,7 +258,7 @@ renameParams = aux []
     -- TODO: handle by renaming
     aux _ (y : _) tp0@(ArrType x _ tp)
       | y `elem` freeVars tp =
-          error . render $ text "Name clash while renaming variable" <+> pPrint x <+> text "to" <+> pPrint y <+> text "in" <+> pPrint tp0
+          error . render $ "Name clash while renaming variable" <+> pPrint x <+> "to" <+> pPrint y <+> "in" <+> pPrint tp0
     aux σ (y : ys) (ArrType x tpx tp) =
       ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
 
@@ -308,15 +308,6 @@ freeVars tm = Set.map fst $ freeVarsArLoc tm
 
 boundVars :: (HasVars a) => a -> Set Id
 boundVars tm = Set.map fst $ freeVarsArLoc tm
-
--- | return a variable fresh wrt to a set of Id
-freshVar :: Id -> Set Id -> Id
-freshVar x vars =
-  let start :: Integer
-      start = 1
-      names = x : [x ++ "_" ++ show i | i <- [start ..]]
-   in -- there was also something with indPatVarName x (currently = x) `notElem` vars
-      fromJust $ find (`notElem` vars) names
 
 -- | return a variable fresh wrt to the free and bound variables in the second argument
 fresh :: (HasVars a) => Id -> a -> Id
@@ -538,32 +529,32 @@ instance Pretty RefType where
   pPrintPrec _ _ (RefType x a r) =
     braces (text x <> colon <+> pPrint a <+> char '|' <+> pPrint r)
   pPrintPrec l p (ArrType x tpx tp) =
-    maybeParens (p > arrPrec) $ sep [text x <> colon <+> pPrintPrec l (arrPrec + 1) tpx, text "->" <+> pPrintPrec l p tp]
+    maybeParens (p > arrPrec) $ sep [text x <> colon <+> pPrintPrec l (arrPrec + 1) tpx, "->" <+> pPrintPrec l p tp]
 
 instance Pretty Decl where
   pPrint (Data tc constrs) =
     sep [ppTC, nest identNb . sep $ map (\dc -> char '|' <+> ppConstr dc) constrs]
     where
-      ppTC = text "data" <+> text tc <+> text ":="
-      ppConstr (c, tpc) = text c <+> text "::" <+> pPrint tpc
+      ppTC = "data" <+> text tc <+> ":="
+      ppConstr (c, tpc) = text c <+> "::" <+> pPrint tpc
   pPrint (Definition f tp e isRefl) =
     sep [ppRefl <+> ppF, nest identNb (pPrint e)]
     where
-      ppRefl = if isRefl then text "refl" else empty
-      ppF = text "def" <+> text f <+> text "::" <+> pPrint tp <+> text ":="
+      ppRefl = if isRefl then "refl" else empty
+      ppF = "def" <+> text f <+> "::" <+> pPrint tp <+> ":="
 
 instance Pretty Expr where
   pPrint (Reft r) = pPrint r
-  pPrint (Let x tpx ex e) = sep [sep [ppLet, pPrint ex], nest 1 (text "in" <+> pPrint e)]
+  pPrint (Let x tpx ex e) = sep [sep [ppLet, pPrint ex], nest 1 ("in" <+> pPrint e)]
     where
-      ppLet = text "let" <+> ppTp <+> text ":="
+      ppLet = "let" <+> ppTp <+> ":="
       ppTp = case tpx of
         Nothing -> text x
         Just tp -> parens (text x <> colon <+> pPrint tp)
   pPrint (Case r alts _) =
-    vcat $ (text "case" <+> pPrint r <+> text "of") : map ppAlt alts
+    vcat $ ("case" <+> pPrint r <+> "of") : map ppAlt alts
     where
-      ppAlt (pat, e) = sep [char '|' <+> ppPat pat <+> text "->", nest identNb $ maybe (text "undefined") pPrint e]
+      ppAlt (pat, e) = sep [char '|' <+> ppPat pat <+> "->", nest identNb $ maybe "undefined" pPrint e]
       ppPat (c, ys) = text c <+> hsep (map (text . fst) ys)
 
 instance Pretty Reft where
@@ -576,19 +567,19 @@ instance Pretty Reft where
   pPrintPrec l p (App r1 r2) =
     maybeParens (p > appPrec) $ pPrintPrec l p r1 <+> pPrintPrec l (appPrec + 1) r2
   pPrintPrec l p (Neg r) =
-    maybeParens (p > appPrec) $ text "not" <+> pPrintPrec l (appPrec + 1) r
+    maybeParens (p > appPrec) $ "not" <+> pPrintPrec l (appPrec + 1) r
   pPrintPrec l p (Bop bop r1 r2) =
     maybeParens (p > bopPrec bop) $ pPrintPrec l (bopPrec bop) r1 <+> pPrint bop <+> pPrintPrec l (bopPrec bop) r2
   pPrintPrec l p (QMark r rh rp) =
-    maybeParens (p > appPrec) $ pPrintPrec l p r <+> char '?' <+> parens (pPrint rh <+> text "proves" <+> pPrint rp)
+    maybeParens (p > appPrec) $ pPrintPrec l p r <+> char '?' <+> parens (pPrint rh <+> "proves" <+> pPrint rp)
   pPrintPrec l p (Pop pop r1 r2) =
     maybeParens (p > popPrec pop) $ pPrintPrec l (popPrec pop) r1 <+> pPrint pop <+> pPrintPrec l (popPrec pop) r2
   pPrintPrec _ p (Sub r from to) =
-    maybeParens (p > appPrec) $ text "sub" <+> parens (hsep $ punctuate comma (pPrint r : map pPrint [from, to]))
+    maybeParens (p > appPrec) $ "sub" <+> parens (hsep $ punctuate comma (pPrint r : map pPrint [from, to]))
   pPrintPrec _ p (Inj r tp) =
-    maybeParens (p > appPrec) $ text "inj" <+> parens (pPrint r <> comma <+> pPrint tp)
+    maybeParens (p > appPrec) $ "inj" <+> parens (pPrint r <> comma <+> pPrint tp)
   pPrintPrec l p (Proj r) =
-    maybeParens (p > appPrec) $ text "proj" <+> pPrintPrec l (appPrec + 1) r
+    maybeParens (p > appPrec) $ "proj" <+> pPrintPrec l (appPrec + 1) r
 
 instance Pretty Localization where
   pPrint Local = char 'L'
