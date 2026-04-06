@@ -216,19 +216,25 @@ wfRefType γ pats (ArrType x tpx tp) = do
 wfDecls :: TypEnv -> [Decl] -> Either TypeError [Decl]
 -- (WF-DTC)
 wfDecls γ (Data tc constrs : decls) = do
-  -- We add TC with no constructors in the environment,
-  -- and will add the constructors one by one,
-  -- so that refinements can depend on previous constructors
-  let γtc = insertTC (tc, []) γ
+  -- We pre-populate the environment with all constructors using trivialized
+  -- refinements, so that refinements of any constructor can refer to any other
+  -- constructor of the same type (not just previously declared ones).
+  let γtc = insertTC (tc, map (second trivializeRefs) constrs) γ
   (γ', constrs') <- foldM checkBranch (γtc, []) constrs
   decls' <- wfDecls γ' decls
   return $ Data tc (reverse constrs') : decls'
   where
+    trivializeRefs :: RefType -> RefType
+    trivializeRefs (RefType x tp _) = RefType x tp ttTm
+    trivializeRefs (ArrType x tpx tp) = ArrType x (trivializeRefs tpx) (trivializeRefs tp)
     checkBranch :: (TypEnv, [(Id, RefType)]) -> (Id, RefType) -> Either TypeError (TypEnv, [(Id, RefType)])
     checkBranch (γi, dcs) (ci, tpi) = do
       checkFOandTC tpi
       tpi' <- wfRefType γi [] tpi
-      (,(ci, tpi') : dcs) <$> insertDCinTC (ci, tpi') tc γi
+      -- Replace the trivialized entry for ci with the elaborated one
+      γtc <- lookupTC tc γi
+      let γtc' = map (\(c, tp) -> if c == ci then (ci, tpi') else (c, tp)) γtc
+      return (insertTC (tc, γtc') γi, (ci, tpi') : dcs)
     checkFOandTC :: RefType -> Either TypeError ()
     checkFOandTC tp =
       let (args, (_, tc', _)) = second fromRefType $ arrs tp
