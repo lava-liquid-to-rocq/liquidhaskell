@@ -1,8 +1,5 @@
 Change return type of arrs to ([RefType], (Id, BaseType, Reft))
 
-RBinsToBins:
-—— Environment lookup failed with error: Constructor "RZ" not bound in context ——
-
 Software foundations: fix generation of hints
 
 - fix translated outputs
