@@ -375,7 +375,8 @@ rocqComment doc = "(*" <+> doc <+> "*)"
 -- | Prints the correct bullet according to the value of p
 rocqBullet :: Rational -> Doc
 rocqBullet p =
-  if p' == 0 then error "Cannot print bullet inside concatenation of tactics."
+  -- if p' == 0 then error "Cannot print bullet inside concatenation of tactics."
+  if p' == 0 then empty
   else let bullet = case p' `mod` 3 of
             1 -> char '-'
             2 -> char '+'
@@ -393,7 +394,7 @@ pPrintP :: (Pretty a) => a -> Doc
 pPrintP = parens . pPrint
 
 pPrintArg :: (Pretty a) => (Id, a) -> Doc
-pPrintArg (x, tp) = pPrint x <> colon <+> pPrint tp
+pPrintArg (x, tp) = text x <> colon <+> pPrint tp
 
 pPrintArgs :: (Pretty a) => [(Id, a)] -> Doc
 pPrintArgs args = sep $ map (parens . pPrintArg) args
@@ -410,24 +411,24 @@ instance Pretty CoqConstr where
 
 instance Pretty CoqTermTC where
   pPrint (InductiveData n constrs) =
-     "Inductive" <+> text n <>  ": Set :=" <+> sep (punctuate mid (map pPrint constrs))
+     "Inductive" <+> text n <>  ": Set :="
+     $$ nest identNb (sep (map ((mid <+>) . pPrint) constrs))
 
 instance Pretty Decl where
-  pPrint (TCDecl n constrs) =  "Inductive" <+> text n <>  ": Set :=" <+> sep (punctuate mid (map pPrint constrs))
-  pPrint (Definition f args ret body vis) = header <> bdy
+  pPrint (TCDecl n constrs) = "Inductive" <+> text n <>  ": Set :="
+    $$ nest identNb (sep (map ((mid <+>) . pPrint) constrs))
+  pPrint (Definition f args ret body vis) =
+    case body of
+      ProofBody tacs -> header <> dot
+        $$ "Proof."
+        $$ nest identNb (sep $ map pPrint tacs)
+        $$ (if admitted tacs then "Admitted" else qedSym) <> dot
+      TermBody expr -> header <> " :=" $$ nest identNb (pPrint expr <> dot)
     where
       header = case ret of
-        Prop {} | vis == Opaque ->  "Theorem" <+> sign
+        Prop {} | vis == Opaque -> "Theorem" <+> sign
         _ ->  "Definition" <+> sign
-      sign = text f <+> sep (map pPrintImpArg args) <> colon <+> pPrint ret
-      bdy = case body of
-        ProofBody tacs -> prfBody tacs
-        TermBody expr -> definien expr
-      prfBody tacs = dot
-          $$  "Proof."
-          $$ nest identNb (hsep . punctuate dot $ map pPrint tacs) <> dot
-          $$ (if admitted tacs then  "Admitted" else  qedSym) <> dot
-      definien tm =  " :=" $$ nest identNb (pPrint tm <> dot)
+      sign = sep [text f <+> sep (map pPrintImpArg args) <> colon, pPrint ret]
       qedSym = case vis of
         Transparent -> "Defined"
         Opaque -> "Qed"
@@ -443,18 +444,18 @@ instance Pretty Decl where
   pPrint (CoqAxiom ax args claim) =
      "Axiom" <+> text ax <> colon <+> pPrintForall (map fst args) claim <> dot
   pPrint (CoqInductive f args k constrs) =
-    "Inductive" <+> pPrint f <+> pPrintArgs args
-      <> colon <+> pPrintP k <+> ":=" <+>
-      nest identNb ((sep . punctuate mid $ map pPrint constrs) <> dot)
+    "Inductive" <+> text f <+> pPrintArgs args
+      <> colon <+> pPrintP k <+> ":="
+      $$ nest identNb (sep (map ((mid <+>) . pPrint) constrs) <> dot)
   pPrint (CoqMarkVisibility v) = pPrint v
   pPrint (AddHint kind ax db) =
     "#[global] Hint" <+> pPrint kind <+> pPrintArg (ax, db) <> dot
   pPrint (Instance instName tp opDefs) =
     "#[global] Instance" <+> text instName <> colon <+>
-    hsep (map text tp) <+> ":=" <+>
-    (braces . nest identNb) (vcat . punctuate semi $
-      map (\(lookupOp, lookupRes) -> pPrint lookupOp <+> ":=" <+> pPrint lookupRes) opDefs)
-    <> dot
+    hsep (map text tp) <+> ":=" <+> lbrace
+    $$ nest identNb (vcat . punctuate semi $
+      map (\(lookupOp, lookupRes) -> text lookupOp <+> ":=" <+> pPrint lookupRes) opDefs)
+    <+> rbrace <> dot
   pPrint (TacInstance instName tp tac) =
     "#[global] Instance" <+> pPrintArg (instName, tp) <> dot
     $$ "Proof." <+> pPrint tac <+> "Defined."
@@ -489,38 +490,37 @@ pPrintRocqType :: RocqType -> Bool -> Doc
 pPrintRocqType (Builtin b) _ = pPrint b
 pPrintRocqType (Sort sort) _ = pPrint sort
 -- NOTE: for TC, there are cases where me might need to add (getTCRef x tc), the well-formedness predicate (as in prntRefType)
-pPrintRocqType (Subset x tc0@(TC tc []) e) True = case tc of
+pPrintRocqType (Subset x tc@(TC tc' []) e) True = case tc' of
   "bool" | isTrivial e -> "Bool"
   "Unit" -> braces (braces (pPrint e))
   _ -> case e of
-    _ | tc0 `elem` coqBuiltinInductDataTypes -> braces (pPrintArg (x, tc) <+> mid <+> pPrint e)
-    And (App (Def wf) [Var x']) true | x == x' && wf == wfTCName tc && isTrivial true -> pPrint tc
+    _ | tc `elem` coqBuiltinInductDataTypes -> braces (pPrintArg (x, tc) <+> mid <+> pPrint e)
+    And (App (Def wf) [Var x']) true | x == x' && wf == wfTCName tc' && isTrivial true -> pPrint tc
     _ -> braces (pPrintArg (x, tc) <+> mid <+> pPrint e)
 pPrintRocqType (Subset x tp e) _ =
   braces (pPrintArg (x, tp) <+> mid <+> pPrint e)
-pPrintRocqType tc0@(TC tc []) _ | tc0 `elem` coqBuiltinInductDataTypes = text tc
+pPrintRocqType tc@(TC tc' []) _ | tc `elem` coqBuiltinInductDataTypes = text tc'
 pPrintRocqType (TC typeName tpArgs) _ =
   hsep $ text typeName : map pPrint tpArgs
-pPrintRocqType (Arrow tp1 tp2) _ = pPrintP tp1 <+> "->" <+> pPrintP tp2
+pPrintRocqType (Arrow tp1 tp2) _ = sep [pPrintP tp1, "->" <+> pPrintP tp2]
 pPrintRocqType tp@(FAType {}) _ = let (args, ret) = concatForalls tp in pPrintForall args ret
 pPrintRocqType (Prop p) _ = pPrint p
 pPrintRocqType (UPack uargTps t) _ =
-  hsep [pPrint upackName, pPrintP uargTps, pPrintP t]
+  sep [text upackName, pPrintP uargTps, pPrintP t]
 pPrintRocqType (ArgumentList argTps) _ = parens ("ArgList" <+> pPrint argTps)
-pPrintRocqType (Pack argTps uargTps z t p) _ = parens . hsep $
+pPrintRocqType (Pack argTps uargTps z t p) _ = parens . sep $
   [pPrint packName, pPrintP argTps, pPrintP uargTps, pPrintP z, pPrintP t, pPrintP p]
 pPrintRocqType Hole _ = char '_'
 
 -- TODO: we probably want to use Maybe instead of using '_'
 pPrintForall :: (Pretty a) => (Pretty b) => [(Id, a)] -> b -> Doc
 pPrintForall [] ret = pPrint ret
-pPrintForall (("_", t) : tl) ret = pPrint t <+> "->" <+> pPrintForall tl ret
+pPrintForall (("_", t) : tl) ret = sep [pPrint t, "->", pPrintForall tl ret]
 pPrintForall args ret =
-  (if null args then empty else "forall" <+> hsep (map printArg args))
-    <> comma <+> pPrint ret
+  sep [if null args then empty else "forall" <+> sep (map printArg args) <> comma, pPrint ret]
   where
     printArg (x, tp) =
-      parens (pPrint x <+> (if pPrint tp == char '_' then empty else colon <+> pPrint tp))
+      parens (text x <+> (if pPrint tp == char '_' then empty else colon <+> pPrint tp))
 
 instance Pretty RocqType where
   pPrint tp = pPrintRocqType tp True
@@ -549,15 +549,15 @@ instance Pretty CoqTerm where
   pPrint (NegB p) = pPrint negB <+> pPrintP p
   pPrint TT = "True"
   pPrint FF = "False"
-  pPrint (Def s) = pPrint s
-  pPrint (Abbr s) = pPrint s
+  pPrint (Def s) = text s
+  pPrint (Abbr s) = text s
   pPrint (Bop bop s t) = pPrintP s <+> pPrint bop <+> pPrintP t
-  pPrint (Var x) = pPrint x
+  pPrint (Var x) = text x
   pPrint (StringLiteral s) = quotes (pPrint s)
   pPrint (IntLiteral n) = integer n
   pPrint (FloatLiteral f) = double f
   pPrint (App f ts) = sep (map pPrintP (f : ts))
-  pPrint (Cr s) = pPrint s
+  pPrint (Cr s) = text s
   pPrint (Lambda x a s) = "fun" <+> parens (pPrintArg (x, a)) <+> "=>" <+> pPrintP s
   pPrint (Project t) =
     let t' = simplifyProject t in
@@ -576,15 +576,15 @@ instance Pretty CoqTerm where
   pPrint (Exist p t z) = "exist" <+> pPrintP p <+> pPrintP t <+> pPrintP z
   pPrint (Match ts _ cases) =
     sep $ ("match" <+> parens (hsep $ punctuate comma (map pPrint ts)) <+> "with") :
-      punctuate mid (map printCase cases) ++ ["end."]
+      map ((mid <+>) . printCase) cases ++ ["end"]
     where
       printCase (pat, tm) =
-        parens (hsep . punctuate comma $ map (\(c, args) -> hsep $ map pPrint (c : args)) pat)
+        parens (hsep . punctuate comma $ map (\(c, args) -> hsep $ map text (c : args)) pat)
         <+> "=>" <+> pPrint tm
   pPrint (Ite r s t) = "if" <+> pPrint r <+> "then" <+> pPrint s <+> "else" <+> pPrint t
   pPrint (Let x tp s t) =
-    sep ["let" <+> maybe (pPrint x) (\tp' -> pPrintArg (x, tp')) tp <+> ":=", pPrint s <+> "in", pPrint t]
-  pPrint (InstanceProjection inst field) = pPrintP inst <> dot <> pPrintP field
+    sep ["let" <+> maybe (text x) (\tp' -> pPrintArg (x, tp')) tp <+> ":=", pPrint s <+> "in", pPrint t]
+  pPrint (InstanceProjection inst field) = pPrintP inst <> dot <> parens (text field)
   pPrint (InlineInstance fields) =
     sep ["{|", sep . punctuate semi $ map (\(field, val) -> pPrint field <+> ":=" <+> pPrint val) fields, "|}"]
   pPrint (TypeArg tp) = pPrint tp
@@ -731,6 +731,7 @@ instance Pretty CoqIntroPat where
   pPrint (RewritePat rwDir) = pPrint rwDir
 
 instance Pretty Tactic where
+  -- TODO: add precedence for not adding anything
   -- We use the precedence to insert the right kind and number of bullets (-, + and *),
   -- and to know whether to put . or ; to separate tactics:
   -- - if p = 0, we use ; (notice that we never use bullets in a list of tactics separated by ;)
@@ -739,7 +740,7 @@ instance Pretty Tactic where
   pPrintPrec _ p Easy = dotted p "quicksolve"
   pPrintPrec _ p Oracle = dotted p "solver"
   pPrintPrec _ p (Admit hints) = dotted p $
-    around (hsep (punctuate comma (map pPrint hints))) <+> "admit"
+    around (hsep (punctuate comma (map text hints))) <+> "admit"
     where around hs = if null hints then hs else rocqComment ("hints:" <+> hs)
   -- TODO: factorize printing of destruct and induction once the grammar is cleaned
   pPrintPrec l p (Destruct tm branches) =
@@ -777,27 +778,27 @@ instance Pretty Tactic where
     if null tacs then empty else brackets . vcat . map (pPrintPrec l p) $ tacs
   pPrintPrec _ p (Custom str) = dotted p $ text str
   pPrintPrec _ p Exfalso = dotted p "exfalso"
-  pPrintPrec l p (Try t) = dotted p "try" <+> pPrintPrec l p t
+  pPrintPrec l p (Try t) = dotted p $ "try" <+> pPrintPrec l p t
   pPrintPrec l p (Refine t) = dotted p $ "refine" <+> parens (pPrintPrec l p t)
   pPrintPrec _ p (DestructSubsetTerm tm destrPat) =
-    dotted p $ "destruct" <+> pPrint tm <+> "as" <+> brackets (pPrint destrPat)
+    dotted p $ "destruct" <+> pPrint tm <+> "as" <+> pPrint destrPat
   pPrintPrec _ p (DestructConj h h1 h2) =
-    dotted p $ "destruct" <+> pPrint h <+> "as" <+> brackets (pPrint h1 <+> pPrint h2)
+    dotted p $ "destruct" <+> text h <+> "as" <+> brackets (text h1 <+> text h2)
   pPrintPrec _ p (Rewrite dir tm hyp) =
     dotted p $ "rewrite" <+> maybe empty pPrint dir <+> pPrintP tm
-    <+> maybe empty ((<+>) "in" . pPrint) hyp
+    <+> maybe empty ((<+>) "in" . text) hyp
   pPrintPrec _ p (Pose abbr tm) =
-    dotted p $ "pose" <+> pPrintP tm <+> "as" <+> pPrint abbr
+    dotted p $ "pose" <+> pPrintP tm <+> "as" <+> text abbr
   pPrintPrec _ p (ProofPose abbr tm) =
-    dotted p $ "pose proof" <+> pPrintP tm <+> "as" <+> pPrint abbr
+    dotted p $ "pose proof" <+> pPrintP tm <+> "as" <+> text abbr
   pPrintPrec _ p (Assert n claim prf) =
     dotted p $ "assert" <+> parens (pPrintArg (n, claim)) <+> "by" <+> parens (pPrint prf)
   pPrintPrec _ p (Intros pats) =
     dotted p $ "intros" <+> sep (map pPrint pats)
   pPrintPrec _ p (GeneralizeDependent xs) =
-    dotted p $ sep . punctuate semi $ map (\x -> "try revert" <+> pPrint (subsetWitnessNm x) <> semi <+> "generalize dependent" <+> pPrint x) xs
+    dotted p $ sep . punctuate semi $ map (\x -> "try revert" <+> text (subsetWitnessNm x) <> semi <+> "generalize dependent" <+> text x) xs
   pPrintPrec _ p (Clear hyp) =
-    dotted p $ "clear" <+> pPrint hyp
+    dotted p $ "clear" <+> text hyp
   pPrintPrec l _ (AssertTacs x tp tacs) =
     sep ["assert" <+> pPrintArg (x, tp) <> dot, braces (sep $ map (pPrintPrec l 1) tacs), dot]
 

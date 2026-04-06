@@ -39,7 +39,7 @@ outPostfix Rocq = ".v"
 -- | Preamble for the Rocq file
 preamble :: Doc
 preamble =
-  hsep [text "From coqDeps Require Export LiquidPreludeUtil.", scope "Z", scope "Int"]
+  vcat [text "From coqDeps Require Export LiquidPreludeUtil.", scope "Z", scope "Int"]
   where
     scope x = text "Open Scope" <+> text x <> text "_scope."
 

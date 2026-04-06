@@ -258,7 +258,7 @@ renameParams = aux []
     -- TODO: handle by renaming
     aux _ (y : _) tp0@(ArrType x _ tp)
       | y `elem` freeVars tp =
-          error . render $ "Name clash while renaming variable" <+> pPrint x <+> "to" <+> pPrint y <+> "in" <+> pPrint tp0
+          error . render $ "Name clash while renaming variable" <+> text x <+> "to" <+> text y <+> "in" <+> pPrint tp0
     aux σ (y : ys) (ArrType x tpx tp) =
       ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
 
