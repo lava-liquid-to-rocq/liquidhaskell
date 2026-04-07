@@ -15,7 +15,7 @@ module Lava.Coq where
 
 import Data.Bifunctor
 import Data.Data
-import Data.List (sortBy, isSuffixOf)
+import Data.List (sortBy, isSuffixOf, unsnoc)
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding ((<>))
@@ -336,6 +336,12 @@ data RewriteDir
 
 data CoqIntroPat = DestrPat CoqDestrPat | RewritePat RewriteDir deriving (Data, Eq)
 
+-- * Constructors
+
+-- | Build Concat [tacs] where [tacs] does not contain another concat
+mkConcat :: [Tactic] -> Tactic
+mkConcat = Concat . concatMap (\case Concat tacs' -> tacs'; tac -> [tac])
+
 -- * Destructors
 
 fromSubset :: RocqType -> (Id, RocqType, CoqTerm)
@@ -357,30 +363,43 @@ isTrivial _ = False
 
 -- * Printer for grammar
 
+-- | Wrap document in (*...*)
+rocqComment :: Doc -> Doc
+rocqComment doc = "(*" <+> doc <+> "*)"
+
 dot :: Doc -- ^ A '.' character
 mid :: Doc -- ^ A '|' character
 dot = char '.'
 mid = char '|'
 
+{- ORMOLU_DISABLE -}
+nodotPrec :: Rational
+concatPrec :: Rational
+dotPrec :: Rational
+nodotPrec = 0
+concatPrec = 1
+dotPrec = 2
+{- ORMOLU_ENABLE -}
+
 -- | Appends the correct punctuation at the end of a doc (used for tactics)
 dotted :: Rational -> Doc -> Doc
-dotted p d = d <> if p' == 0 then semi else dot
-  where p' :: Integer
-        p' = truncate p
-
--- | Wrap document in (*...*)
-rocqComment :: Doc -> Doc
-rocqComment doc = "(*" <+> doc <+> "*)"
+dotted p d =
+  let sign
+        | p == nodotPrec = empty
+        | p == concatPrec = semi
+        | otherwise = dot
+   in d <> sign
 
 -- | Prints the correct bullet according to the value of p
 rocqBullet :: Rational -> Doc
 rocqBullet p =
-  -- if p' == 0 then error "Cannot print bullet inside concatenation of tactics."
-  if p' == 0 then empty
-  else let bullet = case p' `mod` 3 of
-            1 -> char '-'
-            2 -> char '+'
-            _ -> char '*'
+  -- if p' == 0 || p == 1 then error "Cannot print bullet inside concatenation of tactics."
+  if p == nodotPrec || p == concatPrec then empty
+  else let bullet
+             | p' == truncate dotPrec = char '-'
+             | p' == truncate dotPrec + 1 = char '+'
+             | otherwise = char '*'
+        -- negations to obtain the ceiling from the division
         in hcat $ replicate (-((-p') `div` 3)) bullet
   where p' :: Int
         p' = truncate p
@@ -706,9 +725,9 @@ instance Pretty ProofTerm where
   pPrint (TermWitness tm) | tm == unitTm = char '_'
   pPrint (TermWitness t) = pPrint t
   pPrint (RefWitness tm) = char '⌈' <+> pPrint tm <+> char '⌉'
-  pPrint (ProofHole Nothing) = "ltac:" <> parens (pPrint Oracle)
-  pPrint (ProofHole (Just h)) = "ltac:" <> parens (pPrint (Concat [Try (Clear h), Oracle]))
-  pPrint (ByTac tac) = "ltac:" <> parens (pPrint tac)
+  pPrint (ProofHole Nothing) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec Oracle)
+  pPrint (ProofHole (Just h)) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec (Concat [Try (Clear h), Oracle]))
+  pPrint (ByTac tac) = "ltac:" <> parens (pPrintPrec prettyNormal 0 tac)
   pPrint (Conj l r) = "conj" <+> parens (pPrint l) <+> parens (pPrint r)
 
 instance Pretty CoqDestrPat where
@@ -731,12 +750,12 @@ instance Pretty CoqIntroPat where
   pPrint (RewritePat rwDir) = pPrint rwDir
 
 instance Pretty Tactic where
-  -- TODO: add precedence for not adding anything
   -- We use the precedence to insert the right kind and number of bullets (-, + and *),
-  -- and to know whether to put . or ; to separate tactics:
-  -- - if p = 0, we use ; (notice that we never use bullets in a list of tactics separated by ;)
-  -- - if p > 0, we use . and we use the value of p to know what and how many bullets to put
-  pPrint = pPrintPrec prettyNormal 1
+  -- and to know whether to put . or ; or nothing at the end of a tactic:
+  -- - if p = 0, we use nothing (used before a parenthesis for instance) and if p = 1 we use ;
+  --   (notice that we never use bullets in a list of tactics separated by ;)
+  -- - if p > 1, we use . and we use the value of p to know what and how many bullets to put
+  pPrint = pPrintPrec prettyNormal dotPrec
   pPrintPrec _ p Easy = dotted p "quicksolve"
   pPrintPrec _ p Oracle = dotted p "solver"
   pPrintPrec _ p (Admit hints) = dotted p $
@@ -750,7 +769,7 @@ instance Pretty Tactic where
       else hsep (destruct <> dot : map printTacBranch branchesSorted)
     _ -> sep
         ["let E := fresh \"E\" in", destruct <+> "eqn:E" <> if nullBranches then empty else semi,
-        maybeBrackets (not nullBranches) (sep $ map (pPrintPrec l 0 . Concat . snd) branchesSorted)]
+        maybeBrackets (not nullBranches) (sep $ map (pPrintPrec l (p + 1) . mkConcat . snd) branchesSorted)]
     where
       branchesSorted = map snd $ sortBy ordFunc branches
       destruct = "destruct" <+> pPrint tm <+> "as" <+> pPrint (DisjDestrPat $ map fst branchesSorted)
@@ -765,21 +784,24 @@ instance Pretty Tactic where
       induct = text matchTac <+> pPrint t <+> "as" <+> pPrint (DisjDestrPat $ map fst branchesSorted)
       nullBranches = all (null . snd . snd) branches
       printTacBranch (_, tacs) = rocqBullet p <+> sep (map (pPrintPrec l (p + 1)) tacs)
-  pPrintPrec _ p (Exact t) = dotted p $ case t of
+  pPrintPrec l p (Exact t) = case t of
     SubCast _ _ (Exist _ tm (CoqProofTerm prf)) (ProofHole _) | prf == "eq_refl" || prf == "I" ->
       refineOracle (Exist TermHole tm (TermWitness TermHole))
     SubCast _ have tm (ProofHole _) -> refineOracle (SubCast Hole have tm (TermWitness TermHole))
-    SubCast _ have tm prf -> "exact" <+> parens (pPrint (SubCast Hole have tm prf))
-    _ -> "refine" <+> pPrintP t
-    where refineOracle x = sep ["refine" <+> parens (pPrint x) <> semi, pPrint Oracle]
-  pPrintPrec l _ (Concat tacs) =
-    sep . punctuate semi $ map (\case (Custom "idtac") -> empty; t -> pPrintPrec l 0 t) tacs
-  pPrintPrec l p (Branches tacs) =
-    if null tacs then empty else brackets . vcat . map (pPrintPrec l p) $ tacs
+    SubCast _ have tm prf -> dotted p $ "exact" <+> parens (pPrint (SubCast Hole have tm prf))
+    _ -> dotted p $ "refine" <+> pPrintP t
+    where refineOracle x = sep ["refine" <+> parens (pPrint x) <> semi, pPrintPrec l p Oracle]
+  pPrintPrec l p (Concat tacs) =
+    case unsnoc tacs of
+      Nothing -> empty
+      Just (tacs', lastTac) ->
+        dotted p . sep $ map (pPrintPrec l concatPrec) tacs' ++ [pPrintPrec l nodotPrec lastTac]
+  pPrintPrec _ _ (Branches tacs) =
+    if null tacs then empty else brackets . vcat . map pPrint $ tacs
   pPrintPrec _ p (Custom str) = dotted p $ text str
   pPrintPrec _ p Exfalso = dotted p "exfalso"
-  pPrintPrec l p (Try t) = dotted p $ "try" <+> pPrintPrec l p t
-  pPrintPrec l p (Refine t) = dotted p $ "refine" <+> parens (pPrintPrec l p t)
+  pPrintPrec l p (Try t) = "try" <+> pPrintPrec l p t
+  pPrintPrec l p (Refine t) = dotted p $ "refine" <+> parens (pPrintPrec l nodotPrec t)
   pPrintPrec _ p (DestructSubsetTerm tm destrPat) =
     dotted p $ "destruct" <+> pPrint tm <+> "as" <+> pPrint destrPat
   pPrintPrec _ p (DestructConj h h1 h2) =
@@ -799,8 +821,8 @@ instance Pretty Tactic where
     dotted p $ sep . punctuate semi $ map (\x -> "try revert" <+> text (subsetWitnessNm x) <> semi <+> "generalize dependent" <+> text x) xs
   pPrintPrec _ p (Clear hyp) =
     dotted p $ "clear" <+> text hyp
-  pPrintPrec l _ (AssertTacs x tp tacs) =
-    sep ["assert" <+> pPrintArg (x, tp) <> dot, braces (sep $ map (pPrintPrec l 1) tacs), dot]
+  pPrintPrec l p (AssertTacs x tp tacs) =
+    sep $ dotted p ("assert" <+> pPrintArg (x, tp)) : [braces (pPrintPrec l nodotPrec (Concat tacs)) | not $ null tacs]
 
 -- | comparison operator to alphabetically order branches of Induction/Destruct
 ordFunc :: (Id, (CoqDestrPat, [Tactic])) -> (Id, (CoqDestrPat, [Tactic])) -> Ordering

@@ -530,7 +530,7 @@ relFunctionhoodLemma f =
       where
         retName' = retName f ++ "'"
         inductTac = mkIndSkel (body f) False
-        functionhoodTacs = [Coq.Concat [inductTac, Coq.Custom "rel_functionhood_body"]]
+        functionhoodTacs = [mkConcat [inductTac, Coq.Custom "rel_functionhood_body"]]
         relInst x = Coq.App (Coq.Def . relDefName $ name f) (map (Coq.Var . fst) (args f) ++ [Coq.Var x])
 
 -- | Inversion lemmas for the graph relation, one for each branch
@@ -596,7 +596,7 @@ defExLemma f = [exLem, AddHint ResolveHint (exLemName $ name f) RelAxDB]
         (map (,False) $ fst (trRefTypeSplit $ tpf f))
         (Prop $ Coq.App (Def . relDefName $ name f) (projArgs f ++ [Project $ mkApp (Def $ name f) (injArgs f)]))
         ( ProofBody
-            [ Concat
+            [ mkConcat
                 [ Custom $ "existence_lemma_pre " ++ name f,
                   mkIndSkel (body f) True,
                   Custom $ "existence_lemma_quicksolve " ++ name f,
@@ -696,7 +696,7 @@ relMkLemma f = [refRelMkLem, AddHint ResolveHint (relDefMkLemName $ name f) Grap
         (mkOnlyWitnessesExplicit . fst . trRefTypeSplit $ tpf f)
         relMkRet
         ( ProofBody
-            [ Concat
+            [ mkConcat
                 [Intros [], Refine subCast, Rewrite (Just RwRL) (Def . relDefLemName $ name f) Nothing, Easy]
             ]
         )
@@ -739,7 +739,7 @@ mkIndSkel (Case r alts genVars) specIHs =
 -- TODO: handle inductive skeleton of the bound term
 mkIndSkel (LH.Let _ _ _ e) specIHs = mkIndSkel e specIHs
 mkIndSkel (Reft r) specIhs =
-  Concat $
+  mkConcat $
     if specIhs then [] else Custom "fix_notations" : [poseIHCall call | call <- ihCalls] ++ [Try $ Clear ih | ih <- allIHs]
   where
     -- translation of recursive calls

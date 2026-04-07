@@ -7,12 +7,12 @@ module Benchmark.RBinsToBins where
 import Language.Haskell.Liquid.ProofCombinators
 
 {-@ data RBin where
-        RZ :: {x: RBin | True}
         RB0 :: n:{x: RBin | x != RZ} -> {x: RBin | True}
+        RZ :: {x: RBin | True}
         RB1 :: n:RBin ->  {x: RBin | True} @-}
 data RBin where
-  RZ :: RBin
   RB0 :: RBin -> RBin
+  RZ :: RBin
   RB1 :: RBin -> RBin
   deriving (Eq)
 

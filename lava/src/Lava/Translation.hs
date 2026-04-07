@@ -320,7 +320,7 @@ trExprTacs (LH.Let x (Just tpx@(ArrType {})) e1 e2) =
     assertF = Custom $ "unshelve refine (let " ++ x ++ " : ltac:(buildPackG_spec " ++ x' ++ ") := (ltac:(fun_to_pack " ++ x' ++ ")) in _)"
 trExprTacs (Case tm alts genVars) =
   let -- translation of an unreachable branch as intros; exfalso; oracle.
-      trAltBody Nothing = [Concat [Intros [], Exfalso, Oracle]]
+      trAltBody Nothing = [mkConcat [Intros [], Exfalso, Oracle]]
       trAltBody (Just e) = trExprTacs e
    in [mkMatching trAltBody tm alts genVars]
 
@@ -336,7 +336,7 @@ mkMatching trans tm alts genVars =
       let gendep = [GeneralizeDependent genVars | not (null genVars)]
           -- we add intros in each branch to degeneralize the variables from genVars
           trAltIntros = second (second (Intros [] :)) . trAlt
-       in Concat $ gendep ++ [Induction (Project $ trReft tm) (map trAltIntros alts)]
+       in mkConcat $ gendep ++ [Induction (Project $ trReft tm) (map trAltIntros alts)]
     else Coq.Destruct (Project $ trReft tm) (map trAlt alts)
   where
     -- Compute what variables will be actually used for later inductions
