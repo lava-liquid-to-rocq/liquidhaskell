@@ -2687,8 +2687,8 @@ executable benchmark-lava
                     -- , Benchmark.GradeExample
                     -- , Benchmark.Half
                     -- , Benchmark.Overview
-                    -- Benchmark.PeanoNats
-                    , Benchmark.RBinsToBins
+                    Benchmark.PeanoNats
+                    -- , Benchmark.RBinsToBins
                     -- , Benchmark.SafeIndexing
                     -- , Benchmark.SoftwareFoundations
     build-depends:    base

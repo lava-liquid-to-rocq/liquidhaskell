@@ -601,7 +601,7 @@ instance Pretty CoqTerm where
   pPrint (And p q) = pPrintP p <+> "/\\" <+> pPrintP q
   pPrint (Or p q) = pPrintP p <+> " \\/" <+> pPrintP q
   pPrint (Impl p q) = pPrintP p <+> "->" <+> pPrintP q
-  pPrint (Equiv p q) = pPrintP p <+> "<=" <+> pPrintP q
+  pPrint (Equiv p q) = pPrintP p <+> "<->" <+> pPrintP q
   pPrint (Neg (IsTrue (Bop EqualB s t))) = pPrint . IsTrue $ Bop Neqb s t
   pPrint (App neg [Bop EqualB s t]) | neg == Def negb = pPrint $ Bop NEqualB s t
   pPrint (Neg (Neg p)) = pPrint p
