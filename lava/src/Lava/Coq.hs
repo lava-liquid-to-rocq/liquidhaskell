@@ -15,35 +15,12 @@ module Lava.Coq where
 
 import Data.Bifunctor
 import Data.Data
-import Data.List (sortBy, isSuffixOf, unsnoc)
+import Data.List (sortBy, isSuffixOf, unsnoc, stripPrefix)
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding ((<>))
-import Lava.Names (Id)
-import Lava.Calculus (arrPrec, appPrec)
-
-unrefinedTCName :: Id -> Id
-unrefinedTCName name = name ++ "_u"
-
-refinedConstrName :: Id -> Id
-refinedConstrName = id
-
-unrefinedConstrName :: Id -> Id
-unrefinedConstrName name = name ++ "_u"
-
-wfTCName :: Id -> Id
-wfTCName name = name ++ "_wf"
-
-{- ORMOLU_DISABLE -}
-packName :: Id
-upackName :: Id
-projPackName :: Id
-packName = "@Pack"
-upackName = "@uPack"
-projPackName = "packProj"
-
-subsetWitnessNm :: Id -> Id
-subsetWitnessNm x = x ++ "_p"
+import Lava.Names
+-- import Lava.Calculus (arrPrec, appPrec)
 
 xorb :: Id
 implb :: Id
@@ -548,13 +525,16 @@ pPrintRocqType :: RocqType -> Bool -> Doc
 pPrintRocqType (Builtin b) _ = pPrint b
 pPrintRocqType (Sort sort) _ = pPrint sort
 -- NOTE: for TC, there are cases where me might need to add (getTCRef x tc), the well-formedness predicate (as in prntRefType)
-pPrintRocqType (Subset x tc@(TC tc' []) e) True = case tc' of
+pPrintRocqType tp@(Subset x tc@(TC tc' []) e) True = case tc' of
   "bool" | isTrivial e -> "Bool"
   "Unit" -> braces (braces (pPrint e))
-  _ -> case e of
+  _ -> case (e, tc_base) of
     _ | tc `elem` coqBuiltinInductDataTypes -> braces (pPrintArg (x, tc) <+> "|" <+> pPrint e)
-    And (App (Def wf) [Var x']) true | x == x' && wf == wfTCName tc' && isTrivial true -> pPrint tc
-    _ -> braces (pPrintArg (x, tc) <+> "|" <+> pPrint e)
+    -- Use the refined name TC for {x: TC_u | wf_TC x /\ True}
+    (And (App (Def wf) [Var x']) true, Just tc_ref)
+      | x == x' && wf == wfTCName tc_ref && isTrivial true && not (null tc_ref)-> text tc_ref
+    _ -> pPrintRocqType tp False
+    where tc_base = reverse <$> stripPrefix (reverse $ unrefinedTCName "") (reverse tc')
 pPrintRocqType (Subset x tp e) _ =
   braces (pPrintArg (x, tp) <+> "|" <+> pPrint e)
 pPrintRocqType tc@(TC tc' []) _ | tc `elem` coqBuiltinInductDataTypes = text tc'

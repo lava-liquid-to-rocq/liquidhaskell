@@ -44,6 +44,25 @@ preamble =
     scope x = text "Open Scope" <+> text x <> text "_scope."
 
 {- ORMOLU_DISABLE -}
+unrefinedTCName :: Id -> Id
+unrefinedTCName name = name ++ "_u"
+refinedConstrName :: Id -> Id
+refinedConstrName = id
+unrefinedConstrName :: Id -> Id
+unrefinedConstrName name = name ++ "_u"
+wfTCName :: Id -> Id
+wfTCName name = name ++ "_wf"
+
+{- ORMOLU_DISABLE -}
+packName :: Id
+upackName :: Id
+projPackName :: Id
+packName = "@Pack"
+upackName = "@uPack"
+projPackName = "packProj"
+
+subsetWitnessNm :: Id -> Id
+subsetWitnessNm x = x ++ "_p"
 
 constrWfName :: Id -> Id -> Id
 wfLemName :: Id -> Id

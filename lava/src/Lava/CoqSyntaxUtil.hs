@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OrPatterns #-}
 {-# LANGUAGE TupleSections #-}
 
@@ -7,7 +6,7 @@
 module Lava.CoqSyntaxUtil where
 
 import Lava.Coq
-import Lava.Names (Id)
+import Lava.Names
 import Text.PrettyPrint.HughesPJClass
 
 -- * Tactic names for "projections" out of packs

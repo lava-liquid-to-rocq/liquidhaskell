@@ -8,7 +8,7 @@
 module Lava.Translation where
 
 import Data.Bifunctor (bimap, second)
-import Debug.Trace (trace)
+-- import Debug.Trace (trace)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil
@@ -31,7 +31,7 @@ trBaseType (LH.TC tc) = Coq.TC tc' []
     tc' = case tc of
       _ | tc == boolTpName -> "bool"
       _ | tc == unitTpName -> "Unit"
-      _ -> Coq.unrefinedTCName tc
+      _ -> unrefinedTCName tc
 
 -- | Translation of ILH binary operators to Coq binary operators
 trBop :: LH.Bop -> Coq.Bop
