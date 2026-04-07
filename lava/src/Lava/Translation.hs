@@ -332,11 +332,7 @@ mkMatching :: (Maybe Expr -> [Tactic]) -> Reft -> [((Id, [(Id, Bool)]), Maybe Ex
 -- mkMatching _ tm alts genVars | traceFunc "mkMatching" [pPrint tm, pPrint alts, pPrint genVars] = undefined
 mkMatching trans tm alts genVars =
   if induct
-    then
-      let gendep = [GeneralizeDependent genVars | not (null genVars)]
-          -- we add intros in each branch to degeneralize the variables from genVars
-          trAltIntros = second (second (Intros [] :)) . trAlt
-       in mkConcat $ gendep ++ [Induction (Project $ trReft tm) (map trAltIntros alts)]
+    then Induction (Project $ trReft tm) (map trAlt alts) genVars
     else Coq.Destruct (Project $ trReft tm) (map trAlt alts)
   where
     -- Compute what variables will be actually used for later inductions

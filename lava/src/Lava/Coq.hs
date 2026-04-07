@@ -292,7 +292,8 @@ data Tactic
   | Oracle
   | -- In the branches, the Id is the name of the constructor in the branch (useful for reordering in the order needed by Coq)
     Destruct {destrExpr :: CoqTerm, destrBranches :: [(Id, (CoqDestrPat, [Tactic]))]}
-  | Induction {indTerm :: CoqTerm, indBranches :: [(Id, (CoqDestrPat, [Tactic]))]}
+    -- Like in LH, Induction contains the generalized varibles
+  | Induction {indTerm :: CoqTerm, indBranches :: [(Id, (CoqDestrPat, [Tactic]))], indGenVars :: [Id]}
   | Exact CoqTerm
   | Admit [Id]
   | Pose Id CoqTerm
@@ -816,13 +817,20 @@ instance Pretty Tactic where
       destruct = "destruct" <+> pPrint tm <+> "as" <+> pPrint (DisjDestrPat $ map fst branchesSorted)
       nullBranches = all (null . snd . snd) branches
       printTacBranch (_, tacs) = rocqBullet p <+> sep (map (pPrintPrec l (p + 1)) tacs)
-  pPrintPrec l p (Induction t branches) =
+  pPrintPrec l p (Induction t branches genVars) =
     if nullBranches then dotted p induct
-      else hsep (induct <> dot : map printTacBranch branchesSorted)
+      else vcat (gendepInduct <> dot : map printTacBranch branchesSorted)
     where
       branchesSorted = map snd $ sortBy ordFunc branches
       matchTac = if all ((== ConjDestrPat []) . fst . snd) branches && nullBranches then "destruct" else "induction"
+      -- induction t as ...
       induct = text matchTac <+> pPrint t <+> "as" <+> pPrint (DisjDestrPat $ map fst branchesSorted)
+      -- generalize dependent genVars
+      gendeps =
+        hsep . punctuate semi $ map (\x -> "try revert" <+> text (subsetWitnessNm x) <> semi <+> "generalize dependent" <+> text x) genVars
+      -- generalize dependent genVars; induction t as ...; intros.
+      gendepInduct =
+        if null genVars then induct else sep $ punctuate semi [gendeps, induct, "intros"]
       nullBranches = all (null . snd . snd) branches
       printTacBranch (_, tacs) = rocqBullet p <+> sep (map (pPrintPrec l (p + 1)) tacs)
   pPrintPrec l p (Exact t) = case t of
@@ -878,7 +886,7 @@ admitted = any containsAdmit
       Admit {} -> True
       Try t -> containsAdmit t
       Destruct _ cases -> admitted $ concatMap (snd . snd) cases
-      Induction _ cases -> admitted $ concatMap (snd . snd) cases
+      Induction _ cases _ -> admitted $ concatMap (snd . snd) cases
       Assert _ _ t -> containsAdmit t
       Concat ts -> admitted ts
       Branches ts -> admitted ts
