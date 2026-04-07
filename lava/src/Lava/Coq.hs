@@ -20,6 +20,7 @@ import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding ((<>))
 import Lava.Names (Id)
+import Lava.Calculus (arrPrec, appPrec)
 
 unrefinedTCName :: Id -> Id
 unrefinedTCName name = name ++ "_u"
@@ -373,12 +374,51 @@ dot = char '.'
 mid = char '|'
 
 {- ORMOLU_DISABLE -}
+-- ** Precedence levels
+
 nodotPrec :: Rational
 concatPrec :: Rational
 dotPrec :: Rational
 nodotPrec = 0
 concatPrec = 1
 dotPrec = 2
+
+bopPrec :: Bop -> Rational
+bopPrec Eq = 4
+bopPrec EqProp = 4
+bopPrec Neq = 4
+bopPrec Leq = 4
+bopPrec Geq = 4
+bopPrec Lt = 4
+bopPrec Gt = 4
+bopPrec Plus = 6
+bopPrec Minus = 6
+bopPrec Times = 7
+bopPrec Div = 7
+bopPrec Mod = 7
+bopPrec Leqb = 4
+bopPrec Geqb = 4
+bopPrec Eqb = 4
+bopPrec Neqb = 4
+bopPrec Ltb = 4
+bopPrec Gtb = 4
+bopPrec Andb = 3
+bopPrec Orb = 2
+bopPrec ImplB = 1
+bopPrec EqualB = 4
+bopPrec NEqualB = 4
+bopPrec Equal = 4
+bopPrec EqualBProp = 4
+bopPrec EqBool = 4
+bopPrec PlusU = 6
+bopPrec MinusU = 6
+bopPrec TimesU = 7
+bopPrec DivU = 7
+bopPrec ModU = 7
+bopPrec ConsRT = 5
+bopPrec ConsUT = 5
+bopPrec ConsR = 5
+bopPrec ConsU = 5
 {- ORMOLU_ENABLE -}
 
 -- | Appends the correct punctuation at the end of a doc (used for tactics)
@@ -539,7 +579,8 @@ pPrintForall args ret =
   sep [if null args then empty else "forall" <+> sep (map printArg args) <> comma, pPrint ret]
   where
     printArg (x, tp) =
-      parens (text x <+> (if pPrint tp == char '_' then empty else colon <+> pPrint tp))
+      if pPrint tp == char '_' then text x
+      else parens (text x <+> colon <+> pPrint tp)
 
 instance Pretty RocqType where
   pPrint tp = pPrintRocqType tp True
