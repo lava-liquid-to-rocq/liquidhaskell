@@ -6,6 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OrPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
+
 {- {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE KindSignatures #-} -}
 
@@ -15,12 +16,12 @@ module Lava.Coq where
 
 import Data.Bifunctor
 import Data.Data
-import Data.List (sortBy, isSuffixOf, unsnoc, stripPrefix)
+import Data.List (isSuffixOf, sortBy, stripPrefix, unsnoc)
+import Lava.Calculus (appPrec, arrPrec)
+import Lava.Names
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding ((<>))
-import Lava.Names
--- import Lava.Calculus (arrPrec, appPrec)
 
 xorb :: Id
 implb :: Id
@@ -35,17 +36,29 @@ bfalse :: CoqTerm
 boolTp :: RocqType
 unitTp :: RocqType
 xorb = "xorb"
+
 implb = "implb"
+
 negb = "negb"
+
 negB = "negBool"
+
 unitTmName = "unit"
+
 btrueTmName = "true"
+
 bfalseTmName = "false"
+
 unitTm = Cr unitTmName
+
 btrue = Cr btrueTmName
+
 bfalse = Cr bfalseTmName
+
 boolTp = TC "bool" []
+
 unitTp = TC "Unit" []
+
 {- ORMOLU_ENABLE -}
 
 -- | List of builtin CoqInductives
@@ -166,26 +179,29 @@ data RocqType
   | Sort BaseSort
   | Subset Id RocqType CoqTerm
   | TC Id [RocqType]
-  -- | (simple-typed) arrow type
-  | Arrow RocqType RocqType
-  -- | Pi type
-  | FAType (Id, RocqType) RocqType
-  -- | Prop-sorted Rocq Types
-  | Prop CoqTerm
-  -- | unrefined Packs
-  | UPack UArgListT RocqType
+  | -- | (simple-typed) arrow type
+    Arrow RocqType RocqType
+  | -- | Pi type
+    FAType (Id, RocqType) RocqType
+  | -- | Prop-sorted Rocq Types
+    Prop CoqTerm
+  | -- | unrefined Packs
+    UPack UArgListT RocqType
   | Pack ArgListT UArgListT CoqTerm RocqType CoqTerm
   | ArgumentList ArgListT
   | Hole
   deriving (Eq, Data)
 
 newtype ArgListT = ArgListT [(Id, RocqType)] deriving (Eq, Data)
+
 newtype ArgList = ArgList [CoqTerm] deriving (Eq, Data)
+
 newtype UArgListT = UArgListT [RocqType] deriving (Eq, Data)
+
 newtype UArgList = UArgList [CoqTerm]
 
 mkArgListT :: ArgListT -> CoqTerm
-mkArgListT (ArgListT xs) = foldl (\tlTm (x,t) -> Bop ConsRT (TypeArg t) $ Lambda x t tlTm) (Def "nilRT") (reverse xs)
+mkArgListT (ArgListT xs) = foldl (\tlTm (x, t) -> Bop ConsRT (TypeArg t) $ Lambda x t tlTm) (Def "nilRT") (reverse xs)
 
 mkUArgListT :: UArgListT -> CoqTerm
 mkUArgListT (UArgListT xs) = foldl (\tlTm t -> Bop ConsUT (TypeArg t) tlTm) (Def "nilUT") (reverse xs)
@@ -269,8 +285,8 @@ data Tactic
   | Oracle
   | -- In the branches, the Id is the name of the constructor in the branch (useful for reordering in the order needed by Coq)
     Destruct {destrExpr :: CoqTerm, destrBranches :: [(Id, (CoqDestrPat, [Tactic]))]}
-    -- Like in LH, Induction contains the generalized varibles
-  | Induction {indTerm :: CoqTerm, indBranches :: [(Id, (CoqDestrPat, [Tactic]))], indGenVars :: [Id]}
+  | -- Like in LH, Induction contains the generalized varibles
+    Induction {indTerm :: CoqTerm, indBranches :: [(Id, (CoqDestrPat, [Tactic]))], indGenVars :: [Id]}
   | Exact CoqTerm
   | Admit [Id]
   | Pose Id CoqTerm
@@ -340,6 +356,7 @@ isTrivial TT = True
 isTrivial (IsTrue b) = simplifyIsTrue b == TT
 isTrivial _ = False
 
+{- ORMOLU_DISABLE -}
 -- * Printer for grammar
 
 -- | Wrap document in (*...*)
@@ -349,7 +366,6 @@ rocqComment doc = "(*" <+> doc <+> "*)"
 dot :: Doc -- ^ A '.' character
 dot = char '.'
 
-{- ORMOLU_DISABLE -}
 -- ** Precedence levels
 
 nodotPrec :: Rational
@@ -395,7 +411,6 @@ bopPrec ConsRT = 5
 bopPrec ConsUT = 5
 bopPrec ConsR = 5
 bopPrec ConsU = 5
-{- ORMOLU_ENABLE -}
 
 -- | Appends the correct punctuation at the end of a doc (used for tactics)
 dotted :: Rational -> Doc -> Doc
@@ -423,10 +438,6 @@ rocqBullet p =
 -- | Number of indentation spaces
 identNb :: Int
 identNb = 2
-
--- | Prints and adds parenthesis. Can be optimized to not always add parenthesis
-pPrintP :: (Pretty a) => a -> Doc
-pPrintP = parens . pPrint
 
 pPrintArg :: (Pretty a) => (Id, a) -> Doc
 pPrintArg (x, tp) = text x <> colon <+> pPrint tp
@@ -475,12 +486,12 @@ instance Pretty Decl where
   pPrint (CoqAlias f e) =
     sep [ "Notation" <+> text f <+>  ":=", pPrint e <> dot]
   pPrint (CoqNewType t tp) =
-     "Global Notation" <+> text t <+>  ":=" <+> pPrintRocqType tp False <> dot
+     "Global Notation" <+> text t <+>  ":=" <+> pPrintRocqType prettyNormal 0 tp False <> dot
   pPrint (CoqAxiom ax args claim) =
      "Axiom" <+> text ax <> colon <+> pPrintForall (map fst args) claim <> dot
   pPrint (CoqInductive f args k constrs) =
     "Inductive" <+> text f <+> pPrintArgs args
-      <> colon <+> pPrintP k <+> ":="
+      <> colon <+> pPrint k <+> ":="
       $$ nest identNb (sep (map (("|" <+>) . pPrint) constrs) <> dot)
   pPrint (CoqMarkVisibility v) = pPrint v
   pPrint (AddHint kind ax db) =
@@ -521,11 +532,11 @@ instance Pretty Builtin where
 
 -- The flag indicates if we use our notations on subset types
 -- (Bool for {_:bool|True} and {{…}} for a lemma)
-pPrintRocqType :: RocqType -> Bool -> Doc
-pPrintRocqType (Builtin b) _ = pPrint b
-pPrintRocqType (Sort sort) _ = pPrint sort
+pPrintRocqType :: PrettyLevel -> Rational -> RocqType -> Bool -> Doc
+pPrintRocqType _ _ (Builtin b) _ = pPrint b
+pPrintRocqType _ _ (Sort sort) _ = pPrint sort
 -- NOTE: for TC, there are cases where me might need to add (getTCRef x tc), the well-formedness predicate (as in prntRefType)
-pPrintRocqType tp@(Subset x tc@(TC tc' []) e) True = case tc' of
+pPrintRocqType l p tp@(Subset x tc@(TC tc' []) e) True = case tc' of
   "bool" | isTrivial e -> "Bool"
   "Unit" -> braces (braces (pPrint e))
   _ -> case (e, tc_base) of
@@ -533,22 +544,30 @@ pPrintRocqType tp@(Subset x tc@(TC tc' []) e) True = case tc' of
     -- Use the refined name TC for {x: TC_u | wf_TC x /\ True}
     (And (App (Def wf) [Var x']) true, Just tc_ref)
       | x == x' && wf == wfTCName tc_ref && isTrivial true && not (null tc_ref)-> text tc_ref
-    _ -> pPrintRocqType tp False
+    _ -> pPrintRocqType l p tp False
     where tc_base = reverse <$> stripPrefix (reverse $ unrefinedTCName "") (reverse tc')
-pPrintRocqType (Subset x tp e) _ =
+pPrintRocqType _ _ (Subset x tp e) _ =
   braces (pPrintArg (x, tp) <+> "|" <+> pPrint e)
-pPrintRocqType tc@(TC tc' []) _ | tc `elem` coqBuiltinInductDataTypes = text tc'
-pPrintRocqType (TC typeName tpArgs) _ =
-  hsep $ text typeName : map pPrint tpArgs
-pPrintRocqType (Arrow tp1 tp2) _ = sep [pPrintP tp1, "->" <+> pPrintP tp2]
-pPrintRocqType tp@(FAType {}) _ = let (args, ret) = concatForalls tp in pPrintForall args ret
-pPrintRocqType (Prop p) _ = pPrint p
-pPrintRocqType (UPack uargTps t) _ =
-  sep [text upackName, pPrintP uargTps, pPrintP t]
-pPrintRocqType (ArgumentList argTps) _ = parens ("ArgList" <+> pPrint argTps)
-pPrintRocqType (Pack argTps uargTps z t p) _ = parens . sep $
-  [pPrint packName, pPrintP argTps, pPrintP uargTps, pPrintP z, pPrintP t, pPrintP p]
-pPrintRocqType Hole _ = char '_'
+pPrintRocqType _ _ tc@(TC tc' []) _ | tc `elem` coqBuiltinInductDataTypes = text tc'
+pPrintRocqType l p (TC typeName tpArgs) b =
+  maybeParens (p > appPrec) . hsep $
+  text typeName : map (\tp -> pPrintRocqType l (appPrec + 1) tp b) tpArgs
+pPrintRocqType l p (Arrow tp1 tp2) b =
+  maybeParens (p > arrPrec) $
+    sep [pPrintRocqType l (arrPrec + 1) tp1 b, "->" <+> pPrintRocqType l arrPrec tp2 b]
+pPrintRocqType _ p tp@(FAType {}) _ =
+  let (args, ret) = concatForalls tp
+   in maybeParens (p > 0) (pPrintForall args ret)
+pPrintRocqType l p (Prop tm) _ = pPrintPrec l p tm
+pPrintRocqType l p (UPack uargTps t) _ =
+  maybeParens (p > appPrec) $
+    sep [text upackName, pPrintPrec l (appPrec + 1) uargTps, pPrintPrec l (appPrec + 1) t]
+pPrintRocqType l p (ArgumentList argTps) _ =
+  maybeParens (p > appPrec) $ "ArgList" <+> pPrintPrec l (appPrec + 1) argTps
+pPrintRocqType l p (Pack argTps uargTps z t tm) _ =
+  maybeParens (p > appPrec) $
+    sep [text packName, pPrintPrec l (appPrec + 1) argTps, pPrintPrec l (appPrec + 1) uargTps, pPrintPrec l (appPrec + 1) z, pPrintPrec l (appPrec + 1) t, pPrintPrec l (appPrec + 1) tm]
+pPrintRocqType _ _ Hole _ = char '_'
 
 -- TODO: we probably want to use Maybe instead of using '_'
 pPrintForall :: (Pretty a) => (Pretty b) => [(Id, a)] -> b -> Doc
@@ -562,7 +581,7 @@ pPrintForall args ret =
       else parens (text x <+> colon <+> pPrint tp)
 
 instance Pretty RocqType where
-  pPrint tp = pPrintRocqType tp True
+  pPrint tp = pPrintRocqType prettyNormal 0 tp True
 
 instance Pretty BaseSort where
   pPrint PropSort = "Prop"
@@ -570,65 +589,88 @@ instance Pretty BaseSort where
   pPrint SetSort = "Set"
 
 instance Pretty CoqTerm where
-  pPrint (IsTrue b) =
-    let b' = simplifyIsTrue b
-     in if b' == b then "is_true" <+> pPrintP b else pPrint b'
-  pPrint (Forall vars p) = pPrintForall vars p
-  pPrint (Exists vars p) =
-     sep [if null vars then empty else "exists" <+> pPrintArgs vars <> comma, pPrint p]
-  pPrint (And p q) = pPrintP p <+> "/\\" <+> pPrintP q
-  pPrint (Or p q) = pPrintP p <+> " \\/" <+> pPrintP q
-  pPrint (Impl p q) = pPrintP p <+> "->" <+> pPrintP q
-  pPrint (Equiv p q) = pPrintP p <+> "<->" <+> pPrintP q
-  pPrint (Neg (IsTrue (Bop EqualB s t))) = pPrint . IsTrue $ Bop Neqb s t
-  pPrint (App neg [Bop EqualB s t]) | neg == Def negb = pPrint $ Bop NEqualB s t
-  pPrint (Neg (Neg p)) = pPrint p
-  pPrint (Neg p) = "not" <+> pPrintP p
-  pPrint (NegB (NegB p)) = pPrint p
-  pPrint (NegB p) = pPrint negB <+> pPrintP p
-  pPrint TT = "True"
-  pPrint FF = "False"
-  pPrint (Def s) = text s
-  pPrint (Abbr s) = text s
-  pPrint (Bop bop s t) = pPrintP s <+> pPrint bop <+> pPrintP t
-  pPrint (Var x) = text x
-  pPrint (StringLiteral s) = quotes (pPrint s)
-  pPrint (IntLiteral n) = integer n
-  pPrint (FloatLiteral f) = double f
-  pPrint (App f ts) = sep (map pPrintP (f : ts))
-  pPrint (Cr s) = text s
-  pPrint (Lambda x a s) = "fun" <+> parens (pPrintArg (x, a)) <+> "=>" <+> pPrintP s
-  pPrint (Project t) =
+  pPrintPrec _ p (IsTrue tm) =
+    if simplifyIsTrue tm == tm
+      then maybeParens (p > appPrec) $ "is_true" <+> parens (pPrint tm)
+      else pPrint $ simplifyIsTrue tm
+  pPrintPrec _ p (Forall vars tm) = maybeParens (p > 0) $ pPrintForall vars tm
+  pPrintPrec _ p (Exists vars tm) =
+     maybeParens (p > 0) . sep $
+       ["exists" <+> pPrintArgs vars <> comma | not (null vars)] ++ [pPrint tm]
+  pPrintPrec l p (And tm1 tm2) =
+    maybeParens (p > bopPrec Andb) $ pPrintPrec l (bopPrec Andb) tm1 <+> "/\\" <+> pPrintPrec l (bopPrec Andb) tm2
+  pPrintPrec l p (Or tm1 tm2) =
+    maybeParens (p > bopPrec Orb) $ pPrintPrec l (bopPrec Orb) tm1 <+> "\\/" <+> pPrintPrec l (bopPrec Orb) tm2
+  pPrintPrec l p (Impl tm1 tm2) =
+    maybeParens (p > bopPrec ImplB) $ pPrintPrec l (bopPrec ImplB) tm1 <+> "->" <+> pPrintPrec l (bopPrec ImplB) tm2
+  pPrintPrec l p (Equiv tm1 tm2) =
+    maybeParens (p > bopPrec ImplB) $ pPrintPrec l (bopPrec ImplB) tm1 <+> "<->" <+> pPrintPrec l (bopPrec ImplB) tm2
+  pPrintPrec l p (Neg (IsTrue (Bop EqualB s t))) =
+    pPrintPrec l p . IsTrue $ Bop Neqb s t
+  pPrintPrec l p (App (Def negb') [Bop EqualB s t]) | negb' == negb =
+    pPrintPrec l p $ Bop NEqualB s t
+  pPrintPrec l p (Neg (Neg tm)) = pPrintPrec l p tm
+  pPrintPrec l p (Neg tm) =
+    maybeParens (p > appPrec) $ "not" <+> pPrintPrec l (appPrec + 1) tm
+  pPrintPrec l p (NegB (NegB tm)) = pPrintPrec l p tm
+  pPrintPrec l p (NegB tm) =
+    maybeParens (p > appPrec) $ text negB <+> pPrintPrec l (appPrec + 1) tm
+  pPrintPrec _ _ TT = "True"
+  pPrintPrec _ _ FF = "False"
+  pPrintPrec _ _ (Def s) = text s
+  pPrintPrec _ _ (Abbr s) = text s
+  pPrintPrec l p (Bop bop s t) =
+    maybeParens (p > bopPrec bop) $ pPrintPrec l (bopPrec bop) s <+> pPrint bop <+> pPrintPrec l (bopPrec bop) t
+  pPrintPrec _ _ (Var x) = text x
+  pPrintPrec _ _ (StringLiteral s) = pPrint s
+  pPrintPrec _ _ (IntLiteral n) = integer n
+  pPrintPrec _ _ (FloatLiteral f) = double f
+  pPrintPrec l p (App f ts) =
+    maybeParens (p > appPrec)
+      $ sep (pPrintPrec l p f : map (pPrintPrec l (appPrec + 1)) ts)
+  pPrintPrec _ _ (Cr s) = text s
+  pPrintPrec _ p (Lambda x a s) =
+    maybeParens (p > 0) $ "λ" <+> parens (pPrintArg (x, a)) <> comma <+> pPrint s
+  pPrintPrec l p (Project t) =
     let t' = simplifyProject t in
-     if t' == t then char '⌊' <+> pPrint t <+> char '⌋' else pPrint t'
-  pPrint (Proj2sig t) = char '⌈' <+> pPrint t <+> char '⌉'
-  pPrint tm@(SubCast to from t z) =
-    let tm' = simplifySubCast tm
-     in if tm == tm' then
-       case (to, from) of
-          (Hole, _) -> sep ["subsumptionCast", char '_', char '_', pPrintP t, pPrintP z]
-          (Subset n b need, Subset _ a _) | a == b ->
-            sep ["subsumptionCast", pPrintP a, pPrintP (Lambda n a need), pPrintP t, pPrintP z]
-          _ -> sep ["subCast", pPrintP from, pPrintP to, pPrintP t, pPrintP z]
-      else pPrint tm'
-  pPrint (Exist _ t (CoqProofTerm "I")) = char '#' <+> pPrint t
-  pPrint (Exist p t z) = "exist" <+> pPrintP p <+> pPrintP t <+> pPrintP z
-  pPrint (Match ts _ cases) =
-    sep $ ("match" <+> parens (hsep $ punctuate comma (map pPrint ts)) <+> "with") :
+     if t' == t then char '⌊' <+> pPrint t <+> char '⌋' else pPrintPrec l p t'
+  pPrintPrec _ _ (Proj2sig t) = char '⌈' <+> pPrint t <+> char '⌉'
+  pPrintPrec l p tm@(SubCast to from t z) =
+    if tm == simplifySubCast tm then
+      maybeParens (p > appPrec) $ case (to, from) of
+         (Hole, _) ->
+           sep ["subsumptionCast", char '_', char '_', pPrintPrec l (appPrec + 1) t, pPrintPrec l (appPrec + 1) z]
+         (Subset n b need, Subset _ a _) | a == b ->
+           sep ["subsumptionCast", pPrintPrec l (appPrec + 1) a, pPrintPrec l (appPrec + 1) (Lambda n a need), pPrintPrec l (appPrec + 1) t, pPrintPrec l (appPrec + 1) z]
+         _ -> sep ["subCast", pPrintPrec l (appPrec + 1) from, pPrintPrec l (appPrec + 1) to, pPrintPrec l (appPrec + 1) t, pPrintPrec l (appPrec + 1) z]
+    else pPrintPrec l p $ simplifySubCast tm
+  pPrintPrec l p (Exist _ t (CoqProofTerm "I")) =
+    maybeParens (p > appPrec) $ char '#' <+> pPrintPrec l (appPrec + 1) t
+  pPrintPrec l p (Exist tp t z) =
+    maybeParens (p > appPrec) $
+      "exist" <+> pPrintPrec l (appPrec + 1) tp <+> pPrintPrec l (appPrec + 1) t <+> pPrintPrec l (appPrec + 1) z
+  pPrintPrec _ p (Match ts _ cases) =
+    maybeParens (p > 0) . sep $
+      "match" <+> maybeParens (length ts > 1) (hsep $ punctuate comma (map pPrint ts)) <+> "with" :
       map (("|" <+>) . printCase) cases ++ ["end"]
     where
       printCase (pat, tm) =
-        parens (hsep . punctuate comma $ map (\(c, args) -> hsep $ map text (c : args)) pat)
+        maybeParens (length pat > 1)
+        (hsep . punctuate comma $ map (\(c, args) -> hsep $ map text (c : args)) pat)
         <+> "=>" <+> pPrint tm
-  pPrint (Ite r s t) = "if" <+> pPrint r <+> "then" <+> pPrint s <+> "else" <+> pPrint t
-  pPrint (Let x tp s t) =
-    sep ["let" <+> maybe (text x) (\tp' -> pPrintArg (x, tp')) tp <+> ":=", pPrint s <+> "in", pPrint t]
-  pPrint (InstanceProjection inst field) = pPrintP inst <> dot <> parens (text field)
-  pPrint (InlineInstance fields) =
-    sep ["{|", sep . punctuate semi $ map (\(field, val) -> pPrint field <+> ":=" <+> pPrint val) fields, "|}"]
-  pPrint (TypeArg tp) = pPrint tp
-  pPrint TermHole = char '_'
-  pPrint (PrfTerm _ z) = pPrint z
+  pPrintPrec _ p (Ite r s t) =
+    maybeParens (p > 0) $ "if" <+> pPrint r <+> "then" <+> pPrint s <+> "else" <+> pPrint t
+  pPrintPrec _ p (Let x tp s t) =
+    maybeParens (p > 0) $ sep [
+      "let" <+> maybe (text x) (\tp' -> parens (pPrintArg (x, tp'))) tp <+> ":=",
+      pPrint s <+> "in", pPrint t]
+  pPrintPrec l p (InstanceProjection inst field) =
+    maybeParens (p > appPrec) $ pPrintPrec l (appPrec + 1) inst <> dot <> parens (text field)
+  pPrintPrec _ _ (InlineInstance fields) =
+    sep ["{|", sep . punctuate semi $ map (\(field, val) -> text field <+> ":=" <+> pPrint val) fields, "|}"]
+  pPrintPrec l p (TypeArg tp) = pPrintPrec l p tp
+  pPrintPrec _ _ TermHole = char '_'
+  pPrintPrec l p (PrfTerm _ z) = pPrintPrec l p z
 
 -- | Syntactic simplification of is_true(tm)
 simplifyIsTrue :: CoqTerm -> CoqTerm
@@ -680,7 +722,7 @@ simplifyProject proj = case proj of
   Cr c -> Cr $ unrefinedConstrName c
   App (Cr c) args -> App (Cr c') (map simplifyProject args)
        where c' = if unrefinedConstrName "" `isSuffixOf` c then c else unrefinedConstrName c
-  NegB p -> Neg (Project p)
+  NegB tm -> Neg (Project tm)
   SubCast _ _ t _ -> simplifyProject t
   _ -> proj
 
@@ -741,14 +783,15 @@ instance Show Bop where
   show ConsU = "::U"
 
 instance Pretty ProofTerm where
-  pPrint (CoqProofTerm s) = text s
-  pPrint (TermWitness tm) | tm == unitTm = char '_'
-  pPrint (TermWitness t) = pPrint t
-  pPrint (RefWitness tm) = char '⌈' <+> pPrint tm <+> char '⌉'
-  pPrint (ProofHole Nothing) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec Oracle)
-  pPrint (ProofHole (Just h)) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec (Concat [Try (Clear h), Oracle]))
-  pPrint (ByTac tac) = "ltac:" <> parens (pPrintPrec prettyNormal 0 tac)
-  pPrint (Conj l r) = "conj" <+> parens (pPrint l) <+> parens (pPrint r)
+  pPrintPrec _ _ (CoqProofTerm s) = text s
+  pPrintPrec _ _ (TermWitness tm) | tm == unitTm = char '_'
+  pPrintPrec l p (TermWitness t) = pPrintPrec l p t
+  pPrintPrec _ _ (RefWitness tm) = char '⌈' <+> pPrint tm <+> char '⌉'
+  pPrintPrec l p (ProofHole Nothing) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec Oracle)
+  pPrintPrec _ _ (ProofHole (Just h)) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec (Concat [Try (Clear h), Oracle]))
+  pPrintPrec _ _ (ByTac tac) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec tac)
+  pPrintPrec l p (Conj tm1 tm2) =
+    maybeParens (p > appPrec) $ "conj" <+> pPrintPrec l (appPrec + 1) tm1 <+> pPrintPrec l (appPrec + 1) tm2
 
 instance Pretty CoqDestrPat where
   pPrint pat = case pat of
@@ -766,7 +809,7 @@ instance Pretty RewriteDir where
   pPrint RwRL = "<-"
 
 instance Pretty CoqIntroPat where
-  pPrint (DestrPat p) = pPrint p
+  pPrint (DestrPat pat) = pPrint pat
   pPrint (RewritePat rwDir) = pPrint rwDir
 
 instance Pretty Tactic where
@@ -820,7 +863,7 @@ instance Pretty Tactic where
       refineOracle (Exist TermHole tm (TermWitness TermHole))
     SubCast _ have tm (ProofHole _) -> refineOracle (SubCast Hole have tm (TermWitness TermHole))
     SubCast _ have tm prf -> dotted p $ "exact" <+> parens (pPrint (SubCast Hole have tm prf))
-    _ -> dotted p $ "refine" <+> pPrintP t
+    _ -> dotted p $ "refine" <+> parens (pPrint t)
     where refineOracle x = sep ["refine" <+> parens (pPrint x) <> semi, pPrintPrec l p Oracle]
   pPrintPrec l p (Concat tacs) =
     case unsnoc tacs of
@@ -838,12 +881,12 @@ instance Pretty Tactic where
   pPrintPrec _ p (DestructConj h h1 h2) =
     dotted p $ "destruct" <+> text h <+> "as" <+> brackets (text h1 <+> text h2)
   pPrintPrec _ p (Rewrite dir tm hyp) =
-    dotted p $ "rewrite" <+> maybe empty pPrint dir <+> pPrintP tm
+    dotted p $ "rewrite" <+> maybe empty pPrint dir <+> parens (pPrint tm)
     <+> maybe empty ((<+>) "in" . text) hyp
   pPrintPrec _ p (Pose abbr tm) =
-    dotted p $ "pose" <+> pPrintP tm <+> "as" <+> text abbr
+    dotted p $ "pose" <+> parens (pPrint tm) <+> "as" <+> text abbr
   pPrintPrec _ p (ProofPose abbr tm) =
-    dotted p $ "pose proof" <+> pPrintP tm <+> "as" <+> text abbr
+    dotted p $ "pose proof" <+> parens (pPrint tm) <+> "as" <+> text abbr
   pPrintPrec _ p (Assert n claim prf) =
     dotted p $ "assert" <+> parens (pPrintArg (n, claim)) <+> "by" <+> parens (pPrint prf)
   pPrintPrec _ p (Intros pats) =

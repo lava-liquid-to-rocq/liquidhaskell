@@ -514,6 +514,14 @@ bopPrec Impl = 1
 popPrec :: ProofOp -> Rational
 popPrec _ = 4
 
+{- -- | Prints a function applied to arguments with parenthesis if needed
+--
+-- > pPrintFunc p "f" [x, y] = f (x, y)
+pPrintFunc :: Rational -> String -> [Doc] -> Doc
+pPrintFunc _ f [] = text f
+pPrintFunc p f args =
+  maybeParens (p > appPrec) $ text f <+> parens (hsep $ punctuate comma args) -}
+
 -- ** Instances
 
 instance Pretty Builtin where
@@ -529,7 +537,7 @@ instance Pretty RefType where
   pPrintPrec _ _ (RefType x a r) =
     braces (text x <> colon <+> pPrint a <+> char '|' <+> pPrint r)
   pPrintPrec l p (ArrType x tpx tp) =
-    maybeParens (p > arrPrec) $ sep [text x <> colon <+> pPrintPrec l (arrPrec + 1) tpx, "->" <+> pPrintPrec l p tp]
+    maybeParens (p > arrPrec) $ sep [text x <> colon <+> pPrintPrec l (arrPrec + 1) tpx, "->" <+> pPrintPrec l arrPrec tp]
 
 instance Pretty Decl where
   pPrint (Data tc constrs) =
