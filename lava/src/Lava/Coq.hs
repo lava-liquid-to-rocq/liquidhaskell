@@ -370,9 +370,7 @@ rocqComment :: Doc -> Doc
 rocqComment doc = "(*" <+> doc <+> "*)"
 
 dot :: Doc -- ^ A '.' character
-mid :: Doc -- ^ A '|' character
 dot = char '.'
-mid = char '|'
 
 {- ORMOLU_DISABLE -}
 -- ** Precedence levels
@@ -472,11 +470,11 @@ instance Pretty CoqConstr where
 instance Pretty CoqTermTC where
   pPrint (InductiveData n constrs) =
      "Inductive" <+> text n <>  ": Set :="
-     $$ nest identNb (sep (map ((mid <+>) . pPrint) constrs))
+     $$ nest identNb (sep (map (("|" <+>) . pPrint) constrs))
 
 instance Pretty Decl where
   pPrint (TCDecl n constrs) = "Inductive" <+> text n <>  ": Set :="
-    $$ nest identNb (sep (map ((mid <+>) . pPrint) constrs))
+    $$ nest identNb (sep (map (("|" <+>) . pPrint) constrs))
   pPrint (Definition f args ret body vis) =
     case body of
       ProofBody tacs -> header <> dot
@@ -506,7 +504,7 @@ instance Pretty Decl where
   pPrint (CoqInductive f args k constrs) =
     "Inductive" <+> text f <+> pPrintArgs args
       <> colon <+> pPrintP k <+> ":="
-      $$ nest identNb (sep (map ((mid <+>) . pPrint) constrs) <> dot)
+      $$ nest identNb (sep (map (("|" <+>) . pPrint) constrs) <> dot)
   pPrint (CoqMarkVisibility v) = pPrint v
   pPrint (AddHint kind ax db) =
     "#[global] Hint" <+> pPrint kind <+> pPrintArg (ax, db) <> dot
@@ -554,11 +552,11 @@ pPrintRocqType (Subset x tc@(TC tc' []) e) True = case tc' of
   "bool" | isTrivial e -> "Bool"
   "Unit" -> braces (braces (pPrint e))
   _ -> case e of
-    _ | tc `elem` coqBuiltinInductDataTypes -> braces (pPrintArg (x, tc) <+> mid <+> pPrint e)
+    _ | tc `elem` coqBuiltinInductDataTypes -> braces (pPrintArg (x, tc) <+> "|" <+> pPrint e)
     And (App (Def wf) [Var x']) true | x == x' && wf == wfTCName tc' && isTrivial true -> pPrint tc
-    _ -> braces (pPrintArg (x, tc) <+> mid <+> pPrint e)
+    _ -> braces (pPrintArg (x, tc) <+> "|" <+> pPrint e)
 pPrintRocqType (Subset x tp e) _ =
-  braces (pPrintArg (x, tp) <+> mid <+> pPrint e)
+  braces (pPrintArg (x, tp) <+> "|" <+> pPrint e)
 pPrintRocqType tc@(TC tc' []) _ | tc `elem` coqBuiltinInductDataTypes = text tc'
 pPrintRocqType (TC typeName tpArgs) _ =
   hsep $ text typeName : map pPrint tpArgs
@@ -637,7 +635,7 @@ instance Pretty CoqTerm where
   pPrint (Exist p t z) = "exist" <+> pPrintP p <+> pPrintP t <+> pPrintP z
   pPrint (Match ts _ cases) =
     sep $ ("match" <+> parens (hsep $ punctuate comma (map pPrint ts)) <+> "with") :
-      map ((mid <+>) . printCase) cases ++ ["end"]
+      map (("|" <+>) . printCase) cases ++ ["end"]
     where
       printCase (pat, tm) =
         parens (hsep . punctuate comma $ map (\(c, args) -> hsep $ map text (c : args)) pat)
@@ -779,7 +777,7 @@ instance Pretty CoqDestrPat where
     _ -> pPrintAux pat
     where
       pPrintAux (ConjDestrPat pats) = hsep $ map pPrint pats
-      pPrintAux (DisjDestrPat pats) = hsep . punctuate mid $ map pPrintAux pats
+      pPrintAux (DisjDestrPat pats) = hsep . punctuate "|" $ map pPrintAux pats
       pPrintAux UnnamedIdPat = char '_'
       pPrintAux (SingleIdPat n) = text n
 
@@ -818,8 +816,7 @@ instance Pretty Tactic where
       nullBranches = all (null . snd . snd) branches
       printTacBranch (_, tacs) = rocqBullet p <+> sep (map (pPrintPrec l (p + 1)) tacs)
   pPrintPrec l p (Induction t branches genVars) =
-    if nullBranches then dotted p induct
-      else vcat (gendepInduct <> dot : map printTacBranch branchesSorted)
+    if nullBranches then dotted p induct else dotted p gendepInduct $$ printTacBranches
     where
       branchesSorted = map snd $ sortBy ordFunc branches
       matchTac = if all ((== ConjDestrPat []) . fst . snd) branches && nullBranches then "destruct" else "induction"
@@ -827,12 +824,17 @@ instance Pretty Tactic where
       induct = text matchTac <+> pPrint t <+> "as" <+> pPrint (DisjDestrPat $ map fst branchesSorted)
       -- generalize dependent genVars
       gendeps =
-        hsep . punctuate semi $ map (\x -> "try revert" <+> text (subsetWitnessNm x) <> semi <+> "generalize dependent" <+> text x) genVars
-      -- generalize dependent genVars; induction t as ...; intros.
+        sep . punctuate semi $ map (\x -> "try revert" <+> text (subsetWitnessNm x) <> semi <+> "generalize dependent" <+> text x) genVars
+      -- generalize dependent genVars; induction t as ...; intros
       gendepInduct =
         if null genVars then induct else sep $ punctuate semi [gendeps, induct, "intros"]
       nullBranches = all (null . snd . snd) branches
-      printTacBranch (_, tacs) = rocqBullet p <+> sep (map (pPrintPrec l (p + 1)) tacs)
+      -- The branches of an induct/destruct in a Concat are shown with [branch1 | … | branchn],
+      -- and otherwise as - branch1. - … - branchn (with the correct bullet)
+      printTacBranches =
+        if p == concatPrec
+        then dotted p (brackets . sep . punctuate " |" $ map (\(_, tacs) -> pPrintPrec l nodotPrec (mkConcat tacs)) branchesSorted)
+        else vcat $ map (\(_, tacs) -> rocqBullet p <+> sep (map (pPrintPrec l (p + 1)) tacs)) branchesSorted
   pPrintPrec l p (Exact t) = case t of
     SubCast _ _ (Exist _ tm (CoqProofTerm prf)) (ProofHole _) | prf == "eq_refl" || prf == "I" ->
       refineOracle (Exist TermHole tm (TermWitness TermHole))
