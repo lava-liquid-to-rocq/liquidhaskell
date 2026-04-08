@@ -6,6 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OrPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections #-}
 
 {- {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE KindSignatures #-} -}
@@ -17,6 +18,7 @@ module Lava.Coq where
 import Data.Bifunctor
 import Data.Data
 import Data.List (isSuffixOf, sortBy, stripPrefix, unsnoc)
+import qualified Data.List.NonEmpty as NE
 import Lava.Calculus (appPrec, arrPrec)
 import Lava.Names
 import Text.PrettyPrint
@@ -347,10 +349,20 @@ fromSubset _ = error "Subset expected"
 
 -- * Functions on the grammar
 
--- | Regroup forall arguments
-concatForalls :: RocqType -> ([(Id, RocqType)], RocqType)
-concatForalls (FAType arg tp) = first (arg :) $ concatForalls tp
+-- | Regroup forall parameters
+concatFAType :: RocqType -> ([(Id, RocqType)], RocqType)
+concatFAType (FAType arg tp) = first (arg :) $ concatFAType tp
+concatFAType tp = ([], tp)
+
+-- | Regroup forall parameters
+concatForalls :: CoqTerm -> ([(Id, RocqType)], CoqTerm)
+concatForalls (Forall arg tp) = first (arg ++) $ concatForalls tp
 concatForalls tp = ([], tp)
+
+-- | Regroup λ parameters
+concatLambdas :: CoqTerm -> ([(Id, RocqType)], CoqTerm)
+concatLambdas (Lambda x tp r) = first ((x, tp) :) $ concatLambdas r
+concatLambdas r = ([], r)
 
 -- | Whether a proposition is trivially equivalent to True
 isTrivial :: CoqTerm -> Bool
@@ -441,21 +453,33 @@ rocqBullet p =
 identNb :: Int
 identNb = 2
 
-pPrintArg :: (Pretty a) => (Id, a) -> Doc
-pPrintArg (x, tp) = text x <> colon <+> pPrint tp
+pPrintArg :: (Pretty a) => ((Id, a), Bool) -> Doc
+pPrintArg ((x, tp), isImplicit) =
+  let delim = if isImplicit then brackets else parens
+   in if pPrint tp == "_"
+     then maybeBrackets isImplicit (text x)
+     else delim (text x <+> colon <+> pPrint tp)
 
-pPrintArgs :: (Pretty a) => [(Id, a)] -> Doc
-pPrintArgs args = sep $ map (parens . pPrintArg) args
-
-pPrintImpArg :: (Pretty a) => ((Id, a), Bool) -> Doc
-pPrintImpArg ((x, tp), isImplicit) = (if isImplicit then brackets else parens) (pPrintArg (x, tp))
+pPrintArgs :: (Pretty a) => [((Id, a), Bool)] -> Doc
+pPrintArgs args =
+  sep . map (pPrintArg . first (first collapseVars)) $ groupVars args
+  where
+    collapseVars :: [Id] -> Id
+    collapseVars = render . hsep . map text
+    -- Group ids with the same value
+    groupVars :: (Pretty a) => [((Id, a), Bool)] -> [(([Id], a), Bool)]
+    groupVars vars =
+      map collapse $ NE.groupBy (\((_, tp1), b1) ((_, tp2), b2) -> pPrint tp1 == pPrint tp2 && b1 == b2) vars
+      where
+        collapse :: NE.NonEmpty ((Id, a), Bool) -> (([Id], a), Bool)
+        collapse xs@(((_, tp), b) NE.:| _) = ((NE.toList $ NE.map (fst . fst) xs, tp), b)
 
 instance Pretty CoqModule where
   pPrint (CoqModule name decls) =
      "module" <+> text name <+> vcat (punctuate "; " (map pPrint decls))
 
 instance Pretty CoqConstr where
-  pPrint (Constr c tp) = pPrintArg (c, tp)
+  pPrint (Constr c tp) = text c <> colon <+> pPrint tp
 
 instance Pretty CoqTermTC where
   pPrint (InductiveData n constrs) =
@@ -478,13 +502,13 @@ instance Pretty Decl where
         Prop {} | vis == Opaque -> "Theorem"
         _ ->  "Definition"
       header =
-        hang (hang (kind <+> text f) identNb (sep (map pPrintImpArg args) <> colon))
+        hang (hang (kind <+> text f) identNb (pPrintArgs args <> colon))
         identNb (pPrint ret)
       qedSym = case vis of
         Transparent -> "Defined"
         Opaque -> "Qed"
   pPrint (Fix f args ret tm) =
-     hang ("Fixpoint" <+> text f <+> sep (map pPrintImpArg args) <> colon) identNb (pPrint ret <+>  ":=")
+     hang ("Fixpoint" <+> text f <+> pPrintArgs args <> colon) identNb (pPrint ret <+>  ":=")
     $$ nest identNb (pPrint tm <> dot)
   pPrint (Load m) =  "Load" <+> text m <> dot
   pPrint (CoqAlias f e) =
@@ -494,11 +518,11 @@ instance Pretty Decl where
   pPrint (CoqAxiom ax args claim) =
      hang ("Axiom" <+> text ax <> colon) identNb (pPrintForall (map fst args) claim <> dot)
   pPrint (CoqInductive f args ret constrs) =
-    hang ("Inductive" <+> text f <+> pPrintArgs args <> colon) identNb (pPrint ret <+> ":=")
+    hang ("Inductive" <+> text f <+> pPrintArgs (map (,False) args) <> colon) identNb (pPrint ret <+> ":=")
       $$ nest identNb (sep (map (("|" <+>) . pPrint) constrs) <> dot)
   pPrint (CoqMarkVisibility v) = pPrint v
   pPrint (AddHint kind ax db) =
-    "#[global] Hint" <+> pPrint kind <+> pPrintArg (ax, db) <> dot
+    "#[global] Hint" <+> pPrint kind <+> text ax <> colon <+> pPrint db <> dot
   pPrint (Instance instName tp opDefs) =
     hang ("#[global] Instance" <+> text instName <> colon <+>
     hsep (map text tp) <+> ":=" <+> lbrace)
@@ -543,14 +567,14 @@ pPrintRocqType l p tp@(Subset x tc@(TC tc' []) e) True = case tc' of
   "bool" | isTrivial e -> "Bool"
   "Unit" -> braces (braces (pPrint e))
   _ -> case (e, tc_base) of
-    _ | tc `elem` coqBuiltinInductDataTypes -> braces (pPrintArg (x, tc) <+> "|" <+> pPrint e)
+    _ | tc `elem` coqBuiltinInductDataTypes -> text x <+> colon <+> pPrint tc <+> "|" <+> pPrint e
     -- Use the refined name TC for {x: TC_u | wf_TC x /\ True}
     (And (App (Def wf) [Var x']) true, Just tc_ref)
       | x == x' && wf == wfTCName tc_ref && isTrivial true && not (null tc_ref)-> text tc_ref
     _ -> pPrintRocqType l p tp False
     where tc_base = reverse <$> stripPrefix (reverse $ unrefinedTCName "") (reverse tc')
 pPrintRocqType _ _ (Subset x tp e) _ =
-  braces (pPrintArg (x, tp) <+> "|" <+> pPrint e)
+  braces (text x <> colon <+> pPrint tp <+> "|" <+> pPrint e)
 pPrintRocqType _ _ tc@(TC tc' []) _ | tc `elem` coqBuiltinInductDataTypes = text tc'
 pPrintRocqType l p (TC typeName tpArgs) b =
   maybeParens (p > appPrec) . hsep $
@@ -559,7 +583,7 @@ pPrintRocqType l p (Arrow tp1 tp2) b =
   maybeParens (p > arrPrec) $
     sep [pPrintRocqType l (arrPrec + 1) tp1 b, "→" <+> pPrintRocqType l arrPrec tp2 b]
 pPrintRocqType _ p tp@(FAType {}) _ =
-  let (args, ret) = concatForalls tp
+  let (args, ret) = concatFAType tp
    in maybeParens (p > 0) (pPrintForall args ret)
 pPrintRocqType l p (Prop tm) _ = pPrintPrec l p tm
 pPrintRocqType l p (UPack uargTps t) _ =
@@ -573,15 +597,11 @@ pPrintRocqType l p (Pack argTps uargTps z t tm) _ =
 pPrintRocqType _ _ Hole _ = char '_'
 
 -- TODO: we probably want to use Maybe instead of using '_'
-pPrintForall :: (Pretty a) => (Pretty b) => [(Id, a)] -> b -> Doc
+pPrintForall :: (Eq a) => (Pretty a) => (Pretty b) => [(Id, a)] -> b -> Doc
 pPrintForall [] ret = pPrint ret
 pPrintForall (("_", t) : tl) ret = sep [pPrint t, "→", pPrintForall tl ret]
 pPrintForall args ret =
-  sep [if null args then empty else "∀" <+> sep (map printArg args) <> comma, pPrint ret]
-  where
-    printArg (x, tp) =
-      if pPrint tp == char '_' then text x
-      else parens (text x <+> colon <+> pPrint tp)
+  sep [if null args then empty else "∀" <+> pPrintArgs (map (,False) args) <> comma, pPrint ret]
 
 instance Pretty RocqType where
   pPrint tp = pPrintRocqType prettyNormal 0 tp True
@@ -596,10 +616,12 @@ instance Pretty CoqTerm where
     if simplifyIsTrue tm == tm
       then maybeParens (p > appPrec) $ "is_true" <+> parens (pPrint tm)
       else pPrint $ simplifyIsTrue tm
-  pPrintPrec _ p (Forall vars tm) = maybeParens (p > 1) $ pPrintForall vars tm
+  pPrintPrec _ p tm@(Forall {}) =
+    let (vars, tm') = concatForalls tm
+     in maybeParens (p > 1) $ pPrintForall vars tm'
   pPrintPrec _ p (Exists vars tm) =
      maybeParens (p > 1) . sep $
-       ["∃" <+> pPrintArgs vars <> comma | not (null vars)] ++ [pPrint tm]
+       ["∃" <+> pPrintArgs (map (,False) vars) <> comma | not (null vars)] ++ [pPrint tm]
   pPrintPrec l p (And tm1 tm2) =
     maybeParens (p > bopPrec Andb) $
       sep [pPrintPrec l (bopPrec Andb) tm1, "∧" <+> pPrintPrec l (bopPrec Andb) tm2]
@@ -641,8 +663,9 @@ instance Pretty CoqTerm where
     maybeParens (p > appPrec)
       $ sep (pPrintPrec l p f : map (pPrintPrec l (appPrec + 1)) ts)
   pPrintPrec _ _ (Cr s) = text s
-  pPrintPrec _ p (Lambda x a s) =
-    maybeParens (p > 0) $ "λ" <+> parens (pPrintArg (x, a)) <> comma <+> pPrint s
+  pPrintPrec _ p tm@(Lambda {}) =
+    let (args, tm') = concatLambdas tm
+     in maybeParens (p > 0) $ sep ["λ" <+> pPrintArgs (map (,False) args) <> comma, pPrint tm']
   pPrintPrec l p (Project t) =
     let t' = simplifyProject t in
      if t' == t then char '⌊' <+> pPrint t <+> char '⌋' else pPrintPrec l p t'
@@ -674,7 +697,7 @@ instance Pretty CoqTerm where
     maybeParens (p > 0) $ "if" <+> pPrint r <+> "then" <+> pPrint s <+> "else" <+> pPrint t
   pPrintPrec _ p (Let x tp s t) =
     maybeParens (p > 0) $ sep [
-      "let" <+> maybe (text x) (\tp' -> parens (pPrintArg (x, tp'))) tp <+> ":=",
+      "let" <+> maybe (text x) (\tp' -> parens (pPrintArg ((x, tp'), False))) tp <+> ":=",
       pPrint s <+> "in", pPrint t]
   pPrintPrec l p (InstanceProjection inst field) =
     maybeParens (p > appPrec) $ pPrintPrec l (appPrec + 1) inst <> dot <> parens (text field)
@@ -900,7 +923,7 @@ instance Pretty Tactic where
   pPrintPrec _ p (ProofPose abbr tm) =
     dotted p $ "pose proof" <+> parens (pPrint tm) <+> "as" <+> text abbr
   pPrintPrec _ p (Assert n claim prf) =
-    dotted p $ "assert" <+> parens (pPrintArg (n, claim)) <+> "by" <+> parens (pPrint prf)
+    dotted p $ "assert" <+> parens (pPrintArg ((n, claim), False)) <+> "by" <+> parens (pPrint prf)
   pPrintPrec _ p (Intros pats) =
     dotted p $ "intros" <+> sep (map pPrint pats)
   pPrintPrec _ p (GeneralizeDependent xs) =
@@ -908,7 +931,7 @@ instance Pretty Tactic where
   pPrintPrec _ p (Clear hyp) =
     dotted p $ "clear" <+> text hyp
   pPrintPrec l p (AssertTacs x tp tacs) =
-    sep $ dotted p ("assert" <+> pPrintArg (x, tp)) : [braces (pPrintPrec l nodotPrec (Concat tacs)) | not $ null tacs]
+    sep $ dotted p ("assert" <+> pPrintArg ((x, tp), False)) : [braces (pPrintPrec l nodotPrec (Concat tacs)) | not $ null tacs]
 
 -- | comparison operator to alphabetically order branches of Induction/Destruct
 ordFunc :: (Id, (CoqDestrPat, [Tactic])) -> (Id, (CoqDestrPat, [Tactic])) -> Ordering
