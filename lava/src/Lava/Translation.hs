@@ -239,13 +239,13 @@ trRefType tp@(ArrType {}) =
        rx = subst substs rx_ -}
     (args, ret) = arrs tp
     (x, tpx, rx) = fromSubset $ trRefType ret
-    argsT = map (second utrRefType) args
+    argsT = map (second trRefType) args
     argTps = ArgListT argsT
     uargTps = UArgListT $ map (utrRefType . snd) args
     p = mkLam argsT (Lambda x tpx rx)
     argsNm = "x_" ++ hashName argTps
     v = "v_" ++ argsNm
-    p_ = Lambda argsNm (ArgumentList argTps) (Lambda v tpx (PrfTerm Hole (ByTac . Custom $ unwords ["flattenP", prettyShow p, argsNm, v])))
+    p_ = Lambda argsNm (ArgumentList argTps) (Lambda v tpx (PrfTerm Hole (ByTac . Custom $ unwords ["flattenP", render $ parens (pPrint p), argsNm, v])))
 
 -- | Translation of refinement types at top-level (with foralls)
 trRefTypeTop :: LH.RefType -> RocqType

@@ -201,10 +201,12 @@ newtype UArgListT = UArgListT [RocqType] deriving (Eq, Data)
 newtype UArgList = UArgList [CoqTerm]
 
 mkArgListT :: ArgListT -> CoqTerm
-mkArgListT (ArgListT xs) = foldl (\tlTm (x, t) -> Bop ConsRT (TypeArg t) $ Lambda x t tlTm) (Def "nilRT") (reverse xs)
+mkArgListT (ArgListT xs) =
+  foldl (\tlTm (x, t) -> Bop ConsRT (TypeArg t) $ Lambda x t tlTm) (Def "nilRT") (reverse xs)
 
 mkUArgListT :: UArgListT -> CoqTerm
-mkUArgListT (UArgListT xs) = foldl (\tlTm t -> Bop ConsUT (TypeArg t) tlTm) (Def "nilUT") (reverse xs)
+mkUArgListT (UArgListT xs) =
+  foldl (\tlTm t -> Bop ConsUT (TypeArg t) tlTm) (Def "nilUT") (reverse xs)
 
 mkArgList :: ArgList -> CoqTerm
 mkArgList (ArgList args) = foldl (flip (Bop ConsR)) (Def "nilR") args
@@ -504,8 +506,8 @@ instance Pretty Decl where
       map (\(lookupOp, lookupRes) -> text lookupOp <+> ":=" <+> pPrint lookupRes) opDefs)
     <+> rbrace <> dot)
   pPrint (TacInstance instName tp tac) =
-    hang ("#[global] Instance" <+> pPrintArg (instName, tp) <> dot)
-      identNb ("Proof." <+> pPrint tac <+> "Defined.")
+    sep [hang ("#[global] Instance" <+> text instName <> colon)
+      identNb (pPrint tp <> dot), "Proof.", nest identNb (pPrint tac), "Defined."]
 
 instance Pretty ChangeVisibility where
   pPrint (ChangeVisibility f Transparent) = "Transparent" <+> text f <> char '.'
@@ -624,6 +626,10 @@ instance Pretty CoqTerm where
   pPrintPrec _ _ FF = "False"
   pPrintPrec _ _ (Def s) = text s
   pPrintPrec _ _ (Abbr s) = text s
+  -- FIX: defined as right associative in Rocq, but still needs brackets I don't know why
+  pPrintPrec l p (Bop ConsUT s t) =
+    maybeParens (p > bopPrec ConsUT) $
+      sep [pPrintPrec l (bopPrec ConsUT) s, pPrint ConsUT <+> pPrintPrec l (bopPrec ConsUT + 1) t]
   pPrintPrec l p (Bop bop s t) =
     maybeParens (p > bopPrec bop) $
       sep [pPrintPrec l (bopPrec bop) s, pPrint bop <+> pPrintPrec l (bopPrec bop) t]
@@ -924,10 +930,10 @@ admitted = any containsAdmit
       _ -> False
 
 instance Pretty ArgListT where
-  pPrint = pPrint . mkArgListT
+  pPrintPrec l p = pPrintPrec l p . mkArgListT
 instance Pretty ArgList where
-  pPrint = pPrint . mkArgList
+  pPrintPrec l p = pPrintPrec l p . mkArgList
 instance Pretty UArgListT where
-  pPrint = pPrint . mkUArgListT
+  pPrintPrec l p = pPrintPrec l p . mkUArgListT
 instance Pretty UArgList where
-  pPrint = pPrint . mkUArgList
+  pPrintPrec l p = pPrintPrec l p . mkUArgList

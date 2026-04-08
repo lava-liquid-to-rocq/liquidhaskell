@@ -23,10 +23,10 @@ Inductive UArgList: UArgListT -> Type :=
       UArgList (consUArgsT X tlT).
 
 Ltac synthesizePrInstance := quicksolve.
-Global Notation "X ::UT tl" := (consUArgsT X tl) (at level 1).
-Global Notation "X' ::RT tl" := (consArgsT _ X' _ tl) (at level 1).
-Global Notation "x ::R tl" := (@consArgs _ _ _ x _ tl) (at level 1).
-Global Notation "x ::U tl" := (@consUArgs _ x _ tl) (at level 1).
+Global Notation "X ::UT tl" := (consUArgsT X tl) (at level 60, right associativity).
+Global Notation "X' ::RT tl" := (consArgsT _ X' _ tl) (at level 60, right associativity).
+Global Notation "x ::R tl" := (@consArgs _ _ _ x _ tl) (at level 60, right associativity).
+Global Notation "x ::U tl" := (@consUArgs _ x _ tl) (at level 60, right associativity).
 Global Notation nilUT := noUArgsT.
 Global Notation nilU := noUArgs.
 Global Notation nilRT := noArgsT.

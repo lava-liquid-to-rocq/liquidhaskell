@@ -47,7 +47,7 @@ trDecl (LH.Definition f tpf e isRefl) =
           ++ refRelRwLemma fdata --        f_rel_rw
           ++ refUnrefLemmas fdata --       f__f_rel and f__f_rel'
           ++ relMkLemma fdata --           f_rel_mk
-          -- ++ packInstance fdata --         f_pack
+          ++ packInstance fdata --         f_pack
       else []
   where
     fdata = mkFuncData f tpf e
@@ -720,11 +720,11 @@ relMkLemma f = [refRelMkLem, AddHint ResolveHint (relDefMkLemName $ name f) Grap
 -- > #[global] Instance f_pack : ….
 -- > Proof. buildPackG f f_rel f__f_rel f_rel_funct. Defined.
 packInstance :: FuncData -> [Coq.Decl]
-packInstance f | traceF "packInstance" f = undefined
+-- packInstance f | traceF "packInstance" f = undefined
 packInstance f =
   [TacInstance (packInstanceName $ name f) (trRefType $ tpf f) def | firstOrder]
   where
-    def = Custom $ unwords ["\n\tbuildPackG", name f, relDefName $ name f, relDefThmName $ name f, funcHoodLemName $ name f] ++ ". "
+    def = Custom $ unwords ["buildPackG", name f, relDefName $ name f, relDefThmName $ name f, funcHoodLemName $ name f]
     firstOrder = all (\case (_, RefType {}) -> True; (_, ArrType {}) -> False) (args f)
 
 -- ** Utility functions
