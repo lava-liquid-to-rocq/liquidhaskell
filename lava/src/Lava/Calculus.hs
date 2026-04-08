@@ -224,6 +224,13 @@ apps :: Reft -> (Reft, [Reft])
 apps (App tm1 tm2) = let (hd, args) = apps tm1 in (hd, args ++ [tm2])
 apps tm = (tm, [])
 
+-- | Head variable of an application (also when projected)
+headVar :: Reft -> Maybe Id
+headVar r = case fst (apps r) of
+  Var f _ _ -> Just f
+  Proj (Var f _ _) -> Just f
+  _ -> Nothing
+
 -- | Gives the bop corresponding to a pop
 popToBop :: ProofOp -> Bop
 popToBop PEq = Eq

@@ -405,8 +405,9 @@ separateBranches σxs σp (LH.Let x _ ex e) =
    in concatMap (\(σxs_x, σp_x, r_x) -> separateBranches σxs_x σp_x (subst r_x x e)) x_br
 separateBranches σxs σp (Case r branches _) =
   case alreadyMatched of
-    -- if r is matched already
+    -- if r is matched already:
     Just (DC c, rs) -> maybe [] (separateBranches σxs σp) $ matchBranch (c, rs) cleanBranches
+    -- if not:
     Nothing -> case apps r of
       -- if r is an applied constructor
       (DC c, rs) -> maybe [] (separateBranches σxs σp) $ matchBranch (c, rs) cleanBranches

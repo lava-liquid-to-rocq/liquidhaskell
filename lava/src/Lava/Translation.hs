@@ -9,6 +9,8 @@ module Lava.Translation where
 
 import Data.Bifunctor (bimap, second)
 -- import Debug.Trace (trace)
+
+import Data.Maybe (fromMaybe)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil
@@ -168,17 +170,17 @@ extractApps r0 = go [] r0
         -- otherwise creates a fresh variable, update env and returns the variable
         updateEnv env' r' = case lookup r' env' of
           Just z -> (env', LH.Var z 0 Local)
-          Nothing -> let z = freshName "z" env' in (env' ++ [(r', z)], LH.Var z 0 Local)
-        freshName f zs =
-          -- Number of calls to f
-          let nbOfCalls = foldr ((+) . isF) 0 zs
+          Nothing ->
+            let z = freshName (fromMaybe "z" (headVar r')) env'
+             in (env' ++ [(r', z)], LH.Var z 0 Local)
+        freshName f env' =
+          -- Number of calls to f before updating the environment
+          let nbOfCalls = length $ filter (isF . fst) env'
            in if nbOfCalls == 0
-                then f ++ "res"
+                then f ++ "_res"
                 else f ++ "_res_" ++ show (nbOfCalls + 1)
           where
-            isF :: (Reft, Id) -> Int
-            isF (LH.App (LH.Var f' _ _) _, _) | f' == f = 1
-            isF _ = 0
+            isF r' = case headVar r' of Just f' -> f == f'; Nothing -> False
 
 -- | Takes as first argument the map RV from applications to fresh variables and
 -- translates the hypothesis, placing them on top of the second argument
