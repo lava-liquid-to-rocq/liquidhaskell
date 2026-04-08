@@ -562,7 +562,7 @@ inversionLemma f (σxs, paths) =
   where
     f_lem = invLemName f σxs
     -- Variable introduced by destructing the arguments
-    argsVars = Set.toList $ LH.freeVars (map snd σxs) Set.\\ Set.fromList (map fst σxs)
+    argsVars = Set.toList $ LH.freeVars (map snd σxs)
     -- Fresh variable for the result of relApp
     res = f_lem ++ "_res"
     relApp = Coq.App (Def $ relDefName f) (map (utrReft . snd) σxs ++ [Coq.Var res])

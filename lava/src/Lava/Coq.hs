@@ -461,8 +461,9 @@ instance Pretty CoqTermTC where
      $$ nest identNb (sep (map (("|" <+>) . pPrint) constrs))
 
 instance Pretty Decl where
-  pPrint (TCDecl n constrs) = "Inductive" <+> text n <>  ": Set :="
-    $$ nest identNb (sep (map (("|" <+>) . pPrint) constrs))
+  pPrint (TCDecl n constrs) =
+    hang ("Inductive" <+> text n <>  ": Set :=")
+      identNb (sep (map (("|" <+>) . pPrint) constrs))
   pPrint (Definition f args ret body vis) =
     case body of
       ProofBody tacs -> header <> dot
@@ -471,40 +472,40 @@ instance Pretty Decl where
         $$ (if admitted tacs then "Admitted" else qedSym) <> dot
       TermBody expr -> header <> " :=" $$ nest identNb (pPrint expr <> dot)
     where
-      header = case ret of
-        Prop {} | vis == Opaque -> "Theorem" <+> sign
-        _ ->  "Definition" <+> sign
-      sign = sep [text f <+> sep (map pPrintImpArg args) <> colon, pPrint ret]
+      kind = case ret of
+        Prop {} | vis == Opaque -> "Theorem"
+        _ ->  "Definition"
+      header =
+        hang (hang (kind <+> text f) identNb (sep (map pPrintImpArg args) <> colon))
+        identNb (pPrint ret)
       qedSym = case vis of
         Transparent -> "Defined"
         Opaque -> "Qed"
   pPrint (Fix f args ret tm) =
-     "Fixpoint" <+> text f <+>
-    sep (map pPrintImpArg args) <> colon <+> pPrint ret <+>  ":="
+     hang ("Fixpoint" <+> text f <+> sep (map pPrintImpArg args) <> colon) identNb (pPrint ret <+>  ":=")
     $$ nest identNb (pPrint tm <> dot)
   pPrint (Load m) =  "Load" <+> text m <> dot
   pPrint (CoqAlias f e) =
-    sep [ "Notation" <+> text f <+>  ":=", pPrint e <> dot]
+    hang ("Notation" <+> text f <+> ":=") identNb (pPrint e <> dot)
   pPrint (CoqNewType t tp) =
-     "Global Notation" <+> text t <+>  ":=" <+> pPrintRocqType prettyNormal 0 tp False <> dot
+     hang ("Global Notation" <+> text t <+> ":=") identNb (pPrintRocqType prettyNormal 0 tp False <> dot)
   pPrint (CoqAxiom ax args claim) =
-     "Axiom" <+> text ax <> colon <+> pPrintForall (map fst args) claim <> dot
-  pPrint (CoqInductive f args k constrs) =
-    "Inductive" <+> text f <+> pPrintArgs args
-      <> colon <+> pPrint k <+> ":="
+     hang ("Axiom" <+> text ax <> colon) identNb (pPrintForall (map fst args) claim <> dot)
+  pPrint (CoqInductive f args ret constrs) =
+    hang ("Inductive" <+> text f <+> pPrintArgs args <> colon) identNb (pPrint ret <+> ":=")
       $$ nest identNb (sep (map (("|" <+>) . pPrint) constrs) <> dot)
   pPrint (CoqMarkVisibility v) = pPrint v
   pPrint (AddHint kind ax db) =
     "#[global] Hint" <+> pPrint kind <+> pPrintArg (ax, db) <> dot
   pPrint (Instance instName tp opDefs) =
-    "#[global] Instance" <+> text instName <> colon <+>
-    hsep (map text tp) <+> ":=" <+> lbrace
-    $$ nest identNb (vcat . punctuate semi $
+    hang ("#[global] Instance" <+> text instName <> colon <+>
+    hsep (map text tp) <+> ":=" <+> lbrace)
+    identNb (nest identNb (vcat . punctuate semi $
       map (\(lookupOp, lookupRes) -> text lookupOp <+> ":=" <+> pPrint lookupRes) opDefs)
-    <+> rbrace <> dot
+    <+> rbrace <> dot)
   pPrint (TacInstance instName tp tac) =
-    "#[global] Instance" <+> pPrintArg (instName, tp) <> dot
-    $$ "Proof." <+> pPrint tac <+> "Defined."
+    hang ("#[global] Instance" <+> pPrintArg (instName, tp) <> dot)
+      identNb ("Proof." <+> pPrint tac <+> "Defined.")
 
 instance Pretty ChangeVisibility where
   pPrint (ChangeVisibility f Transparent) = "Transparent" <+> text f <> char '.'
@@ -554,7 +555,7 @@ pPrintRocqType l p (TC typeName tpArgs) b =
   text typeName : map (\tp -> pPrintRocqType l (appPrec + 1) tp b) tpArgs
 pPrintRocqType l p (Arrow tp1 tp2) b =
   maybeParens (p > arrPrec) $
-    sep [pPrintRocqType l (arrPrec + 1) tp1 b, "->" <+> pPrintRocqType l arrPrec tp2 b]
+    sep [pPrintRocqType l (arrPrec + 1) tp1 b, "→" <+> pPrintRocqType l arrPrec tp2 b]
 pPrintRocqType _ p tp@(FAType {}) _ =
   let (args, ret) = concatForalls tp
    in maybeParens (p > 0) (pPrintForall args ret)
@@ -572,9 +573,9 @@ pPrintRocqType _ _ Hole _ = char '_'
 -- TODO: we probably want to use Maybe instead of using '_'
 pPrintForall :: (Pretty a) => (Pretty b) => [(Id, a)] -> b -> Doc
 pPrintForall [] ret = pPrint ret
-pPrintForall (("_", t) : tl) ret = sep [pPrint t, "->", pPrintForall tl ret]
+pPrintForall (("_", t) : tl) ret = sep [pPrint t, "→", pPrintForall tl ret]
 pPrintForall args ret =
-  sep [if null args then empty else "forall" <+> sep (map printArg args) <> comma, pPrint ret]
+  sep [if null args then empty else "∀" <+> sep (map printArg args) <> comma, pPrint ret]
   where
     printArg (x, tp) =
       if pPrint tp == char '_' then text x
@@ -593,25 +594,25 @@ instance Pretty CoqTerm where
     if simplifyIsTrue tm == tm
       then maybeParens (p > appPrec) $ "is_true" <+> parens (pPrint tm)
       else pPrint $ simplifyIsTrue tm
-  pPrintPrec _ p (Forall vars tm) = maybeParens (p > 0) $ pPrintForall vars tm
+  pPrintPrec _ p (Forall vars tm) = maybeParens (p > 1) $ pPrintForall vars tm
   pPrintPrec _ p (Exists vars tm) =
-     maybeParens (p > 0) . sep $
-       ["exists" <+> pPrintArgs vars <> comma | not (null vars)] ++ [pPrint tm]
+     maybeParens (p > 1) . sep $
+       ["∃" <+> pPrintArgs vars <> comma | not (null vars)] ++ [pPrint tm]
   pPrintPrec l p (And tm1 tm2) =
-    maybeParens (p > bopPrec Andb) $ pPrintPrec l (bopPrec Andb) tm1 <+> "/\\" <+> pPrintPrec l (bopPrec Andb) tm2
+    maybeParens (p > bopPrec Andb) $ pPrintPrec l (bopPrec Andb) tm1 <+> "∧" <+> pPrintPrec l (bopPrec Andb) tm2
   pPrintPrec l p (Or tm1 tm2) =
-    maybeParens (p > bopPrec Orb) $ pPrintPrec l (bopPrec Orb) tm1 <+> "\\/" <+> pPrintPrec l (bopPrec Orb) tm2
+    maybeParens (p > bopPrec Orb) $ pPrintPrec l (bopPrec Orb) tm1 <+> "∨" <+> pPrintPrec l (bopPrec Orb) tm2
   pPrintPrec l p (Impl tm1 tm2) =
-    maybeParens (p > bopPrec ImplB) $ pPrintPrec l (bopPrec ImplB) tm1 <+> "->" <+> pPrintPrec l (bopPrec ImplB) tm2
+    maybeParens (p > bopPrec ImplB) $ pPrintPrec l (bopPrec ImplB) tm1 <+> "→" <+> pPrintPrec l (bopPrec ImplB) tm2
   pPrintPrec l p (Equiv tm1 tm2) =
-    maybeParens (p > bopPrec ImplB) $ pPrintPrec l (bopPrec ImplB) tm1 <+> "<->" <+> pPrintPrec l (bopPrec ImplB) tm2
+    maybeParens (p > bopPrec ImplB) $ pPrintPrec l (bopPrec ImplB) tm1 <+> "↔" <+> pPrintPrec l (bopPrec ImplB) tm2
   pPrintPrec l p (Neg (IsTrue (Bop EqualB s t))) =
     pPrintPrec l p . IsTrue $ Bop Neqb s t
   pPrintPrec l p (App (Def negb') [Bop EqualB s t]) | negb' == negb =
     pPrintPrec l p $ Bop NEqualB s t
   pPrintPrec l p (Neg (Neg tm)) = pPrintPrec l p tm
   pPrintPrec l p (Neg tm) =
-    maybeParens (p > appPrec) $ "not" <+> pPrintPrec l (appPrec + 1) tm
+    maybeParens (p > appPrec) $ "¬" <+> pPrintPrec l (appPrec + 1) tm
   pPrintPrec l p (NegB (NegB tm)) = pPrintPrec l p tm
   pPrintPrec l p (NegB tm) =
     maybeParens (p > appPrec) $ text negB <+> pPrintPrec l (appPrec + 1) tm
@@ -746,8 +747,8 @@ instance Pretty Bop where
 
 instance Show Bop where
   show Eq = "="
-  show EqProp = "<->"
-  show Neq = "<>"
+  show EqProp = "↔"
+  show Neq = "≠"
   show Leq = "<=Z"
   show Geq = ">="
   show Lt = "<Z"
@@ -787,7 +788,7 @@ instance Pretty ProofTerm where
   pPrintPrec _ _ (TermWitness tm) | tm == unitTm = char '_'
   pPrintPrec l p (TermWitness t) = pPrintPrec l p t
   pPrintPrec _ _ (RefWitness tm) = char '⌈' <+> pPrint tm <+> char '⌉'
-  pPrintPrec l p (ProofHole Nothing) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec Oracle)
+  pPrintPrec _ _ (ProofHole Nothing) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec Oracle)
   pPrintPrec _ _ (ProofHole (Just h)) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec (Concat [Try (Clear h), Oracle]))
   pPrintPrec _ _ (ByTac tac) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec tac)
   pPrintPrec l p (Conj tm1 tm2) =
