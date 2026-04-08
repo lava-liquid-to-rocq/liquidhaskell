@@ -599,13 +599,17 @@ instance Pretty CoqTerm where
      maybeParens (p > 1) . sep $
        ["∃" <+> pPrintArgs vars <> comma | not (null vars)] ++ [pPrint tm]
   pPrintPrec l p (And tm1 tm2) =
-    maybeParens (p > bopPrec Andb) $ pPrintPrec l (bopPrec Andb) tm1 <+> "∧" <+> pPrintPrec l (bopPrec Andb) tm2
+    maybeParens (p > bopPrec Andb) $
+      sep [pPrintPrec l (bopPrec Andb) tm1, "∧" <+> pPrintPrec l (bopPrec Andb) tm2]
   pPrintPrec l p (Or tm1 tm2) =
-    maybeParens (p > bopPrec Orb) $ pPrintPrec l (bopPrec Orb) tm1 <+> "∨" <+> pPrintPrec l (bopPrec Orb) tm2
+    maybeParens (p > bopPrec Orb) $
+      sep [pPrintPrec l (bopPrec Orb) tm1, "∨" <+> pPrintPrec l (bopPrec Orb) tm2]
   pPrintPrec l p (Impl tm1 tm2) =
-    maybeParens (p > bopPrec ImplB) $ pPrintPrec l (bopPrec ImplB) tm1 <+> "→" <+> pPrintPrec l (bopPrec ImplB) tm2
+    maybeParens (p > bopPrec ImplB) $
+      sep [pPrintPrec l (bopPrec ImplB) tm1, "→" <+> pPrintPrec l (bopPrec ImplB) tm2]
   pPrintPrec l p (Equiv tm1 tm2) =
-    maybeParens (p > bopPrec ImplB) $ pPrintPrec l (bopPrec ImplB) tm1 <+> "↔" <+> pPrintPrec l (bopPrec ImplB) tm2
+    maybeParens (p > bopPrec ImplB) $
+      sep [pPrintPrec l (bopPrec ImplB) tm1, "↔" <+> pPrintPrec l (bopPrec ImplB) tm2]
   pPrintPrec l p (Neg (IsTrue (Bop EqualB s t))) =
     pPrintPrec l p . IsTrue $ Bop Neqb s t
   pPrintPrec l p (App (Def negb') [Bop EqualB s t]) | negb' == negb =
@@ -621,7 +625,8 @@ instance Pretty CoqTerm where
   pPrintPrec _ _ (Def s) = text s
   pPrintPrec _ _ (Abbr s) = text s
   pPrintPrec l p (Bop bop s t) =
-    maybeParens (p > bopPrec bop) $ pPrintPrec l (bopPrec bop) s <+> pPrint bop <+> pPrintPrec l (bopPrec bop) t
+    maybeParens (p > bopPrec bop) $
+      sep [pPrintPrec l (bopPrec bop) s, pPrint bop <+> pPrintPrec l (bopPrec bop) t]
   pPrintPrec _ _ (Var x) = text x
   pPrintPrec _ _ (StringLiteral s) = pPrint s
   pPrintPrec _ _ (IntLiteral n) = integer n

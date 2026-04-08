@@ -143,7 +143,8 @@ writeOut outputFolder modulename outType pre ilhSource = do
   let ilhOutputPath = outputFolder </> (modulename ++ outPostfix outType)
   putStrLn ("Writing " ++ show outType ++ " output to file at " ++ ilhOutputPath)
   let ilhOutput = PP.vcat (pre PP.<> PP.char '\n' : map ((PP.<> PP.char '\n') . PP.pPrint) ilhSource)
-  writeFile ilhOutputPath (PP.render ilhOutput)
+  let style = PP.Style {mode = PP.PageMode, lineLength = 120, ribbonsPerLine = 1.2}
+  writeFile ilhOutputPath (PP.renderStyle style ilhOutput)
 
 -- | Parsed binds and specs extracted from LH.
 data ParsedBinds = ParsedBinds
