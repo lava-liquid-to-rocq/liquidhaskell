@@ -471,7 +471,7 @@ trPathGuard f (σxs, [], rf) hs relRes =
       result =
         case relRes of
           Nothing -> Coq.App (Coq.Def $ relDefName f) (map utrReft (map snd σxs ++ [r']))
-          Just z -> Coq.Bop Equal (Coq.Var z) (utrReft rf)
+          Just z -> Coq.Bop Equal (Coq.Var z) (utrReft r')
    in hypsRV currentHyps (isNothing relRes) result
 trPathGuard f (σxs, (r, rp) : σp', rf) hs relRes =
   let (hyps_r, r') = extractApps r
