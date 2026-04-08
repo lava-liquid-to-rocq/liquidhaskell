@@ -173,14 +173,11 @@ extractApps r0 = go [] r0
           Nothing ->
             let z = freshName (fromMaybe "z" (headVar r')) env'
              in (env' ++ [(r', z)], LH.Var z 0 Local)
+        -- f_res, f_res_2, f_res_3 etc
         freshName f env' =
-          -- Number of calls to f before updating the environment
-          let nbOfCalls = length $ filter (isF . fst) env'
-           in if nbOfCalls == 0
-                then f ++ "_res"
-                else f ++ "_res_" ++ show (nbOfCalls + 1)
-          where
-            isF r' = case headVar r' of Just f' -> f == f'; Nothing -> False
+          let isF r' = case headVar r' of Just f' -> f == f'; Nothing -> False
+              nbOfCalls = length $ filter (isF . fst) env'
+           in f ++ "_res" ++ (if nbOfCalls == 0 then "" else "_" ++ show (nbOfCalls + 1))
 
 -- | Takes as first argument the map RV from applications to fresh variables and
 -- translates the hypothesis, placing them on top of the second argument

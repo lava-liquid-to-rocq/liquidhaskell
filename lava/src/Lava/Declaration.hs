@@ -434,7 +434,7 @@ separateBranches σxs σp (Case r branches _) =
        in separateBranches
             (map (second (subst pat' x)) σxs)
             (map (bimap (subst pat' x) (subst pat' x)) σp)
-            (subst pat' x ebr)
+            (if x `notElem` freeVars pat' then subst pat' x ebr else ebr)
     -- Returns the application corresponding to the pattern of a case
     -- Since we do not have higher-order constructors, all variables are of arity 0
     matchToApp :: (Id, [(Id, Bool)]) -> Reft
