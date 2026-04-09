@@ -182,6 +182,12 @@ mkSub :: Reft -> RefType -> RefType -> Reft
 mkSub r from to | from == to = r
 mkSub r from to = Sub r from to
 
+-- | Build a projection, removing the outer injection or subsumptions.
+mkProj :: Reft -> Reft
+mkProj (Inj r _) = r
+mkProj (Sub r _ _) = mkProj r
+mkProj r = Proj r
+
 -- ** Destructions
 
 -- | Extracts the elements out of a RefType constructor and raises an error for another type

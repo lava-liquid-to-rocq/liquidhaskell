@@ -115,8 +115,11 @@ chooseIndVar γ pats (hd, args) =
           indVar <- case listToMaybe indVarCandidates of
             Nothing -> Left . SynErr $ "No possible induction variable in term " ++ prettyShow (foldl App hd args)
             Just y -> return y
-          let newLoc = Recursive indVar pats
-          let γ' = adjust (\case (ΓVar _ tp) -> ΓVar newLoc tp; l -> l) x γ
+          -- We remove the inductive variable from the pats to help the
+          -- translation of a recursive call where this variable is already instantiated
+          let patsWithoutIndVar = [pat | (Var y _ _, pat) <- zip args pats, y /= indVar]
+              newLoc = Recursive indVar patsWithoutIndVar
+              γ' = adjust (\case (ΓVar _ tp) -> ΓVar newLoc tp; l -> l) x γ
           return (γ', foldl App (Var x ar newLoc) args', argsLast)
         _ -> return ogTerm
     _ -> return ogTerm
@@ -329,10 +332,10 @@ synReft γ pats r@(Pop pop r1 r2) = do
     ArrType {} -> Left . SynErr $ "Proof combinators on higher-order values is not defined, in the type synthesis of " ++ prettyShow r
     RefType x a reft1 -> do
       let xvar = Var x 0 Local
-          reft2 = Bop And reft1 (Bop (popToBop pop) xvar (Proj r1'))
+          reft2 = Bop And reft1 (Bop (popToBop pop) xvar (mkProj r1'))
       r2' <- checkReft γ pats r2 (RefType x a reft2)
-      let reft3' = Bop And reft1 (Bop Eq xvar (Proj r2'))
-          reft3 = case pop of PEq -> Bop And reft3' (Bop Eq xvar (Proj r1')); _ -> reft3'
+      let reft3' = Bop And reft1 (Bop Eq xvar (mkProj r2'))
+          reft3 = case pop of PEq -> Bop And reft3' (Bop Eq xvar (mkProj r1')); _ -> reft3'
       return (RefType x a reft3, Pop pop r1' r2')
 synReft _ _ (Sub {}) = error "Constructor Sub found before elaboration"
 synReft _ _ (Inj {}) = error "Constructor Inj found before elaboration"

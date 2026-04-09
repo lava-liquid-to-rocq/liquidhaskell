@@ -213,7 +213,7 @@ mkPseudoConstr tc (c, tp) =
     argsT = map ((,False) . second trRefType) args
     retT = trRefType ret
     -- C proj(x1) … proj(xn) (in LH), that translates to C_u proj1_sig(x1) … proj1_sig(x_n)
-    unrefCrApp = foldl LH.App (DC c) (map Proj $ tpArgsArLoc tp)
+    unrefCrApp = foldl LH.App (DC c) (map mkProj $ tpArgsArLoc tp)
     bodyLem = ProofBody [Custom "repeat first [split; solver]"]
     -- The translated refinement of the return type of C, where x is replaced by Cu proj1_sig(args)
     -- NOTE: instead of inlining the translation of the refinement of an
@@ -344,6 +344,7 @@ traceDC s tc dc = trace ("Defining " ++ s ++ "(" ++ tc ++ "." ++ dc ++ ")") Fals
 trDefRefDef :: FuncData -> Coq.Decl
 -- trDefRefDef f | traceF "trDefRefDef" f = undefined
 trDefRefDef f =
+  -- FIX: for a constant, the type for the pack is wrong (see PeanoNats.one_pack)
   Coq.Definition (name f) (map (,False) (argsT f)) (retT f) (ProofBody tacs) Transparent
   where
     tacs =
@@ -595,7 +596,7 @@ defExLemma f = [exLem, AddHint ResolveHint (exLemName $ name f) RelAxDB]
       Coq.Definition
         (exLemName $ name f)
         (map (,False) $ fst (trRefTypeSplit $ tpf f))
-        (Prop $ Coq.App (Def . relDefName $ name f) (projArgs f ++ [Project $ mkApp (Def $ name f) (injArgs f)]))
+        (Prop $ Coq.App (Def . relDefName $ name f) (projArgs f ++ [mkProject $ mkApp (Def $ name f) (injArgs f)]))
         ( ProofBody
             [ mkConcat
                 [ Custom $ "existence_lemma_pre " ++ name f,
@@ -631,7 +632,7 @@ refRelRwLemma f =
         (ProofBody [Custom "f__f_rel_rw"])
         Opaque
     -- ⌊ f (exist _ args argsp) -⌋ = f_res
-    defEq = Coq.Bop Coq.Eq (Project $ mkApp (Def $ name f) (injArgs f)) (Coq.Var $ retName f)
+    defEq = Coq.Bop Coq.Eq (mkProject $ mkApp (Def $ name f) (injArgs f)) (Coq.Var $ retName f)
     -- f_rel [exist _ args argsp] f_res
     relApp = Coq.App (Def . relDefName $ name f) (projArgs f ++ [Coq.Var $ retName f])
 
@@ -655,13 +656,13 @@ refUnrefLemmas f =
     params_u = map (Coq.Var . fst) argsUT_u
     equivalence fuArgs =
       Coq.Equiv
-        (Coq.Bop Coq.Eq (Project $ Coq.App (Coq.Def $ name f) params) (Coq.Var $ retName f))
+        (Coq.Bop Coq.Eq (mkProject $ Coq.App (Coq.Def $ name f) params) (Coq.Var $ retName f))
         (Coq.App (Coq.Def (relDefName $ name f)) $ fuArgs ++ [Coq.Var $ retName f])
     refUnrefLemma =
       mkCoqTheorem
         (relDefThmName $ name f)
         (map (,False) $ argsT f ++ [(retName f, retUT f)])
-        (equivalence $ map Project params)
+        (equivalence $ map mkProject params)
         [Coq.Custom "f__f_rel"]
     refUnrefLemma' =
       Coq.Definition

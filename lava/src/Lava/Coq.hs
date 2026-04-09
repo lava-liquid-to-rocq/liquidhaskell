@@ -19,6 +19,8 @@ import Data.Bifunctor
 import Data.Data
 import Data.List (isSuffixOf, sortBy, stripPrefix, unsnoc)
 import qualified Data.List.NonEmpty as NE
+import Data.Maybe (isNothing)
+import Debug.Trace (trace)
 import Lava.Calculus (appPrec, arrPrec)
 import Lava.Names
 import Text.PrettyPrint
@@ -133,7 +135,7 @@ data Decl
 data DefBody
   = ProofBody [Tactic]
   | TermBody CoqTerm
-  deriving (Data, Eq)
+  deriving (Data, Eq, Show)
 
 -- | A refined type constructor, the only kind allowed in the image of the translation to ECoq, gets printed to its elaboration by the 'CoqPrinter'
 --
@@ -165,12 +167,12 @@ type Goal = RocqType
 --
 -- > B ::= Z | string | float
 data Builtin = CTInt | CTString | CTFloat
-  deriving (Eq, Data)
+  deriving (Eq, Data, Show)
 
 -- | Sorts
 --
 -- > κ ::= Type | Prop | Set
-data BaseSort = TypeSort | PropSort | SetSort deriving (Eq, Data)
+data BaseSort = TypeSort | PropSort | SetSort deriving (Eq, Data, Show)
 
 -- | Types
 --
@@ -192,13 +194,13 @@ data RocqType
   | Pack ArgListT UArgListT CoqTerm RocqType CoqTerm
   | ArgumentList ArgListT
   | Hole
-  deriving (Eq, Data)
+  deriving (Eq, Data, Show)
 
-newtype ArgListT = ArgListT [(Id, RocqType)] deriving (Eq, Data)
+newtype ArgListT = ArgListT [(Id, RocqType)] deriving (Eq, Data, Show)
 
-newtype ArgList = ArgList [CoqTerm] deriving (Eq, Data)
+newtype ArgList = ArgList [CoqTerm] deriving (Eq, Data, Show)
 
-newtype UArgListT = UArgListT [RocqType] deriving (Eq, Data)
+newtype UArgListT = UArgListT [RocqType] deriving (Eq, Data, Show)
 
 newtype UArgList = UArgList [CoqTerm]
 
@@ -263,7 +265,7 @@ data CoqTerm
   | InstanceProjection CoqTerm Id
   | InlineInstance [(Id, CoqTerm)]
   | TypeArg RocqType
-  deriving (Data, Eq)
+  deriving (Data, Eq, Show)
 
 -- | Boolean operators
 --
@@ -281,7 +283,7 @@ data ProofTerm
   | ByTac Tactic
   | RefWitness CoqTerm
   | Conj ProofTerm ProofTerm
-  deriving (Data, Eq)
+  deriving (Data, Eq, Show)
 
 -- | represents supported ECoq tactics, both custom tactics and basic Coq tactics (@tac@)
 data Tactic
@@ -310,7 +312,7 @@ data Tactic
   | Branches [Tactic]
   | Custom String
   | Exfalso
-  deriving (Data, Eq)
+  deriving (Data, Eq, Show)
 
 -- | Destruction patterns
 --
@@ -324,22 +326,56 @@ data CoqDestrPat
     SingleIdPat Id
   | -- | represents _ in patterns
     UnnamedIdPat
-  deriving (Data, Eq)
+  deriving (Data, Eq, Show)
 
 data RewriteDir
   = -- | represents the -> rewrite pattern
     RwLR
   | -- | represents the <- rewrite pattern
     RwRL
-  deriving (Data, Eq)
+  deriving (Data, Eq, Show)
 
-data CoqIntroPat = DestrPat CoqDestrPat | RewritePat RewriteDir deriving (Data, Eq)
+data CoqIntroPat = DestrPat CoqDestrPat | RewritePat RewriteDir deriving (Data, Eq, Show)
 
 -- * Constructors
 
 -- | Build Concat [tacs] where [tacs] does not contain another concat
 mkConcat :: [Tactic] -> Tactic
 mkConcat = Concat . concatMap (\case Concat tacs' -> tacs'; tac -> [tac])
+
+-- | Build Project and simplify the term, removing outer exists and subcasts or converting
+-- between refined and unrefined operations
+mkProject :: CoqTerm -> CoqTerm
+mkProject (Exist _ t _) = t
+mkProject (Bop Plus s t) = Bop PlusU (mkProject s) (mkProject t)
+mkProject (Bop Minus s t) = Bop MinusU (mkProject s) (mkProject t)
+mkProject (Bop Times s t) = Bop TimesU (mkProject s) (mkProject t)
+mkProject (Bop Div s t) = Bop DivU (mkProject s) (mkProject t)
+mkProject (Bop Mod s t) = Bop ModU (mkProject s) (mkProject t)
+mkProject (Cr c) | unrefinedConstrName "" `isSuffixOf` c = Cr c
+mkProject (Cr c) = Cr $ unrefinedConstrName c
+mkProject (App (Cr c) args) = App (Cr c') (map mkProject args)
+  where
+    c' = if unrefinedConstrName "" `isSuffixOf` c then c else unrefinedConstrName c
+mkProject (NegB tm) = Neg (Project tm)
+mkProject (SubCast _ _ t _) = mkProject t
+mkProject tm = Project tm
+
+-- | Syntactic simplification of SubCast to exist
+simplifySubCast :: CoqTerm -> CoqTerm
+-- TODO: transform into a mkSubCast
+simplifySubCast (SubCast (Subset n b need) _ (Exist _ tm ProofHole {}) (ProofHole idO)) =
+  Exist (Lambda n b need) tm (ProofHole idO)
+simplifySubCast (SubCast (Subset n b need) _ (Exist _ tm CoqProofTerm {}) (ProofHole idO)) =
+  Exist (Lambda n b need) tm (ProofHole idO)
+simplifySubCast (SubCast Hole _ (Exist _ tm CoqProofTerm {}) (TermWitness TermHole)) =
+  Exist TermHole tm (TermWitness TermHole)
+simplifySubCast (SubCast Hole _ (Exist _ tm CoqProofTerm {}) (ProofHole idO)) =
+  Exist TermHole tm (ProofHole idO)
+simplifySubCast (SubCast Hole _ (Exist _ tm ProofHole {}) (TermWitness TermHole)) =
+  Exist TermHole tm (TermWitness TermHole)
+simplifySubCast (SubCast need have t _) | need == have && need /= Hole = t
+simplifySubCast t = t
 
 -- * Destructors
 
@@ -567,7 +603,7 @@ pPrintRocqType l p tp@(Subset x tc@(TC tc' []) e) True = case tc' of
   "bool" | isTrivial e -> "Bool"
   "Unit" -> braces (braces (pPrint e))
   _ -> case (e, tc_base) of
-    _ | tc `elem` coqBuiltinInductDataTypes -> text x <+> colon <+> pPrint tc <+> "|" <+> pPrint e
+    _ | tc `elem` coqBuiltinInductDataTypes -> braces (text x <+> colon <+> pPrint tc <+> "|" <+> pPrint e)
     -- Use the refined name TC for {x: TC_u | wf_TC x /\ True}
     (And (App (Def wf) [Var x']) true, Just tc_ref)
       | x == x' && wf == wfTCName tc_ref && isTrivial true && not (null tc_ref)-> text tc_ref
@@ -666,19 +702,15 @@ instance Pretty CoqTerm where
   pPrintPrec _ p tm@(Lambda {}) =
     let (args, tm') = concatLambdas tm
      in maybeParens (p > 0) $ sep ["λ" <+> pPrintArgs (map (,False) args) <> comma, pPrint tm']
-  pPrintPrec l p (Project t) =
-    let t' = simplifyProject t in
-     if t' == t then char '⌊' <+> pPrint t <+> char '⌋' else pPrintPrec l p t'
+  pPrintPrec _ _ (Project t) = char '⌊' <+> pPrint t <+> char '⌋'
   pPrintPrec _ _ (Proj2sig t) = char '⌈' <+> pPrint t <+> char '⌉'
-  pPrintPrec l p tm@(SubCast to from t z) =
-    if tm == simplifySubCast tm then
-      maybeParens (p > appPrec) $ case (to, from) of
-         (Hole, _) ->
-           sep ["subsumptionCast", char '_', char '_', pPrintPrec l (appPrec + 1) t, pPrintPrec l (appPrec + 1) z]
-         (Subset n b need, Subset _ a _) | a == b ->
-           sep ["subsumptionCast", pPrintPrec l (appPrec + 1) a, pPrintPrec l (appPrec + 1) (Lambda n a need), pPrintPrec l (appPrec + 1) t, pPrintPrec l (appPrec + 1) z]
-         _ -> sep ["subCast", pPrintPrec l (appPrec + 1) from, pPrintPrec l (appPrec + 1) to, pPrintPrec l (appPrec + 1) t, pPrintPrec l (appPrec + 1) z]
-    else pPrintPrec l p $ simplifySubCast tm
+  pPrintPrec l p (SubCast to from t z) =
+    maybeParens (p > appPrec) $ case (to, from) of
+       (Hole, _) ->
+         sep ["subsumptionCast", char '_', char '_', pPrintPrec l (appPrec + 1) t, pPrintPrec l (appPrec + 1) z]
+       (Subset n b need, Subset _ a _) | a == b ->
+         sep ["subsumptionCast", pPrintPrec l (appPrec + 1) a, pPrintPrec l (appPrec + 1) (Lambda n a need), pPrintPrec l (appPrec + 1) t, pPrintPrec l (appPrec + 1) z]
+       _ -> sep ["subCast", pPrintPrec l (appPrec + 1) from, pPrintPrec l (appPrec + 1) to, pPrintPrec l (appPrec + 1) t, pPrintPrec l (appPrec + 1) z]
   pPrintPrec l p (Exist _ t (CoqProofTerm "I")) =
     maybeParens (p > appPrec) $ char '#' <+> pPrintPrec l (appPrec + 1) t
   pPrintPrec l p (Exist tp t z) =
@@ -697,7 +729,7 @@ instance Pretty CoqTerm where
     maybeParens (p > 0) $ "if" <+> pPrint r <+> "then" <+> pPrint s <+> "else" <+> pPrint t
   pPrintPrec _ p (Let x tp s t) =
     maybeParens (p > 0) $ sep [
-      "let" <+> maybe (text x) (\tp' -> parens (pPrintArg ((x, tp'), False))) tp <+> ":=",
+      "let" <+> maybe (text x) (\tp' -> pPrintArg ((x, tp'), False)) tp <+> ":=",
       pPrint s <+> "in", pPrint t]
   pPrintPrec l p (InstanceProjection inst field) =
     maybeParens (p > appPrec) $ pPrintPrec l (appPrec + 1) inst <> dot <> parens (text field)
@@ -744,37 +776,6 @@ simplifyIsTrue tm = case tm of
     nonBoolHeuristic (Bop{}; Project{}; Exist{}; SubCast{}; IsTrue{}; Cr{}) = True
     nonBoolHeuristic _ = False
 
--- | Syntactic simplification of Project
-simplifyProject :: CoqTerm -> CoqTerm
-simplifyProject proj = case proj of
-  Exist _ t _ -> t
-  Bop Plus s t -> Bop PlusU (simplifyProject s) (simplifyProject t)
-  Bop Minus s t -> Bop MinusU (simplifyProject s) (simplifyProject t)
-  Bop Times s t -> Bop TimesU (simplifyProject s) (simplifyProject t)
-  Bop Div s t -> Bop DivU (simplifyProject s) (simplifyProject t)
-  Bop Mod s t -> Bop ModU (simplifyProject s) (simplifyProject t)
-  Cr c | unrefinedConstrName "" `isSuffixOf` c -> Cr c
-  Cr c -> Cr $ unrefinedConstrName c
-  App (Cr c) args -> App (Cr c') (map simplifyProject args)
-       where c' = if unrefinedConstrName "" `isSuffixOf` c then c else unrefinedConstrName c
-  NegB tm -> Neg (Project tm)
-  SubCast _ _ t _ -> simplifyProject t
-  _ -> proj
-
--- | Syntactic simplification of SubCast to exist
-simplifySubCast :: CoqTerm -> CoqTerm
-simplifySubCast (SubCast (Subset n b need) _ (Exist _ tm ProofHole{}) (ProofHole idO)) =
-    Exist (Lambda n b need) tm (ProofHole idO)
-simplifySubCast (SubCast (Subset n b need) _ (Exist _ tm CoqProofTerm{}) (ProofHole idO)) =
-    Exist (Lambda n b need) tm (ProofHole idO)
-simplifySubCast (SubCast Hole _ (Exist _ tm CoqProofTerm{}) (TermWitness TermHole)) =
-    Exist TermHole tm (TermWitness TermHole)
-simplifySubCast (SubCast Hole _ (Exist _ tm CoqProofTerm{}) (ProofHole idO)) =
-    Exist TermHole tm (ProofHole idO)
-simplifySubCast (SubCast Hole _ (Exist _ tm ProofHole{}) (TermWitness TermHole)) =
-    Exist TermHole tm (TermWitness TermHole)
-simplifySubCast (SubCast need have t _) | need == have && need /= Hole = t
-simplifySubCast t = t
 
 instance Pretty Bop where
   pPrint = text . show
@@ -859,40 +860,8 @@ instance Pretty Tactic where
   pPrintPrec _ p (Admit hints) = dotted p $
     around (hsep (punctuate comma (map text hints))) <+> "admit"
     where around hs = if null hints then hs else rocqComment ("hints:" <+> hs)
-  -- TODO: factorize printing of destruct and induction once the grammar is cleaned
-  pPrintPrec l p (Destruct tm branches) =
-    case tm of
-    Var _ -> if nullBranches
-      then dotted p destruct
-      else hsep (destruct <> dot : map printTacBranch branchesSorted)
-    _ -> sep
-        ["let E := fresh \"E\" in", destruct <+> "eqn:E" <> if nullBranches then empty else semi,
-        maybeBrackets (not nullBranches) (sep $ map (pPrintPrec l (p + 1) . mkConcat . snd) branchesSorted)]
-    where
-      branchesSorted = map snd $ sortBy ordFunc branches
-      destruct = "destruct" <+> pPrint tm <+> "as" <+> pPrint (DisjDestrPat $ map fst branchesSorted)
-      nullBranches = all (null . snd . snd) branches
-      printTacBranch (_, tacs) = rocqBullet p <+> sep (map (pPrintPrec l (p + 1)) tacs)
-  pPrintPrec l p (Induction t branches genVars) =
-    if nullBranches then dotted p induct else dotted p gendepInduct $$ printTacBranches
-    where
-      branchesSorted = map snd $ sortBy ordFunc branches
-      matchTac = if all ((== ConjDestrPat []) . fst . snd) branches && nullBranches then "destruct" else "induction"
-      -- induction t as ...
-      induct = text matchTac <+> pPrint t <+> "as" <+> pPrint (DisjDestrPat $ map fst branchesSorted)
-      -- generalize dependent genVars
-      gendeps =
-        sep . punctuate semi $ map (\x -> "try revert" <+> text (subsetWitnessNm x) <> semi <+> "generalize dependent" <+> text x) genVars
-      -- generalize dependent genVars; induction t as ...; intros
-      gendepInduct =
-        if null genVars then induct else sep $ punctuate semi [gendeps, induct, "intros"]
-      nullBranches = all (null . snd . snd) branches
-      -- The branches of an induct/destruct in a Concat are shown with [branch1 | … | branchn],
-      -- and otherwise as - branch1. - … - branchn (with the correct bullet)
-      printTacBranches =
-        if p == concatPrec
-        then dotted p (brackets . sep . punctuate " |" $ map (\(_, tacs) -> pPrintPrec l nodotPrec (mkConcat tacs)) branchesSorted)
-        else vcat $ map (\(_, tacs) -> rocqBullet p <+> sep (map (pPrintPrec l (p + 1)) tacs)) branchesSorted
+  pPrintPrec l p (Destruct tm branches) = pPrintPrecMatch l p tm branches Nothing
+  pPrintPrec l p (Induction tm branches genVars) = pPrintPrecMatch l p tm branches (Just genVars)
   pPrintPrec l p (Exact t) = case t of
     SubCast _ _ (Exist _ tm (CoqProofTerm prf)) (ProofHole _) | prf == "eq_refl" || prf == "I" ->
       refineOracle (Exist TermHole tm (TermWitness TermHole))
@@ -932,6 +901,35 @@ instance Pretty Tactic where
     dotted p $ "clear" <+> text hyp
   pPrintPrec l p (AssertTacs x tp tacs) =
     sep $ dotted p ("assert" <+> pPrintArg ((x, tp), False)) : [braces (pPrintPrec l nodotPrec (Concat tacs)) | not $ null tacs]
+
+-- | Pretty prints destruct or induct.
+-- The last argument is Just genVars for induct (with genVars possibly empty)
+pPrintPrecMatch :: PrettyLevel -> Rational -> CoqTerm -> [(Id, (CoqDestrPat, [Tactic]))] -> Maybe [Id] -> Doc
+pPrintPrecMatch l p tm branches ind =
+  let matchTac =
+        if isNothing ind || all (\(_, (pat, tacs)) -> pat == ConjDestrPat [] && null tacs) branches
+        then "destruct" else "induction"
+      -- destruct or induct
+      header0 = matchTac <+> pPrint tm <+> "as" <+> pPrint (DisjDestrPat $ map fst branchesSorted)
+      -- generalize dependent genVars
+      gendeps genVars =
+        sep . punctuate semi $ map (\x -> "try revert" <+> text (subsetWitnessNm x) <> semi <+> "generalize dependent" <+> text x) genVars
+      -- destruct/induct, induct with generalized variables, or destruct with eqn:E
+      -- In the last case, we update the precedence to print the branches with a concatenation
+      (header, p') = case (ind, tm) of
+        ((Just [], _); (Nothing, Var _)) -> (header0, p)
+        (Just genVars, _) -> (sep $ punctuate semi [gendeps genVars, header0, "intros"], p)
+        (Nothing, _) -> (sep ["let E := fresh \"E\" in", header0 <+> "eqn:E"], concatPrec)
+   in dotted p' header $$ printTacBranches p'
+  where
+    nullBranches = all (null . snd . snd) branches
+    branchesSorted = map snd $ sortBy ordFunc branches
+    -- The branches of an induct/destruct in a Concat are shown with [branch1 | … | branchn],
+    -- and otherwise as - branch1. - … - branchn (with the correct bullet)
+    printTacBranches p' =
+      if p' == concatPrec && not nullBranches
+      then dotted p (brackets . sep . punctuate " |" $ map (\(_, tacs) -> pPrintPrec l nodotPrec (mkConcat tacs)) branchesSorted)
+      else vcat $ map (\(_, tacs) -> rocqBullet p' <+> sep (map (pPrintPrec l (p' + 1)) tacs)) branchesSorted
 
 -- | comparison operator to alphabetically order branches of Induction/Destruct
 ordFunc :: (Id, (CoqDestrPat, [Tactic])) -> (Id, (CoqDestrPat, [Tactic])) -> Ordering

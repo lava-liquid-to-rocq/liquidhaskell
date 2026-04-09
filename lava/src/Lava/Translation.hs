@@ -10,6 +10,7 @@ module Lava.Translation where
 import Data.Bifunctor (bimap, second)
 -- import Debug.Trace (trace)
 
+import Data.List ((\\))
 import Data.Maybe (fromMaybe)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
@@ -99,7 +100,7 @@ utrReft r0 = case r0 of
   LH.Pop _ _ r -> utrReft r
   LH.Sub r _ _ -> utrReft r
   LH.Inj r _ -> utrReft r
-  LH.Proj r -> Project $ trReft r
+  LH.Proj r -> mkProject $ trReft r
 
 -- | Translation of refinements to propositions
 --   Function RtoP (def 3.4) of the paper
@@ -279,17 +280,15 @@ trReft (LH.Bop op tm1 tm2) = Coq.Bop (trBop op) (trReft tm1) (trReft tm2)
 trReft (LH.QMark tm hint prop) =
   Coq.Let "_" (Just . Prop $ utrReftProp prop) (Proj2sig $ trReft hint) (trReft tm)
 trReft (LH.Pop pop tm1 tm2) =
-  let popProp = Just . Prop $ Coq.Bop (trBop $ popToBop pop) (Project $ trReft tm1) (Project $ trReft tm2)
+  let popProp = Just . Prop $ Coq.Bop (trBop $ popToBop pop) (mkProject $ trReft tm1) (mkProject $ trReft tm2)
    in Coq.Let "_" popProp (PrfTerm Hole $ ProofHole Nothing) (trReft tm2)
 trReft (LH.Sub tm from to) = Coq.SubCast (trRefType to) (trRefType from) (trReft tm) (Coq.ProofHole Nothing)
 trReft (LH.Inj tm tp) = mkExist (trRefType tp) (trReft tm)
 trReft tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
 trReft tm@(LH.App {}) = case apps tm of
-  (LH.Var _ _ (Recursive indVar pats), args) ->
-    trRecCall indVar pats args
-  (LH.Var f n Local, args)
-    | n > 0 ->
-        Coq.App (packGetF (Coq.Var f)) (map trReft args)
+  (LH.Var _ _ (Recursive indVar pats), args) -> trRecCall indVar pats args
+  (LH.Var f _ Local, args) -> Coq.App (packGetF (Coq.Var f)) (map trReft args)
+  (LH.Var f _ Global, args) -> Coq.App (Coq.Def f) (map trReft args)
   (hd, args) -> Coq.App (trReft hd) (map trReft args)
 
 -- | Translation of expressions as tactics
@@ -323,6 +322,39 @@ trExprTacs (Case tm alts genVars) =
       trAltBody (Just e) = trExprTacs e
    in [mkMatching trAltBody tm alts genVars]
 
+-- ** Utility functions for the refined translation
+
+-- | Given an inductive variable y, the branch pattern and arguments,
+-- build an application of IHy to the arguments
+trRecCall :: Id -> BranchPattern -> [Reft] -> CoqTerm
+trRecCall indVar pats args =
+  -- FIX: if the inductive variable appears several times, we only want to delete once
+  -- FIX: wrong variable chosen in PeanoNats.eqN
+  let argsNoIndVar = [arg | arg <- args, arg /= LH.Var indVar 0 Local]
+      -- During elaboration, we removed the pattern for the inductive variable from pats
+      argsAndPats = zip argsNoIndVar (map apps pats)
+      -- ltac:(try clear ihHyp; solver)
+      oracleTac = Coq.PrfTerm Coq.Hole $ Coq.ProofHole (Just $ ihName indVar)
+      -- Translation of the arguments:
+      -- A higher-order argument is translated directly with RtoR;
+      -- we recognize it with its pattern, necessarily intact and
+      -- contains the arity.
+      -- A first-order argument must be decomposed into its first
+      -- projection and the witness, for which we use ltac:(oracle)
+      trArg (ri, (LH.Var _ n _, _)) | n > 0 = [trReft ri]
+      trArg (ri, _) = [mkProject $ trReft ri, oracleTac]
+      -- The number of parameters that have been destructed gives us
+      -- the number of ltac:(oracle) we need for the induction
+      -- hypothesis, this includes one for the induction variable itself
+      nbOracles = length [ri | (ri, (LH.DC _, _)) <- argsAndPats]
+      argsT = replicate nbOracles oracleTac ++ concatMap trArg argsAndPats
+   in Coq.App (Coq.Var $ ihName indVar) argsT
+  where
+    castOfIndVar (LH.Var y _ _) | y == indVar = True
+    castOfIndVar (Sub r _ _) = castOfIndVar r
+    castOfIndVar (Proj r) = castOfIndVar r
+    castOfIndVar _ = False
+
 -- | Translation of a case expression as destruct or as induct
 -- An induct such that none of the introduced IHs are used is transformed to destruct
 -- This function is factorized by the function to apply to the branches,
@@ -331,8 +363,8 @@ mkMatching :: (Maybe Expr -> [Tactic]) -> Reft -> [((Id, [(Id, Bool)]), Maybe Ex
 -- mkMatching _ tm alts genVars | traceFunc "mkMatching" [pPrint tm, pPrint alts, pPrint genVars] = undefined
 mkMatching trans tm alts genVars =
   if induct
-    then Induction (Project $ trReft tm) (map trAlt alts) genVars
-    else Coq.Destruct (Project $ trReft tm) (map trAlt alts)
+    then Induction (mkProject $ trReft tm) (map trAlt alts) genVars
+    else Coq.Destruct (mkProject $ trReft tm) (map trAlt alts)
   where
     -- Compute what variables will be actually used for later inductions
     indVars = map indVarsAlt alts
@@ -355,30 +387,3 @@ mkMatching trans tm alts genVars =
         varPattern (y, isInd) =
           let ihy = if y `isIndVar` e then SingleIdPat $ ihName y else UnnamedIdPat
            in SingleIdPat y : [ihy | isInd, induct]
-
--- ** Utility functions for the refined translation
-
--- | Given an inductive variable y, the branch pattern and arguments,
--- build an application of IHy to the arguments
-trRecCall :: Id -> BranchPattern -> [Reft] -> CoqTerm
-trRecCall indVar pats args =
-  let argsAndPats = zip args (map apps pats)
-      -- ltac:(try clear ihHyp; solver)
-      oracleTac = Coq.PrfTerm Coq.Hole $ Coq.ProofHole (Just $ ihName indVar)
-      -- Translation of the arguments:
-      -- We translate only arguments in positions of parameters that
-      -- have not been destructed, the only ones that are not already instantiated.
-      -- A higher-order argument is translated directly with RtoR;
-      -- we recognize it with its pattern, necessarily intact and
-      -- contains the arity.
-      -- A first-order argument must be decomposed into its first
-      -- projection and the witness, for which we use ltac:(oracle)
-      trArg (ri, (LH.Var _ n _, _)) =
-        if n > 0 then [trReft ri] else [Coq.Project $ trReft ri, oracleTac]
-      trArg _ = []
-      -- The number of parameters that have been destructed gives us
-      -- the number of ltac:(oracle) we need for the induction
-      -- hypothesis, this includes one for the induction variable itself
-      nbOracles = length [ri | (ri, (LH.DC _, _)) <- argsAndPats]
-      argsT = replicate nbOracles oracleTac ++ concatMap trArg argsAndPats
-   in Coq.App (Coq.Var $ ihName indVar) argsT
