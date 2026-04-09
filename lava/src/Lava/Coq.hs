@@ -14,6 +14,7 @@ module Lava.Coq
   ( -- * names for derived declarations
     unrefinedTCName,
     wfTCName,
+    specName,
     refinedConstrName,
     unrefinedConstrName,
 
@@ -98,6 +99,9 @@ unrefinedConstrName name = name ++ "_u"
 
 wfTCName :: Id -> Id
 wfTCName name = name ++ "_wf"
+
+specName :: Id -> Id
+specName def = def ++ "_spec"
 
 {- ORMOLU_DISABLE -}
 packName :: Id
@@ -224,7 +228,7 @@ data Visibility = Transparent | Opaque deriving (Data, Eq, Show)
 
 data HintKind = UnfoldHint | ConstructorsHint | ResolveHint | RewriteHint deriving (Data, Eq)
 
-data HintDatabase = CoreDB | GraphRelDB | GraphRelBackDB | WfDB | RefConstrDB | RelAxDB | EqHintDb deriving (Data, Eq)
+data HintDatabase = CoreDB | GraphRelDB | GraphRelBackDB | WfDB | RefConstrDB | RelAxDB | EqHintDb | LiaUnfoldDB deriving (Data, Eq)
 
 -- ** Object-level grammar
 
@@ -504,6 +508,7 @@ instance Show HintDatabase where
   show GraphRelBackDB = "f_rel_back"
   show RelAxDB = "rel_ax_db"
   show EqHintDb = "eq_hint_db"
+  show LiaUnfoldDB = "lia_unfold"
 
 instance Show Builtin where
   show CTInt = "Z"

@@ -52,7 +52,10 @@ Defined.
 #[global] Hint Resolve wf_Suc_n : ref_constr_db.
 #[global] Hint Unfold Suc : ref_constr_db.
 #[global] Hint Unfold Zero : ref_constr_db.
-Definition even (n: Nats): Bool. 
+Definition even_spec (n: Nats): Type := 
+	Bool. 
+#[global] Hint Unfold even_spec : lia_unfold.
+Definition even (n: Nats): even_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*Suc*) n IH_n | (*Zero*) ]. 

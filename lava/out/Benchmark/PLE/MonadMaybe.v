@@ -47,7 +47,10 @@ Definition Nothing: MaybeInt :=
 #[global] Hint Resolve MaybeInt_eq : ref_constr_db.
 #[global] Hint Unfold Just : ref_constr_db.
 #[global] Hint Unfold Nothing : ref_constr_db.
-Definition bind (lq_tmp0: MaybeInt) (lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) MaybeInt_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: MaybeInt_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: MaybeInt_u) => ((MaybeInt_wf VV) /\ True))) x_61572807 v_x_61572807)))))): MaybeInt. 
+Definition bind_spec (lq_tmp0: MaybeInt) (lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) MaybeInt_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: MaybeInt_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: MaybeInt_u) => ((MaybeInt_wf VV) /\ True))) x_61572807 v_x_61572807)))))): Type := 
+	MaybeInt. 
+#[global] Hint Unfold bind_spec : lia_unfold.
+Definition bind (lq_tmp0: MaybeInt) (lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) MaybeInt_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: MaybeInt_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: MaybeInt_u) => ((MaybeInt_wf VV) /\ True))) x_61572807 v_x_61572807)))))): bind_spec lq_tmp0 lq_tmp1. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
@@ -133,7 +136,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve bind_rel_mk : f_rel_funct_db.
-Definition retrn (lq_tmp0: {lq_tmp0: Z | True}): MaybeInt. 
+Definition retrn_spec (lq_tmp0: {lq_tmp0: Z | True}): Type := 
+	MaybeInt. 
+#[global] Hint Unfold retrn_spec : lia_unfold.
+Definition retrn (lq_tmp0: {lq_tmp0: Z | True}): retrn_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	refine (subsumptionCast _ _ 
@@ -204,16 +210,22 @@ Qed.
 Proof. 
 	buildPackG retrn retrn_rel retrn__retrn_rel retrn_rel_funct. 
 Defined.
-Theorem left_identity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) MaybeInt_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: MaybeInt_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: MaybeInt_u) => ((MaybeInt_wf VV) /\ True))) x_86410777 v_x_86410777)))))): {{forall (retrnres: MaybeInt_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (bindres: MaybeInt_u), (bind_rel retrnres (packProj f) bindres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (bindres == fres)))}}. 
+Definition left_identity_spec (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) MaybeInt_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: MaybeInt_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: MaybeInt_u) => ((MaybeInt_wf VV) /\ True))) x_86410777 v_x_86410777)))))): Type := 
+	{{forall (retrnres: MaybeInt_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (bindres: MaybeInt_u), (bind_rel retrnres (packProj f) bindres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (bindres == fres)))}}. 
+#[global] Hint Unfold left_identity_spec : lia_unfold.
+Theorem left_identity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) MaybeInt_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: MaybeInt_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: MaybeInt_u) => ((MaybeInt_wf VV) /\ True))) x_86410777 v_x_86410777)))))): left_identity_spec x f. 
 Proof. 
 	destruct x as [x x_p]. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem right_identity (x: MaybeInt): {{forall (bindres: MaybeInt_u), (bind_rel (⌊ x -⌋) 
+Definition right_identity_spec (x: MaybeInt): Type := 
+	{{forall (bindres: MaybeInt_u), (bind_rel (⌊ x -⌋) 
 		(ltac: (pose retrn_rel as Rel; 
 	pose retrn_rel_funct as Funct; 
 	buildUPackG Rel Funct)) bindres) -> (bindres = (⌊ x -⌋))}}. 
+#[global] Hint Unfold right_identity_spec : lia_unfold.
+Theorem right_identity (x: MaybeInt): right_identity_spec x. 
 Proof. 
 	destruct x as [x x_p]. 
 	induction x as [(*Just*) x | (*Nothing*) ]. 

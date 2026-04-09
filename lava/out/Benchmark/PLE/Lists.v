@@ -52,7 +52,10 @@ Defined.
 #[global] Hint Resolve wf_C_VV_ : ref_constr_db.
 #[global] Hint Unfold C : ref_constr_db.
 #[global] Hint Unfold Emp : ref_constr_db.
-Definition append (lq_tmp0: L) (lq_tmp1: L): L. 
+Definition append_spec (lq_tmp0: L) (lq_tmp1: L): Type := 
+	L. 
+#[global] Hint Unfold append_spec : lia_unfold.
+Definition append (lq_tmp0: L) (lq_tmp1: L): append_spec lq_tmp0 lq_tmp1. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	destruct lq_tmp1 as [lq_tmp1 lq_tmp1_p]. 
@@ -152,25 +155,37 @@ Qed.
 Proof. 
 	buildPackG append append_rel append__append_rel append_rel_funct. 
 Defined.
-Theorem propConst1 (lq_tmp0: {{True}}): {{forall (appendres: L_u), (append_rel (C_u 1 Emp_u) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 Emp_u)))}}. 
+Definition propConst1_spec (lq_tmp0: {{True}}): Type := 
+	{{forall (appendres: L_u), (append_rel (C_u 1 Emp_u) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 Emp_u)))}}. 
+#[global] Hint Unfold propConst1_spec : lia_unfold.
+Theorem propConst1 (lq_tmp0: {{True}}): propConst1_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem propConst2 (lq_tmp0: {{True}}): {{forall (appendres: L_u), (append_rel (C_u 1 (C_u 2 Emp_u)) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 (C_u 2 Emp_u))))}}. 
+Definition propConst2_spec (lq_tmp0: {{True}}): Type := 
+	{{forall (appendres: L_u), (append_rel (C_u 1 (C_u 2 Emp_u)) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 (C_u 2 Emp_u))))}}. 
+#[global] Hint Unfold propConst2_spec : lia_unfold.
+Theorem propConst2 (lq_tmp0: {{True}}): propConst2_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem propConst3 (lq_tmp0: {{True}}): {{forall (appendres: L_u), (append_rel (C_u 1 (C_u 2 (C_u 3 Emp_u))) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 (C_u 2 (C_u 3 Emp_u)))))}}. 
+Definition propConst3_spec (lq_tmp0: {{True}}): Type := 
+	{{forall (appendres: L_u), (append_rel (C_u 1 (C_u 2 (C_u 3 Emp_u))) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 (C_u 2 (C_u 3 Emp_u)))))}}. 
+#[global] Hint Unfold propConst3_spec : lia_unfold.
+Theorem propConst3 (lq_tmp0: {{True}}): propConst3_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Definition length (lq_tmp0: L): {VV: Z | gebZ_rel VV 0 true}. 
+Definition length_spec (lq_tmp0: L): Type := 
+	{VV: Z | gebZ_rel VV 0 true}. 
+#[global] Hint Unfold length_spec : lia_unfold.
+Definition length (lq_tmp0: L): length_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	induction lq_tmp0 as [(*C*) ds_d3vT xs IH_xs | (*Emp*) ]. 
@@ -261,7 +276,10 @@ Qed.
 Proof. 
 	buildPackG length length_rel length__length_rel length_rel_funct. 
 Defined.
-Theorem prop (x: {x: Z | True}) (xs: L) (ys: L) (zs: L): {{forall (appendres: L_u), (append_rel (C_u (⌊ x -⌋) (⌊ xs -⌋)) (⌊ ys -⌋) appendres) -> (forall (append_res_2: L_u), (append_rel appendres (⌊ zs -⌋) append_res_2) -> (forall (append_res_3: L_u), (append_rel (⌊ xs -⌋) (⌊ ys -⌋) append_res_3) -> (forall (append_res_4: L_u), (append_rel append_res_3 (⌊ zs -⌋) append_res_4) -> (append_res_2 == (C_u (⌊ x -⌋) append_res_4)))))}}. 
+Definition prop_spec (x: {x: Z | True}) (xs: L) (ys: L) (zs: L): Type := 
+	{{forall (appendres: L_u), (append_rel (C_u (⌊ x -⌋) (⌊ xs -⌋)) (⌊ ys -⌋) appendres) -> (forall (append_res_2: L_u), (append_rel appendres (⌊ zs -⌋) append_res_2) -> (forall (append_res_3: L_u), (append_rel (⌊ xs -⌋) (⌊ ys -⌋) append_res_3) -> (forall (append_res_4: L_u), (append_rel append_res_3 (⌊ zs -⌋) append_res_4) -> (append_res_2 == (C_u (⌊ x -⌋) append_res_4)))))}}. 
+#[global] Hint Unfold prop_spec : lia_unfold.
+Theorem prop (x: {x: Z | True}) (xs: L) (ys: L) (zs: L): prop_spec x xs ys zs. 
 Proof. 
 	destruct x as [x x_p]. 
 	destruct xs as [xs xs_p]. 

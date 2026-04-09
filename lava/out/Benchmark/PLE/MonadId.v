@@ -39,7 +39,10 @@ Definition Val (n: {n: Z | True}): Identity :=
 #[global] Hint Unfold Identity_wf : wf_constr_db.
 #[global] Hint Resolve Identity_eq : ref_constr_db.
 #[global] Hint Unfold Val : ref_constr_db.
-Definition compose (vx: Identity) (f: (@Pack ({x: Z | True} ::RT (fun (x: {x: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({x: Z | True} ::RT (fun (x: {x: Z | True}) => nilRT)) (Z ::UT nilUT))) Identity_u (fun (x_35415358: (ArgList {x: Z | True} ::RT (fun (x: {x: Z | True}) => nilRT))) => (fun (v_x_35415358: Identity_u) => (ltac: (flattenP (fun (x: {x: Z | True}) => (fun (VV: Identity_u) => ((Identity_wf VV) /\ True))) x_35415358 v_x_35415358)))))): Identity. 
+Definition compose_spec (vx: Identity) (f: (@Pack ({x: Z | True} ::RT (fun (x: {x: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({x: Z | True} ::RT (fun (x: {x: Z | True}) => nilRT)) (Z ::UT nilUT))) Identity_u (fun (x_35415358: (ArgList {x: Z | True} ::RT (fun (x: {x: Z | True}) => nilRT))) => (fun (v_x_35415358: Identity_u) => (ltac: (flattenP (fun (x: {x: Z | True}) => (fun (VV: Identity_u) => ((Identity_wf VV) /\ True))) x_35415358 v_x_35415358)))))): Type := 
+	Identity. 
+#[global] Hint Unfold compose_spec : lia_unfold.
+Definition compose (vx: Identity) (f: (@Pack ({x: Z | True} ::RT (fun (x: {x: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({x: Z | True} ::RT (fun (x: {x: Z | True}) => nilRT)) (Z ::UT nilUT))) Identity_u (fun (x_35415358: (ArgList {x: Z | True} ::RT (fun (x: {x: Z | True}) => nilRT))) => (fun (v_x_35415358: Identity_u) => (ltac: (flattenP (fun (x: {x: Z | True}) => (fun (VV: Identity_u) => ((Identity_wf VV) /\ True))) x_35415358 v_x_35415358)))))): compose_spec vx f. 
 Proof. 
 	destruct vx as [vx vx_p]. 
 	try revert f_p; generalize dependent f; 
@@ -115,7 +118,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve compose_rel_mk : f_rel_funct_db.
-Definition retrn (v: {v: Z | True}): Identity. 
+Definition retrn_spec (v: {v: Z | True}): Type := 
+	Identity. 
+#[global] Hint Unfold retrn_spec : lia_unfold.
+Definition retrn (v: {v: Z | True}): retrn_spec v. 
 Proof. 
 	destruct v as [v v_p]. 
 	refine (subsumptionCast _ _ (Val (exist (fun (n: Z) => True) v (ltac: (solver)))) _); 
@@ -185,16 +191,22 @@ Qed.
 Proof. 
 	buildPackG retrn retrn_rel retrn__retrn_rel retrn_rel_funct. 
 Defined.
-Theorem leftIdentity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Identity_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Identity_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: Identity_u) => ((Identity_wf VV) /\ True))) x_86410777 v_x_86410777)))))): {{forall (retrnres: Identity_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (composeres: Identity_u), (compose_rel retrnres (packProj f) composeres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (composeres == fres)))}}. 
+Definition leftIdentity_spec (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Identity_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Identity_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: Identity_u) => ((Identity_wf VV) /\ True))) x_86410777 v_x_86410777)))))): Type := 
+	{{forall (retrnres: Identity_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (composeres: Identity_u), (compose_rel retrnres (packProj f) composeres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (composeres == fres)))}}. 
+#[global] Hint Unfold leftIdentity_spec : lia_unfold.
+Theorem leftIdentity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Identity_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Identity_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: Identity_u) => ((Identity_wf VV) /\ True))) x_86410777 v_x_86410777)))))): leftIdentity_spec x f. 
 Proof. 
 	destruct x as [x x_p]. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem rightIdentity (x: Identity): {{forall (composeres: Identity_u), (compose_rel (⌊ x -⌋) 
+Definition rightIdentity_spec (x: Identity): Type := 
+	{{forall (composeres: Identity_u), (compose_rel (⌊ x -⌋) 
 		(ltac: (pose retrn_rel as Rel; 
 	pose retrn_rel_funct as Funct; 
 	buildUPackG Rel Funct)) composeres) -> (composeres = (⌊ x -⌋))}}. 
+#[global] Hint Unfold rightIdentity_spec : lia_unfold.
+Theorem rightIdentity (x: Identity): rightIdentity_spec x. 
 Proof. 
 	destruct x as [x x_p]. 
 	induction x as [(*Val*) x]. 

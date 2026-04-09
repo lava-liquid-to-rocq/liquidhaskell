@@ -52,7 +52,10 @@ Defined.
 #[global] Hint Resolve wf_C_VV_ : ref_constr_db.
 #[global] Hint Unfold C : ref_constr_db.
 #[global] Hint Unfold Emp : ref_constr_db.
-Definition mappend (lq_tmp0: L) (lq_tmp1: L): L. 
+Definition mappend_spec (lq_tmp0: L) (lq_tmp1: L): Type := 
+	L. 
+#[global] Hint Unfold mappend_spec : lia_unfold.
+Definition mappend (lq_tmp0: L) (lq_tmp1: L): mappend_spec lq_tmp0 lq_tmp1. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	destruct lq_tmp1 as [lq_tmp1 lq_tmp1_p]. 
@@ -152,7 +155,10 @@ Qed.
 Proof. 
 	buildPackG mappend mappend_rel mappend__mappend_rel mappend_rel_funct. 
 Defined.
-Theorem mappend_assoc (xs: L) (ys: L) (zs: L): {{forall (mappendres: L_u), (mappend_rel (⌊ xs -⌋) (⌊ ys -⌋) mappendres) -> (forall (mappend_res_2: L_u), (mappend_rel mappendres (⌊ zs -⌋) mappend_res_2) -> (forall (mappend_res_3: L_u), (mappend_rel (⌊ ys -⌋) (⌊ zs -⌋) mappend_res_3) -> (forall (mappend_res_4: L_u), (mappend_rel (⌊ xs -⌋) mappend_res_3 mappend_res_4) -> (mappend_res_2 == mappend_res_4))))}}. 
+Definition mappend_assoc_spec (xs: L) (ys: L) (zs: L): Type := 
+	{{forall (mappendres: L_u), (mappend_rel (⌊ xs -⌋) (⌊ ys -⌋) mappendres) -> (forall (mappend_res_2: L_u), (mappend_rel mappendres (⌊ zs -⌋) mappend_res_2) -> (forall (mappend_res_3: L_u), (mappend_rel (⌊ ys -⌋) (⌊ zs -⌋) mappend_res_3) -> (forall (mappend_res_4: L_u), (mappend_rel (⌊ xs -⌋) mappend_res_3 mappend_res_4) -> (mappend_res_2 == mappend_res_4))))}}. 
+#[global] Hint Unfold mappend_assoc_spec : lia_unfold.
+Theorem mappend_assoc (xs: L) (ys: L) (zs: L): mappend_assoc_spec xs ys zs. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct ys as [ys ys_p]. 
@@ -170,7 +176,10 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Definition mempty: L. 
+Definition mempty_spec: Type := 
+	L. 
+#[global] Hint Unfold mempty_spec : lia_unfold.
+Definition mempty: mempty_spec. 
 Proof. 
 	refine (subsumptionCast _ _ Emp _); 
 	solver. 
@@ -235,13 +244,19 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve mempty_rel_mk : f_rel_funct_db.
-Theorem mempty_left (x: L): {{forall (mappendres: L_u), (mappend_rel (⌊ mempty -⌋) (⌊ x -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+Definition mempty_left_spec (x: L): Type := 
+	{{forall (mappendres: L_u), (mappend_rel (⌊ mempty -⌋) (⌊ x -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+#[global] Hint Unfold mempty_left_spec : lia_unfold.
+Theorem mempty_left (x: L): mempty_left_spec x. 
 Proof. 
 	destruct x as [x x_p]. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem mempty_right (x: L): {{forall (mappendres: L_u), (mappend_rel (⌊ x -⌋) (⌊ mempty -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+Definition mempty_right_spec (x: L): Type := 
+	{{forall (mappendres: L_u), (mappend_rel (⌊ x -⌋) (⌊ mempty -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+#[global] Hint Unfold mempty_right_spec : lia_unfold.
+Theorem mempty_right (x: L): mempty_right_spec x. 
 Proof. 
 	destruct x as [x x_p]. 
 	induction x as [(*C*) x xs IH_xs | (*Emp*) ]. 

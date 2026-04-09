@@ -128,7 +128,10 @@ Defined.
 #[global] Hint Unfold B0 : ref_constr_db.
 #[global] Hint Unfold B1 : ref_constr_db.
 #[global] Hint Unfold RBinsToBins__Z : ref_constr_db.
-Definition rbinToBin (b: RBin): Bin. 
+Definition rbinToBin_spec (b: RBin): Type := 
+	Bin. 
+#[global] Hint Unfold rbinToBin_spec : lia_unfold.
+Definition rbinToBin (b: RBin): rbinToBin_spec b. 
 Proof. 
 	destruct b as [b b_p]. 
 	induction b as [(*RB0*) n IH_n | (*RB1*) n IH_n | (*RZ*) ]. 

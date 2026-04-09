@@ -52,7 +52,10 @@ Defined.
 #[global] Hint Resolve wf_Suc_n : ref_constr_db.
 #[global] Hint Unfold Suc : ref_constr_db.
 #[global] Hint Unfold Zero : ref_constr_db.
-Definition add (m: Nats) (n: Nats): Nats. 
+Definition add_spec (m: Nats) (n: Nats): Type := 
+	Nats. 
+#[global] Hint Unfold add_spec : lia_unfold.
+Definition add (m: Nats) (n: Nats): add_spec m n. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -151,7 +154,10 @@ Qed.
 Proof. 
 	buildPackG add add_rel add__add_rel add_rel_funct. 
 Defined.
-Definition add' (m: Nats) (n: Nats): {v: Nats_u | (Nats_wf v) /\ (forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (add_res_2: Nats_u), (add_rel addres Zero_u add_res_2) -> (add_res_2 == v)))}. 
+Definition add'_spec (m: Nats) (n: Nats): Type := 
+	{v: Nats_u | (Nats_wf v) /\ (forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (add_res_2: Nats_u), (add_rel addres Zero_u add_res_2) -> (add_res_2 == v)))}. 
+#[global] Hint Unfold add'_spec : lia_unfold.
+Definition add' (m: Nats) (n: Nats): add'_spec m n. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -164,7 +170,10 @@ Proof.
 		(subsumptionCast Nats_u (fun (n: Nats_u) => ((Nats_wf n) /\ True)) Zero (ltac: (solver)))) _); 
 	solver. 
 Defined. 
-Definition add'' (m: Nats) (n: Nats): {v: Nats_u | (Nats_wf v) /\ (forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (addres == v))}. 
+Definition add''_spec (m: Nats) (n: Nats): Type := 
+	{v: Nats_u | (Nats_wf v) /\ (forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (addres == v))}. 
+#[global] Hint Unfold add''_spec : lia_unfold.
+Definition add'' (m: Nats) (n: Nats): add''_spec m n. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -174,7 +183,10 @@ Proof.
 		(exist (fun (n: Nats_u) => ((Nats_wf n) /\ True)) n (ltac: (solver)))) _); 
 	solver. 
 Defined. 
-Theorem add_assoc (m: Nats) (n: Nats) (o: Nats): {{forall (addres: Nats_u), (add_rel (⌊ n -⌋) (⌊ o -⌋) addres) -> (forall (add_res_2: Nats_u), (add_rel (⌊ m -⌋) addres add_res_2) -> (forall (add_res_3: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) add_res_3) -> (forall (add_res_4: Nats_u), (add_rel add_res_3 (⌊ o -⌋) add_res_4) -> (add_res_2 == add_res_4))))}}. 
+Definition add_assoc_spec (m: Nats) (n: Nats) (o: Nats): Type := 
+	{{forall (addres: Nats_u), (add_rel (⌊ n -⌋) (⌊ o -⌋) addres) -> (forall (add_res_2: Nats_u), (add_rel (⌊ m -⌋) addres add_res_2) -> (forall (add_res_3: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) add_res_3) -> (forall (add_res_4: Nats_u), (add_rel add_res_3 (⌊ o -⌋) add_res_4) -> (add_res_2 == add_res_4))))}}. 
+#[global] Hint Unfold add_assoc_spec : lia_unfold.
+Theorem add_assoc (m: Nats) (n: Nats) (o: Nats): add_assoc_spec m n o. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -192,7 +204,10 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Theorem add_suc_r (m: Nats) (n: Nats): {{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (add_res_2: Nats_u), (add_rel (⌊ m -⌋) (Suc_u (⌊ n -⌋)) add_res_2) -> ((Suc_u addres) == add_res_2))}}. 
+Definition add_suc_r_spec (m: Nats) (n: Nats): Type := 
+	{{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (add_res_2: Nats_u), (add_rel (⌊ m -⌋) (Suc_u (⌊ n -⌋)) add_res_2) -> ((Suc_u addres) == add_res_2))}}. 
+#[global] Hint Unfold add_suc_r_spec : lia_unfold.
+Theorem add_suc_r (m: Nats) (n: Nats): add_suc_r_spec m n. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -208,7 +223,10 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Theorem add_zero_l (n: Nats): {{forall (addres: Nats_u), (add_rel Zero_u (⌊ n -⌋) addres) -> (addres = (⌊ n -⌋))}}. 
+Definition add_zero_l_spec (n: Nats): Type := 
+	{{forall (addres: Nats_u), (add_rel Zero_u (⌊ n -⌋) addres) -> (addres = (⌊ n -⌋))}}. 
+#[global] Hint Unfold add_zero_l_spec : lia_unfold.
+Theorem add_zero_l (n: Nats): add_zero_l_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*Suc*) n IH_n | (*Zero*) ]. 
@@ -220,7 +238,10 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Theorem add_zero_l_test: {{forall (addres: Nats_u), (add_rel Zero_u (Suc_u (Suc_u Zero_u)) addres) -> (addres == (Suc_u (Suc_u Zero_u)))}}. 
+Definition add_zero_l_test_spec: Type := 
+	{{forall (addres: Nats_u), (add_rel Zero_u (Suc_u (Suc_u Zero_u)) addres) -> (addres == (Suc_u (Suc_u Zero_u)))}}. 
+#[global] Hint Unfold add_zero_l_test_spec : lia_unfold.
+Theorem add_zero_l_test: add_zero_l_test_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(add_zero_l 
@@ -231,7 +252,10 @@ Proof.
 		(subsumptionCast Nats_u (fun (n: Nats_u) => ((Nats_wf n) /\ True)) Zero (ltac: (solver)))) (ltac: (solver)))) (ltac: (solver)))) _); 
 	solver. 
 Qed. 
-Theorem add_zero_r (n: Nats): {{forall (addres: Nats_u), (add_rel (⌊ n -⌋) Zero_u addres) -> (addres = (⌊ n -⌋))}}. 
+Definition add_zero_r_spec (n: Nats): Type := 
+	{{forall (addres: Nats_u), (add_rel (⌊ n -⌋) Zero_u addres) -> (addres = (⌊ n -⌋))}}. 
+#[global] Hint Unfold add_zero_r_spec : lia_unfold.
+Theorem add_zero_r (n: Nats): add_zero_r_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*Suc*) n IH_n | (*Zero*) ]. 
@@ -243,7 +267,10 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Definition eqN (m: Nats) (n: Nats): Bool. 
+Definition eqN_spec (m: Nats) (n: Nats): Type := 
+	Bool. 
+#[global] Hint Unfold eqN_spec : lia_unfold.
+Definition eqN (m: Nats) (n: Nats): eqN_spec m n. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -375,7 +402,10 @@ Qed.
 Proof. 
 	buildPackG eqN eqN_rel eqN__eqN_rel eqN_rel_funct. 
 Defined.
-Definition test_eqN: {r: bool | is_true r}. 
+Definition test_eqN_spec: Type := 
+	{r: bool | is_true r}. 
+#[global] Hint Unfold test_eqN_spec : lia_unfold.
+Definition test_eqN: test_eqN_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(eqN 
@@ -395,7 +425,10 @@ Proof.
 		(subsumptionCast Nats_u (fun (n: Nats_u) => ((Nats_wf n) /\ True)) Zero (ltac: (solver)))) (ltac: (solver)))) (ltac: (solver)))) (ltac: (solver)))) _); 
 	solver. 
 Defined. 
-Definition test_eqN': {r: bool | not (is_true r)}. 
+Definition test_eqN'_spec: Type := 
+	{r: bool | not (is_true r)}. 
+#[global] Hint Unfold test_eqN'_spec : lia_unfold.
+Definition test_eqN': test_eqN'_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(eqN 
@@ -409,7 +442,10 @@ Proof.
 		(subsumptionCast Nats_u (fun (n: Nats_u) => ((Nats_wf n) /\ True)) Zero (ltac: (solver)))) (ltac: (solver)))) _); 
 	solver. 
 Defined. 
-Definition geqN (m: Nats) (n: Nats): Bool. 
+Definition geqN_spec (m: Nats) (n: Nats): Type := 
+	Bool. 
+#[global] Hint Unfold geqN_spec : lia_unfold.
+Definition geqN (m: Nats) (n: Nats): geqN_spec m n. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -525,7 +561,10 @@ Qed.
 Proof. 
 	buildPackG geqN geqN_rel geqN__geqN_rel geqN_rel_funct. 
 Defined.
-Definition PeanoNats__sub (m: Nats) (n: {n: Nats_u | (Nats_wf n) /\ (geqN_rel (⌊ m -⌋) n true)}): {o: Nats_u | (Nats_wf o) /\ ((o <> Zero_u) <-> ((⌊ m -⌋) <> (⌊ n -⌋)))}. 
+Definition PeanoNats__sub_spec (m: Nats) (n: {n: Nats_u | (Nats_wf n) /\ (geqN_rel (⌊ m -⌋) n true)}): Type := 
+	{o: Nats_u | (Nats_wf o) /\ ((o <> Zero_u) <-> ((⌊ m -⌋) <> (⌊ n -⌋)))}. 
+#[global] Hint Unfold PeanoNats__sub_spec : lia_unfold.
+Definition PeanoNats__sub (m: Nats) (n: {n: Nats_u | (Nats_wf n) /\ (geqN_rel (⌊ m -⌋) n true)}): PeanoNats__sub_spec m n. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -654,7 +693,10 @@ Qed.
 Proof. 
 	buildPackG PeanoNats__sub PeanoNats__sub_rel PeanoNats__sub__PeanoNats__sub_rel PeanoNats__sub_rel_funct. 
 Defined.
-Theorem add_sub (m: Nats) (n: Nats): {{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (PeanoNats__subres: Nats_u), (PeanoNats__sub_rel addres (⌊ n -⌋) PeanoNats__subres) -> (PeanoNats__subres = (⌊ m -⌋)))}}. 
+Definition add_sub_spec (m: Nats) (n: Nats): Type := 
+	{{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (PeanoNats__subres: Nats_u), (PeanoNats__sub_rel addres (⌊ n -⌋) PeanoNats__subres) -> (PeanoNats__subres = (⌊ m -⌋)))}}. 
+#[global] Hint Unfold add_sub_spec : lia_unfold.
+Theorem add_sub (m: Nats) (n: Nats): add_sub_spec m n. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -693,7 +735,10 @@ Proof.
 			refine (exist _ unit _); 
 			solver.   
 Qed. 
-Definition mult (m: Nats) (n: Nats): Nats. 
+Definition mult_spec (m: Nats) (n: Nats): Type := 
+	Nats. 
+#[global] Hint Unfold mult_spec : lia_unfold.
+Definition mult (m: Nats) (n: Nats): mult_spec m n. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -793,7 +838,10 @@ Qed.
 Proof. 
 	buildPackG mult mult_rel mult__mult_rel mult_rel_funct. 
 Defined.
-Theorem add_dist_rmult (m: Nats) (n: Nats) (o: Nats): {{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (multres: Nats_u), (mult_rel addres (⌊ o -⌋) multres) -> (forall (mult_res_2: Nats_u), (mult_rel (⌊ n -⌋) (⌊ o -⌋) mult_res_2) -> (forall (mult_res_3: Nats_u), (mult_rel (⌊ m -⌋) (⌊ o -⌋) mult_res_3) -> (forall (add_res_2: Nats_u), (add_rel mult_res_3 mult_res_2 add_res_2) -> (multres == add_res_2)))))}}. 
+Definition add_dist_rmult_spec (m: Nats) (n: Nats) (o: Nats): Type := 
+	{{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (multres: Nats_u), (mult_rel addres (⌊ o -⌋) multres) -> (forall (mult_res_2: Nats_u), (mult_rel (⌊ n -⌋) (⌊ o -⌋) mult_res_2) -> (forall (mult_res_3: Nats_u), (mult_rel (⌊ m -⌋) (⌊ o -⌋) mult_res_3) -> (forall (add_res_2: Nats_u), (add_rel mult_res_3 mult_res_2 add_res_2) -> (multres == add_res_2)))))}}. 
+#[global] Hint Unfold add_dist_rmult_spec : lia_unfold.
+Theorem add_dist_rmult (m: Nats) (n: Nats) (o: Nats): add_dist_rmult_spec m n o. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -822,7 +870,10 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Definition one: Nats. 
+Definition one_spec: Type := 
+	Nats. 
+#[global] Hint Unfold one_spec : lia_unfold.
+Definition one: one_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(Suc 
@@ -889,7 +940,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve one_rel_mk : f_rel_funct_db.
-Theorem sub_self (m: Nats) (n: Nats): {{forall (eqNres: bool), (eqN_rel (⌊ m -⌋) (⌊ n -⌋) eqNres) -> (forall (PeanoNats__subres: Nats_u), (PeanoNats__sub_rel (⌊ m -⌋) (⌊ n -⌋) PeanoNats__subres) -> ((is_true eqNres) -> (PeanoNats__subres = Zero_u)))}}. 
+Definition sub_self_spec (m: Nats) (n: Nats): Type := 
+	{{forall (eqNres: bool), (eqN_rel (⌊ m -⌋) (⌊ n -⌋) eqNres) -> (forall (PeanoNats__subres: Nats_u), (PeanoNats__sub_rel (⌊ m -⌋) (⌊ n -⌋) PeanoNats__subres) -> ((is_true eqNres) -> (PeanoNats__subres = Zero_u)))}}. 
+#[global] Hint Unfold sub_self_spec : lia_unfold.
+Theorem sub_self (m: Nats) (n: Nats): sub_self_spec m n. 
 Proof. 
 	destruct m as [m m_p]. 
 	destruct n as [n n_p]. 
@@ -910,7 +964,10 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Definition two: Nats. 
+Definition two_spec: Type := 
+	Nats. 
+#[global] Hint Unfold two_spec : lia_unfold.
+Definition two: two_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(Suc 

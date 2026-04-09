@@ -52,7 +52,10 @@ Defined.
 #[global] Hint Resolve wf_Cons_l : ref_constr_db.
 #[global] Hint Unfold Cons : ref_constr_db.
 #[global] Hint Unfold Nil : ref_constr_db.
-Definition llen (l: IList): {v: Z | gebZ_rel v 0 true}. 
+Definition llen_spec (l: IList): Type := 
+	{v: Z | gebZ_rel v 0 true}. 
+#[global] Hint Unfold llen_spec : lia_unfold.
+Definition llen (l: IList): llen_spec l. 
 Proof. 
 	destruct l as [l l_p]. 
 	induction l as [(*Cons*) ds_d4Sc l' IH_l' | (*Nil*) ]. 
@@ -143,7 +146,10 @@ Qed.
 Proof. 
 	buildPackG llen llen_rel llen__llen_rel llen_rel_funct. 
 Defined.
-Definition append (xs: IList) (ys: IList): {v: IList_u | (IList_wf v) /\ (forall (llenres: Z), (llen_rel v llenres) -> (forall (llen_res_2: Z), (llen_rel (⌊ xs -⌋) llen_res_2) -> (forall (llen_res_3: Z), (llen_rel (⌊ ys -⌋) llen_res_3) -> (forall (addZres: Z), (addZ_rel llen_res_2 llen_res_3 addZres) -> (llenres == addZres)))))}. 
+Definition append_spec (xs: IList) (ys: IList): Type := 
+	{v: IList_u | (IList_wf v) /\ (forall (llenres: Z), (llen_rel v llenres) -> (forall (llen_res_2: Z), (llen_rel (⌊ xs -⌋) llen_res_2) -> (forall (llen_res_3: Z), (llen_rel (⌊ ys -⌋) llen_res_3) -> (forall (addZres: Z), (addZ_rel llen_res_2 llen_res_3 addZres) -> (llenres == addZres)))))}. 
+#[global] Hint Unfold append_spec : lia_unfold.
+Definition append (xs: IList) (ys: IList): append_spec xs ys. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct ys as [ys ys_p]. 
@@ -243,7 +249,10 @@ Qed.
 Proof. 
 	buildPackG append append_rel append__append_rel append_rel_funct. 
 Defined.
-Definition get (xs: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): {v: Z | ltbZ_rel 5 v true}. 
+Definition get_spec (xs: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): Type := 
+	{v: Z | ltbZ_rel 5 v true}. 
+#[global] Hint Unfold get_spec : lia_unfold.
+Definition get (xs: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): get_spec xs i. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct i as [i i_p]. 
@@ -340,7 +349,10 @@ Qed.
 Proof. 
 	buildPackG get get_rel get__get_rel get_rel_funct. 
 Defined.
-Theorem thm1 (xs: IList) (x: {x: Z | ltbZ_rel 5 x true}) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): {{forall (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) -> (forall (addZres: Z), (addZ_rel (⌊ i -⌋) 1 addZres) -> (forall (get_res_2: Z), (get_rel (Cons_u (⌊ x -⌋) (⌊ xs -⌋)) addZres get_res_2) -> (getres == get_res_2)))}}. 
+Definition thm1_spec (xs: IList) (x: {x: Z | ltbZ_rel 5 x true}) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): Type := 
+	{{forall (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) -> (forall (addZres: Z), (addZ_rel (⌊ i -⌋) 1 addZres) -> (forall (get_res_2: Z), (get_rel (Cons_u (⌊ x -⌋) (⌊ xs -⌋)) addZres get_res_2) -> (getres == get_res_2)))}}. 
+#[global] Hint Unfold thm1_spec : lia_unfold.
+Theorem thm1 (xs: IList) (x: {x: Z | ltbZ_rel 5 x true}) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): thm1_spec xs x i. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct x as [x x_p]. 
@@ -348,7 +360,10 @@ Proof.
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem thm2 (xs: IList) (ys: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): {{forall (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) -> (forall (llenres: Z), (llen_rel (⌊ ys -⌋) llenres) -> (forall (addZres: Z), (addZ_rel (⌊ i -⌋) llenres addZres) -> (forall (appendres: IList_u), (append_rel (⌊ ys -⌋) (⌊ xs -⌋) appendres) -> (forall (get_res_2: Z), (get_rel appendres addZres get_res_2) -> (getres == get_res_2)))))}}. 
+Definition thm2_spec (xs: IList) (ys: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): Type := 
+	{{forall (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) -> (forall (llenres: Z), (llen_rel (⌊ ys -⌋) llenres) -> (forall (addZres: Z), (addZ_rel (⌊ i -⌋) llenres addZres) -> (forall (appendres: IList_u), (append_rel (⌊ ys -⌋) (⌊ xs -⌋) appendres) -> (forall (get_res_2: Z), (get_rel appendres addZres get_res_2) -> (getres == get_res_2)))))}}. 
+#[global] Hint Unfold thm2_spec : lia_unfold.
+Theorem thm2 (xs: IList) (ys: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): thm2_spec xs ys i. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct ys as [ys ys_p]. 

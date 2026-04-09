@@ -272,7 +272,7 @@ Ltac localLookupRel f Res :=
   match type of f with
   | forall (args:ArgList ?argTps), ?rTp =>
     match goal with
-    | [f_frel: forall (args: ArgList argTps) v, ⌊ f args _⌋ = v <-> ?frel _ v |- _] =>
+    | [f_frel: forall (args: ArgList argTps) v, ⌊ f args -⌋ = v <-> ?frel _ v |- _] =>
       pose frel as Res
     end
   end.
@@ -290,7 +290,7 @@ Ltac localLookupFunc rel Res :=
   match type of rel with
   | forall (_:UArgList ?uargTps) (_:?T), Prop =>
     match goal with
-    | [f_frel: forall (args: ArgList ?argTps) (v: T), ⌊ ?f args _⌋ = v <-> rel _ v |- _] =>
+    | [f_frel: forall (args: ArgList ?argTps) (v: T), ⌊ ?f args -⌋ = v <-> rel _ v |- _] =>
       pose f as Res
     end
   end.
@@ -306,7 +306,7 @@ Ltac localLookupRwLem f Res :=
   match type of f with
   | forall (args:ArgList ?argTps), ?rTp =>
     match goal with
-    | [f_frel: forall (args: ArgList argTps) v, ⌊ f args _⌋ = v <-> ?rel _ v |- _] =>
+    | [f_frel: forall (args: ArgList argTps) v, ⌊ f args -⌋ = v <-> ?rel _ v |- _ ] =>
       pose f_frel as Res
     end
   end.

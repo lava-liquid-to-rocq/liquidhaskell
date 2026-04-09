@@ -47,7 +47,10 @@ Definition Nothing: MaybeInt :=
 #[global] Hint Resolve MaybeInt_eq : ref_constr_db.
 #[global] Hint Unfold Just : ref_constr_db.
 #[global] Hint Unfold Nothing : ref_constr_db.
-Definition mappend (lq_tmp0: MaybeInt) (lq_tmp1: MaybeInt): MaybeInt. 
+Definition mappend_spec (lq_tmp0: MaybeInt) (lq_tmp1: MaybeInt): Type := 
+	MaybeInt. 
+#[global] Hint Unfold mappend_spec : lia_unfold.
+Definition mappend (lq_tmp0: MaybeInt) (lq_tmp1: MaybeInt): mappend_spec lq_tmp0 lq_tmp1. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	destruct lq_tmp1 as [lq_tmp1 lq_tmp1_p]. 
@@ -139,7 +142,10 @@ Qed.
 Proof. 
 	buildPackG mappend mappend_rel mappend__mappend_rel mappend_rel_funct. 
 Defined.
-Theorem mappend_assoc (xs: MaybeInt) (ys: MaybeInt) (zs: MaybeInt): {{forall (mappendres: MaybeInt_u), (mappend_rel (⌊ xs -⌋) (⌊ ys -⌋) mappendres) -> (forall (mappend_res_2: MaybeInt_u), (mappend_rel mappendres (⌊ zs -⌋) mappend_res_2) -> (forall (mappend_res_3: MaybeInt_u), (mappend_rel (⌊ ys -⌋) (⌊ zs -⌋) mappend_res_3) -> (forall (mappend_res_4: MaybeInt_u), (mappend_rel (⌊ xs -⌋) mappend_res_3 mappend_res_4) -> (mappend_res_2 == mappend_res_4))))}}. 
+Definition mappend_assoc_spec (xs: MaybeInt) (ys: MaybeInt) (zs: MaybeInt): Type := 
+	{{forall (mappendres: MaybeInt_u), (mappend_rel (⌊ xs -⌋) (⌊ ys -⌋) mappendres) -> (forall (mappend_res_2: MaybeInt_u), (mappend_rel mappendres (⌊ zs -⌋) mappend_res_2) -> (forall (mappend_res_3: MaybeInt_u), (mappend_rel (⌊ ys -⌋) (⌊ zs -⌋) mappend_res_3) -> (forall (mappend_res_4: MaybeInt_u), (mappend_rel (⌊ xs -⌋) mappend_res_3 mappend_res_4) -> (mappend_res_2 == mappend_res_4))))}}. 
+#[global] Hint Unfold mappend_assoc_spec : lia_unfold.
+Theorem mappend_assoc (xs: MaybeInt) (ys: MaybeInt) (zs: MaybeInt): mappend_assoc_spec xs ys zs. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct ys as [ys ys_p]. 
@@ -158,7 +164,10 @@ Proof.
 			refine (exist _ unit _); 
 			solver.   
 Qed. 
-Definition mempty: MaybeInt. 
+Definition mempty_spec: Type := 
+	MaybeInt. 
+#[global] Hint Unfold mempty_spec : lia_unfold.
+Definition mempty: mempty_spec. 
 Proof. 
 	refine (subsumptionCast _ _ Nothing _); 
 	solver. 
@@ -223,13 +232,19 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve mempty_rel_mk : f_rel_funct_db.
-Theorem mempty_left (x: MaybeInt): {{forall (mappendres: MaybeInt_u), (mappend_rel (⌊ mempty -⌋) (⌊ x -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+Definition mempty_left_spec (x: MaybeInt): Type := 
+	{{forall (mappendres: MaybeInt_u), (mappend_rel (⌊ mempty -⌋) (⌊ x -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+#[global] Hint Unfold mempty_left_spec : lia_unfold.
+Theorem mempty_left (x: MaybeInt): mempty_left_spec x. 
 Proof. 
 	destruct x as [x x_p]. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem mempty_right (x: MaybeInt): {{forall (mappendres: MaybeInt_u), (mappend_rel (⌊ x -⌋) (⌊ mempty -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+Definition mempty_right_spec (x: MaybeInt): Type := 
+	{{forall (mappendres: MaybeInt_u), (mappend_rel (⌊ x -⌋) (⌊ mempty -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+#[global] Hint Unfold mempty_right_spec : lia_unfold.
+Theorem mempty_right (x: MaybeInt): mempty_right_spec x. 
 Proof. 
 	destruct x as [x x_p]. 
 	induction x as [(*Just*) x | (*Nothing*) ]. 

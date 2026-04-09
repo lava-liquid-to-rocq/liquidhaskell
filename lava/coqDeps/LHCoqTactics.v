@@ -33,16 +33,20 @@ Proof.
 Qed.
 #[global] Hint Rewrite f_rel_u_cleanup:get_rel_db. *)
 
+Ltac is_trivial tp :=
+  match tp with
+  | True => idtac
+  | ?tm = ?tm => idtac
+  | _ => fail
+  end.
+
 Ltac cleanup_witness z :=
   let zTp := type of z in
   let zKnd := type of zTp in
   eq_fail zKnd Prop;
   
   let temp_wit_rw := fresh "temp_wit_rw" in
-  tryif (match zTp with
-  | True => idtac
-  | _ => fail
-  end) then fail else idtac;
+  tryif (is_trivial zTp) then fail else idtac;
   match goal with
   | [wit: zTp |- _] => 
     assert (forall z', z' = wit) as temp_wit_rw by (intros; auto with pi_db);
@@ -172,9 +176,18 @@ Ltac isExistProj exp :=
   | _ => (* idtac "subterm not matching " exp; *) fail
   end.
 
+Ltac isSubCastProj exp :=
+  match exp with
+  | ⌊ subsumptionCast _ _ _ _ -⌋ => idtac
+  | _ => (* idtac "subterm not matching " exp; *) fail
+  end.
+
 Ltac isAppProj exp :=
   match exp with
-  | ⌊ _ _ -⌋ => idtac (* "found matching subterm " exp *)
+  | ⌊ ?fApp _ -⌋ => tryif (match fApp with
+    | subsumptionCast _ _ _ => idtac
+    | exist _ _ => idtac
+    end) then fail else idtac (* "found matching subterm " exp *)
   | ⌊ ?const -⌋ => has_rel const; idtac
   | _ => (* idtac "subterm not matching " exp; *) fail
   end.
@@ -209,6 +222,19 @@ Ltac cleanupExistProj exp :=
     set ⌊ tm -⌋ as Res in *
   end;
   first [rewrite proj_ex'' in Res | timeout 1 simpl in Res];
+  subst Res.
+
+Ltac cleanupSubCastProj exp :=
+  let Res := fresh "Res" in 
+  findSubExpr Res isSubCastProj exp;
+  let temp := fresh "temp" in
+  assRefl Res as temp;
+  match type of temp with
+  | ⌊ ?tm -⌋ = _ => clear temp; 
+    pose proof ⌈ tm ⌉;
+    set ⌊ tm -⌋ as Res in *
+  end;
+  first [rewrite proj_subCast in Res | timeout 1 simpl in Res];
   subst Res.
 
 Ltac isHypApp fApp :=
@@ -407,7 +433,7 @@ Ltac findHOAppProj exp ProjRes Res :=
   undoHOAppProj ProjRes Res.
 
 Ltac axHOAppProjTm exp :=
-  let ProjRes := fresh "ProjRes" in
+  let ProjRes := fresh "v" in
   let Res := fresh "Res" in
   let tmv := fresh "u" in
   let tmp := fresh "up" in
@@ -452,8 +478,23 @@ Ltac axHOAppProjTm exp :=
       apply pr1 in rw_lem;
       apply rw_lem in def_rw; clear rw_lem;
       simpl in def_rw;
-      pose proof (exist _ ProjRes eq_refl) as [? ->];
-      clear v_def; first [clear Res | subst Res]
+      try first [rewrite def_rw | pose proof def_rw as ->];
+        clear v_def;
+        first [clear Res | subst Res];
+        first [
+          clearbody ProjRes |
+          pose proof (exist _ ProjRes eq_refl) as [? ->] |
+          let tmp := fresh "v" in
+          set ProjRes as tmp in *;
+          clearbody tmp;
+          clear dependent ProjRes (*|
+          let tmp := fresh "v" in
+          let tmp_rw := fresh "tmp_rw" in
+          pose proof (exist _ ProjRes (eq_refl ProjRes)) as tmp;
+          destruct tmp as [tmp tmp_rw];
+          repeat rewrite tmp_rw in *;
+          clear dependent ProjRes*)
+        ]
     end
   end.
 
@@ -515,7 +556,10 @@ Ltac axProjTm exp :=
           fail
         end
       | ?t => (* idtac "axProjTm produced an ill-formed result" t; *) fail
-      end 
+      end; 
+      match goal with
+      | [eq: ⌊ ?Res -⌋ = ?v |- _] => rewrite eq in *
+      end
     end
   end.
 
@@ -639,12 +683,12 @@ Ltac axiomatize_ih_specializations :=
 Ltac axiomatize_next_term :=
   repeat rewrite fix_notation' in *; 
   match goal with
-  | |- ?g => first [cleanupExistProj g | axProjTm g | axHOAppProjTm g]
+  | |- ?g => first [cleanupSubCastProj g | cleanupExistProj g | axProjTm g | axHOAppProjTm g]
   | [h:?T |- ?g] => tryif (match T with
     (* in case the hypothesis is from a previous axiomatization *)
     | ⌊ _ -⌋ = _ => idtac
     | _ => fail
-    end) then fail else first [cleanupExistProj T | axProjTm T | axHOAppProjTm T]
+    end) then fail else first [cleanupSubCastProj T | cleanupExistProj g | axProjTm T | axHOAppProjTm T]
   end; simpl_proj.
 
 Ltac axiomatize_ho_term :=
@@ -758,6 +802,20 @@ Ltac specialize_wit h wit :=
     rewriteAll H; idtac "Rewrote other applications of " h " to " h wit " using proof irrelevance. ";
     try specialize (h wit)].
 
+Tactic Notation "specialize_hyp_ax_wit" hyp(h) constr(v) constr(g) tactic(suc) tactic(fl) :=
+  let hApplTp := type of (h v g) in
+  tryif (match goal with
+    | [hApp':?hAppTp' |- _] => eq_fail hApplTp hAppTp'
+    end) then fail else (
+    tryif (specialize (h v)) then (
+      tryif (specialize_wit h g) then (
+        suc
+      ) else pose proof (h g)
+    ) else (
+      tryif (is_trivial hApplTp) then try clear h else
+      fl; progress cleanup_witness (h v g)
+    )).
+
 Ltac specialize_hyp h :=
   let temp := fresh "H" in
   progress (
@@ -805,19 +863,11 @@ Ltac specialize_hyp h :=
           ) else (
             idtac "unable to specialize" h "with" v "!"; fail
           )*)
-          let hApplTp := type of (h v g) in
-          tryif (match goal with
-            | [hApp':?hAppTp' |- _] => eq_fail hApplTp hAppTp'
-            end) then fail else (
-            tryif (specialize (h v)) then (
-              tryif (specialize_wit h g) then (
-                let gtp := type of g in
-                idtac "Axiomatization " g ": " gtp " of variable " v " is used to specialize " h ". "
-              ) else pose proof (h g)
-            ) else (
-              idtac "Unable to specialize" h "with" v "and" g ":" hApplTp "!";
-              progress cleanup_witness (h v g)
-            ))
+          specialize_hyp_ax_wit h v g 
+            (let gtp := type of g in
+            idtac "Axiomatization " g ": " gtp " of variable " v " is used to specialize " h ". ")
+            (let hApplTp := type of (h v g) in
+            idtac "Unable to specialize" h "with" v "and" g ":" hApplTp "!")
         | _ => 
           let u := fresh "u" in
           let uRefl := fresh "uRefl" in
@@ -827,18 +877,9 @@ Ltac specialize_hyp h :=
           assert (u = u) as uRefl by reflexivity; subst u;
           match type of uRefl with
           | exist _ ?tm ?z = _ => clear uRefl; 
-            let hApplTp := type of (h tm z) in
-            tryif (match goal with
-            | [hApp':?hAppTp' |- _] => eq_fail hApplTp hAppTp'
-            end) then fail else (
-            tryif (specialize (h tm)) then (
-              tryif (specialize_wit h z) then 
-                idtac "Directly specialized " h " with easily synthesizable term. " else
-                pose proof (h z)
-            ) else (
-              idtac "Unable to directly specialize " h "!";
-              progress cleanup_witness (h tm z)
-            ))
+            specialize_hyp_ax_wit h tm z
+              (idtac "Directly specialized " h " with easily synthesizable term. ")
+              (idtac "Unable to directly specialize " h "!")
           end
         | _ => fail
         end
@@ -850,12 +891,10 @@ Ltac specialize_hyp h :=
       | [f_funct: forall (y:_) (v1:?T) (v2:?T), f_rel y v1 -> f_rel y v2 -> v1 = v2 |- _] =>
         match goal with
         | [g:f_rel x ?v |- _] => 
-          tryif (specialize (h v); specialize_wit h g) then (
-            let gtp := type of g in
-            idtac "Axiomatization " g ": " gtp " of variable " v " is used to specialize " h ". "
-          ) else (
-            idtac "Unable to specialize " h "!"; fail
-          )
+          specialize_hyp_ax_wit h v g
+            (let gtp := type of g in
+            idtac "Axiomatization " g ": " gtp " of variable " v " is used to specialize " h ". ")
+            (idtac "Unable to specialize relation for 1-ary function " h "!"; fail)
         end
       end
     (* specialize with local relation for 2-ary local function *)
@@ -863,12 +902,10 @@ Ltac specialize_hyp h :=
       | [f_funct: forall (y1:_) (y2:_) (v1:?T) (v2:?T), f_rel y1 y2 v1 -> f_rel y1 y2 v2 -> v1 = v2 |- _] =>
         match goal with
         | [g:f_rel x1 x2 ?v |- _] => 
-          tryif (specialize (h v); specialize_wit h g) then (
-            let gtp := type of g in
-            idtac "Axiomatization " g ": " gtp " of variable " v " is used to specialize " h ". "
-          ) else (
-            idtac "Unable to specialize!"; fail
-          )
+          specialize_hyp_ax_wit h v g
+            (let gtp := type of g in
+            idtac "Axiomatization " g ": " gtp " of variable " v " is used to specialize " h ". ")
+            (idtac "Unable to specialize relation for 2-ary function " h "!"; fail)
         end
       end
     (* specialize with local relation for 3-ary local function *)
@@ -876,12 +913,10 @@ Ltac specialize_hyp h :=
       | [f_funct: forall (y1:_) (y2:_) (y3:_) (v1:?T) (v2:?T), f_rel y1 y2 y3 v1 -> f_rel y1 y2 y3 v2 -> v1 = v2 |- _] =>
         match goal with
         | [g:f_rel x1 x2 x3 ?v |- _] => 
-          tryif (specialize (h v); specialize_wit h g) then (
-            let gtp := type of g in
-            idtac "Axiomatization " g ": " gtp " of variable " v " is used to specialize " h ". "
-          ) else (
-            idtac "Unable to specialize!"; fail
-          )
+          specialize_hyp_ax_wit h v g
+            (let gtp := type of g in
+            idtac "Axiomatization " g ": " gtp " of variable " v " is used to specialize " h ". ")
+            (idtac "Unable to specialize relation for 3-ary function " h "!"; fail)
         end
       end
     | forall (wit:?r), ?f => match type of r with
@@ -1891,7 +1926,7 @@ Ltac existence_lemma_quicksolve f :=
   try timeout 3 quicksolve; (* try quicksolve; *)
 
   (* unfold definition in goal *)
-  (* cbn; *) first [ timeout 4 cbn | unfold f; repeat progress autorewrite with fix_notation_hints];
+  (* cbn; *) first [ timeout 4 cbn | unfold f; (*unfold subsumptionCast in *;*) repeat progress autorewrite with fix_notation_hints];
   repeat axiomatize_ho_term;
   repeat progress (simpl_proj; apply_ifs); try timeout 4 quicksolve.
   

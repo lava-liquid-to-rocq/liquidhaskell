@@ -52,7 +52,10 @@ Defined.
 #[global] Hint Resolve wf_C_VV_ : ref_constr_db.
 #[global] Hint Unfold C : ref_constr_db.
 #[global] Hint Unfold Emp : ref_constr_db.
-Definition append (lq_tmp0: L) (lq_tmp1: L): L. 
+Definition append_spec (lq_tmp0: L) (lq_tmp1: L): Type := 
+	L. 
+#[global] Hint Unfold append_spec : lia_unfold.
+Definition append (lq_tmp0: L) (lq_tmp1: L): append_spec lq_tmp0 lq_tmp1. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	destruct lq_tmp1 as [lq_tmp1 lq_tmp1_p]. 
@@ -152,7 +155,10 @@ Qed.
 Proof. 
 	buildPackG append append_rel append__append_rel append_rel_funct. 
 Defined.
-Definition bind (lq_tmp0: L) (lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: L_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_61572807 v_x_61572807)))))): L. 
+Definition bind_spec (lq_tmp0: L) (lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: L_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_61572807 v_x_61572807)))))): Type := 
+	L. 
+#[global] Hint Unfold bind_spec : lia_unfold.
+Definition bind (lq_tmp0: L) (lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: L_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_61572807 v_x_61572807)))))): bind_spec lq_tmp0 lq_tmp1. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
@@ -245,7 +251,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve bind_rel_mk : f_rel_funct_db.
-Theorem prop_append_neutral (xs: L): {{forall (appendres: L_u), (append_rel (⌊ xs -⌋) Emp_u appendres) -> (appendres = (⌊ xs -⌋))}}. 
+Definition prop_append_neutral_spec (xs: L): Type := 
+	{{forall (appendres: L_u), (append_rel (⌊ xs -⌋) Emp_u appendres) -> (appendres = (⌊ xs -⌋))}}. 
+#[global] Hint Unfold prop_append_neutral_spec : lia_unfold.
+Theorem prop_append_neutral (xs: L): prop_append_neutral_spec xs. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	induction xs as [(*C*) x xs IH_xs | (*Emp*) ]. 
@@ -257,7 +266,10 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Definition retrn (lq_tmp0: {lq_tmp0: Z | True}): L. 
+Definition retrn_spec (lq_tmp0: {lq_tmp0: Z | True}): Type := 
+	L. 
+#[global] Hint Unfold retrn_spec : lia_unfold.
+Definition retrn (lq_tmp0: {lq_tmp0: Z | True}): retrn_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	refine (subsumptionCast _ _ 
@@ -329,7 +341,10 @@ Qed.
 Proof. 
 	buildPackG retrn retrn_rel retrn__retrn_rel retrn_rel_funct. 
 Defined.
-Theorem left_identity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: L_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_86410777 v_x_86410777)))))): {{forall (retrnres: L_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (bindres: L_u), (bind_rel retrnres (packProj f) bindres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (bindres == fres)))}}. 
+Definition left_identity_spec (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: L_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_86410777 v_x_86410777)))))): Type := 
+	{{forall (retrnres: L_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (bindres: L_u), (bind_rel retrnres (packProj f) bindres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (bindres == fres)))}}. 
+#[global] Hint Unfold left_identity_spec : lia_unfold.
+Theorem left_identity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: L_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_86410777 v_x_86410777)))))): left_identity_spec x f. 
 Proof. 
 	destruct x as [x x_p]. 
 	refine (subsumptionCast _ _ 
@@ -338,11 +353,13 @@ Proof.
 		((getPackF f) (exist (fun (lq_tmp0: Z) => True) x (ltac: (solver)))) (ltac: (solver)))) _); 
 	solver. 
 Qed. 
-Polymorphic Definition right_identity_tp (x: L): Type := {{forall (bindres: L_u), (bind_rel (⌊ x -⌋) 
+Definition right_identity_spec (x: L): Type := 
+	{{forall (bindres: L_u), (bind_rel (⌊ x -⌋) 
 		(ltac: (pose retrn_rel as Rel; 
 	pose retrn_rel_funct as Funct; 
-	buildUPackG Rel Funct)) bindres) -> (bindres = (⌊ x -⌋))}}.
-Theorem right_identity (x: L): right_identity_tp x. 
+	buildUPackG Rel Funct)) bindres) -> (bindres = (⌊ x -⌋))}}. 
+#[global] Hint Unfold right_identity_spec : lia_unfold.
+Theorem right_identity (x: L): right_identity_spec x. 
 Proof. 
 	destruct x as [x x_p]. 
 	induction x as [(*C*) x xs IH_xs | (*Emp*) ]. 

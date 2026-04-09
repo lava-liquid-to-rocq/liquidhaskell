@@ -124,7 +124,10 @@ Definition F: Letter :=
 #[global] Hint Unfold C : ref_constr_db.
 #[global] Hint Unfold D : ref_constr_db.
 #[global] Hint Unfold F : ref_constr_db.
-Definition lowerLetter (l: Letter): Letter. 
+Definition lowerLetter_spec (l: Letter): Type := 
+	Letter. 
+#[global] Hint Unfold lowerLetter_spec : lia_unfold.
+Definition lowerLetter (l: Letter): lowerLetter_spec l. 
 Proof. 
 	destruct l as [l l_p]. 
 	induction l as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]. 
@@ -240,7 +243,10 @@ Qed.
 Proof. 
 	buildPackG lowerLetter lowerLetter_rel lowerLetter__lowerLetter_rel lowerLetter_rel_funct. 
 Defined.
-Theorem lowerLetterFIsF: {{forall (lowerLetterres: Letter_u), (lowerLetter_rel F_u lowerLetterres) -> (lowerLetterres = F_u)}}. 
+Definition lowerLetterFIsF_spec: Type := 
+	{{forall (lowerLetterres: Letter_u), (lowerLetter_rel F_u lowerLetterres) -> (lowerLetterres = F_u)}}. 
+#[global] Hint Unfold lowerLetterFIsF_spec : lia_unfold.
+Theorem lowerLetterFIsF: lowerLetterFIsF_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
@@ -282,7 +288,10 @@ Definition Grade (VV: Letter) (VV_: Modifier): Grades :=
 #[global] Hint Unfold Grades_wf : wf_constr_db.
 #[global] Hint Resolve Grades_eq : ref_constr_db.
 #[global] Hint Unfold Grade : ref_constr_db.
-Definition lowerGrade (g: Grades): Grades. 
+Definition lowerGrade_spec (g: Grades): Type := 
+	Grades. 
+#[global] Hint Unfold lowerGrade_spec : lia_unfold.
+Definition lowerGrade (g: Grades): lowerGrade_spec g. 
 Proof. 
 	destruct g as [g g_p]. 
 	induction g as [(*Grade*) l m]. 
@@ -454,7 +463,10 @@ Qed.
 Proof. 
 	buildPackG lowerGrade lowerGrade_rel lowerGrade__lowerGrade_rel lowerGrade_rel_funct. 
 Defined.
-Definition applyLatePolicy (lateDays: {lateDays: Z | True}) (g: Grades): Grades. 
+Definition applyLatePolicy_spec (lateDays: {lateDays: Z | True}) (g: Grades): Type := 
+	Grades. 
+#[global] Hint Unfold applyLatePolicy_spec : lia_unfold.
+Definition applyLatePolicy (lateDays: {lateDays: Z | True}) (g: Grades): applyLatePolicy_spec lateDays g. 
 Proof. 
 	destruct lateDays as [lateDays lateDays_p]. 
 	destruct g as [g g_p]. 
@@ -551,22 +563,34 @@ Qed.
 Proof. 
 	buildPackG applyLatePolicy applyLatePolicy_rel applyLatePolicy__applyLatePolicy_rel applyLatePolicy_rel_funct. 
 Defined.
-Theorem lowerGradeFMinus: {{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u F_u Minus_u) lowerGraderes) -> (lowerGraderes == (Grade_u F_u Minus_u))}}. 
+Definition lowerGradeFMinus_spec: Type := 
+	{{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u F_u Minus_u) lowerGraderes) -> (lowerGraderes == (Grade_u F_u Minus_u))}}. 
+#[global] Hint Unfold lowerGradeFMinus_spec : lia_unfold.
+Theorem lowerGradeFMinus: lowerGradeFMinus_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem lowerGradeThrice: {{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u B_u Minus_u) lowerGraderes) -> (forall (lowerGrade_res_2: Grades_u), (lowerGrade_rel lowerGraderes lowerGrade_res_2) -> (forall (lowerGrade_res_3: Grades_u), (lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3) -> (lowerGrade_res_3 == (Grade_u C_u Minus_u))))}}. 
+Definition lowerGradeThrice_spec: Type := 
+	{{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u B_u Minus_u) lowerGraderes) -> (forall (lowerGrade_res_2: Grades_u), (lowerGrade_rel lowerGraderes lowerGrade_res_2) -> (forall (lowerGrade_res_3: Grades_u), (lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3) -> (lowerGrade_res_3 == (Grade_u C_u Minus_u))))}}. 
+#[global] Hint Unfold lowerGradeThrice_spec : lia_unfold.
+Theorem lowerGradeThrice: lowerGradeThrice_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem lowerGradeTwice: {{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u B_u Minus_u) lowerGraderes) -> (forall (lowerGrade_res_2: Grades_u), (lowerGrade_rel lowerGraderes lowerGrade_res_2) -> (lowerGrade_res_2 == (Grade_u C_u Natural_u)))}}. 
+Definition lowerGradeTwice_spec: Type := 
+	{{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u B_u Minus_u) lowerGraderes) -> (forall (lowerGrade_res_2: Grades_u), (lowerGrade_rel lowerGraderes lowerGrade_res_2) -> (lowerGrade_res_2 == (Grade_u C_u Natural_u)))}}. 
+#[global] Hint Unfold lowerGradeTwice_spec : lia_unfold.
+Theorem lowerGradeTwice: lowerGradeTwice_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem noPenaltyForMostlyOnTime (lateDays: {lateDays: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ lateDays -⌋) 9 true}}): {{forall (applyLatePolicyres: Grades_u), (applyLatePolicy_rel (⌊ lateDays -⌋) (⌊ g -⌋) applyLatePolicyres) -> (applyLatePolicyres = (⌊ g -⌋))}}. 
+Definition noPenaltyForMostlyOnTime_spec (lateDays: {lateDays: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ lateDays -⌋) 9 true}}): Type := 
+	{{forall (applyLatePolicyres: Grades_u), (applyLatePolicy_rel (⌊ lateDays -⌋) (⌊ g -⌋) applyLatePolicyres) -> (applyLatePolicyres = (⌊ g -⌋))}}. 
+#[global] Hint Unfold noPenaltyForMostlyOnTime_spec : lia_unfold.
+Theorem noPenaltyForMostlyOnTime (lateDays: {lateDays: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ lateDays -⌋) 9 true}}): noPenaltyForMostlyOnTime_spec lateDays g h. 
 Proof. 
 	destruct lateDays as [lateDays lateDays_p]. 
 	destruct g as [g g_p]. 
@@ -629,7 +653,10 @@ Definition Lt: Comparison :=
 #[global] Hint Unfold Eq : ref_constr_db.
 #[global] Hint Unfold Gt : ref_constr_db.
 #[global] Hint Unfold Lt : ref_constr_db.
-Definition letterComparison (l1: Letter) (l2: Letter): Comparison. 
+Definition letterComparison_spec (l1: Letter) (l2: Letter): Type := 
+	Comparison. 
+#[global] Hint Unfold letterComparison_spec : lia_unfold.
+Definition letterComparison (l1: Letter) (l2: Letter): letterComparison_spec l1 l2. 
 Proof. 
 	destruct l1 as [l1 l1_p]. 
 	destruct l2 as [l2 l2_p]. 
@@ -979,7 +1006,10 @@ Qed.
 Proof. 
 	buildPackG letterComparison letterComparison_rel letterComparison__letterComparison_rel letterComparison_rel_funct. 
 Defined.
-Theorem letterComparisonEq (l: Letter): {{forall (letterComparisonres: Comparison_u), (letterComparison_rel (⌊ l -⌋) (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Eq_u)}}. 
+Definition letterComparisonEq_spec (l: Letter): Type := 
+	{{forall (letterComparisonres: Comparison_u), (letterComparison_rel (⌊ l -⌋) (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Eq_u)}}. 
+#[global] Hint Unfold letterComparisonEq_spec : lia_unfold.
+Theorem letterComparisonEq (l: Letter): letterComparisonEq_spec l. 
 Proof. 
 	destruct l as [l l_p]. 
 	induction l as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]. 
@@ -999,7 +1029,10 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Theorem lowerLetterLowers (l: Letter) (p: {{forall (letterComparisonres: Comparison_u), (letterComparison_rel F_u (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Lt_u)}}): {{forall (lowerLetterres: Letter_u), (lowerLetter_rel (⌊ l -⌋) lowerLetterres) -> (forall (letterComparisonres: Comparison_u), (letterComparison_rel lowerLetterres (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Lt_u))}}. 
+Definition lowerLetterLowers_spec (l: Letter) (p: {{forall (letterComparisonres: Comparison_u), (letterComparison_rel F_u (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Lt_u)}}): Type := 
+	{{forall (lowerLetterres: Letter_u), (lowerLetter_rel (⌊ l -⌋) lowerLetterres) -> (forall (letterComparisonres: Comparison_u), (letterComparison_rel lowerLetterres (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Lt_u))}}. 
+#[global] Hint Unfold lowerLetterLowers_spec : lia_unfold.
+Theorem lowerLetterLowers (l: Letter) (p: {{forall (letterComparisonres: Comparison_u), (letterComparison_rel F_u (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Lt_u)}}): lowerLetterLowers_spec l p. 
 Proof. 
 	destruct l as [l l_p]. 
 	destruct p as [p p_p]. 
@@ -1021,7 +1054,10 @@ Proof.
 		refine (exist _ p _); 
 		solver.  
 Qed. 
-Definition modifierComparison (m1: Modifier) (m2: Modifier): Comparison. 
+Definition modifierComparison_spec (m1: Modifier) (m2: Modifier): Type := 
+	Comparison. 
+#[global] Hint Unfold modifierComparison_spec : lia_unfold.
+Definition modifierComparison (m1: Modifier) (m2: Modifier): modifierComparison_spec m1 m2. 
 Proof. 
 	destruct m1 as [m1 m1_p]. 
 	destruct m2 as [m2 m2_p]. 

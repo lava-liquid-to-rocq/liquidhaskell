@@ -47,7 +47,10 @@ Definition SFTrue: SFBool :=
 #[global] Hint Resolve SFBool_eq : ref_constr_db.
 #[global] Hint Unfold SFFalse : ref_constr_db.
 #[global] Hint Unfold SFTrue : ref_constr_db.
-Definition andb (b1: SFBool) (b2: SFBool): SFBool. 
+Definition andb_spec (b1: SFBool) (b2: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold andb_spec : lia_unfold.
+Definition andb (b1: SFBool) (b2: SFBool): andb_spec b1 b2. 
 Proof. 
 	destruct b1 as [b1 b1_p]. 
 	destruct b2 as [b2 b2_p]. 
@@ -137,7 +140,10 @@ Qed.
 Proof. 
 	buildPackG andb andb_rel andb__andb_rel andb_rel_funct. 
 Defined.
-Definition andb' (b1: SFBool) (b2: SFBool): SFBool. 
+Definition andb'_spec (b1: SFBool) (b2: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold andb'_spec : lia_unfold.
+Definition andb' (b1: SFBool) (b2: SFBool): andb'_spec b1 b2. 
 Proof. 
 	destruct b1 as [b1 b1_p]. 
 	destruct b2 as [b2 b2_p]. 
@@ -146,7 +152,10 @@ Proof.
 	solver | refine (subsumptionCast _ _ SFFalse _); 
 	solver]. 
 Defined. 
-Definition andb3 (b1: SFBool) (b2: SFBool) (b3: SFBool): SFBool. 
+Definition andb3_spec (b1: SFBool) (b2: SFBool) (b3: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold andb3_spec : lia_unfold.
+Definition andb3 (b1: SFBool) (b2: SFBool) (b3: SFBool): andb3_spec b1 b2 b3. 
 Proof. 
 	destruct b1 as [b1 b1_p]. 
 	destruct b2 as [b2 b2_p]. 
@@ -273,27 +282,42 @@ Qed.
 Proof. 
 	buildPackG andb3 andb3_rel andb3__andb3_rel andb3_rel_funct. 
 Defined.
-Theorem test_andb31: {{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3res) -> (andb3res = SFTrue_u)}}. 
+Definition test_andb31_spec: Type := 
+	{{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3res) -> (andb3res = SFTrue_u)}}. 
+#[global] Hint Unfold test_andb31_spec : lia_unfold.
+Theorem test_andb31: test_andb31_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_andb32: {{forall (andb3res: SFBool_u), (andb3_rel SFFalse_u SFTrue_u SFTrue_u andb3res) -> (andb3res = SFFalse_u)}}. 
+Definition test_andb32_spec: Type := 
+	{{forall (andb3res: SFBool_u), (andb3_rel SFFalse_u SFTrue_u SFTrue_u andb3res) -> (andb3res = SFFalse_u)}}. 
+#[global] Hint Unfold test_andb32_spec : lia_unfold.
+Theorem test_andb32: test_andb32_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_andb33: {{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFFalse_u SFTrue_u andb3res) -> (andb3res = SFFalse_u)}}. 
+Definition test_andb33_spec: Type := 
+	{{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFFalse_u SFTrue_u andb3res) -> (andb3res = SFFalse_u)}}. 
+#[global] Hint Unfold test_andb33_spec : lia_unfold.
+Theorem test_andb33: test_andb33_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_andb34: {{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3res) -> (andb3res = SFFalse_u)}}. 
+Definition test_andb34_spec: Type := 
+	{{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3res) -> (andb3res = SFFalse_u)}}. 
+#[global] Hint Unfold test_andb34_spec : lia_unfold.
+Theorem test_andb34: test_andb34_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem andb_commutative (b: SFBool) (c: SFBool): {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (forall (andb_res_2: SFBool_u), (andb_rel (⌊ c -⌋) (⌊ b -⌋) andb_res_2) -> (andbres == andb_res_2))}}. 
+Definition andb_commutative_spec (b: SFBool) (c: SFBool): Type := 
+	{{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (forall (andb_res_2: SFBool_u), (andb_rel (⌊ c -⌋) (⌊ b -⌋) andb_res_2) -> (andbres == andb_res_2))}}. 
+#[global] Hint Unfold andb_commutative_spec : lia_unfold.
+Theorem andb_commutative (b: SFBool) (c: SFBool): andb_commutative_spec b c. 
 Proof. 
 	destruct b as [b b_p]. 
 	destruct c as [c c_p]. 
@@ -316,7 +340,10 @@ Proof.
 			refine (exist _ unit _); 
 			solver.   
 Qed. 
-Theorem andb_true_elim2 (b: SFBool) (c: SFBool) (p: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (andbres = SFTrue_u)}}): {{(⌊ c -⌋) = SFTrue_u}}. 
+Definition andb_true_elim2_spec (b: SFBool) (c: SFBool) (p: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (andbres = SFTrue_u)}}): Type := 
+	{{(⌊ c -⌋) = SFTrue_u}}. 
+#[global] Hint Unfold andb_true_elim2_spec : lia_unfold.
+Theorem andb_true_elim2 (b: SFBool) (c: SFBool) (p: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (andbres = SFTrue_u)}}): andb_true_elim2_spec b c p. 
 Proof. 
 	destruct b as [b b_p]. 
 	destruct c as [c c_p]. 
@@ -340,7 +367,10 @@ Proof.
 			refine (exist _ unit _); 
 			solver.   
 Qed. 
-Theorem identity_fn_applied_twice (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (forall (x: SFBool) , {{forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (fres = (⌊ x -⌋))}})) (b: SFBool): {{forall (fres: _), ((getPackRel f) (⌊ b -⌋) fres) -> (forall (f_res_2: _), ((getPackRel f) fres f_res_2) -> (f_res_2 = (⌊ b -⌋)))}}. 
+Definition identity_fn_applied_twice_spec (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (forall (x: SFBool) , {{forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (fres = (⌊ x -⌋))}})) (b: SFBool): Type := 
+	{{forall (fres: _), ((getPackRel f) (⌊ b -⌋) fres) -> (forall (f_res_2: _), ((getPackRel f) fres f_res_2) -> (f_res_2 = (⌊ b -⌋)))}}. 
+#[global] Hint Unfold identity_fn_applied_twice_spec : lia_unfold.
+Theorem identity_fn_applied_twice (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (forall (x: SFBool) , {{forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (fres = (⌊ x -⌋))}})) (b: SFBool): identity_fn_applied_twice_spec f h b. 
 Proof. 
 	destruct b as [b b_p]. 
 	pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_39899679. 
@@ -357,7 +387,10 @@ Proof.
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Definition nandb (b1: SFBool) (b2: SFBool): SFBool. 
+Definition nandb_spec (b1: SFBool) (b2: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold nandb_spec : lia_unfold.
+Definition nandb (b1: SFBool) (b2: SFBool): nandb_spec b1 b2. 
 Proof. 
 	destruct b1 as [b1 b1_p]. 
 	destruct b2 as [b2 b2_p]. 
@@ -464,27 +497,42 @@ Qed.
 Proof. 
 	buildPackG nandb nandb_rel nandb__nandb_rel nandb_rel_funct. 
 Defined.
-Theorem test_nandb1: {{forall (nandbres: SFBool_u), (nandb_rel SFTrue_u SFFalse_u nandbres) -> (nandbres = SFTrue_u)}}. 
+Definition test_nandb1_spec: Type := 
+	{{forall (nandbres: SFBool_u), (nandb_rel SFTrue_u SFFalse_u nandbres) -> (nandbres = SFTrue_u)}}. 
+#[global] Hint Unfold test_nandb1_spec : lia_unfold.
+Theorem test_nandb1: test_nandb1_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_nandb2: {{forall (nandbres: SFBool_u), (nandb_rel SFFalse_u SFFalse_u nandbres) -> (nandbres = SFTrue_u)}}. 
+Definition test_nandb2_spec: Type := 
+	{{forall (nandbres: SFBool_u), (nandb_rel SFFalse_u SFFalse_u nandbres) -> (nandbres = SFTrue_u)}}. 
+#[global] Hint Unfold test_nandb2_spec : lia_unfold.
+Theorem test_nandb2: test_nandb2_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_nandb3: {{forall (nandbres: SFBool_u), (nandb_rel SFFalse_u SFTrue_u nandbres) -> (nandbres = SFTrue_u)}}. 
+Definition test_nandb3_spec: Type := 
+	{{forall (nandbres: SFBool_u), (nandb_rel SFFalse_u SFTrue_u nandbres) -> (nandbres = SFTrue_u)}}. 
+#[global] Hint Unfold test_nandb3_spec : lia_unfold.
+Theorem test_nandb3: test_nandb3_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_nandb4: {{forall (nandbres: SFBool_u), (nandb_rel SFTrue_u SFTrue_u nandbres) -> (nandbres = SFFalse_u)}}. 
+Definition test_nandb4_spec: Type := 
+	{{forall (nandbres: SFBool_u), (nandb_rel SFTrue_u SFTrue_u nandbres) -> (nandbres = SFFalse_u)}}. 
+#[global] Hint Unfold test_nandb4_spec : lia_unfold.
+Theorem test_nandb4: test_nandb4_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Definition negb (lq_tmp0: SFBool): SFBool. 
+Definition negb_spec (lq_tmp0: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold negb_spec : lia_unfold.
+Definition negb (lq_tmp0: SFBool): negb_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	induction lq_tmp0 as [(*SFFalse*)  | (*SFTrue*) ]. 
@@ -570,7 +618,10 @@ Qed.
 Proof. 
 	buildPackG negb negb_rel negb__negb_rel negb_rel_funct. 
 Defined.
-Definition negb' (b: SFBool): SFBool. 
+Definition negb'_spec (b: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold negb'_spec : lia_unfold.
+Definition negb' (b: SFBool): negb'_spec b. 
 Proof. 
 	destruct b as [b b_p]. 
 	let E := fresh "E" in 
@@ -578,7 +629,10 @@ Proof.
 	solver | refine (subsumptionCast _ _ SFTrue _); 
 	solver]. 
 Defined. 
-Theorem negb_involutive (b: SFBool): {{forall (negbres: SFBool_u), (negb_rel (⌊ b -⌋) negbres) -> (forall (negb_res_2: SFBool_u), (negb_rel negbres negb_res_2) -> (negb_res_2 = (⌊ b -⌋)))}}. 
+Definition negb_involutive_spec (b: SFBool): Type := 
+	{{forall (negbres: SFBool_u), (negb_rel (⌊ b -⌋) negbres) -> (forall (negb_res_2: SFBool_u), (negb_rel negbres negb_res_2) -> (negb_res_2 = (⌊ b -⌋)))}}. 
+#[global] Hint Unfold negb_involutive_spec : lia_unfold.
+Theorem negb_involutive (b: SFBool): negb_involutive_spec b. 
 Proof. 
 	destruct b as [b b_p]. 
 	induction b as [(*SFFalse*)  | (*SFTrue*) ]. 
@@ -589,7 +643,10 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Definition orb (b1: SFBool) (b2: SFBool): SFBool. 
+Definition orb_spec (b1: SFBool) (b2: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold orb_spec : lia_unfold.
+Definition orb (b1: SFBool) (b2: SFBool): orb_spec b1 b2. 
 Proof. 
 	destruct b1 as [b1 b1_p]. 
 	destruct b2 as [b2 b2_p]. 
@@ -679,7 +736,10 @@ Qed.
 Proof. 
 	buildPackG orb orb_rel orb__orb_rel orb_rel_funct. 
 Defined.
-Theorem andb_eq_orb (b: SFBool) (c: SFBool) (h: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (forall (orbres: SFBool_u), (orb_rel (⌊ b -⌋) (⌊ c -⌋) orbres) -> (andbres == orbres))}}): {{(⌊ b -⌋) = (⌊ c -⌋)}}. 
+Definition andb_eq_orb_spec (b: SFBool) (c: SFBool) (h: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (forall (orbres: SFBool_u), (orb_rel (⌊ b -⌋) (⌊ c -⌋) orbres) -> (andbres == orbres))}}): Type := 
+	{{(⌊ b -⌋) = (⌊ c -⌋)}}. 
+#[global] Hint Unfold andb_eq_orb_spec : lia_unfold.
+Theorem andb_eq_orb (b: SFBool) (c: SFBool) (h: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (forall (orbres: SFBool_u), (orb_rel (⌊ b -⌋) (⌊ c -⌋) orbres) -> (andbres == orbres))}}): andb_eq_orb_spec b c h. 
 Proof. 
 	destruct b as [b b_p]. 
 	destruct c as [c c_p]. 
@@ -703,32 +763,50 @@ Proof.
 			refine (exist _ unit _); 
 			solver.   
 Qed. 
-Theorem test_orb1: {{forall (orbres: SFBool_u), (orb_rel SFTrue_u SFFalse_u orbres) -> (orbres = SFTrue_u)}}. 
+Definition test_orb1_spec: Type := 
+	{{forall (orbres: SFBool_u), (orb_rel SFTrue_u SFFalse_u orbres) -> (orbres = SFTrue_u)}}. 
+#[global] Hint Unfold test_orb1_spec : lia_unfold.
+Theorem test_orb1: test_orb1_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_orb2: {{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFFalse_u orbres) -> (orbres = SFFalse_u)}}. 
+Definition test_orb2_spec: Type := 
+	{{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFFalse_u orbres) -> (orbres = SFFalse_u)}}. 
+#[global] Hint Unfold test_orb2_spec : lia_unfold.
+Theorem test_orb2: test_orb2_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_orb3: {{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFTrue_u orbres) -> (orbres = SFTrue_u)}}. 
+Definition test_orb3_spec: Type := 
+	{{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFTrue_u orbres) -> (orbres = SFTrue_u)}}. 
+#[global] Hint Unfold test_orb3_spec : lia_unfold.
+Theorem test_orb3: test_orb3_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_orb4: {{forall (orbres: SFBool_u), (orb_rel SFTrue_u SFTrue_u orbres) -> (orbres = SFTrue_u)}}. 
+Definition test_orb4_spec: Type := 
+	{{forall (orbres: SFBool_u), (orb_rel SFTrue_u SFTrue_u orbres) -> (orbres = SFTrue_u)}}. 
+#[global] Hint Unfold test_orb4_spec : lia_unfold.
+Theorem test_orb4: test_orb4_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_orb5: {{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFTrue_u orbres) -> (forall (orb_res_2: SFBool_u), (orb_rel SFFalse_u orbres orb_res_2) -> (orb_res_2 = SFTrue_u))}}. 
+Definition test_orb5_spec: Type := 
+	{{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFTrue_u orbres) -> (forall (orb_res_2: SFBool_u), (orb_rel SFFalse_u orbres orb_res_2) -> (orb_res_2 = SFTrue_u))}}. 
+#[global] Hint Unfold test_orb5_spec : lia_unfold.
+Theorem test_orb5: test_orb5_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Definition orb' (b1: SFBool) (b2: SFBool): SFBool. 
+Definition orb'_spec (b1: SFBool) (b2: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold orb'_spec : lia_unfold.
+Definition orb' (b1: SFBool) (b2: SFBool): orb'_spec b1 b2. 
 Proof. 
 	destruct b1 as [b1 b1_p]. 
 	destruct b2 as [b2 b2_p]. 
@@ -845,7 +923,10 @@ Defined.
 #[global] Hint Unfold Bin0 : ref_constr_db.
 #[global] Hint Unfold Bin1 : ref_constr_db.
 #[global] Hint Unfold SoftwareFoundations__Z : ref_constr_db.
-Definition bin_to_nat (m: SFBin): {VV: Z | True}. 
+Definition bin_to_nat_spec (m: SFBin): Type := 
+	{VV: Z | True}. 
+#[global] Hint Unfold bin_to_nat_spec : lia_unfold.
+Definition bin_to_nat (m: SFBin): bin_to_nat_spec m. 
 Proof. 
 	destruct m as [m m_p]. 
 	induction m as [(*Bin0*) m' IH_m' | (*Bin1*) m' IH_m' | (*SoftwareFoundations__Z*) ]. 
@@ -952,12 +1033,18 @@ Qed.
 Proof. 
 	buildPackG bin_to_nat bin_to_nat_rel bin_to_nat__bin_to_nat_rel bin_to_nat_rel_funct. 
 Defined.
-Theorem test_bin_incr4: {{forall (bin_to_natres: Z), (bin_to_nat_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) bin_to_natres) -> (bin_to_natres == 2)}}. 
+Definition test_bin_incr4_spec: Type := 
+	{{forall (bin_to_natres: Z), (bin_to_nat_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) bin_to_natres) -> (bin_to_natres == 2)}}. 
+#[global] Hint Unfold test_bin_incr4_spec : lia_unfold.
+Theorem test_bin_incr4: test_bin_incr4_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Definition incr (m: SFBin): SFBin. 
+Definition incr_spec (m: SFBin): Type := 
+	SFBin. 
+#[global] Hint Unfold incr_spec : lia_unfold.
+Definition incr (m: SFBin): incr_spec m. 
 Proof. 
 	destruct m as [m m_p]. 
 	induction m as [(*Bin0*) m' IH_m' | (*Bin1*) m' IH_m' | (*SoftwareFoundations__Z*) ]. 
@@ -1064,27 +1151,42 @@ Qed.
 Proof. 
 	buildPackG incr incr_rel incr__incr_rel incr_rel_funct. 
 Defined.
-Theorem test_bin_incr1: {{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (incrres == (Bin0_u (Bin1_u SoftwareFoundations__Z_u)))}}. 
+Definition test_bin_incr1_spec: Type := 
+	{{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (incrres == (Bin0_u (Bin1_u SoftwareFoundations__Z_u)))}}. 
+#[global] Hint Unfold test_bin_incr1_spec : lia_unfold.
+Theorem test_bin_incr1: test_bin_incr1_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_bin_incr2: {{forall (incrres: SFBin_u), (incr_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) incrres) -> (incrres == (Bin1_u (Bin1_u SoftwareFoundations__Z_u)))}}. 
+Definition test_bin_incr2_spec: Type := 
+	{{forall (incrres: SFBin_u), (incr_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) incrres) -> (incrres == (Bin1_u (Bin1_u SoftwareFoundations__Z_u)))}}. 
+#[global] Hint Unfold test_bin_incr2_spec : lia_unfold.
+Theorem test_bin_incr2: test_bin_incr2_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_bin_incr3: {{forall (incrres: SFBin_u), (incr_rel (Bin1_u (Bin1_u SoftwareFoundations__Z_u)) incrres) -> (incrres == (Bin0_u (Bin0_u (Bin1_u SoftwareFoundations__Z_u))))}}. 
+Definition test_bin_incr3_spec: Type := 
+	{{forall (incrres: SFBin_u), (incr_rel (Bin1_u (Bin1_u SoftwareFoundations__Z_u)) incrres) -> (incrres == (Bin0_u (Bin0_u (Bin1_u SoftwareFoundations__Z_u))))}}. 
+#[global] Hint Unfold test_bin_incr3_spec : lia_unfold.
+Theorem test_bin_incr3: test_bin_incr3_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_bin_incr5: {{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (forall (bin_to_natres: Z), (bin_to_nat_rel incrres bin_to_natres) -> (forall (bin_to_nat_res_2: Z), (bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2) -> (forall (addZres: Z), (addZ_rel 1 bin_to_nat_res_2 addZres) -> (bin_to_natres == addZres))))}}. 
+Definition test_bin_incr5_spec: Type := 
+	{{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (forall (bin_to_natres: Z), (bin_to_nat_rel incrres bin_to_natres) -> (forall (bin_to_nat_res_2: Z), (bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2) -> (forall (addZres: Z), (addZ_rel 1 bin_to_nat_res_2 addZres) -> (bin_to_natres == addZres))))}}. 
+#[global] Hint Unfold test_bin_incr5_spec : lia_unfold.
+Theorem test_bin_incr5: test_bin_incr5_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_bin_incr6: {{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (forall (incr_res_2: SFBin_u), (incr_rel incrres incr_res_2) -> (forall (bin_to_natres: Z), (bin_to_nat_rel incr_res_2 bin_to_natres) -> (forall (bin_to_nat_res_2: Z), (bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2) -> (forall (addZres: Z), (addZ_rel 2 bin_to_nat_res_2 addZres) -> (bin_to_natres == addZres)))))}}. 
+Definition test_bin_incr6_spec: Type := 
+	{{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (forall (incr_res_2: SFBin_u), (incr_rel incrres incr_res_2) -> (forall (bin_to_natres: Z), (bin_to_nat_rel incr_res_2 bin_to_natres) -> (forall (bin_to_nat_res_2: Z), (bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2) -> (forall (addZres: Z), (addZ_rel 2 bin_to_nat_res_2 addZres) -> (bin_to_natres == addZres)))))}}. 
+#[global] Hint Unfold test_bin_incr6_spec : lia_unfold.
+Theorem test_bin_incr6: test_bin_incr6_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
@@ -1229,7 +1331,10 @@ Definition Bits (VV: SFBit) (VV_: SFBit) (VV__: SFBit) (VV___: SFBit): Nibble :=
 #[global] Hint Unfold Nibble_wf : wf_constr_db.
 #[global] Hint Resolve Nibble_eq : ref_constr_db.
 #[global] Hint Unfold Bits : ref_constr_db.
-Definition allzero (lq_tmp0: Nibble): SFBool. 
+Definition allzero_spec (lq_tmp0: Nibble): Type := 
+	SFBool. 
+#[global] Hint Unfold allzero_spec : lia_unfold.
+Definition allzero (lq_tmp0: Nibble): allzero_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	induction lq_tmp0 as [(*Bits*) ds_d5PD ds_d5PE ds_d5PF ds_d5PG]. 
@@ -1344,7 +1449,10 @@ Definition Pair (n1: MyNat) (n2: MyNat): Natprod :=
 #[global] Hint Unfold Natprod_wf : wf_constr_db.
 #[global] Hint Resolve Natprod_eq : ref_constr_db.
 #[global] Hint Unfold Pair : ref_constr_db.
-Definition swap_pair (p: Natprod): Natprod. 
+Definition swap_pair_spec (p: Natprod): Type := 
+	Natprod. 
+#[global] Hint Unfold swap_pair_spec : lia_unfold.
+Definition swap_pair (p: Natprod): swap_pair_spec p. 
 Proof. 
 	destruct p as [p p_p]. 
 	induction p as [(*Pair*) x y]. 
@@ -1423,7 +1531,10 @@ Qed.
 Proof. 
 	buildPackG swap_pair swap_pair_rel swap_pair__swap_pair_rel swap_pair_rel_funct. 
 Defined.
-Definition eqb (n: MyNat) (m: MyNat): SFBool. 
+Definition eqb_spec (n: MyNat) (m: MyNat): Type := 
+	SFBool. 
+#[global] Hint Unfold eqb_spec : lia_unfold.
+Definition eqb (n: MyNat) (m: MyNat): eqb_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -1555,7 +1666,10 @@ Qed.
 Proof. 
 	buildPackG eqb eqb_rel eqb__eqb_rel eqb_rel_funct. 
 Defined.
-Definition fstSF (p: Natprod): MyNat. 
+Definition fstSF_spec (p: Natprod): Type := 
+	MyNat. 
+#[global] Hint Unfold fstSF_spec : lia_unfold.
+Definition fstSF (p: Natprod): fstSF_spec p. 
 Proof. 
 	destruct p as [p p_p]. 
 	induction p as [(*Pair*) n1 n2]. 
@@ -1631,7 +1745,10 @@ Qed.
 Proof. 
 	buildPackG fstSF fstSF_rel fstSF__fstSF_rel fstSF_rel_funct. 
 Defined.
-Definition leb (n: MyNat) (m: MyNat): SFBool. 
+Definition leb_spec (n: MyNat) (m: MyNat): Type := 
+	SFBool. 
+#[global] Hint Unfold leb_spec : lia_unfold.
+Definition leb (n: MyNat) (m: MyNat): leb_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -1747,7 +1864,10 @@ Qed.
 Proof. 
 	buildPackG leb leb_rel leb__leb_rel leb_rel_funct. 
 Defined.
-Definition ltb (n: MyNat) (m: MyNat): SFBool. 
+Definition ltb_spec (n: MyNat) (m: MyNat): Type := 
+	SFBool. 
+#[global] Hint Unfold ltb_spec : lia_unfold.
+Definition ltb (n: MyNat) (m: MyNat): ltb_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -1879,7 +1999,10 @@ Qed.
 Proof. 
 	buildPackG ltb ltb_rel ltb__ltb_rel ltb_rel_funct. 
 Defined.
-Definition minus (n: MyNat) (m: MyNat): MyNat. 
+Definition minus_spec (n: MyNat) (m: MyNat): Type := 
+	MyNat. 
+#[global] Hint Unfold minus_spec : lia_unfold.
+Definition minus (n: MyNat) (m: MyNat): minus_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -1997,7 +2120,10 @@ Qed.
 Proof. 
 	buildPackG minus minus_rel minus__minus_rel minus_rel_funct. 
 Defined.
-Theorem minus_n_n (n: MyNat): {{forall (minusres: MyNat_u), (minus_rel (⌊ n -⌋) (⌊ n -⌋) minusres) -> (minusres = O_u)}}. 
+Definition minus_n_n_spec (n: MyNat): Type := 
+	{{forall (minusres: MyNat_u), (minus_rel (⌊ n -⌋) (⌊ n -⌋) minusres) -> (minusres = O_u)}}. 
+#[global] Hint Unfold minus_n_n_spec : lia_unfold.
+Theorem minus_n_n (n: MyNat): minus_n_n_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*O*)  | (*S*) n' IH_n']. 
@@ -2009,7 +2135,10 @@ Proof.
 	solver))) _); 
 		solver.  
 Qed. 
-Definition minustwo (lq_tmp0: MyNat): MyNat. 
+Definition minustwo_spec (lq_tmp0: MyNat): Type := 
+	MyNat. 
+#[global] Hint Unfold minustwo_spec : lia_unfold.
+Definition minustwo (lq_tmp0: MyNat): minustwo_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	induction lq_tmp0 as [(*O*)  | (*S*) ds_d5PA IH_ds_d5PA]. 
@@ -2025,7 +2154,10 @@ Proof.
 			refine (exist _ n' _); 
 			solver.   
 Defined. 
-Definition one: MyNat. 
+Definition one_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold one_spec : lia_unfold.
+Definition one: one_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -2092,7 +2224,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve one_rel_mk : f_rel_funct_db.
-Definition plus (n: MyNat) (m: MyNat): MyNat. 
+Definition plus_spec (n: MyNat) (m: MyNat): Type := 
+	MyNat. 
+#[global] Hint Unfold plus_spec : lia_unfold.
+Definition plus (n: MyNat) (m: MyNat): plus_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2190,7 +2325,10 @@ Qed.
 Proof. 
 	buildPackG plus plus_rel plus__plus_rel plus_rel_funct. 
 Defined.
-Theorem add_0_r (n: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) O_u plusres) -> (plusres = (⌊ n -⌋))}}. 
+Definition add_0_r_spec (n: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) O_u plusres) -> (plusres = (⌊ n -⌋))}}. 
+#[global] Hint Unfold add_0_r_spec : lia_unfold.
+Theorem add_0_r (n: MyNat): add_0_r_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*O*)  | (*S*) n' IH_n']. 
@@ -2202,7 +2340,10 @@ Proof.
 	solver))) _); 
 		solver.  
 Qed. 
-Theorem add_assoc (n: MyNat) (m: MyNat) (p: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ p -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) plusres plus_res_2) -> (forall (plus_res_3: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plus_res_3) -> (forall (plus_res_4: MyNat_u), (plus_rel plus_res_3 (⌊ p -⌋) plus_res_4) -> (plus_res_2 == plus_res_4))))}}. 
+Definition add_assoc_spec (n: MyNat) (m: MyNat) (p: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ p -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) plusres plus_res_2) -> (forall (plus_res_3: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plus_res_3) -> (forall (plus_res_4: MyNat_u), (plus_rel plus_res_3 (⌊ p -⌋) plus_res_4) -> (plus_res_2 == plus_res_4))))}}. 
+#[global] Hint Unfold add_assoc_spec : lia_unfold.
+Theorem add_assoc (n: MyNat) (m: MyNat) (p: MyNat): add_assoc_spec n m p. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2220,7 +2361,10 @@ Proof.
 	solver))) _); 
 		solver.  
 Qed. 
-Theorem add_succ_r (n: MyNat) (m: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plus_res_2) -> (plusres == (S_u plus_res_2)))}}. 
+Definition add_succ_r_spec (n: MyNat) (m: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plus_res_2) -> (plusres == (S_u plus_res_2)))}}. 
+#[global] Hint Unfold add_succ_r_spec : lia_unfold.
+Theorem add_succ_r (n: MyNat) (m: MyNat): add_succ_r_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2236,7 +2380,10 @@ Proof.
 	solver))) _); 
 		solver.  
 Qed. 
-Definition mult (n: MyNat) (m: MyNat): MyNat. 
+Definition mult_spec (n: MyNat) (m: MyNat): Type := 
+	MyNat. 
+#[global] Hint Unfold mult_spec : lia_unfold.
+Definition mult (n: MyNat) (m: MyNat): mult_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2336,7 +2483,10 @@ Qed.
 Proof. 
 	buildPackG mult mult_rel mult__mult_rel mult_rel_funct. 
 Defined.
-Definition factorial (lq_tmp0: MyNat): MyNat. 
+Definition factorial_spec (lq_tmp0: MyNat): Type := 
+	MyNat. 
+#[global] Hint Unfold factorial_spec : lia_unfold.
+Definition factorial (lq_tmp0: MyNat): factorial_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	induction lq_tmp0 as [(*O*)  | (*S*) n' IH_n']. 
@@ -2433,7 +2583,10 @@ Qed.
 Proof. 
 	buildPackG factorial factorial_rel factorial__factorial_rel factorial_rel_funct. 
 Defined.
-Theorem mul_0_r (n: MyNat): {{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) O_u multres) -> (multres = O_u)}}. 
+Definition mul_0_r_spec (n: MyNat): Type := 
+	{{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) O_u multres) -> (multres = O_u)}}. 
+#[global] Hint Unfold mul_0_r_spec : lia_unfold.
+Theorem mul_0_r (n: MyNat): mul_0_r_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*O*)  | (*S*) n' IH_n']. 
@@ -2445,13 +2598,19 @@ Proof.
 	solver))) _); 
 		solver.  
 Qed. 
-Theorem mult_0_1 (n: MyNat): {{forall (multres: MyNat_u), (mult_rel O_u (⌊ n -⌋) multres) -> (multres = O_u)}}. 
+Definition mult_0_1_spec (n: MyNat): Type := 
+	{{forall (multres: MyNat_u), (mult_rel O_u (⌊ n -⌋) multres) -> (multres = O_u)}}. 
+#[global] Hint Unfold mult_0_1_spec : lia_unfold.
+Theorem mult_0_1 (n: MyNat): mult_0_1_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem mult_n_O (n: MyNat): {{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) O_u multres) -> (O_u = multres)}}. 
+Definition mult_n_O_spec (n: MyNat): Type := 
+	{{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) O_u multres) -> (O_u = multres)}}. 
+#[global] Hint Unfold mult_n_O_spec : lia_unfold.
+Theorem mult_n_O (n: MyNat): mult_n_O_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*O*)  | (*S*) n' IH_n']. 
@@ -2463,7 +2622,10 @@ Proof.
 	solver))) _); 
 		solver.  
 Qed. 
-Theorem mult_n_0_m_0 (p: MyNat) (q: MyNat): {{forall (multres: MyNat_u), (mult_rel (⌊ q -⌋) O_u multres) -> (forall (mult_res_2: MyNat_u), (mult_rel (⌊ p -⌋) O_u mult_res_2) -> (forall (plusres: MyNat_u), (plus_rel mult_res_2 multres plusres) -> (plusres = O_u)))}}. 
+Definition mult_n_0_m_0_spec (p: MyNat) (q: MyNat): Type := 
+	{{forall (multres: MyNat_u), (mult_rel (⌊ q -⌋) O_u multres) -> (forall (mult_res_2: MyNat_u), (mult_rel (⌊ p -⌋) O_u mult_res_2) -> (forall (plusres: MyNat_u), (plus_rel mult_res_2 multres plusres) -> (plusres = O_u)))}}. 
+#[global] Hint Unfold mult_n_0_m_0_spec : lia_unfold.
+Theorem mult_n_0_m_0 (p: MyNat) (q: MyNat): mult_n_0_m_0_spec p q. 
 Proof. 
 	destruct p as [p p_p]. 
 	destruct q as [q q_p]. 
@@ -2475,7 +2637,10 @@ Proof.
 		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)))) _); 
 	solver. 
 Qed. 
-Theorem mult_n_Sm (n: MyNat) (m: MyNat): {{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) (⌊ m -⌋) multres) -> (forall (plusres: MyNat_u), (plus_rel multres (⌊ n -⌋) plusres) -> (forall (mult_res_2: MyNat_u), (mult_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) mult_res_2) -> (plusres == mult_res_2)))}}. 
+Definition mult_n_Sm_spec (n: MyNat) (m: MyNat): Type := 
+	{{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) (⌊ m -⌋) multres) -> (forall (plusres: MyNat_u), (plus_rel multres (⌊ n -⌋) plusres) -> (forall (mult_res_2: MyNat_u), (mult_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) mult_res_2) -> (plusres == mult_res_2)))}}. 
+#[global] Hint Unfold mult_n_Sm_spec : lia_unfold.
+Theorem mult_n_Sm (n: MyNat) (m: MyNat): mult_n_Sm_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2509,7 +2674,10 @@ Proof.
 	solver))) _); 
 		solver.  
 Qed. 
-Theorem mult_n_1 (p: MyNat): {{forall (multres: MyNat_u), (mult_rel (⌊ p -⌋) (⌊ one -⌋) multres) -> (multres = (⌊ p -⌋))}}. 
+Definition mult_n_1_spec (p: MyNat): Type := 
+	{{forall (multres: MyNat_u), (mult_rel (⌊ p -⌋) (⌊ one -⌋) multres) -> (multres = (⌊ p -⌋))}}. 
+#[global] Hint Unfold mult_n_1_spec : lia_unfold.
+Theorem mult_n_1 (p: MyNat): mult_n_1_spec p. 
 Proof. 
 	destruct p as [p p_p]. 
 	pose proof (mult_n_O 
@@ -2521,13 +2689,19 @@ Proof.
 		(subsumptionCast MyNat_u (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) O (ltac: (solver)))) _); 
 	solver. 
 Qed. 
-Theorem plus_1_1 (n: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ one -⌋) (⌊ n -⌋) plusres) -> (plusres == (S_u (⌊ n -⌋)))}}. 
+Definition plus_1_1_spec (n: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ one -⌋) (⌊ n -⌋) plusres) -> (plusres == (S_u (⌊ n -⌋)))}}. 
+#[global] Hint Unfold plus_1_1_spec : lia_unfold.
+Theorem plus_1_1 (n: MyNat): plus_1_1_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem plus_1_neq_0 (n: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ one -⌋) plusres) -> (plusres <> O_u)}}. 
+Definition plus_1_neq_0_spec (n: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ one -⌋) plusres) -> (plusres <> O_u)}}. 
+#[global] Hint Unfold plus_1_neq_0_spec : lia_unfold.
+Theorem plus_1_neq_0 (n: MyNat): plus_1_neq_0_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*O*)  | (*S*) ds_d5OV IH_ds_d5OV]. 
@@ -2538,13 +2712,19 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Theorem plus_O_n (n: MyNat): {{forall (plusres: MyNat_u), (plus_rel O_u (⌊ n -⌋) plusres) -> (plusres = (⌊ n -⌋))}}. 
+Definition plus_O_n_spec (n: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel O_u (⌊ n -⌋) plusres) -> (plusres = (⌊ n -⌋))}}. 
+#[global] Hint Unfold plus_O_n_spec : lia_unfold.
+Theorem plus_O_n (n: MyNat): plus_O_n_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem plus_id_example (n: MyNat) (m: MyNat) (z: {{(⌊ n -⌋) = (⌊ m -⌋)}}): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ n -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ m -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+Definition plus_id_example_spec (n: MyNat) (m: MyNat) (z: {{(⌊ n -⌋) = (⌊ m -⌋)}}): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ n -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ m -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+#[global] Hint Unfold plus_id_example_spec : lia_unfold.
+Theorem plus_id_example (n: MyNat) (m: MyNat) (z: {{(⌊ n -⌋) = (⌊ m -⌋)}}): plus_id_example_spec n m z. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2552,7 +2732,10 @@ Proof.
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem plus_id_exercise (n: MyNat) (m: MyNat) (o: MyNat) (p: {{(⌊ n -⌋) = (⌊ m -⌋)}}) (q: {{(⌊ m -⌋) = (⌊ o -⌋)}}): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ o -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+Definition plus_id_exercise_spec (n: MyNat) (m: MyNat) (o: MyNat) (p: {{(⌊ n -⌋) = (⌊ m -⌋)}}) (q: {{(⌊ m -⌋) = (⌊ o -⌋)}}): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ o -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+#[global] Hint Unfold plus_id_exercise_spec : lia_unfold.
+Theorem plus_id_exercise (n: MyNat) (m: MyNat) (o: MyNat) (p: {{(⌊ n -⌋) = (⌊ m -⌋)}}) (q: {{(⌊ m -⌋) = (⌊ o -⌋)}}): plus_id_exercise_spec n m o p q. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2562,7 +2745,10 @@ Proof.
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem plus_n_Sm (n: MyNat) (m: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) plus_res_2) -> ((S_u plusres) == plus_res_2))}}. 
+Definition plus_n_Sm_spec (n: MyNat) (m: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) plus_res_2) -> ((S_u plusres) == plus_res_2))}}. 
+#[global] Hint Unfold plus_n_Sm_spec : lia_unfold.
+Theorem plus_n_Sm (n: MyNat) (m: MyNat): plus_n_Sm_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2578,7 +2764,10 @@ Proof.
 	solver))) _); 
 		solver.  
 Qed. 
-Theorem add_comm (n: MyNat) (m: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ n -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+Definition add_comm_spec (n: MyNat) (m: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ n -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+#[global] Hint Unfold add_comm_spec : lia_unfold.
+Theorem add_comm (n: MyNat) (m: MyNat): add_comm_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2600,7 +2789,10 @@ Proof.
 		(exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) n' (ltac: (solver)))) _); 
 		solver.  
 Qed. 
-Definition pred (lq_tmp0: MyNat): MyNat. 
+Definition pred_spec (lq_tmp0: MyNat): Type := 
+	MyNat. 
+#[global] Hint Unfold pred_spec : lia_unfold.
+Definition pred (lq_tmp0: MyNat): pred_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	induction lq_tmp0 as [(*O*)  | (*S*) n' IH_n']. 
@@ -2687,7 +2879,10 @@ Qed.
 Proof. 
 	buildPackG pred pred_rel pred__pred_rel pred_rel_funct. 
 Defined.
-Definition sf_exp (base: MyNat) (power: MyNat): MyNat. 
+Definition sf_exp_spec (base: MyNat) (power: MyNat): Type := 
+	MyNat. 
+#[global] Hint Unfold sf_exp_spec : lia_unfold.
+Definition sf_exp (base: MyNat) (power: MyNat): sf_exp_spec base power. 
 Proof. 
 	destruct base as [base base_p]. 
 	destruct power as [power power_p]. 
@@ -2789,7 +2984,10 @@ Qed.
 Proof. 
 	buildPackG sf_exp sf_exp_rel sf_exp__sf_exp_rel sf_exp_rel_funct. 
 Defined.
-Definition sndSF (p: Natprod): MyNat. 
+Definition sndSF_spec (p: Natprod): Type := 
+	MyNat. 
+#[global] Hint Unfold sndSF_spec : lia_unfold.
+Definition sndSF (p: Natprod): sndSF_spec p. 
 Proof. 
 	destruct p as [p p_p]. 
 	induction p as [(*Pair*) n1 n2]. 
@@ -2865,7 +3063,10 @@ Qed.
 Proof. 
 	buildPackG sndSF sndSF_rel sndSF__sndSF_rel sndSF_rel_funct. 
 Defined.
-Theorem surjective_pairing (p: Natprod): {{forall (sndSFres: MyNat_u), (sndSF_rel (⌊ p -⌋) sndSFres) -> (forall (fstSFres: MyNat_u), (fstSF_rel (⌊ p -⌋) fstSFres) -> ((⌊ p -⌋) = (Pair_u fstSFres sndSFres)))}}. 
+Definition surjective_pairing_spec (p: Natprod): Type := 
+	{{forall (sndSFres: MyNat_u), (sndSF_rel (⌊ p -⌋) sndSFres) -> (forall (fstSFres: MyNat_u), (fstSF_rel (⌊ p -⌋) fstSFres) -> ((⌊ p -⌋) = (Pair_u fstSFres sndSFres)))}}. 
+#[global] Hint Unfold surjective_pairing_spec : lia_unfold.
+Theorem surjective_pairing (p: Natprod): surjective_pairing_spec p. 
 Proof. 
 	destruct p as [p p_p]. 
 	induction p as [(*Pair*) n m]. 
@@ -2873,14 +3074,20 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Theorem surjective_pairing' (n: MyNat) (m: MyNat): {{forall (sndSFres: MyNat_u), (sndSF_rel (Pair_u (⌊ n -⌋) (⌊ m -⌋)) sndSFres) -> (forall (fstSFres: MyNat_u), (fstSF_rel (Pair_u (⌊ n -⌋) (⌊ m -⌋)) fstSFres) -> ((Pair_u (⌊ n -⌋) (⌊ m -⌋)) == (Pair_u fstSFres sndSFres)))}}. 
+Definition surjective_pairing'_spec (n: MyNat) (m: MyNat): Type := 
+	{{forall (sndSFres: MyNat_u), (sndSF_rel (Pair_u (⌊ n -⌋) (⌊ m -⌋)) sndSFres) -> (forall (fstSFres: MyNat_u), (fstSF_rel (Pair_u (⌊ n -⌋) (⌊ m -⌋)) fstSFres) -> ((Pair_u (⌊ n -⌋) (⌊ m -⌋)) == (Pair_u fstSFres sndSFres)))}}. 
+#[global] Hint Unfold surjective_pairing'_spec : lia_unfold.
+Theorem surjective_pairing' (n: MyNat) (m: MyNat): surjective_pairing'_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Definition two: MyNat. 
+Definition two_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold two_spec : lia_unfold.
+Definition two: two_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -2947,17 +3154,26 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve two_rel_mk : f_rel_funct_db.
-Theorem test_leb1: {{forall (lebres: SFBool_u), (leb_rel (⌊ two -⌋) (⌊ two -⌋) lebres) -> (lebres = SFTrue_u)}}. 
+Definition test_leb1_spec: Type := 
+	{{forall (lebres: SFBool_u), (leb_rel (⌊ two -⌋) (⌊ two -⌋) lebres) -> (lebres = SFTrue_u)}}. 
+#[global] Hint Unfold test_leb1_spec : lia_unfold.
+Theorem test_leb1: test_leb1_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_ltb1: {{forall (ltbres: SFBool_u), (ltb_rel (⌊ two -⌋) (⌊ two -⌋) ltbres) -> (ltbres = SFFalse_u)}}. 
+Definition test_ltb1_spec: Type := 
+	{{forall (ltbres: SFBool_u), (ltb_rel (⌊ two -⌋) (⌊ two -⌋) ltbres) -> (ltbres = SFFalse_u)}}. 
+#[global] Hint Unfold test_ltb1_spec : lia_unfold.
+Theorem test_ltb1: test_ltb1_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Definition three: MyNat. 
+Definition three_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold three_spec : lia_unfold.
+Definition three: three_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3024,7 +3240,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve three_rel_mk : f_rel_funct_db.
-Definition four: MyNat. 
+Definition four_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold four_spec : lia_unfold.
+Definition four: four_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3091,7 +3310,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve four_rel_mk : f_rel_funct_db.
-Definition five: MyNat. 
+Definition five_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold five_spec : lia_unfold.
+Definition five: five_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3158,7 +3380,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve five_rel_mk : f_rel_funct_db.
-Definition six: MyNat. 
+Definition six_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold six_spec : lia_unfold.
+Definition six: six_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3225,7 +3450,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve six_rel_mk : f_rel_funct_db.
-Definition seven: MyNat. 
+Definition seven_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold seven_spec : lia_unfold.
+Definition seven: seven_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3292,7 +3520,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve seven_rel_mk : f_rel_funct_db.
-Definition eight: MyNat. 
+Definition eight_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold eight_spec : lia_unfold.
+Definition eight: eight_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3359,7 +3590,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve eight_rel_mk : f_rel_funct_db.
-Definition nine: MyNat. 
+Definition nine_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold nine_spec : lia_unfold.
+Definition nine: nine_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3426,7 +3660,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve nine_rel_mk : f_rel_funct_db.
-Definition ten: MyNat. 
+Definition ten_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold ten_spec : lia_unfold.
+Definition ten: ten_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3493,7 +3730,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve ten_rel_mk : f_rel_funct_db.
-Definition eleven: MyNat. 
+Definition eleven_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold eleven_spec : lia_unfold.
+Definition eleven: eleven_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3560,7 +3800,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve eleven_rel_mk : f_rel_funct_db.
-Definition twelve: MyNat. 
+Definition twelve_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold twelve_spec : lia_unfold.
+Definition twelve: twelve_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3627,37 +3870,58 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve twelve_rel_mk : f_rel_funct_db.
-Theorem test_leb2: {{forall (lebres: SFBool_u), (leb_rel (⌊ two -⌋) (⌊ four -⌋) lebres) -> (lebres = SFTrue_u)}}. 
+Definition test_leb2_spec: Type := 
+	{{forall (lebres: SFBool_u), (leb_rel (⌊ two -⌋) (⌊ four -⌋) lebres) -> (lebres = SFTrue_u)}}. 
+#[global] Hint Unfold test_leb2_spec : lia_unfold.
+Theorem test_leb2: test_leb2_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_leb3: {{forall (lebres: SFBool_u), (leb_rel (⌊ four -⌋) (⌊ two -⌋) lebres) -> (lebres = SFFalse_u)}}. 
+Definition test_leb3_spec: Type := 
+	{{forall (lebres: SFBool_u), (leb_rel (⌊ four -⌋) (⌊ two -⌋) lebres) -> (lebres = SFFalse_u)}}. 
+#[global] Hint Unfold test_leb3_spec : lia_unfold.
+Theorem test_leb3: test_leb3_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_ltb2: {{forall (ltbres: SFBool_u), (ltb_rel (⌊ two -⌋) (⌊ four -⌋) ltbres) -> (ltbres = SFTrue_u)}}. 
+Definition test_ltb2_spec: Type := 
+	{{forall (ltbres: SFBool_u), (ltb_rel (⌊ two -⌋) (⌊ four -⌋) ltbres) -> (ltbres = SFTrue_u)}}. 
+#[global] Hint Unfold test_ltb2_spec : lia_unfold.
+Theorem test_ltb2: test_ltb2_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_ltb3: {{forall (ltbres: SFBool_u), (ltb_rel (⌊ four -⌋) (⌊ two -⌋) ltbres) -> (ltbres = SFFalse_u)}}. 
+Definition test_ltb3_spec: Type := 
+	{{forall (ltbres: SFBool_u), (ltb_rel (⌊ four -⌋) (⌊ two -⌋) ltbres) -> (ltbres = SFFalse_u)}}. 
+#[global] Hint Unfold test_ltb3_spec : lia_unfold.
+Theorem test_ltb3: test_ltb3_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_factorial1: {{forall (factorialres: MyNat_u), (factorial_rel (⌊ three -⌋) factorialres) -> (factorialres = (⌊ six -⌋))}}. 
+Definition test_factorial1_spec: Type := 
+	{{forall (factorialres: MyNat_u), (factorial_rel (⌊ three -⌋) factorialres) -> (factorialres = (⌊ six -⌋))}}. 
+#[global] Hint Unfold test_factorial1_spec : lia_unfold.
+Theorem test_factorial1: test_factorial1_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem test_mult1: {{forall (multres: MyNat_u), (mult_rel (⌊ three -⌋) (⌊ three -⌋) multres) -> (multres = (⌊ nine -⌋))}}. 
+Definition test_mult1_spec: Type := 
+	{{forall (multres: MyNat_u), (mult_rel (⌊ three -⌋) (⌊ three -⌋) multres) -> (multres = (⌊ nine -⌋))}}. 
+#[global] Hint Unfold test_mult1_spec : lia_unfold.
+Theorem test_mult1: test_mult1_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem zero_nbeq_plus_1 (n: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ one -⌋) plusres) -> (forall (eqbres: SFBool_u), (eqb_rel O_u plusres eqbres) -> (eqbres = SFFalse_u))}}. 
+Definition zero_nbeq_plus_1_spec (n: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ one -⌋) plusres) -> (forall (eqbres: SFBool_u), (eqb_rel O_u plusres eqbres) -> (eqbres = SFFalse_u))}}. 
+#[global] Hint Unfold zero_nbeq_plus_1_spec : lia_unfold.
+Theorem zero_nbeq_plus_1 (n: MyNat): zero_nbeq_plus_1_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*O*)  | (*S*) n' IH_n']. 
@@ -3790,7 +4054,10 @@ Definition F: Letter :=
 #[global] Hint Unfold C : ref_constr_db.
 #[global] Hint Unfold D : ref_constr_db.
 #[global] Hint Unfold F : ref_constr_db.
-Definition lower_letter (l: Letter): Letter. 
+Definition lower_letter_spec (l: Letter): Type := 
+	Letter. 
+#[global] Hint Unfold lower_letter_spec : lia_unfold.
+Definition lower_letter (l: Letter): lower_letter_spec l. 
 Proof. 
 	destruct l as [l l_p]. 
 	induction l as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]. 
@@ -3906,7 +4173,10 @@ Qed.
 Proof. 
 	buildPackG lower_letter lower_letter_rel lower_letter__lower_letter_rel lower_letter_rel_funct. 
 Defined.
-Theorem lower_letter_F_is_F: {{forall (lower_letterres: Letter_u), (lower_letter_rel F_u lower_letterres) -> (lower_letterres = F_u)}}. 
+Definition lower_letter_F_is_F_spec: Type := 
+	{{forall (lower_letterres: Letter_u), (lower_letter_rel F_u lower_letterres) -> (lower_letterres = F_u)}}. 
+#[global] Hint Unfold lower_letter_F_is_F_spec : lia_unfold.
+Theorem lower_letter_F_is_F: lower_letter_F_is_F_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
@@ -3948,7 +4218,10 @@ Definition Grade (VV: Letter) (VV_: Modifier): Grades :=
 #[global] Hint Unfold Grades_wf : wf_constr_db.
 #[global] Hint Resolve Grades_eq : ref_constr_db.
 #[global] Hint Unfold Grade : ref_constr_db.
-Definition lower_grade (g: Grades): Grades. 
+Definition lower_grade_spec (g: Grades): Type := 
+	Grades. 
+#[global] Hint Unfold lower_grade_spec : lia_unfold.
+Definition lower_grade (g: Grades): lower_grade_spec g. 
 Proof. 
 	destruct g as [g g_p]. 
 	induction g as [(*Grade*) l m]. 
@@ -4120,7 +4393,10 @@ Qed.
 Proof. 
 	buildPackG lower_grade lower_grade_rel lower_grade__lower_grade_rel lower_grade_rel_funct. 
 Defined.
-Definition apply_late_policy (late_days: {late_days: Z | True}) (g: Grades): Grades. 
+Definition apply_late_policy_spec (late_days: {late_days: Z | True}) (g: Grades): Type := 
+	Grades. 
+#[global] Hint Unfold apply_late_policy_spec : lia_unfold.
+Definition apply_late_policy (late_days: {late_days: Z | True}) (g: Grades): apply_late_policy_spec late_days g. 
 Proof. 
 	destruct late_days as [late_days late_days_p]. 
 	destruct g as [g g_p]. 
@@ -4217,22 +4493,34 @@ Qed.
 Proof. 
 	buildPackG apply_late_policy apply_late_policy_rel apply_late_policy__apply_late_policy_rel apply_late_policy_rel_funct. 
 Defined.
-Theorem lower_grade_F_Minus: {{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u F_u Minus_u) lower_graderes) -> (lower_graderes == (Grade_u F_u Minus_u))}}. 
+Definition lower_grade_F_Minus_spec: Type := 
+	{{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u F_u Minus_u) lower_graderes) -> (lower_graderes == (Grade_u F_u Minus_u))}}. 
+#[global] Hint Unfold lower_grade_F_Minus_spec : lia_unfold.
+Theorem lower_grade_F_Minus: lower_grade_F_Minus_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem lower_grade_thrice: {{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u B_u Minus_u) lower_graderes) -> (forall (lower_grade_res_2: Grades_u), (lower_grade_rel lower_graderes lower_grade_res_2) -> (forall (lower_grade_res_3: Grades_u), (lower_grade_rel lower_grade_res_2 lower_grade_res_3) -> (lower_grade_res_3 == (Grade_u C_u Minus_u))))}}. 
+Definition lower_grade_thrice_spec: Type := 
+	{{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u B_u Minus_u) lower_graderes) -> (forall (lower_grade_res_2: Grades_u), (lower_grade_rel lower_graderes lower_grade_res_2) -> (forall (lower_grade_res_3: Grades_u), (lower_grade_rel lower_grade_res_2 lower_grade_res_3) -> (lower_grade_res_3 == (Grade_u C_u Minus_u))))}}. 
+#[global] Hint Unfold lower_grade_thrice_spec : lia_unfold.
+Theorem lower_grade_thrice: lower_grade_thrice_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem lower_grade_twice: {{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u B_u Minus_u) lower_graderes) -> (forall (lower_grade_res_2: Grades_u), (lower_grade_rel lower_graderes lower_grade_res_2) -> (lower_grade_res_2 == (Grade_u C_u Natural_u)))}}. 
+Definition lower_grade_twice_spec: Type := 
+	{{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u B_u Minus_u) lower_graderes) -> (forall (lower_grade_res_2: Grades_u), (lower_grade_rel lower_graderes lower_grade_res_2) -> (lower_grade_res_2 == (Grade_u C_u Natural_u)))}}. 
+#[global] Hint Unfold lower_grade_twice_spec : lia_unfold.
+Theorem lower_grade_twice: lower_grade_twice_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Theorem no_penalty_for_mostly_on_time (late_days: {late_days: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ late_days -⌋) 9 true}}): {{forall (apply_late_policyres: Grades_u), (apply_late_policy_rel (⌊ late_days -⌋) (⌊ g -⌋) apply_late_policyres) -> (apply_late_policyres = (⌊ g -⌋))}}. 
+Definition no_penalty_for_mostly_on_time_spec (late_days: {late_days: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ late_days -⌋) 9 true}}): Type := 
+	{{forall (apply_late_policyres: Grades_u), (apply_late_policy_rel (⌊ late_days -⌋) (⌊ g -⌋) apply_late_policyres) -> (apply_late_policyres = (⌊ g -⌋))}}. 
+#[global] Hint Unfold no_penalty_for_mostly_on_time_spec : lia_unfold.
+Theorem no_penalty_for_mostly_on_time (late_days: {late_days: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ late_days -⌋) 9 true}}): no_penalty_for_mostly_on_time_spec late_days g h. 
 Proof. 
 	destruct late_days as [late_days late_days_p]. 
 	destruct g as [g g_p]. 
@@ -4327,7 +4615,10 @@ Definition Wednesday: Day :=
 #[global] Hint Unfold Thursday : ref_constr_db.
 #[global] Hint Unfold Tuesday : ref_constr_db.
 #[global] Hint Unfold Wednesday : ref_constr_db.
-Definition next_weekday (d: Day): Day. 
+Definition next_weekday_spec (d: Day): Type := 
+	Day. 
+#[global] Hint Unfold next_weekday_spec : lia_unfold.
+Definition next_weekday (d: Day): next_weekday_spec d. 
 Proof. 
 	destruct d as [d d_p]. 
 	induction d as [(*Friday*)  | (*Monday*)  | (*Saturday*)  | (*Sunday*)  | (*Thursday*)  | (*Tuesday*)  | (*Wednesday*) ]. 
@@ -4463,7 +4754,10 @@ Qed.
 Proof. 
 	buildPackG next_weekday next_weekday_rel next_weekday__next_weekday_rel next_weekday_rel_funct. 
 Defined.
-Theorem test_next_weekday: {{forall (next_weekdayres: Day_u), (next_weekday_rel Saturday_u next_weekdayres) -> (forall (next_weekday_res_2: Day_u), (next_weekday_rel next_weekdayres next_weekday_res_2) -> (next_weekday_res_2 = Tuesday_u))}}. 
+Definition test_next_weekday_spec: Type := 
+	{{forall (next_weekdayres: Day_u), (next_weekday_rel Saturday_u next_weekdayres) -> (forall (next_weekday_res_2: Day_u), (next_weekday_rel next_weekdayres next_weekday_res_2) -> (next_weekday_res_2 = Tuesday_u))}}. 
+#[global] Hint Unfold test_next_weekday_spec : lia_unfold.
+Theorem test_next_weekday: test_next_weekday_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
@@ -4521,7 +4815,10 @@ Definition Lt: Comparison :=
 #[global] Hint Unfold Eq : ref_constr_db.
 #[global] Hint Unfold Gt : ref_constr_db.
 #[global] Hint Unfold Lt : ref_constr_db.
-Definition letter_comparison (l1: Letter) (l2: Letter): Comparison. 
+Definition letter_comparison_spec (l1: Letter) (l2: Letter): Type := 
+	Comparison. 
+#[global] Hint Unfold letter_comparison_spec : lia_unfold.
+Definition letter_comparison (l1: Letter) (l2: Letter): letter_comparison_spec l1 l2. 
 Proof. 
 	destruct l1 as [l1 l1_p]. 
 	destruct l2 as [l2 l2_p]. 
@@ -4871,7 +5168,10 @@ Qed.
 Proof. 
 	buildPackG letter_comparison letter_comparison_rel letter_comparison__letter_comparison_rel letter_comparison_rel_funct. 
 Defined.
-Theorem letter_comparison_eq (l: Letter): {{forall (letter_comparisonres: Comparison_u), (letter_comparison_rel (⌊ l -⌋) (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Eq_u)}}. 
+Definition letter_comparison_eq_spec (l: Letter): Type := 
+	{{forall (letter_comparisonres: Comparison_u), (letter_comparison_rel (⌊ l -⌋) (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Eq_u)}}. 
+#[global] Hint Unfold letter_comparison_eq_spec : lia_unfold.
+Theorem letter_comparison_eq (l: Letter): letter_comparison_eq_spec l. 
 Proof. 
 	destruct l as [l l_p]. 
 	induction l as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]. 
@@ -4891,7 +5191,10 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Theorem lower_letter_lowers (l: Letter) (p: {{forall (letter_comparisonres: Comparison_u), (letter_comparison_rel F_u (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Lt_u)}}): {{forall (lower_letterres: Letter_u), (lower_letter_rel (⌊ l -⌋) lower_letterres) -> (forall (letter_comparisonres: Comparison_u), (letter_comparison_rel lower_letterres (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Lt_u))}}. 
+Definition lower_letter_lowers_spec (l: Letter) (p: {{forall (letter_comparisonres: Comparison_u), (letter_comparison_rel F_u (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Lt_u)}}): Type := 
+	{{forall (lower_letterres: Letter_u), (lower_letter_rel (⌊ l -⌋) lower_letterres) -> (forall (letter_comparisonres: Comparison_u), (letter_comparison_rel lower_letterres (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Lt_u))}}. 
+#[global] Hint Unfold lower_letter_lowers_spec : lia_unfold.
+Theorem lower_letter_lowers (l: Letter) (p: {{forall (letter_comparisonres: Comparison_u), (letter_comparison_rel F_u (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Lt_u)}}): lower_letter_lowers_spec l p. 
 Proof. 
 	destruct l as [l l_p]. 
 	destruct p as [p p_p]. 
@@ -4913,7 +5216,10 @@ Proof.
 		refine (exist _ p _); 
 		solver.  
 Qed. 
-Definition modifier_comparison (m1: Modifier) (m2: Modifier): Comparison. 
+Definition modifier_comparison_spec (m1: Modifier) (m2: Modifier): Type := 
+	Comparison. 
+#[global] Hint Unfold modifier_comparison_spec : lia_unfold.
+Definition modifier_comparison (m1: Modifier) (m2: Modifier): modifier_comparison_spec m1 m2. 
 Proof. 
 	destruct m1 as [m1 m1_p]. 
 	destruct m2 as [m2 m2_p]. 
@@ -5145,7 +5451,10 @@ Definition White: Color :=
 #[global] Hint Unfold Black : ref_constr_db.
 #[global] Hint Unfold Primary : ref_constr_db.
 #[global] Hint Unfold White : ref_constr_db.
-Definition isred (c: Color): SFBool. 
+Definition isred_spec (c: Color): Type := 
+	SFBool. 
+#[global] Hint Unfold isred_spec : lia_unfold.
+Definition isred (c: Color): isred_spec c. 
 Proof. 
 	destruct c as [c c_p]. 
 	induction c as [(*Black*)  | (*Primary*) ds_d5PM | (*White*) ]. 
@@ -5167,7 +5476,10 @@ Proof.
 		refine (subsumptionCast _ _ SFFalse _); 
 		solver.  
 Defined. 
-Definition monochrome (c: Color): SFBool. 
+Definition monochrome_spec (c: Color): Type := 
+	SFBool. 
+#[global] Hint Unfold monochrome_spec : lia_unfold.
+Definition monochrome (c: Color): monochrome_spec c. 
 Proof. 
 	destruct c as [c c_p]. 
 	induction c as [(*Black*)  | (*Primary*) p | (*White*) ]. 
