@@ -43,7 +43,9 @@ preamble =
     [ text "From coqDeps Require Export LiquidPreludeUtil.",
       scope "Z",
       scope "Int",
-      text "From Coq Require Import Unicode.Utf8."
+      text "From Coq Require Import Unicode.Utf8.",
+      -- For debugging
+      text "Ltac solver := admit."
     ]
   where
     scope x = text "Open Scope" <+> text x <> text "_scope."

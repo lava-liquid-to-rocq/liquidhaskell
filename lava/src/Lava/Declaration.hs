@@ -87,7 +87,7 @@ eqDecl tc alts =
     mkConstrEqBranch (c, tp) =
       let c_u = unrefinedConstrName c
        in ( [(c_u, tpArgs tp), (c_u, map (++ "'") $ tpArgs tp)],
-            foldl (\b (x, tpx) -> Coq.Bop Andb b (mkEq tpx (Coq.Var x) (Coq.Var $ x ++ "'"))) btrue (fst $ arrs tp)
+            foldl (\b (x, tpx) -> Coq.Bop (Binop Coq.And UnrefBop) b (mkEq tpx (Coq.Var x) (Coq.Var $ x ++ "'"))) btrue (fst $ arrs tp)
           )
     defaultBranch = ([("_", []), ("_", [])], bfalse)
     -- TODO: we could have an inductive tc' that is not the same one, but for which
@@ -96,7 +96,7 @@ eqDecl tc alts =
     -- Is it really not possible to expand the boolean equality automatically?
     mkEq :: RefType -> CoqTerm -> CoqTerm -> CoqTerm
     mkEq (RefType _ (LH.TC tc') _) x x' | tc' == tc = Coq.App (Def $ tcEqName tc) [x, x']
-    mkEq _ x x' = Coq.Bop EqualB x x'
+    mkEq _ x x' = Coq.Bop (Binop Coq.Eq RefBop) x x'
 
 -- | Lemma TC_eq_refl: reflexivity of TC_eq, with associated hint:
 --
@@ -108,7 +108,7 @@ eqReflLem tc =
   [ Coq.Definition
       (eqReflLemName tc)
       []
-      (FAType ("x", unrefTC tc) . Prop . IsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["x", "x"]))
+      (FAType ("x", unrefTC tc) . Prop . mkIsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["x", "x"]))
       (ProofBody [Custom "eq_refl"])
       Opaque,
     AddHint ResolveHint (eqReflLemName tc) EqHintDb
@@ -127,9 +127,10 @@ eqbEqLem tc =
       ( FAType ("s", unrefTC tc)
           . FAType ("t", unrefTC tc)
           . Prop
-          $ Coq.Impl
-            (IsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["s", "t"]))
-            (Coq.Bop Coq.Eq (Coq.Var "s") (Coq.Var "t"))
+          $ Coq.Bop
+            (Binop Coq.Impl PropBop)
+            (mkIsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["s", "t"]))
+            (Coq.Bop (Binop Coq.RocqEq PropBop) (Coq.Var "s") (Coq.Var "t"))
       )
       (ProofBody [Custom "eqb_eq_lem"])
       Opaque,
@@ -171,7 +172,7 @@ wfDecl tc alts =
           case trRefType tpArg of
             Subset _ _ p -> p
             Pack {} -> Coq.App (Def uPackWfName) [Coq.Var x] -- TODO: add required conditions
-            _ -> TT
+            _ -> PropLit True
 
 -- | Lemma TC_wf_ref:
 --
@@ -185,7 +186,7 @@ wfLem tc =
     (ProofBody [destructSubsetArg "tm", Oracle])
     Opaque
   where
-    tm = ("tm", Subset "v" (unrefTC tc) $ Coq.And wfV (Coq.App (Coq.Var "p") [Coq.Var "v"]))
+    tm = ("tm", Subset "v" (unrefTC tc) $ Coq.Bop (Binop Coq.And PropBop) wfV (Coq.App (Coq.Var "p") [Coq.Var "v"]))
     wfV = Coq.App (Def $ wfTCName tc) [Coq.Var "v"]
     destructSubsetArg x = DestructSubsetTerm (Coq.Var x) (ConjDestrPat [SingleIdPat x, SingleIdPat $ subsetWitnessNm x])
 
@@ -193,7 +194,7 @@ wfLem tc =
 --
 -- > Global Notation TC := {x: TC_u | TC_wf x /\ True}.
 refTCDecl :: Id -> Coq.Decl
-refTCDecl tc = CoqNewType tc (Subset "x" (Coq.TC (unrefinedConstrName tc) []) (Coq.And (Coq.App (Def $ wfTCName tc) [Coq.Var "x"]) TT))
+refTCDecl tc = CoqNewType tc (Subset "x" (Coq.TC (unrefinedConstrName tc) []) (Coq.Bop (Binop Coq.And PropBop) (Coq.App (Def $ wfTCName tc) [Coq.Var "x"]) (PropLit True)))
 
 -- ** Definition of the refined constructors
 
@@ -219,7 +220,7 @@ mkPseudoConstr tc (c, tp) =
     -- NOTE: instead of inlining the translation of the refinement of an
     -- inductive type, we could use a substitution in Rocq, but I want to avoid
     -- implementing it
-    retLem = Prop $ Coq.And (Coq.App (Def $ wfTCName tc) [utrReft unrefCrApp]) (utrReftProp $ subst unrefCrApp x retRef)
+    retLem = Prop $ Coq.Bop (Binop Coq.And PropBop) (Coq.App (Def $ wfTCName tc) [utrReft unrefCrApp]) (utrReftProp $ subst unrefCrApp x retRef)
     -- The constructor is defined as an `exist`
     bodyConstr =
       let lemCrApp = Coq.App (Def $ psConstrLemName c) (map (Coq.Var . fst) args)
@@ -467,15 +468,15 @@ trPathGuard f (σxs, [], rf) hs relRes =
       result =
         case relRes of
           Nothing -> Coq.App (Coq.Def $ relDefName f) (map utrReft (map snd σxs ++ [r']))
-          Just z -> Coq.Bop Equal (Coq.Var z) (utrReft r')
+          Just z -> Coq.Bop (Binop Coq.Eq PropBop) (Coq.Var z) (utrReft r')
    in hypsRV currentHyps (isNothing relRes) result
 trPathGuard f (σxs, (r, rp) : σp', rf) hs relRes =
   let (hyps_r, r') = extractApps r
       currentHyps = hyps_r \\ hs
       foralls = mkForallXs . Set.toList $ LH.freeVars rp
-      equality = Coq.Bop Equal (utrReft r') (utrReft rp)
+      equality = Coq.Bop (Binop Coq.Eq PropBop) (utrReft r') (utrReft rp)
       recCall = trPathGuard f (σxs, σp', rf) (hs ++ currentHyps) relRes
-   in hypsRV currentHyps (isNothing relRes) . foralls $ Coq.Impl equality recCall
+   in hypsRV currentHyps (isNothing relRes) . foralls $ Coq.Bop (Binop Coq.Impl PropBop) equality recCall
 
 -- | Create a name for a constructor based on the patterns of the parameters (`pats`).
 -- The flag takeVars indicates if we want the variables alone between the constructors.
@@ -517,9 +518,9 @@ relFunctionhoodLemma f =
         ( mkForallT
             [(retName f, retUT f), (retName', retUT f)]
             ( Coq.Prop
-                . Coq.Impl (relInst $ retName f)
-                . Coq.Impl (relInst retName')
-                $ Coq.Bop Coq.Eq (Coq.Var $ retName f) (Coq.Var retName')
+                . Coq.Bop (Binop Coq.Impl PropBop) (relInst $ retName f)
+                . Coq.Bop (Binop Coq.Impl PropBop) (relInst retName')
+                $ Coq.Bop (Binop Coq.RocqEq PropBop) (Coq.Var $ retName f) (Coq.Var retName')
             )
         )
         (Coq.ProofBody functionhoodTacs)
@@ -550,7 +551,7 @@ inversionLemma f (σxs, paths) =
   [ Coq.Definition
       f_lem
       []
-      (Coq.Prop . mkForallXs (argsVars ++ [res]) $ Equiv relApp guardDisjunction)
+      (Coq.Prop . mkForallXs (argsVars ++ [res]) $ Coq.Bop (Binop Equiv PropBop) relApp guardDisjunction)
       (ProofBody [Custom $ "rel_back' (" ++ tacArg ++ ")"])
       Opaque,
     AddHint RewriteHint f_lem GraphRelBackDB
@@ -623,11 +624,11 @@ refRelRwLemma f =
       Coq.Definition
         (relDefRwLemName $ name f)
         (map (,False) $ fst (trRefTypeSplit $ tpf f) ++ [(retName f, retUT f)])
-        (Prop $ Equiv defEq relApp)
+        (Prop $ Coq.Bop (Binop Equiv PropBop) defEq relApp)
         (ProofBody [Custom "f__f_rel_rw"])
         Opaque
     -- ⌊ f (exist _ args argsp) -⌋ = f_res
-    defEq = Coq.Bop Coq.Eq (mkProject $ mkApp (Def $ name f) (injArgs f)) (Coq.Var $ retName f)
+    defEq = Coq.Bop (Binop Coq.RocqEq PropBop) (mkProject $ mkApp (Def $ name f) (injArgs f)) (Coq.Var $ retName f)
     -- f_rel [exist _ args argsp] f_res
     relApp = Coq.App (Def . relDefName $ name f) (projArgs f ++ [Coq.Var $ retName f])
 
@@ -650,8 +651,9 @@ refUnrefLemmas f =
     params = map (Coq.Var . fst) (argsT f)
     params_u = map (Coq.Var . fst) argsUT_u
     equivalence fuArgs =
-      Coq.Equiv
-        (Coq.Bop Coq.Eq (mkProject $ Coq.App (Coq.Def $ name f) params) (Coq.Var $ retName f))
+      Coq.Bop
+        (Binop Coq.Equiv PropBop)
+        (Coq.Bop (Binop Coq.RocqEq PropBop) (mkProject $ Coq.App (Coq.Def $ name f) params) (Coq.Var $ retName f))
         (Coq.App (Coq.Def (relDefName $ name f)) $ fuArgs ++ [Coq.Var $ retName f])
     refUnrefLemma =
       mkCoqTheorem
@@ -673,11 +675,11 @@ refUnrefLemmas f =
       where
         paramsEq =
           zipWith
-            (\xiu xi -> Coq.Bop Coq.Eq (Coq.Var xiu) (Project (Coq.Var xi)))
+            (\xiu xi -> Coq.Bop (Binop Coq.RocqEq PropBop) (Coq.Var xiu) (Project (Coq.Var xi)))
             (map fst argsUT_u)
             (map fst $ argsT f)
         unrLemArgs = map (,False) $ argsUT_u ++ argsT f ++ [(retName f, retUT f)]
-        unrLemTp = Coq.Prop $ foldr Coq.Impl (equivalence params_u) paramsEq
+        unrLemTp = Coq.Prop $ foldr (Coq.Bop $ Binop Coq.Impl PropBop) (equivalence params_u) paramsEq
 
 -- Lemma f_rel_mk
 --

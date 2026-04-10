@@ -10,7 +10,6 @@ module Lava.Translation where
 import Data.Bifunctor (bimap, second)
 -- import Debug.Trace (trace)
 
-import Data.List ((\\))
 import Data.Maybe (fromMaybe)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
@@ -37,21 +36,22 @@ trBaseType (LH.TC tc) = Coq.TC tc' []
       _ -> unrefinedTCName tc
 
 -- | Translation of ILH binary operators to Coq binary operators
-trBop :: LH.Bop -> Coq.Bop
+trBop :: LH.Bop -> Coq.BaseBop
 trBop LH.Plus = Coq.Plus
 trBop LH.Minus = Coq.Minus
 trBop LH.Times = Coq.Times
 trBop LH.Div = Coq.Div
 trBop LH.Mod = Coq.Mod
-trBop LH.Eq = Coq.EqualB
-trBop LH.Neq = Coq.Neqb
-trBop LH.Leq = Coq.Leqb
-trBop LH.Geq = Coq.Geqb
-trBop LH.Lt = Coq.Ltb
-trBop LH.Gt = Coq.Gtb
-trBop LH.And = Coq.Andb
-trBop LH.Or = Coq.Orb
-trBop LH.Impl = Coq.ImplB
+trBop LH.Eq = Coq.Eq
+trBop LH.Neq = Coq.Neq
+trBop LH.Leq = Coq.Leq
+trBop LH.Geq = Coq.Geq
+trBop LH.Lt = Coq.Lt
+trBop LH.Gt = Coq.Gt
+trBop LH.And = Coq.And
+trBop LH.Or = Coq.Or
+trBop LH.Impl = Coq.Impl
+trBop LH.Iff = Coq.Equiv
 
 -- * Unrefined translations
 
@@ -94,8 +94,8 @@ utrReft r0 = case r0 of
   LH.FloatLit d -> Coq.FloatLiteral d
   LH.DC c -> Coq.Cr $ utrDC c
   LH.App r1 r2 -> Coq.App (utrReft r1) [utrReft r2]
-  LH.Neg r -> Coq.App (Coq.Def Coq.negb) [utrReft r]
-  LH.Bop op r1 r2 -> Coq.Bop (trBop op) (utrReft r1) (utrReft r2)
+  LH.Neg r -> Coq.Neg UnrefBop $ utrReft r
+  LH.Bop op r1 r2 -> Coq.Bop (Binop (trBop op) UnrefBop) (utrReft r1) (utrReft r2)
   LH.QMark r _ _ -> utrReft r
   LH.Pop _ _ r -> utrReft r
   LH.Sub r _ _ -> utrReft r
@@ -194,7 +194,7 @@ hypsRV rv graphRel = \p -> foldr hyp p rv
         link (Coq.App hdT (map utrReft args ++ [Coq.Var z])) p
       where
         (quantifier, link) =
-          if graphRel then (Forall, Coq.Impl) else (Exists, Coq.And)
+          if graphRel then (Forall, Coq.Bop (Binop Coq.Impl PropBop)) else (Exists, Coq.Bop (Binop Coq.And PropBop))
         (hd, args) = apps app
         hdT = case hd of
           -- f -> f_rel for global FO/HO variables (includes operators in `operatorsWithGraph`)
@@ -229,7 +229,7 @@ trRefType (RefType x tp r) =
     rT = case tp of
       (LH.Builtin {}) -> utrReftProp r
       _ | tp `elem` builtinTCs -> utrReftProp r
-      (LH.TC tc) -> Coq.And (Coq.App (Def $ wfTCName tc) [Coq.Var x]) (utrReftProp r)
+      (LH.TC tc) -> Coq.Bop (Binop Coq.And PropBop) (Coq.App (Def $ wfTCName tc) [Coq.Var x]) (utrReftProp r)
 trRefType tp@(ArrType {}) =
   Pack argTps uargTps (argListCorPrf argTps uargTps) tpx p_
   where
@@ -275,12 +275,12 @@ trReft (LH.StringLit s) = Coq.StringLiteral s
 trReft (LH.IntLit n) = Coq.IntLiteral n
 trReft (LH.FloatLit d) = Coq.FloatLiteral d
 trReft (LH.DC c) = Cr (trDC c)
-trReft (LH.Neg tm) = Coq.App (Coq.Def Coq.negB) [trReft tm]
-trReft (LH.Bop op tm1 tm2) = Coq.Bop (trBop op) (trReft tm1) (trReft tm2)
+trReft (LH.Neg tm) = Coq.Neg RefBop $ trReft tm
+trReft (LH.Bop op tm1 tm2) = Coq.Bop (Binop (trBop op) RefBop) (trReft tm1) (trReft tm2)
 trReft (LH.QMark tm hint prop) =
   Coq.Let "_" (Just . Prop $ utrReftProp prop) (Proj2sig $ trReft hint) (trReft tm)
 trReft (LH.Pop pop tm1 tm2) =
-  let popProp = Just . Prop $ Coq.Bop (trBop $ popToBop pop) (mkProject $ trReft tm1) (mkProject $ trReft tm2)
+  let popProp = Just . Prop $ Coq.Bop (Binop (trBop $ popToBop pop) PropBop) (mkProject $ trReft tm1) (mkProject $ trReft tm2)
    in Coq.Let "_" popProp (PrfTerm Hole $ ProofHole Nothing) (trReft tm2)
 trReft (LH.Sub tm from to) = Coq.SubCast (trRefType to) (trRefType from) (trReft tm) (Coq.ProofHole Nothing)
 trReft (LH.Inj tm tp) = mkExist (trRefType tp) (trReft tm)
@@ -327,7 +327,8 @@ trExprTacs (Case tm alts genVars) =
 -- | Given an inductive variable y, the branch pattern and arguments,
 -- build an application of IHy to the arguments
 trRecCall :: Id -> BranchPattern -> [Reft] -> CoqTerm
-trRecCall indVar pats args | traceFunc "trRecCall" [text indVar, pPrint pats, pPrint args] = undefined
+-- trRecCall indVar pats args | traceFunc "trRecCall" [text indVar, pPrint pats, pPrint args] = undefined
+-- TODO: fix for when we use a double induction
 trRecCall indVar pats args =
   -- FIX: if the inductive variable appears several times, we only want to delete once
   let argsNoIndVar = filter (not . castOfIndVar) args

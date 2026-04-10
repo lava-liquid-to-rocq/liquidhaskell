@@ -45,7 +45,8 @@ bopTypes =
     (Gt, mkBopType Gt (Builtin Integer) (Builtin Integer) ttTm boolTp),
     (And, mkBopType And boolTp boolTp ttTm boolTp),
     (Or, mkBopType Or boolTp boolTp ttTm boolTp),
-    (Impl, mkBopType Impl boolTp boolTp ttTm boolTp)
+    (Impl, mkBopType Impl boolTp boolTp ttTm boolTp),
+    (Iff, mkBopType Iff boolTp boolTp ttTm boolTp)
   ]
 
 -- | Type of the equality and inequality for any base type

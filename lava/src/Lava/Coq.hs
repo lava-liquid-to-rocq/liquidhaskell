@@ -20,17 +20,14 @@ import Data.Data
 import Data.List (isSuffixOf, sortBy, stripPrefix, unsnoc)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (isNothing)
-import Debug.Trace (trace)
+-- import Debug.Trace (trace)
 import Lava.Calculus (appPrec, arrPrec)
 import Lava.Names
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding ((<>))
 
-xorb :: Id
-implb :: Id
-negb :: Id
-negB :: Id
+{- ORMOLU_DISABLE -}
 unitTmName :: Id
 btrueTmName :: Id
 bfalseTmName :: Id
@@ -39,30 +36,14 @@ btrue :: CoqTerm
 bfalse :: CoqTerm
 boolTp :: RocqType
 unitTp :: RocqType
-xorb = "xorb"
-
-implb = "implb"
-
-negb = "negb"
-
-negB = "negBool"
-
 unitTmName = "unit"
-
 btrueTmName = "true"
-
 bfalseTmName = "false"
-
 unitTm = Cr unitTmName
-
 btrue = Cr btrueTmName
-
 bfalse = Cr bfalseTmName
-
 boolTp = TC "bool" []
-
 unitTp = TC "Unit" []
-
 {- ORMOLU_ENABLE -}
 
 -- | List of builtin CoqInductives
@@ -92,17 +73,11 @@ data CoqModule = CoqModule Id [Decl] deriving (Eq, Data)
 -- >     | CoqInductive tc (x:tp)* : k := (| c: ∀(y:tp)*, tp)*.
 -- >     | Transparent x. | Opaque x.
 data Decl
-  = -- Stuff we have that is missing in Rocq, but should potentially be there
-
-    -- | A declaration of an inductive data type
-    TCDecl Id [CoqConstr]
-  | -- | Mark definitions as Transparent or Opaque, as needed
-    CoqMarkVisibility ChangeVisibility
-  | -- | Add the hint to the specified hint database in Coq
+  = -- | Add the hint to the specified hint database in Coq
     AddHint HintKind Id HintDatabase
-  | -- Stuff also present in Rocq
-
-    -- | a load declaration for some module to be loaded
+  | -- > Transparent x. | Opaque x.
+    ChangeVisibility Id Visibility
+  | -- | a load declaration for some module to be loaded
     Load Id
   | -- | A fixpoint in Coq
     Fix
@@ -113,18 +88,8 @@ data Decl
       CoqTerm
   | -- | A Coq definition/theorem
     Definition Id [((Id, RocqType), Bool)] RocqType DefBody Visibility
-  | -- | A declaration of an axiom in Coq
-    CoqAxiom
-      Id
-      [((Id, RocqType), Bool)]
-      -- | TODO: Consider getting rid of the args, as Axioms cannot have arguments to the left of the :, however forallT doesn't currently support implicit arguments
-      RocqType
   | -- | An inductively defined Prop, Type or Set (used only internally)
     CoqInductive Id [(Id, RocqType)] RocqType [CoqConstr]
-  | -- Internal stuff
-
-    -- | A term-level notation (like the refined constructors)
-    CoqAlias Id CoqTerm
   | -- | A type-level notation (like the refined inductive data types)
     CoqNewType Id RocqType
   | -- | An instance of one of the dictionary classes used for lookup in the proof automation tactics in Coq
@@ -137,20 +102,10 @@ data DefBody
   | TermBody CoqTerm
   deriving (Data, Eq, Show)
 
--- | A refined type constructor, the only kind allowed in the image of the translation to ECoq, gets printed to its elaboration by the 'CoqPrinter'
---
--- > Inductive tc : Set := (| c: A)*
-data CoqTermTC = InductiveData {cDataName :: Id, constructors :: [CoqConstr]} deriving (Data, Eq)
-
 -- | Data constructors
 --
 -- > c: A
 data CoqConstr = Constr {cConstrNm :: Id, cConstrTp :: RocqType} deriving (Data, Eq)
-
--- |
---
--- > Transparent x. | Opaque x.
-data ChangeVisibility = ChangeVisibility Id Visibility deriving (Data, Eq)
 
 data Visibility = Transparent | Opaque deriving (Data, Eq, Show)
 
@@ -159,9 +114,6 @@ data HintKind = UnfoldHint | ConstructorsHint | ResolveHint | RewriteHint derivi
 data HintDatabase = CoreDB | GraphRelDB | GraphRelBackDB | WfDB | RefConstrDB | RelAxDB | EqHintDb deriving (Data, Eq)
 
 -- ** Object-level grammar
-
--- | Basically the same as a RocqType, but shouldn't contain holes (it can still contain simple type goals, but those Coq should be able to infer when needed) or errors
-type Goal = RocqType
 
 -- | Built-in datatypes
 --
@@ -204,19 +156,21 @@ newtype UArgListT = UArgListT [RocqType] deriving (Eq, Data, Show)
 
 newtype UArgList = UArgList [CoqTerm]
 
+-- TODO: remove these functions and the BopArgList operators that are only used for pretty-printing
+
 mkArgListT :: ArgListT -> CoqTerm
 mkArgListT (ArgListT xs) =
-  foldl (\tlTm (x, t) -> Bop ConsRT (TypeArg t) $ Lambda x t tlTm) (Def "nilRT") (reverse xs)
+  foldl (\tlTm (x, t) -> Bop (Binop ConsRT RefBop) (TypeArg t) $ Lambda x t tlTm) (Def "nilRT") (reverse xs)
 
 mkUArgListT :: UArgListT -> CoqTerm
 mkUArgListT (UArgListT xs) =
-  foldl (\tlTm t -> Bop ConsUT (TypeArg t) tlTm) (Def "nilUT") (reverse xs)
+  foldl (\tlTm t -> Bop (Binop ConsUT RefBop) (TypeArg t) tlTm) (Def "nilUT") (reverse xs)
 
 mkArgList :: ArgList -> CoqTerm
-mkArgList (ArgList args) = foldl (flip (Bop ConsR)) (Def "nilR") args
+mkArgList (ArgList args) = foldl (flip (Bop (Binop ConsR RefBop))) (Def "nilR") args
 
 mkUArgList :: UArgList -> CoqTerm
-mkUArgList (UArgList uargs) = foldl (flip (Bop ConsU)) (Def "nilU") uargs
+mkUArgList (UArgList uargs) = foldl (flip (Bop (Binop ConsU RefBop))) (Def "nilU") uargs
 
 -- | An ECoq term of any kind
 --
@@ -230,14 +184,8 @@ mkUArgList (UArgList uargs) = foldl (flip (Bop ConsU)) (Def "nilU") uargs
 data CoqTerm
   = Forall [(Id, RocqType)] CoqTerm
   | Exists [(Id, RocqType)] CoqTerm
-  | And CoqTerm CoqTerm
-  | Or CoqTerm CoqTerm
-  | Impl CoqTerm CoqTerm
-  | Equiv CoqTerm CoqTerm
-  | Neg CoqTerm
-  | NegB CoqTerm
-  | TT
-  | FF
+  | -- | True or False (in Prop)
+    PropLit Bool
   | IsTrue CoqTerm
   | -- | represents a function name
     Def Id
@@ -247,7 +195,8 @@ data CoqTerm
     Cr Id
   | -- | represents a variable
     Var Id
-  | Bop Bop CoqTerm CoqTerm
+  | Bop Binop CoqTerm CoqTerm
+  | Neg BopKind CoqTerm
   | StringLiteral String
   | IntLiteral Integer
   | FloatLiteral Double
@@ -261,17 +210,37 @@ data CoqTerm
   | Ite CoqTerm CoqTerm CoqTerm
   | Let Id (Maybe RocqType) CoqTerm CoqTerm
   | TermHole
-  | PrfTerm Goal ProofTerm
-  | InstanceProjection CoqTerm Id
+  | PrfTerm RocqType ProofTerm
   | InlineInstance [(Id, CoqTerm)]
   | TypeArg RocqType
   deriving (Data, Eq, Show)
 
--- | Boolean operators
---
--- > bop ::= = | <> | <= | >= | < | > | + | - | * | /
--- >       | <=? | >=? | =? | <? | >? | && | ‖ | =>? | ==? |  eqb
-data Bop = Eq | EqProp | Neq | Leq | Geq | Lt | Gt | Plus | Minus | Times | Div | Mod | Leqb | Geqb | Eqb | Neqb | Ltb | Gtb | Andb | Orb | ImplB | EqualB | NEqualB | Equal | EqualBProp | EqBool | PlusU | MinusU | TimesU | DivU | ModU | ConsRT | ConsUT | ConsR | ConsU deriving (Data, Eq)
+data Binop = Binop BaseBop BopKind deriving (Data, Eq)
+
+data BopKind = PropBop | RefBop | UnrefBop deriving (Data, Eq, Show)
+
+data BaseBop
+  = RocqEq
+  | Eq
+  | Neq
+  | Leq
+  | Geq
+  | Lt
+  | Gt
+  | And
+  | Or
+  | Impl
+  | Equiv
+  | Plus
+  | Minus
+  | Times
+  | Div
+  | Mod
+  | ConsRT
+  | ConsUT
+  | ConsR
+  | ConsU
+  deriving (Data, Eq)
 
 -- | represents terms of Prop-kinded types in ECoq, in particular refinement witnesses
 --
@@ -282,7 +251,6 @@ data ProofTerm
   | ProofHole (Maybe Id)
   | ByTac Tactic
   | RefWitness CoqTerm
-  | Conj ProofTerm ProofTerm
   deriving (Data, Eq, Show)
 
 -- | represents supported ECoq tactics, both custom tactics and basic Coq tactics (@tac@)
@@ -303,7 +271,7 @@ data Tactic
     DestructSubsetTerm CoqTerm CoqDestrPat
   | DestructConj Id Id Id
   | Rewrite (Maybe RewriteDir) CoqTerm (Maybe Id)
-  | Assert {assHypName :: Id, assClaim :: Goal, assPrf :: Tactic}
+  | Assert {assHypName :: Id, assClaim :: RocqType, assPrf :: Tactic}
   | AssertTacs Id RocqType [Tactic]
   | Intros [CoqIntroPat]
   | GeneralizeDependent [Id]
@@ -347,17 +315,12 @@ mkConcat = Concat . concatMap (\case Concat tacs' -> tacs'; tac -> [tac])
 -- between refined and unrefined operations
 mkProject :: CoqTerm -> CoqTerm
 mkProject (Exist _ t _) = t
-mkProject (Bop Plus s t) = Bop PlusU (mkProject s) (mkProject t)
-mkProject (Bop Minus s t) = Bop MinusU (mkProject s) (mkProject t)
-mkProject (Bop Times s t) = Bop TimesU (mkProject s) (mkProject t)
-mkProject (Bop Div s t) = Bop DivU (mkProject s) (mkProject t)
-mkProject (Bop Mod s t) = Bop ModU (mkProject s) (mkProject t)
+mkProject (Bop (Binop bop RefBop) s t) = Bop (Binop bop UnrefBop) (mkProject s) (mkProject t)
 mkProject (Cr c) | unrefinedConstrName "" `isSuffixOf` c = Cr c
 mkProject (Cr c) = Cr $ unrefinedConstrName c
 mkProject (App (Cr c) args) = App (Cr c') (map mkProject args)
   where
     c' = if unrefinedConstrName "" `isSuffixOf` c then c else unrefinedConstrName c
-mkProject (NegB tm) = Neg (Project tm)
 mkProject (SubCast _ _ t _) = mkProject t
 mkProject tm = Project tm
 
@@ -402,8 +365,8 @@ concatLambdas r = ([], r)
 
 -- | Whether a proposition is trivially equivalent to True
 isTrivial :: CoqTerm -> Bool
-isTrivial TT = True
-isTrivial (IsTrue b) = simplifyIsTrue b == TT
+isTrivial (PropLit b) = b
+isTrivial (IsTrue b) = b == btrue
 isTrivial _ = False
 
 {- ORMOLU_DISABLE -}
@@ -425,41 +388,26 @@ nodotPrec = 0
 concatPrec = 1
 dotPrec = 2
 
-bopPrec :: Bop -> Rational
-bopPrec Eq = 4
-bopPrec EqProp = 4
-bopPrec Neq = 4
-bopPrec Leq = 4
-bopPrec Geq = 4
-bopPrec Lt = 4
-bopPrec Gt = 4
+bopPrec :: BaseBop -> Rational
 bopPrec Plus = 6
 bopPrec Minus = 6
 bopPrec Times = 7
 bopPrec Div = 7
 bopPrec Mod = 7
-bopPrec Leqb = 4
-bopPrec Geqb = 4
-bopPrec Eqb = 4
-bopPrec Neqb = 4
-bopPrec Ltb = 4
-bopPrec Gtb = 4
-bopPrec Andb = 3
-bopPrec Orb = 2
-bopPrec ImplB = 1
-bopPrec EqualB = 4
-bopPrec NEqualB = 4
-bopPrec Equal = 4
-bopPrec EqualBProp = 4
-bopPrec EqBool = 4
-bopPrec PlusU = 6
-bopPrec MinusU = 6
-bopPrec TimesU = 7
-bopPrec DivU = 7
-bopPrec ModU = 7
+bopPrec Eq = 4
+bopPrec RocqEq = 4
+bopPrec Neq = 4
+bopPrec Leq = 4
+bopPrec Geq = 4
+bopPrec Lt = 4
+bopPrec Gt = 4
+bopPrec And = 3
+bopPrec Or = 2
+bopPrec Impl = 1
+bopPrec Equiv = 4
 bopPrec ConsRT = 5
-bopPrec ConsUT = 5
 bopPrec ConsR = 5
+bopPrec ConsUT = 5
 bopPrec ConsU = 5
 
 -- | Appends the correct punctuation at the end of a doc (used for tactics)
@@ -517,15 +465,7 @@ instance Pretty CoqModule where
 instance Pretty CoqConstr where
   pPrint (Constr c tp) = text c <> colon <+> pPrint tp
 
-instance Pretty CoqTermTC where
-  pPrint (InductiveData n constrs) =
-     "Inductive" <+> text n <>  ": Set :="
-     $$ nest identNb (sep (map (("|" <+>) . pPrint) constrs))
-
 instance Pretty Decl where
-  pPrint (TCDecl n constrs) =
-    hang ("Inductive" <+> text n <>  ": Set :=")
-      identNb (sep (map (("|" <+>) . pPrint) constrs))
   pPrint (Definition f args ret body vis) =
     case body of
       ProofBody tacs -> header <> dot
@@ -547,16 +487,12 @@ instance Pretty Decl where
      hang ("Fixpoint" <+> text f <+> pPrintArgs args <> colon) identNb (pPrint ret <+>  ":=")
     $$ nest identNb (pPrint tm <> dot)
   pPrint (Load m) =  "Load" <+> text m <> dot
-  pPrint (CoqAlias f e) =
-    hang ("Notation" <+> text f <+> ":=") identNb (pPrint e <> dot)
   pPrint (CoqNewType t tp) =
      hang ("Global Notation" <+> text t <+> ":=") identNb (pPrintRocqType prettyNormal 0 tp False <> dot)
-  pPrint (CoqAxiom ax args claim) =
-     hang ("Axiom" <+> text ax <> colon) identNb (pPrintForall (map fst args) claim <> dot)
   pPrint (CoqInductive f args ret constrs) =
     hang ("Inductive" <+> text f <+> pPrintArgs (map (,False) args) <> colon) identNb (pPrint ret <+> ":=")
       $$ nest identNb (sep (map (("|" <+>) . pPrint) constrs) <> dot)
-  pPrint (CoqMarkVisibility v) = pPrint v
+  pPrint (ChangeVisibility f vis) = text (show vis) <+> text f <> char '.'
   pPrint (AddHint kind ax db) =
     "#[global] Hint" <+> pPrint kind <+> text ax <> colon <+> pPrint db <> dot
   pPrint (Instance instName tp opDefs) =
@@ -568,10 +504,6 @@ instance Pretty Decl where
   pPrint (TacInstance instName tp tac) =
     sep [hang ("#[global] Instance" <+> text instName <> colon)
       identNb (pPrint tp <> dot), "Proof.", nest identNb (pPrint tac), "Defined."]
-
-instance Pretty ChangeVisibility where
-  pPrint (ChangeVisibility f Transparent) = "Transparent" <+> text f <> char '.'
-  pPrint (ChangeVisibility f Opaque) = "Opaque" <+> text f <> char '.'
 
 instance Pretty HintKind where
   pPrint UnfoldHint = "Unfold"
@@ -598,14 +530,13 @@ instance Pretty Builtin where
 pPrintRocqType :: PrettyLevel -> Rational -> RocqType -> Bool -> Doc
 pPrintRocqType _ _ (Builtin b) _ = pPrint b
 pPrintRocqType _ _ (Sort sort) _ = pPrint sort
--- NOTE: for TC, there are cases where me might need to add (getTCRef x tc), the well-formedness predicate (as in prntRefType)
 pPrintRocqType l p tp@(Subset x tc@(TC tc' []) e) True = case tc' of
   "bool" | isTrivial e -> "Bool"
   "Unit" -> braces (braces (pPrint e))
   _ -> case (e, tc_base) of
     _ | tc `elem` coqBuiltinInductDataTypes -> braces (text x <+> colon <+> pPrint tc <+> "|" <+> pPrint e)
     -- Use the refined name TC for {x: TC_u | wf_TC x /\ True}
-    (And (App (Def wf) [Var x']) true, Just tc_ref)
+    (Bop (Binop And PropBop) (App (Def wf) [Var x']) true, Just tc_ref)
       | x == x' && wf == wfTCName tc_ref && isTrivial true && not (null tc_ref)-> text tc_ref
     _ -> pPrintRocqType l p tp False
     where tc_base = reverse <$> stripPrefix (reverse $ unrefinedTCName "") (reverse tc')
@@ -649,48 +580,30 @@ instance Pretty BaseSort where
 
 instance Pretty CoqTerm where
   pPrintPrec _ p (IsTrue tm) =
-    if simplifyIsTrue tm == tm
-      then maybeParens (p > appPrec) $ "is_true" <+> parens (pPrint tm)
-      else pPrint $ simplifyIsTrue tm
+    maybeParens (p > appPrec) $ "is_true" <+> parens (pPrint tm)
   pPrintPrec _ p tm@(Forall {}) =
     let (vars, tm') = concatForalls tm
      in maybeParens (p > 1) $ pPrintForall vars tm'
   pPrintPrec _ p (Exists vars tm) =
      maybeParens (p > 1) . sep $
        ["∃" <+> pPrintArgs (map (,False) vars) <> comma | not (null vars)] ++ [pPrint tm]
-  pPrintPrec l p (And tm1 tm2) =
-    maybeParens (p > bopPrec Andb) $
-      sep [pPrintPrec l (bopPrec Andb) tm1, "∧" <+> pPrintPrec l (bopPrec Andb) tm2]
-  pPrintPrec l p (Or tm1 tm2) =
-    maybeParens (p > bopPrec Orb) $
-      sep [pPrintPrec l (bopPrec Orb) tm1, "∨" <+> pPrintPrec l (bopPrec Orb) tm2]
-  pPrintPrec l p (Impl tm1 tm2) =
-    maybeParens (p > bopPrec ImplB) $
-      sep [pPrintPrec l (bopPrec ImplB) tm1, "→" <+> pPrintPrec l (bopPrec ImplB) tm2]
-  pPrintPrec l p (Equiv tm1 tm2) =
-    maybeParens (p > bopPrec ImplB) $
-      sep [pPrintPrec l (bopPrec ImplB) tm1, "↔" <+> pPrintPrec l (bopPrec ImplB) tm2]
-  pPrintPrec l p (Neg (IsTrue (Bop EqualB s t))) =
-    pPrintPrec l p . IsTrue $ Bop Neqb s t
-  pPrintPrec l p (App (Def negb') [Bop EqualB s t]) | negb' == negb =
-    pPrintPrec l p $ Bop NEqualB s t
-  pPrintPrec l p (Neg (Neg tm)) = pPrintPrec l p tm
-  pPrintPrec l p (Neg tm) =
-    maybeParens (p > appPrec) $ "¬" <+> pPrintPrec l (appPrec + 1) tm
-  pPrintPrec l p (NegB (NegB tm)) = pPrintPrec l p tm
-  pPrintPrec l p (NegB tm) =
-    maybeParens (p > appPrec) $ text negB <+> pPrintPrec l (appPrec + 1) tm
-  pPrintPrec _ _ TT = "True"
-  pPrintPrec _ _ FF = "False"
+  pPrintPrec l p (Neg PropBop (IsTrue (Bop (Binop Eq RefBop) s t))) =
+    pPrintPrec l p . IsTrue $ Bop (Binop Neq UnrefBop) s t
+  pPrintPrec l p (Neg _ (Neg _ tm)) = pPrintPrec l p tm
+  pPrintPrec l p (Neg bopKind tm) =
+    maybeParens (p > appPrec) $ symbol <+> pPrintPrec l (appPrec + 1) tm
+    where
+      symbol = case bopKind of PropBop -> "¬"; UnrefBop -> "negb"; RefBop -> "negBool"
+  pPrintPrec _ _ (PropLit b) = pPrint b
   pPrintPrec _ _ (Def s) = text s
   pPrintPrec _ _ (Abbr s) = text s
   -- FIX: defined as right associative in Rocq, but still needs brackets I don't know why
-  pPrintPrec l p (Bop ConsUT s t) =
+  pPrintPrec l p (Bop bop@(Binop ConsUT _) s t) =
     maybeParens (p > bopPrec ConsUT) $
-      sep [pPrintPrec l (bopPrec ConsUT) s, pPrint ConsUT <+> pPrintPrec l (bopPrec ConsUT + 1) t]
-  pPrintPrec l p (Bop bop s t) =
-    maybeParens (p > bopPrec bop) $
-      sep [pPrintPrec l (bopPrec bop) s, pPrint bop <+> pPrintPrec l (bopPrec bop) t]
+      sep [pPrintPrec l (bopPrec ConsUT) s, pPrint bop <+> pPrintPrec l (bopPrec ConsUT + 1) t]
+  pPrintPrec l p (Bop bop@(Binop op _) s t) =
+    maybeParens (p > bopPrec op) $
+      sep [pPrintPrec l (bopPrec op) s, pPrint bop <+> pPrintPrec l (bopPrec op) t]
   pPrintPrec _ _ (Var x) = text x
   pPrintPrec _ _ (StringLiteral s) = pPrint s
   pPrintPrec _ _ (IntLiteral n) = integer n
@@ -731,92 +644,81 @@ instance Pretty CoqTerm where
     maybeParens (p > 0) $ sep [
       "let" <+> maybe (text x) (\tp' -> pPrintArg ((x, tp'), False)) tp <+> ":=",
       pPrint s <+> "in", pPrint t]
-  pPrintPrec l p (InstanceProjection inst field) =
-    maybeParens (p > appPrec) $ pPrintPrec l (appPrec + 1) inst <> dot <> parens (text field)
   pPrintPrec _ _ (InlineInstance fields) =
     sep ["{|", sep . punctuate semi $ map (\(field, val) -> text field <+> ":=" <+> pPrint val) fields, "|}"]
   pPrintPrec l p (TypeArg tp) = pPrintPrec l p tp
   pPrintPrec _ _ TermHole = char '_'
   pPrintPrec l p (PrfTerm _ z) = pPrintPrec l p z
 
--- | Syntactic simplification of is_true(tm)
-simplifyIsTrue :: CoqTerm -> CoqTerm
-simplifyIsTrue tm = case tm of
-    App neg [f] | neg == Def negb -> Neg (IsTrue f)
-    App impl [a, c] | impl == Def implb -> Impl (IsTrue a) (IsTrue c)
-    (Bop ImplB a c) -> Impl (IsTrue a) (IsTrue c)
-    (Bop EqualBProp s t) -> Bop EqProp s t
-    -- (Bop EqualB s t) -> Bop Eq (IsTrue s) (IsTrue t) -- C.PExpr . C.eqTrue $ mkBEqual decls ctx CTBool s t
-    (App (Def ngb) [f])  | ngb == negb -> Neg (IsTrue f)
-    -- (Bop Neqb s t) -> Bop Neq (IsTrue s) (IsTrue t)
-    (Bop EqualB s t)  | boolHeuristic s || boolHeuristic t -> Bop EqProp (IsTrue s) (IsTrue t)
-    --(Bop Neqb s t)    | boolHeuristic s || boolHeuristic t -> Bop Neq (IsTrue s) (IsTrue t)
-    (Bop EqualB s t)  | nonBoolHeuristic s || nonBoolHeuristic t -> Bop Eq s t
-    (Bop EqualB s t) -> Bop Equal s t
-    (Bop Neqb s t)    | boolHeuristic s || boolHeuristic t -> Neg (Bop EqProp (IsTrue s) (IsTrue t))
-    (Bop Neqb s t)    {- | nonBoolHeuristic s || nonBoolHeuristic t -} -> Bop Neq s t
-    (Bop Andb s t) -> And (IsTrue s) (IsTrue t)
-    (Bop Orb s t) -> Or (IsTrue s) (IsTrue t)
-    (Bop Leqb s t) -> Bop Leq s t
-    (Bop Ltb s t) -> Bop Lt s t
-    (Bop Geqb s t) -> Bop Geq s t
-    (Bop Gtb s t) -> Bop Gt s t
-    (Bop Eqb s t) -> Bop Eq s t
-    b | b == btrue -> TT
-    b | b == bfalse -> FF
-    _ -> tm
-  where
-    boolHeuristic t = case t of
-      Bop op _ _ ->
-        op `elem` [ImplB, EqualB, EqualBProp, Neqb, Andb, Orb, Leqb, Ltb, Geqb, Gtb, Eqb]
-      IsTrue (App impl _) -> impl == Def implb
-      (TT; FF) -> True
-      _ -> t == btrue || t == bfalse
-    nonBoolHeuristic t | boolHeuristic t = False
-    nonBoolHeuristic (Bop{}; Project{}; Exist{}; SubCast{}; IsTrue{}; Cr{}) = True
-    nonBoolHeuristic _ = False
-
-
-instance Pretty Bop where
+instance Pretty Binop where
   pPrint = text . show
 
-instance Show Bop where
-  show Eq = "="
-  show EqProp = "↔"
-  show Neq = "≠"
-  show Leq = "<=Z"
-  show Geq = ">="
-  show Lt = "<Z"
-  show Gt = ">"
-  show Plus = "+Z"
-  show Minus = "-Z"
-  show Times = "*Z"
-  show Div = "/Z"
-  show Mod = error "TODO: support modulo in Rocq"
-  show Leqb = "<=?"
-  show Geqb = ">=?"
-  show EqBool = "eqb"
-  show Eqb = "=?Z"
-  -- show NeqZb = "!=?" -- there is no such infix notation in Coq for bool-valued equality on Z, so we define one ourselves
-  show Neqb = "/=?" -- there is no such infix notation in Coq for bool-valued equality on Z, so we define one ourselves
-  show Ltb = "<?"
-  show Gtb = ">?"
-  show Andb = "&&"
-  show Orb = "||"
-  show EqualB = "==?"
-  show NEqualB = "/=?"
-  show Equal = "=="
-  show EqualBProp = "<=>?"
-  show ImplB = "implb"
-  show PlusU = "+"
-  show MinusU = "-"
-  show TimesU = "*"
-  show DivU = "/"
-  show ModU = "mod"
-  show ConsRT = "::RT"
-  show ConsUT = "::UT"
-  show ConsR = "::R"
-  show ConsU = "::U"
+instance Show Binop where
+  show (Binop RocqEq _) = "="
+  show (Binop Eq kind) = case kind of
+    PropBop -> "=="
+    UnrefBop -> "eqb"
+    RefBop -> "==?"
+  show (Binop Neq kind) = case kind of
+    PropBop -> "≠"
+    UnrefBop -> "/=?" -- there is no infix notation in Coq for bool-valued equality on Z, so we define one
+    RefBop -> "/=?"
+  show (Binop Leq kind) = case kind of
+    PropBop -> "<="
+    UnrefBop -> "<=?"
+    RefBop -> "<=Z"
+  show (Binop Geq kind) = case kind of
+    PropBop -> ">="
+    UnrefBop -> ">=?"
+    RefBop -> ">=Z"
+  show (Binop Lt kind) = case kind of
+    PropBop -> "<"
+    UnrefBop -> "<?"
+    RefBop -> "<Z"
+  show (Binop Gt kind) = case kind of
+    PropBop -> ">"
+    UnrefBop -> ">?"
+    RefBop -> ">Z"
+  show (Binop And kind) = case kind of
+    PropBop -> "∧"
+    UnrefBop -> "&&"
+    RefBop -> undefined
+  show (Binop Or kind) = case kind of
+    PropBop -> "∨"
+    UnrefBop -> "||"
+    RefBop -> undefined
+  show (Binop Impl kind) = case kind of
+    PropBop -> "→"
+    UnrefBop -> "implb"
+    RefBop -> undefined
+  show (Binop Equiv kind) = case kind of
+    PropBop -> "↔"
+    UnrefBop -> undefined
+    RefBop -> undefined
+  show (Binop Plus kind) = case kind of
+    PropBop -> undefined
+    UnrefBop -> "+"
+    RefBop -> "+Z"
+  show (Binop Minus kind) = case kind of
+    PropBop -> undefined
+    UnrefBop -> "-"
+    RefBop -> "-Z"
+  show (Binop Times kind) = case kind of
+    PropBop -> undefined
+    UnrefBop -> "*"
+    RefBop -> "*Z"
+  show (Binop Div kind) = case kind of
+    PropBop -> undefined
+    UnrefBop -> "/"
+    RefBop -> "/Z"
+  show (Binop Mod kind) = case kind of
+    PropBop -> undefined
+    UnrefBop -> "mod"
+    RefBop -> "modZ"
+  show (Binop ConsRT _) = "::RT"
+  show (Binop ConsUT _) = "::UT"
+  show (Binop ConsR _) = "::R"
+  show (Binop ConsU _) = "::U"
 
 instance Pretty ProofTerm where
   pPrintPrec _ _ (CoqProofTerm s) = text s
@@ -826,8 +728,6 @@ instance Pretty ProofTerm where
   pPrintPrec _ _ (ProofHole Nothing) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec Oracle)
   pPrintPrec _ _ (ProofHole (Just h)) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec (Concat [Try (Clear h), Oracle]))
   pPrintPrec _ _ (ByTac tac) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec tac)
-  pPrintPrec l p (Conj tm1 tm2) =
-    maybeParens (p > appPrec) $ "conj" <+> pPrintPrec l (appPrec + 1) tm1 <+> pPrintPrec l (appPrec + 1) tm2
 
 instance Pretty CoqDestrPat where
   pPrint pat = case pat of
@@ -951,6 +851,11 @@ admitted = any containsAdmit
       _ -> False
 
 instance Pretty ArgListT where
+  {- pPrintPrec l p (ArgListT xs) =
+    maybeParens (p > consPrec) $ sep
+      (map (\(x, t) -> sep [pPrintPrec l (consPrec + 1) t <+> "::RT" <+>
+      "λ" <+> pPrintArg ((x,t),True) <> comma]) xs)
+      <+> "::RT nilRT" -}
   pPrintPrec l p = pPrintPrec l p . mkArgListT
 instance Pretty ArgList where
   pPrintPrec l p = pPrintPrec l p . mkArgList

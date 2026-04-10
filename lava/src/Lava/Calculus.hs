@@ -9,8 +9,6 @@ module Lava.Calculus where
 
 import Data.Bifunctor (first, second)
 import Data.Data
-import Data.List (find)
-import Data.Maybe (fromJust)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Debug.Trace (trace)
@@ -130,6 +128,7 @@ data Bop
   | And
   | Or
   | Impl
+  | Iff
   deriving (Data, Eq)
 
 -- | Binary proof operators
@@ -523,6 +522,7 @@ bopPrec Gt = 4
 bopPrec And = 3
 bopPrec Or = 2
 bopPrec Impl = 1
+bopPrec Iff = 1
 
 popPrec :: ProofOp -> Rational
 popPrec _ = 4
@@ -623,6 +623,7 @@ instance Show Bop where
     And -> "&&"
     Or -> "||"
     Impl -> "=>"
+    Iff -> "<=>"
 
 instance Pretty Bop where
   pPrint = text . show

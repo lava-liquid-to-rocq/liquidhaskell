@@ -45,7 +45,7 @@ mkForallXs xs cqtm = Forall (map (,Hole) xs) cqtm
 -- | Wrapper for Exists, defined as id for empty argument list
 mkExists :: [(Id, RocqType)] -> CoqTerm -> CoqTerm
 mkExists [] r = r
-mkExists ((_, Prop prp@(Bop Eq _ trueOrFalse)) : tl) r | trueOrFalse `elem` [btrue, bfalse] = mkAnd [prp, mkExists tl r]
+mkExists ((_, Prop prp@(Bop (Binop Eq PropBop) _ trueOrFalse)) : tl) r | trueOrFalse `elem` [btrue, bfalse] = mkAnd [prp, mkExists tl r]
 mkExists (hd : tl) r = case mkExists tl r of
   Exists args r' -> Exists (hd : args) r'
   res -> Exists [hd] res
@@ -60,48 +60,55 @@ mkArrowT args ret = foldr Arrow ret args
 
 -- | Wrapper for And, defined as TT for empty conjuncts list
 mkAnd :: [CoqTerm] -> CoqTerm
-mkAnd args = if null args' then TT else foldl1 And args'
+mkAnd args = if null args' then PropLit True else foldl1 (Bop (Binop And PropBop)) args'
   where
-    args' = filter (/= TT) args
+    args' = filter (/= PropLit True) args
 
 -- | Wrapper for Or, defined as FF for empty conjuncts list
 mkOr :: [CoqTerm] -> CoqTerm
-mkOr args = if null args' then FF else foldl1 Or args'
+mkOr args = if null args' then PropLit False else foldl1 (Bop (Binop Or PropBop)) args'
   where
-    args' = filter (/= FF) args
+    args' = filter (/= PropLit False) args
 
 -- | Wrapper for App, defined as its first argument for empty argument list
 mkApp :: CoqTerm -> [CoqTerm] -> CoqTerm
 mkApp f [] = f
 mkApp f ts = App f ts
 
--- TODO: use simplifyIsTrue in mkIsTrue (or make no simplifications at all)
-
 -- | Wrapper for Is_true with some simplifications
 mkIsTrue :: CoqTerm -> CoqTerm
 -- mkIsTrue tm | trace ("mkIsTrue(" ++ show tm ++ ")") False = undefined
 mkIsTrue tm = case tm of
-  Var "true" -> TT
-  Cr "true" -> TT
-  Bop zrel r1 r2 | zrel `elem` [Ltb, Leqb, Geqb, Gtb] -> mkZrel zrel r1 r2 btrue
-  Neg (Neg b) -> mkIsTrue b
-  Neg (Bop zrel r1 r2) | zrel `elem` [Ltb, Leqb, Geqb, Gtb] -> mkZrel zrel r1 r2 bfalse
-  App (Def neg) [Bop zrel r1 r2] | neg == negb && zrel `elem` [Ltb, Leqb, Geqb, Gtb] -> mkZrel zrel r1 r2 bfalse
-  _ -> {- traceFuncRet ["mkIsTrue", show r] $ -} IsTrue tm
+  _ | tm == btrue -> PropLit True
+  _ | tm == bfalse -> PropLit False
+  Neg _ (Neg _ b) -> mkIsTrue b
+  Neg _ (Bop (Binop zrel UnrefBop) r1 r2)
+    | zrel `elem` [Lt, Leq, Geq, Gt] ->
+        mkZrel zrel r1 r2 bfalse
+  Neg _ b -> Neg PropBop (mkIsTrue b)
+  Bop (Binop zrel UnrefBop) r1 r2
+    | zrel `elem` [Lt, Leq, Geq, Gt] ->
+        mkZrel zrel r1 r2 btrue
+  Bop (Binop bop UnrefBop) r1 r2
+    | bop `elem` [Eq, Neq] ->
+        Bop (Binop bop PropBop) r1 r2
+  Bop (Binop bop UnrefBop) r1 r2
+    | bop `elem` [And, Or, Impl, Equiv] ->
+        Bop (Binop bop PropBop) (mkIsTrue r1) (mkIsTrue r2)
+  _ -> IsTrue tm
   where
     mkZrel zrel r1 r2 res = App zrel_rel [r1, r2, res]
       where
         zrel_rel = Def $ case zrel of
-          Ltb -> "ltbZ_rel"
-          Leqb -> "lebZ_rel"
-          Geqb -> "gebZ_rel"
-          Gtb -> "gtbZ_rel"
+          Lt -> "ltbZ_rel"
+          Leq -> "lebZ_rel"
+          Geq -> "gebZ_rel"
+          Gt -> "gtbZ_rel"
 
 -- | Wrapper for exist, using the proof term I for a trivial refinement
 mkExist :: RocqType -> CoqTerm -> CoqTerm
-mkExist (Subset x tp r) tm = Exist (Lambda x tp r) tm proof
-  where
-    proof = if r == TT || r == IsTrue btrue then CoqProofTerm "I" else ProofHole Nothing
+mkExist (Subset x tp r) tm =
+  Exist (Lambda x tp r) tm (if isTrivial r then CoqProofTerm "I" else ProofHole Nothing)
 mkExist tp _ = error . render $ text "Subset type expected to build exist, found" <+> pPrint tp
 
 -- | Create a destruction pattern [x x_p] for the variable x
@@ -115,7 +122,7 @@ mkVarDestruct x = DestructSubsetTerm (Var x) (mkVarDestrPat x)
 -- | mkOpaque(x) = Opaque x.
 mkOpaque :: Id -> Decl
 -- mkOpaque x | trace ("mkOpaque(" ++ x ++ ")") False = undefined
-mkOpaque x = CoqMarkVisibility $ ChangeVisibility x Opaque
+mkOpaque x = ChangeVisibility x Opaque
 
 argListCorT :: ArgListT -> UArgListT -> RocqType
 argListCorT argList uargList = Prop $ App (Def "projectsArgListT") [mkArgListT argList, mkUArgListT uargList]

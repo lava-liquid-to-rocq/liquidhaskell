@@ -66,12 +66,9 @@ instance Binder LH.Decl where
 
 instance Binder Coq.Decl where
   bindName d = case d of
-    Coq.TCDecl tc _ -> tc
     Coq.Fix n _ _ _ -> n
     Coq.Definition f _ _ _ _ -> f
-    Coq.CoqAxiom ax _ _ -> ax
     Coq.CoqInductive tc _ _ _ -> tc
-    Coq.CoqAlias n _ -> n
     Coq.CoqNewType t _ -> t
     -- \| load, visibility modifier, hint
     _ -> ""

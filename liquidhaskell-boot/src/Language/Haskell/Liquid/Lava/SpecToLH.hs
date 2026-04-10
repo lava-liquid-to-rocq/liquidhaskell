@@ -219,7 +219,7 @@ transExp modId binder = transExpr
               [] -> Calc.ttTm -- TODO: [LP] An empty disjunction should be false no?
               rs' -> foldl1 (Calc.Bop Calc.Or) rs'
           F.PIff ante concl ->
-            Calc.Bop Calc.Eq <$> transExpr ante <*> transExpr concl
+            Calc.Bop Calc.Iff <$> transExpr ante <*> transExpr concl
           F.PImp ante concl ->
             Calc.Bop Calc.Impl <$> transExpr ante <*> transExpr concl
           F.ECon (F.I i) -> pure $ Calc.IntLit i
