@@ -43,7 +43,7 @@ preamble =
     [ text "From coqDeps Require Export LiquidPreludeUtil.",
       scope "Z",
       scope "Int",
-      text "Require Import Unicode.Utf8."
+      text "From Coq Require Import Unicode.Utf8."
     ]
   where
     scope x = text "Open Scope" <+> text x <> text "_scope."

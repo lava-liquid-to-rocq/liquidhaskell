@@ -118,7 +118,9 @@ chooseIndVar γ pats (hd, args) =
           -- We remove the inductive variable from the pats to help the
           -- translation of a recursive call where this variable is already instantiated
           let patsWithoutIndVar = [pat | (Var y _ _, pat) <- zip args pats, y /= indVar]
-              newLoc = Recursive indVar patsWithoutIndVar
+              newLoc
+                | trace (render $ text "Variable" <+> text indVar <+> pPrint patsWithoutIndVar) False = undefined
+                | otherwise = Recursive indVar patsWithoutIndVar
               γ' = adjust (\case (ΓVar _ tp) -> ΓVar newLoc tp; l -> l) x γ
           return (γ', foldl App (Var x ar newLoc) args', argsLast)
         _ -> return ogTerm

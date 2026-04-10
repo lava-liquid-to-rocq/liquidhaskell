@@ -342,7 +342,7 @@ traceDC s tc dc = trace ("Defining " ++ s ++ "(" ++ tc ++ "." ++ dc ++ ")") Fals
 
 -- | Translation of a definition `f` to the refined definition `f` (defined with tactics)
 trDefRefDef :: FuncData -> Coq.Decl
--- trDefRefDef f | traceF "trDefRefDef" f = undefined
+trDefRefDef f | traceF "trDefRefDef" f = undefined
 trDefRefDef f =
   -- FIX: for a constant, the type for the pack is wrong (see PeanoNats.one_pack)
   Coq.Definition (name f) (map (,False) (argsT f)) (retT f) (ProofBody tacs) Transparent
@@ -395,11 +395,6 @@ functionPaths e xs =
 -- | Actually create the function paths of an expression: function P from the paper (definition B.3)
 separateBranches :: [(Id, Reft)] -> [(Reft, Reft)] -> Expr -> [FunctionPath]
 separateBranches σxs σp (Reft r) = [(σxs, σp, r)]
--- TODO: remove this case for if-then-else, but deal with it in the translation
-{- separateBranches σxs σp (LH.Let x _ (Reft cond) (Case (LH.Var x') [("False", [], elseE), ("True", [], thenE)] _)) args | x == x' =
-  let thenBrs = map (\(σxs_t, σp_t, r_t) -> (σxs_t, cond : σp_t, r_t)) $ separateBranches thenE args
-      elseBrs = map (\(σxs_f, σp_f, r_f) -> (σxs_f, LH.Neg cond : σp_f, r_f)) $ separateBranches elseE args
-   in thenBrs ++ elseBrs -}
 -- Lets are subsituted away
 separateBranches σxs σp (LH.Let x _ ex e) =
   let x_br = separateBranches σxs σp ex

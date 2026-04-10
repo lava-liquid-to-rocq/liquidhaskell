@@ -327,10 +327,10 @@ trExprTacs (Case tm alts genVars) =
 -- | Given an inductive variable y, the branch pattern and arguments,
 -- build an application of IHy to the arguments
 trRecCall :: Id -> BranchPattern -> [Reft] -> CoqTerm
+trRecCall indVar pats args | traceFunc "trRecCall" [text indVar, pPrint pats, pPrint args] = undefined
 trRecCall indVar pats args =
   -- FIX: if the inductive variable appears several times, we only want to delete once
-  -- FIX: wrong variable chosen in PeanoNats.eqN
-  let argsNoIndVar = [arg | arg <- args, arg /= LH.Var indVar 0 Local]
+  let argsNoIndVar = filter (not . castOfIndVar) args
       -- During elaboration, we removed the pattern for the inductive variable from pats
       argsAndPats = zip argsNoIndVar (map apps pats)
       -- ltac:(try clear ihHyp; solver)
@@ -343,16 +343,12 @@ trRecCall indVar pats args =
       -- projection and the witness, for which we use ltac:(oracle)
       trArg (ri, (LH.Var _ n _, _)) | n > 0 = [trReft ri]
       trArg (ri, _) = [mkProject $ trReft ri, oracleTac]
-      -- The number of parameters that have been destructed gives us
-      -- the number of ltac:(oracle) we need for the induction
-      -- hypothesis, this includes one for the induction variable itself
-      nbOracles = length [ri | (ri, (LH.DC _, _)) <- argsAndPats]
-      argsT = replicate nbOracles oracleTac ++ concatMap trArg argsAndPats
+      argsT = oracleTac : concatMap trArg argsAndPats
    in Coq.App (Coq.Var $ ihName indVar) argsT
   where
     castOfIndVar (LH.Var y _ _) | y == indVar = True
     castOfIndVar (Sub r _ _) = castOfIndVar r
-    castOfIndVar (Proj r) = castOfIndVar r
+    castOfIndVar (Inj r _) = castOfIndVar r
     castOfIndVar _ = False
 
 -- | Translation of a case expression as destruct or as induct

@@ -128,14 +128,12 @@ translateFile writeFlag sinfo arg = do
       when writeFlag $ do
         createDirectoryIfMissing True outputFolder
         writeOut outputFolder modulename ILH PP.empty calcSourceElaborated
-      putStrLn ""
       -- Translate Calculus declarations to Coq declarations
       let coqImports = map Coq.Load importNames
           coqResult = coqImports ++ concatMap trDecl calcSourceElaborated
       when writeFlag $ do
         let coqPreamble = if hasImports then PP.empty else preamble
         writeOut outputFolder modulename Rocq coqPreamble coqResult
-      putStrLn ""
       pure coqResult
 
 writeOut :: (PP.Pretty a) => FilePath -> String -> OUT -> PP.Doc -> [a] -> IO ()
@@ -145,6 +143,7 @@ writeOut outputFolder modulename outType pre ilhSource = do
   let ilhOutput = PP.vcat (pre PP.<> PP.char '\n' : map ((PP.<> PP.char '\n') . PP.pPrint) ilhSource)
   let style = PP.Style {mode = PP.PageMode, lineLength = 120, ribbonsPerLine = 1.2}
   writeFile ilhOutputPath (PP.renderStyle style ilhOutput)
+  putStrLn ""
 
 -- | Parsed binds and specs extracted from LH.
 data ParsedBinds = ParsedBinds
