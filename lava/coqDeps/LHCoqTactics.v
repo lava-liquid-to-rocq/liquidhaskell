@@ -14,25 +14,6 @@ Proof.
 Defined. 
 Global Notation "p ? q" := (qmark p q) (at level 99).
 
-(*Lemma f_def_cleanup [A B: Type] [A': Type] [B': forall (x1:A'), Type] [prA: A' ⤖ A] [prB: forall (x1:A'), (B' x1) ⤖ B] (f: @Pack A B A' B' prA prB):
-  (let (f_def, f_rel, _, _) := f in f_def) = f.(f_def).
-Proof.
-  now destruct f as [f f_rel ? ?].
-Qed.
-#[global] Hint Rewrite f_def_cleanup:get_rel_db. 
-Lemma f_rel_cleanup [A B: Type] [A': Type] [B': forall (x1:A'), Type] [prA: A' ⤖ A] [prB: forall (x1:A'), (B' x1) ⤖ B] (f: @Pack A B A' B' prA prB):
-  (let (f_def, f_rel, _, _) := f in f_rel) = f.(f_rel).
-Proof.
-  now destruct f as [f f_rel ? ?].
-Qed.
-#[global] Hint Rewrite f_rel_cleanup:get_rel_db. 
-Lemma f_rel_u_cleanup [A B: Type] (f: @uPack A B):
-  (let (f_rel, _) := f in f_rel) = f.(f_rel_u).
-Proof.
-  now destruct f as [f f_rel].
-Qed.
-#[global] Hint Rewrite f_rel_u_cleanup:get_rel_db. *)
-
 Ltac is_trivial tp :=
   match tp with
   | True => idtac
@@ -196,7 +177,7 @@ Local Ltac isEqRes Res exp :=
   let test := fresh "test" in
   assert (Res = exp) as test by (unfold Res; reflexivity); clear test. 
 
-(* takes a projection ` tm posed as Res and poses tm as Res *)
+(* takes a projection ` tm posed as Res and sets tm as Res *)
 Tactic Notation "undoProj" ident(Res) :=
   let temp := fresh "temp" in
   assRefl Res as temp;
@@ -211,6 +192,7 @@ Ltac findProj exp Res :=
   findSubExpr Res isAppProj exp;
   undoProj Res.
 
+(* simplify subterms of the shape ⌊ exist _ _ _ -⌋ in exp throughout the proof state *)
 Ltac cleanupExistProj exp :=
   let Res := fresh "Res" in
   findSubExpr Res isExistProj exp;
@@ -224,6 +206,7 @@ Ltac cleanupExistProj exp :=
   first [rewrite proj_ex'' in Res | timeout 1 simpl in Res];
   subst Res.
 
+(* simplify subterms of the shape ⌊ subsumptionCast _ _ _ _ -⌋ in exp throughout the proof state *)
 Ltac cleanupSubCastProj exp :=
   let Res := fresh "Res" in 
   findSubExpr Res isSubCastProj exp;
@@ -237,6 +220,7 @@ Ltac cleanupSubCastProj exp :=
   first [rewrite proj_subCast in Res | timeout 1 simpl in Res];
   subst Res.
 
+(* suceeds iff fApp is a hypothesis or an application of a hypothesis *)
 Ltac isHypApp fApp :=
   match fApp with
   | ?f _ _ _ _ _ _ _ _ => isVar f
@@ -369,15 +353,6 @@ Tactic Notation "axiomatize_term" constr(tm) "as " ident(name) ident(def) :=
     idtac "Sucessfully axiomatized refined term and created refinement witness for it."
   else (idtac "Failed to create refinement witness for newly axiomatized refined term."; clear tm').
 
-(*
-Ltac axiomatize_posed_tm v name def :=
-  let vRef := fresh "vRef" in
-  assert (v = v) as vRef by reflexivity; unfold v in vRef;
-  match type of vRef with
-  | ?tm = _ => clear vRef; axiomatize_term tm as name def
-  end.
-*)
-
 Ltac pose_cleanup_refined_tm var_name tm := 
   let temp := fresh "temp_r" in
   let v_def := fresh "v_def" in 
@@ -487,13 +462,7 @@ Ltac axHOAppProjTm exp :=
           let tmp := fresh "v" in
           set ProjRes as tmp in *;
           clearbody tmp;
-          clear dependent ProjRes (*|
-          let tmp := fresh "v" in
-          let tmp_rw := fresh "tmp_rw" in
-          pose proof (exist _ ProjRes (eq_refl ProjRes)) as tmp;
-          destruct tmp as [tmp tmp_rw];
-          repeat rewrite tmp_rw in *;
-          clear dependent ProjRes*)
+          clear dependent ProjRes
         ]
     end
   end.
@@ -582,6 +551,9 @@ Ltac createIhAppRw ih p :=
     try cleanup_witness p
   end.
 
+(* takes a hypothesis with prop-kinded antecedent and a proof term for the antecedent,
+    and creates a variable for the application and tries to 
+    specialize all occurences of the hypothesis with that variable *)
 Ltac assIhAppl ih p Res :=
   propKinded p;
   idtac "assIhAppl " ih p Res; 
@@ -591,26 +563,10 @@ Ltac assIhAppl ih p Res :=
     replace p with q in * by (auto with pi_db);
     pose v as Res;
     try (rewriteAll h)
-  (*| _ => (* idtac "rewrite all applications of the shape " ih  " _ to " ih p " using proof irrelevance";*)
-    (* rewrite all applications of the shape ih _ to ih p using proof irrelevance *)
-    let H := fresh "temp" in
-    assert (forall p', ih p' = ih p) as H by (intros; f_equal; now auto with pi_db); 
-    (* let Htp := type of H in
-    idtac H ": " Htp; *)
-    try (rewrite H in *; idtac "Rewrote other applications of " ih " to " ih p " using proof irrelevance. "); 
-    clear H;
-    
-    let v := fresh "v" in
-    let v_def := fresh "v_def" in
-    pose proof (exist (fun v => ih p = v) (ih p) eq_refl) as v;
-    destruct v as [v v_def];
-    rewriteAll v_def;
-    try subst ih; 
-    pose v as Res;
-    try (specialize (ih p))*)
   | |- _ => fail "Missing hypothesis rewriting ih application into a variable. "
   end.
 
+(* Unify and opaqueify ih application subterms in exp throughout the proof state *)
 Ltac axProjIhAppl exp :=
   let Res := fresh "Res" in
   let ih := fresh "ih" in
