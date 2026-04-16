@@ -1,17 +1,18 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive SFBool_u : Set := 
+Set Universe Polymorphism.
+Inductive SFBool_u : Type := 
 	 | SFFalse_u: SFBool_u
 	 | SFTrue_u: SFBool_u. 
 Fixpoint SFBool_eq (x: SFBool_u) (y: SFBool_u): bool := 
 	match (x, y) with (SFFalse_u, SFFalse_u) => true | (SFTrue_u, SFTrue_u) => true | (_, _) => false end. 
-Definition SFBool_eq_refl: (forall (x: SFBool_u) , is_true (SFBool_eq x x)). 
+Theorem SFBool_eq_refl: (forall (x: SFBool_u) , is_true (SFBool_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve SFBool_eq_refl : eq_hint_db.
-Definition SFBool_eqb_eq: (forall (s: SFBool_u) (t: SFBool_u) , (is_true (SFBool_eq s t)) -> (s = t)). 
+Theorem SFBool_eqb_eq: (forall (s: SFBool_u) (t: SFBool_u) , (is_true (SFBool_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -46,7 +47,10 @@ Definition SFTrue: SFBool :=
 #[global] Hint Resolve SFBool_eq : ref_constr_db.
 #[global] Hint Unfold SFFalse : ref_constr_db.
 #[global] Hint Unfold SFTrue : ref_constr_db.
-Definition andb (b1: SFBool) (b2: SFBool): SFBool. 
+Definition andb_spec (b1: SFBool) (b2: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold andb_spec : lia_unfold.
+Definition andb (b1: SFBool) (b2: SFBool): andb_spec b1 b2. 
 Proof. 
 	destruct b1 as [b1 b1_p]. 
 	destruct b2 as [b2 b2_p]. 
@@ -69,7 +73,7 @@ Inductive andb_rel : (SFBool_u -> (SFBool_u -> (SFBool_u -> Prop))) :=
 #[global] Instance andb_getF : getFunc andb_rel := { 
 	getF' := andb
 }.
-Definition andb_rel_funct [b1: SFBool_u] [b2: SFBool_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: andb_rel b1 b2 VV) (K: andb_rel b1 b2 VV') , VV = VV'). 
+Theorem andb_rel_funct [b1: SFBool_u] [b2: SFBool_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: andb_rel b1 b2 VV) (K: andb_rel b1 b2 VV') , VV = VV'). 
 Proof. 
 	try revert b2_p; generalize dependent b2; 
 	destruct b1 as [(*SFFalse*)  | (*SFTrue*) ]; 
@@ -89,18 +93,21 @@ Qed.
 #[global] Hint Rewrite andb_SFFalse_lem : f_rel_back.
 Theorem andb_rel_ex (b1: SFBool_u) (b2: SFBool_u) (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True): andb_rel b1 b2 (⌊ andb (exist _ b1 b1_p) (exist _ b2 b2_p) -⌋). 
 Proof. 
+	Opaque andb.
 	existence_lemma_pre andb; 
 	try revert b2_p; generalize dependent b2; 
 	destruct b1 as [(*SFFalse*)  | (*SFTrue*) ]; 
 	intros ; 
 	[fix_notations| 
 	fix_notations]; 
-	existence_lemma_quicksolve andb; 
+	simpl in *. 
+	Transparent andb.
+	all: existence_lemma_quicksolve andb; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve andb_rel_ex : rel_ax_db.
-Opaque andb. 
+#[global] Opaque andb. 
 Theorem andb__andb_rel_rw (b1: SFBool_u) (b2: SFBool_u) (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True) (VV: SFBool_u): ((⌊ andb (exist _ b1 b1_p) (exist _ b2 b2_p) -⌋) = VV) <-> (andb_rel b1 b2 VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -121,7 +128,7 @@ Proof.
 	refine (andb__andb_rel b1_r b2_r VV). 
 Qed. 
 #[global] Hint Resolve andb__andb_rel' : f_rel_funct_db.
-Definition andb_rel_mk [b1: SFBool_u] [b2: SFBool_u] (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True): {VV: _ | andb_rel b1 b2 VV}. 
+Theorem andb_rel_mk [b1: SFBool_u] [b2: SFBool_u] (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True): {VV: _ | andb_rel b1 b2 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (andb_rel b1 b2 VV)) (andb (exist _ b1 b1_p) (exist _ b2 b2_p)) _); 
@@ -133,7 +140,10 @@ Qed.
 Proof. 
 	buildPackG andb andb_rel andb__andb_rel andb_rel_funct. 
 Defined.
-Definition andb' (b1: SFBool) (b2: SFBool): SFBool. 
+Definition andb'_spec (b1: SFBool) (b2: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold andb'_spec : lia_unfold.
+Definition andb' (b1: SFBool) (b2: SFBool): andb'_spec b1 b2. 
 Proof. 
 	destruct b1 as [b1 b1_p]. 
 	destruct b2 as [b2 b2_p]. 
@@ -142,7 +152,10 @@ Proof.
 	solver | refine (subsumptionCast _ _ SFFalse _); 
 	solver]. 
 Defined. 
-Definition andb3 (b1: SFBool) (b2: SFBool) (b3: SFBool): SFBool. 
+Definition andb3_spec (b1: SFBool) (b2: SFBool) (b3: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold andb3_spec : lia_unfold.
+Definition andb3 (b1: SFBool) (b2: SFBool) (b3: SFBool): andb3_spec b1 b2 b3. 
 Proof. 
 	destruct b1 as [b1 b1_p]. 
 	destruct b2 as [b2 b2_p]. 
@@ -178,7 +191,7 @@ Inductive andb3_rel : (SFBool_u -> (SFBool_u -> (SFBool_u -> (SFBool_u -> Prop))
 #[global] Instance andb3_getF : getFunc andb3_rel := { 
 	getF' := andb3
 }.
-Definition andb3_rel_funct [b1: SFBool_u] [b2: SFBool_u] [b3: SFBool_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: andb3_rel b1 b2 b3 VV) (K: andb3_rel b1 b2 b3 VV') , VV = VV'). 
+Theorem andb3_rel_funct [b1: SFBool_u] [b2: SFBool_u] [b3: SFBool_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: andb3_rel b1 b2 b3 VV) (K: andb3_rel b1 b2 b3 VV') , VV = VV'). 
 Proof. 
 	try revert b3_p; generalize dependent b3; try revert b2_p; generalize dependent b2; 
 	destruct b1 as [(*SFFalse*)  | (*SFTrue*) ]; 
@@ -215,6 +228,7 @@ Qed.
 Theorem andb3_rel_ex (b1: SFBool_u) (b2: SFBool_u) (b3: SFBool_u) (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True) (b3_p: (SFBool_wf b3) /\ True): andb3_rel b1 b2 b3 
 		(⌊ andb3 (exist _ b1 b1_p) (exist _ b2 b2_p) (exist _ b3 b3_p) -⌋). 
 Proof. 
+	Opaque andb3.
 	existence_lemma_pre andb3; 
 	try revert b3_p; generalize dependent b3; try revert b2_p; generalize dependent b2; 
 	destruct b1 as [(*SFFalse*)  | (*SFTrue*) ]; 
@@ -227,12 +241,14 @@ Proof.
 	intros ; 
 	[fix_notations| 
 	fix_notations]]]; 
-	existence_lemma_quicksolve andb3; 
+	simpl in *. 
+	Transparent andb3.
+	all: existence_lemma_quicksolve andb3; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve andb3_rel_ex : rel_ax_db.
-Opaque andb3. 
+#[global] Opaque andb3. 
 Theorem andb3__andb3_rel_rw (b1: SFBool_u) (b2: SFBool_u) (b3: SFBool_u) (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True) (b3_p: (SFBool_wf b3) /\ True) (VV: SFBool_u): ((⌊ andb3 (exist _ b1 b1_p) (exist _ b2 b2_p) (exist _ b3 b3_p) -⌋) = VV) <-> (andb3_rel b1 b2 b3 VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -253,7 +269,7 @@ Proof.
 	refine (andb3__andb3_rel b1_r b2_r b3_r VV). 
 Qed. 
 #[global] Hint Resolve andb3__andb3_rel' : f_rel_funct_db.
-Definition andb3_rel_mk [b1: SFBool_u] [b2: SFBool_u] [b3: SFBool_u] (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True) (b3_p: (SFBool_wf b3) /\ True): {VV: _ | andb3_rel b1 b2 b3 VV}. 
+Theorem andb3_rel_mk [b1: SFBool_u] [b2: SFBool_u] [b3: SFBool_u] (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True) (b3_p: (SFBool_wf b3) /\ True): {VV: _ | andb3_rel b1 b2 b3 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (andb3_rel b1 b2 b3 VV)) 
@@ -266,27 +282,42 @@ Qed.
 Proof. 
 	buildPackG andb3 andb3_rel andb3__andb3_rel andb3_rel_funct. 
 Defined.
-Definition test_andb31: {{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3res) -> (andb3res = SFTrue_u)}}. 
+Definition test_andb31_spec: Type := 
+	{{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3res) -> (andb3res = SFTrue_u)}}. 
+#[global] Hint Unfold test_andb31_spec : lia_unfold.
+Theorem test_andb31: test_andb31_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_andb32: {{forall (andb3res: SFBool_u), (andb3_rel SFFalse_u SFTrue_u SFTrue_u andb3res) -> (andb3res = SFFalse_u)}}. 
+Qed. 
+Definition test_andb32_spec: Type := 
+	{{forall (andb3res: SFBool_u), (andb3_rel SFFalse_u SFTrue_u SFTrue_u andb3res) -> (andb3res = SFFalse_u)}}. 
+#[global] Hint Unfold test_andb32_spec : lia_unfold.
+Theorem test_andb32: test_andb32_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_andb33: {{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFFalse_u SFTrue_u andb3res) -> (andb3res = SFFalse_u)}}. 
+Qed. 
+Definition test_andb33_spec: Type := 
+	{{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFFalse_u SFTrue_u andb3res) -> (andb3res = SFFalse_u)}}. 
+#[global] Hint Unfold test_andb33_spec : lia_unfold.
+Theorem test_andb33: test_andb33_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_andb34: {{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3res) -> (andb3res = SFFalse_u)}}. 
+Qed. 
+Definition test_andb34_spec: Type := 
+	{{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3res) -> (andb3res = SFFalse_u)}}. 
+#[global] Hint Unfold test_andb34_spec : lia_unfold.
+Theorem test_andb34: test_andb34_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition andb_commutative (b: SFBool) (c: SFBool): {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (forall (andb_res_2: SFBool_u), (andb_rel (⌊ c -⌋) (⌊ b -⌋) andb_res_2) -> (andbres == andb_res_2))}}. 
+Qed. 
+Definition andb_commutative_spec (b: SFBool) (c: SFBool): Type := 
+	{{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (forall (andb_res_2: SFBool_u), (andb_rel (⌊ c -⌋) (⌊ b -⌋) andb_res_2) -> (andbres == andb_res_2))}}. 
+#[global] Hint Unfold andb_commutative_spec : lia_unfold.
+Theorem andb_commutative (b: SFBool) (c: SFBool): andb_commutative_spec b c. 
 Proof. 
 	destruct b as [b b_p]. 
 	destruct c as [c c_p]. 
@@ -308,8 +339,11 @@ Proof.
 		  -- intros . 
 			refine (exist _ unit _); 
 			solver.   
-Defined. 
-Definition andb_true_elim2 (b: SFBool) (c: SFBool) (p: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (andbres = SFTrue_u)}}): {{(⌊ c -⌋) = SFTrue_u}}. 
+Qed. 
+Definition andb_true_elim2_spec (b: SFBool) (c: SFBool) (p: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (andbres = SFTrue_u)}}): Type := 
+	{{(⌊ c -⌋) = SFTrue_u}}. 
+#[global] Hint Unfold andb_true_elim2_spec : lia_unfold.
+Theorem andb_true_elim2 (b: SFBool) (c: SFBool) (p: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (andbres = SFTrue_u)}}): andb_true_elim2_spec b c p. 
 Proof. 
 	destruct b as [b b_p]. 
 	destruct c as [c c_p]. 
@@ -332,25 +366,31 @@ Proof.
 		  -- intros . 
 			refine (exist _ unit _); 
 			solver.   
-Defined. 
-Definition identity_fn_applied_twice (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (forall (x: SFBool) , {{forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (fres = (⌊ x -⌋))}})) (b: SFBool): {{forall (fres: _), ((getPackRel f) (⌊ b -⌋) fres) -> (forall (f_res_2: _), ((getPackRel f) fres f_res_2) -> (f_res_2 = (⌊ b -⌋)))}}. 
+Qed. 
+Definition identity_fn_applied_twice_spec (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (forall (x: SFBool) , {{forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (fres = (⌊ x -⌋))}})) (b: SFBool): Type := 
+	{{forall (fres: _), ((getPackRel f) (⌊ b -⌋) fres) -> (forall (f_res_2: _), ((getPackRel f) fres f_res_2) -> (f_res_2 = (⌊ b -⌋)))}}. 
+#[global] Hint Unfold identity_fn_applied_twice_spec : lia_unfold.
+Theorem identity_fn_applied_twice (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (forall (x: SFBool) , {{forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (fres = (⌊ x -⌋))}})) (b: SFBool): identity_fn_applied_twice_spec f h b. 
 Proof. 
 	destruct b as [b b_p]. 
 	pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_39899679. 
-	fix_notations. 
+	simpl in H_39899679. 
 	fix_notations. 
 	pose proof (h 
 		(exist (fun (x: SFBool_u) => ((SFBool_wf x) /\ True)) b (ltac: (solver)))) as H_42296745. 
 	assert (H_42296745': forall (fres: _), ((getPackRel f) b fres) -> (True /\ (fres == b))) by solver. 
-	fix_notations. 
+	simpl in H_42296745'. 
 	pose proof (h 
 		(subsumptionCast SFBool_u (fun (x: SFBool_u) => ((SFBool_wf x) /\ True)) 
 		((getPackF f) 
 		(exist (fun (lq_tmp0: SFBool_u) => ((SFBool_wf lq_tmp0) /\ True)) b (ltac: (solver)))) (ltac: (solver)))) as H_49965291; 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition nandb (b1: SFBool) (b2: SFBool): SFBool. 
+Qed. 
+Definition nandb_spec (b1: SFBool) (b2: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold nandb_spec : lia_unfold.
+Definition nandb (b1: SFBool) (b2: SFBool): nandb_spec b1 b2. 
 Proof. 
 	destruct b1 as [b1 b1_p]. 
 	destruct b2 as [b2 b2_p]. 
@@ -379,7 +419,7 @@ Inductive nandb_rel : (SFBool_u -> (SFBool_u -> (SFBool_u -> Prop))) :=
 #[global] Instance nandb_getF : getFunc nandb_rel := { 
 	getF' := nandb
 }.
-Definition nandb_rel_funct [b1: SFBool_u] [b2: SFBool_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: nandb_rel b1 b2 VV) (K: nandb_rel b1 b2 VV') , VV = VV'). 
+Theorem nandb_rel_funct [b1: SFBool_u] [b2: SFBool_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: nandb_rel b1 b2 VV) (K: nandb_rel b1 b2 VV') , VV = VV'). 
 Proof. 
 	try revert b2_p; generalize dependent b2; 
 	destruct b1 as [(*SFFalse*)  | (*SFTrue*) ]; 
@@ -407,6 +447,7 @@ Qed.
 #[global] Hint Rewrite nandb_SFFalse_lem : f_rel_back.
 Theorem nandb_rel_ex (b1: SFBool_u) (b2: SFBool_u) (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True): nandb_rel b1 b2 (⌊ nandb (exist _ b1 b1_p) (exist _ b2 b2_p) -⌋). 
 Proof. 
+	Opaque nandb.
 	existence_lemma_pre nandb; 
 	try revert b2_p; generalize dependent b2; 
 	destruct b1 as [(*SFFalse*)  | (*SFTrue*) ]; 
@@ -416,12 +457,14 @@ Proof.
 	intros ; 
 	[fix_notations| 
 	fix_notations]]; 
-	existence_lemma_quicksolve nandb; 
+	simpl in *. 
+	Transparent nandb.
+	all: existence_lemma_quicksolve nandb; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve nandb_rel_ex : rel_ax_db.
-Opaque nandb. 
+#[global] Opaque nandb. 
 Theorem nandb__nandb_rel_rw (b1: SFBool_u) (b2: SFBool_u) (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True) (VV: SFBool_u): ((⌊ nandb (exist _ b1 b1_p) (exist _ b2 b2_p) -⌋) = VV) <-> (nandb_rel b1 b2 VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -442,7 +485,7 @@ Proof.
 	refine (nandb__nandb_rel b1_r b2_r VV). 
 Qed. 
 #[global] Hint Resolve nandb__nandb_rel' : f_rel_funct_db.
-Definition nandb_rel_mk [b1: SFBool_u] [b2: SFBool_u] (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True): {VV: _ | nandb_rel b1 b2 VV}. 
+Theorem nandb_rel_mk [b1: SFBool_u] [b2: SFBool_u] (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True): {VV: _ | nandb_rel b1 b2 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (nandb_rel b1 b2 VV)) (nandb (exist _ b1 b1_p) (exist _ b2 b2_p)) _); 
@@ -454,27 +497,42 @@ Qed.
 Proof. 
 	buildPackG nandb nandb_rel nandb__nandb_rel nandb_rel_funct. 
 Defined.
-Definition test_nandb1: {{forall (nandbres: SFBool_u), (nandb_rel SFTrue_u SFFalse_u nandbres) -> (nandbres = SFTrue_u)}}. 
+Definition test_nandb1_spec: Type := 
+	{{forall (nandbres: SFBool_u), (nandb_rel SFTrue_u SFFalse_u nandbres) -> (nandbres = SFTrue_u)}}. 
+#[global] Hint Unfold test_nandb1_spec : lia_unfold.
+Theorem test_nandb1: test_nandb1_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_nandb2: {{forall (nandbres: SFBool_u), (nandb_rel SFFalse_u SFFalse_u nandbres) -> (nandbres = SFTrue_u)}}. 
+Qed. 
+Definition test_nandb2_spec: Type := 
+	{{forall (nandbres: SFBool_u), (nandb_rel SFFalse_u SFFalse_u nandbres) -> (nandbres = SFTrue_u)}}. 
+#[global] Hint Unfold test_nandb2_spec : lia_unfold.
+Theorem test_nandb2: test_nandb2_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_nandb3: {{forall (nandbres: SFBool_u), (nandb_rel SFFalse_u SFTrue_u nandbres) -> (nandbres = SFTrue_u)}}. 
+Qed. 
+Definition test_nandb3_spec: Type := 
+	{{forall (nandbres: SFBool_u), (nandb_rel SFFalse_u SFTrue_u nandbres) -> (nandbres = SFTrue_u)}}. 
+#[global] Hint Unfold test_nandb3_spec : lia_unfold.
+Theorem test_nandb3: test_nandb3_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_nandb4: {{forall (nandbres: SFBool_u), (nandb_rel SFTrue_u SFTrue_u nandbres) -> (nandbres = SFFalse_u)}}. 
+Qed. 
+Definition test_nandb4_spec: Type := 
+	{{forall (nandbres: SFBool_u), (nandb_rel SFTrue_u SFTrue_u nandbres) -> (nandbres = SFFalse_u)}}. 
+#[global] Hint Unfold test_nandb4_spec : lia_unfold.
+Theorem test_nandb4: test_nandb4_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition negb (lq_tmp0: SFBool): SFBool. 
+Qed. 
+Definition negb_spec (lq_tmp0: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold negb_spec : lia_unfold.
+Definition negb (lq_tmp0: SFBool): negb_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	induction lq_tmp0 as [(*SFFalse*)  | (*SFTrue*) ]. 
@@ -495,7 +553,7 @@ Inductive negb_rel : (SFBool_u -> (SFBool_u -> Prop)) :=
 #[global] Instance negb_getF : getFunc negb_rel := { 
 	getF' := negb
 }.
-Definition negb_rel_funct [lq_tmp0: SFBool_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: negb_rel lq_tmp0 VV) (K: negb_rel lq_tmp0 VV') , VV = VV'). 
+Theorem negb_rel_funct [lq_tmp0: SFBool_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: negb_rel lq_tmp0 VV) (K: negb_rel lq_tmp0 VV') , VV = VV'). 
 Proof. 
 	destruct lq_tmp0 as [(*SFFalse*)  | (*SFTrue*) ]; 
 	intros ; 
@@ -514,17 +572,20 @@ Qed.
 #[global] Hint Rewrite negb_SFFalse_lem : f_rel_back.
 Theorem negb_rel_ex (lq_tmp0: SFBool_u) (lq_tmp0_p: (SFBool_wf lq_tmp0) /\ True): negb_rel lq_tmp0 (⌊ negb (exist _ lq_tmp0 lq_tmp0_p) -⌋). 
 Proof. 
+	Opaque negb.
 	existence_lemma_pre negb; 
 	destruct lq_tmp0 as [(*SFFalse*)  | (*SFTrue*) ]; 
 	intros ; 
 	[fix_notations| 
 	fix_notations]; 
-	existence_lemma_quicksolve negb; 
+	simpl in *. 
+	Transparent negb.
+	all: existence_lemma_quicksolve negb; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve negb_rel_ex : rel_ax_db.
-Opaque negb. 
+#[global] Opaque negb. 
 Theorem negb__negb_rel_rw (lq_tmp0: SFBool_u) (lq_tmp0_p: (SFBool_wf lq_tmp0) /\ True) (VV: SFBool_u): ((⌊ negb (exist _ lq_tmp0 lq_tmp0_p) -⌋) = VV) <-> (negb_rel lq_tmp0 VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -545,7 +606,7 @@ Proof.
 	refine (negb__negb_rel lq_tmp0_r VV). 
 Qed. 
 #[global] Hint Resolve negb__negb_rel' : f_rel_funct_db.
-Definition negb_rel_mk [lq_tmp0: SFBool_u] (lq_tmp0_p: (SFBool_wf lq_tmp0) /\ True): {VV: _ | negb_rel lq_tmp0 VV}. 
+Theorem negb_rel_mk [lq_tmp0: SFBool_u] (lq_tmp0_p: (SFBool_wf lq_tmp0) /\ True): {VV: _ | negb_rel lq_tmp0 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (negb_rel lq_tmp0 VV)) (negb (exist _ lq_tmp0 lq_tmp0_p)) _); 
@@ -557,7 +618,10 @@ Qed.
 Proof. 
 	buildPackG negb negb_rel negb__negb_rel negb_rel_funct. 
 Defined.
-Definition negb' (b: SFBool): SFBool. 
+Definition negb'_spec (b: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold negb'_spec : lia_unfold.
+Definition negb' (b: SFBool): negb'_spec b. 
 Proof. 
 	destruct b as [b b_p]. 
 	let E := fresh "E" in 
@@ -565,7 +629,10 @@ Proof.
 	solver | refine (subsumptionCast _ _ SFTrue _); 
 	solver]. 
 Defined. 
-Definition negb_involutive (b: SFBool): {{forall (negbres: SFBool_u), (negb_rel (⌊ b -⌋) negbres) -> (forall (negb_res_2: SFBool_u), (negb_rel negbres negb_res_2) -> (negb_res_2 = (⌊ b -⌋)))}}. 
+Definition negb_involutive_spec (b: SFBool): Type := 
+	{{forall (negbres: SFBool_u), (negb_rel (⌊ b -⌋) negbres) -> (forall (negb_res_2: SFBool_u), (negb_rel negbres negb_res_2) -> (negb_res_2 = (⌊ b -⌋)))}}. 
+#[global] Hint Unfold negb_involutive_spec : lia_unfold.
+Theorem negb_involutive (b: SFBool): negb_involutive_spec b. 
 Proof. 
 	destruct b as [b b_p]. 
 	induction b as [(*SFFalse*)  | (*SFTrue*) ]. 
@@ -575,8 +642,11 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
-Definition orb (b1: SFBool) (b2: SFBool): SFBool. 
+Qed. 
+Definition orb_spec (b1: SFBool) (b2: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold orb_spec : lia_unfold.
+Definition orb (b1: SFBool) (b2: SFBool): orb_spec b1 b2. 
 Proof. 
 	destruct b1 as [b1 b1_p]. 
 	destruct b2 as [b2 b2_p]. 
@@ -599,7 +669,7 @@ Inductive orb_rel : (SFBool_u -> (SFBool_u -> (SFBool_u -> Prop))) :=
 #[global] Instance orb_getF : getFunc orb_rel := { 
 	getF' := orb
 }.
-Definition orb_rel_funct [b1: SFBool_u] [b2: SFBool_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: orb_rel b1 b2 VV) (K: orb_rel b1 b2 VV') , VV = VV'). 
+Theorem orb_rel_funct [b1: SFBool_u] [b2: SFBool_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: orb_rel b1 b2 VV) (K: orb_rel b1 b2 VV') , VV = VV'). 
 Proof. 
 	try revert b2_p; generalize dependent b2; 
 	destruct b1 as [(*SFFalse*)  | (*SFTrue*) ]; 
@@ -619,18 +689,21 @@ Qed.
 #[global] Hint Rewrite orb_SFFalse_lem : f_rel_back.
 Theorem orb_rel_ex (b1: SFBool_u) (b2: SFBool_u) (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True): orb_rel b1 b2 (⌊ orb (exist _ b1 b1_p) (exist _ b2 b2_p) -⌋). 
 Proof. 
+	Opaque orb.
 	existence_lemma_pre orb; 
 	try revert b2_p; generalize dependent b2; 
 	destruct b1 as [(*SFFalse*)  | (*SFTrue*) ]; 
 	intros ; 
 	[fix_notations| 
 	fix_notations]; 
-	existence_lemma_quicksolve orb; 
+	simpl in *. 
+	Transparent orb.
+	all: existence_lemma_quicksolve orb; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve orb_rel_ex : rel_ax_db.
-Opaque orb. 
+#[global] Opaque orb. 
 Theorem orb__orb_rel_rw (b1: SFBool_u) (b2: SFBool_u) (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True) (VV: SFBool_u): ((⌊ orb (exist _ b1 b1_p) (exist _ b2 b2_p) -⌋) = VV) <-> (orb_rel b1 b2 VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -651,7 +724,7 @@ Proof.
 	refine (orb__orb_rel b1_r b2_r VV). 
 Qed. 
 #[global] Hint Resolve orb__orb_rel' : f_rel_funct_db.
-Definition orb_rel_mk [b1: SFBool_u] [b2: SFBool_u] (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True): {VV: _ | orb_rel b1 b2 VV}. 
+Theorem orb_rel_mk [b1: SFBool_u] [b2: SFBool_u] (b1_p: (SFBool_wf b1) /\ True) (b2_p: (SFBool_wf b2) /\ True): {VV: _ | orb_rel b1 b2 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (orb_rel b1 b2 VV)) (orb (exist _ b1 b1_p) (exist _ b2 b2_p)) _); 
@@ -663,7 +736,10 @@ Qed.
 Proof. 
 	buildPackG orb orb_rel orb__orb_rel orb_rel_funct. 
 Defined.
-Definition andb_eq_orb (b: SFBool) (c: SFBool) (h: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (forall (orbres: SFBool_u), (orb_rel (⌊ b -⌋) (⌊ c -⌋) orbres) -> (andbres == orbres))}}): {{(⌊ b -⌋) = (⌊ c -⌋)}}. 
+Definition andb_eq_orb_spec (b: SFBool) (c: SFBool) (h: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (forall (orbres: SFBool_u), (orb_rel (⌊ b -⌋) (⌊ c -⌋) orbres) -> (andbres == orbres))}}): Type := 
+	{{(⌊ b -⌋) = (⌊ c -⌋)}}. 
+#[global] Hint Unfold andb_eq_orb_spec : lia_unfold.
+Theorem andb_eq_orb (b: SFBool) (c: SFBool) (h: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (forall (orbres: SFBool_u), (orb_rel (⌊ b -⌋) (⌊ c -⌋) orbres) -> (andbres == orbres))}}): andb_eq_orb_spec b c h. 
 Proof. 
 	destruct b as [b b_p]. 
 	destruct c as [c c_p]. 
@@ -686,33 +762,51 @@ Proof.
 		  -- intros . 
 			refine (exist _ unit _); 
 			solver.   
-Defined. 
-Definition test_orb1: {{forall (orbres: SFBool_u), (orb_rel SFTrue_u SFFalse_u orbres) -> (orbres = SFTrue_u)}}. 
+Qed. 
+Definition test_orb1_spec: Type := 
+	{{forall (orbres: SFBool_u), (orb_rel SFTrue_u SFFalse_u orbres) -> (orbres = SFTrue_u)}}. 
+#[global] Hint Unfold test_orb1_spec : lia_unfold.
+Theorem test_orb1: test_orb1_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_orb2: {{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFFalse_u orbres) -> (orbres = SFFalse_u)}}. 
+Qed. 
+Definition test_orb2_spec: Type := 
+	{{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFFalse_u orbres) -> (orbres = SFFalse_u)}}. 
+#[global] Hint Unfold test_orb2_spec : lia_unfold.
+Theorem test_orb2: test_orb2_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_orb3: {{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFTrue_u orbres) -> (orbres = SFTrue_u)}}. 
+Qed. 
+Definition test_orb3_spec: Type := 
+	{{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFTrue_u orbres) -> (orbres = SFTrue_u)}}. 
+#[global] Hint Unfold test_orb3_spec : lia_unfold.
+Theorem test_orb3: test_orb3_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_orb4: {{forall (orbres: SFBool_u), (orb_rel SFTrue_u SFTrue_u orbres) -> (orbres = SFTrue_u)}}. 
+Qed. 
+Definition test_orb4_spec: Type := 
+	{{forall (orbres: SFBool_u), (orb_rel SFTrue_u SFTrue_u orbres) -> (orbres = SFTrue_u)}}. 
+#[global] Hint Unfold test_orb4_spec : lia_unfold.
+Theorem test_orb4: test_orb4_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_orb5: {{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFTrue_u orbres) -> (forall (orb_res_2: SFBool_u), (orb_rel SFFalse_u orbres orb_res_2) -> (orb_res_2 = SFTrue_u))}}. 
+Qed. 
+Definition test_orb5_spec: Type := 
+	{{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFTrue_u orbres) -> (forall (orb_res_2: SFBool_u), (orb_rel SFFalse_u orbres orb_res_2) -> (orb_res_2 = SFTrue_u))}}. 
+#[global] Hint Unfold test_orb5_spec : lia_unfold.
+Theorem test_orb5: test_orb5_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition orb' (b1: SFBool) (b2: SFBool): SFBool. 
+Qed. 
+Definition orb'_spec (b1: SFBool) (b2: SFBool): Type := 
+	SFBool. 
+#[global] Hint Unfold orb'_spec : lia_unfold.
+Definition orb' (b1: SFBool) (b2: SFBool): orb'_spec b1 b2. 
 Proof. 
 	destruct b1 as [b1 b1_p]. 
 	destruct b2 as [b2 b2_p]. 
@@ -721,17 +815,17 @@ Proof.
 	solver | refine (exist _ b2 _); 
 	solver]. 
 Defined. 
-Inductive SFBit_u : Set := 
+Inductive SFBit_u : Type := 
 	 | B0_u: SFBit_u
 	 | B1_u: SFBit_u. 
 Fixpoint SFBit_eq (x: SFBit_u) (y: SFBit_u): bool := 
 	match (x, y) with (B0_u, B0_u) => true | (B1_u, B1_u) => true | (_, _) => false end. 
-Definition SFBit_eq_refl: (forall (x: SFBit_u) , is_true (SFBit_eq x x)). 
+Theorem SFBit_eq_refl: (forall (x: SFBit_u) , is_true (SFBit_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve SFBit_eq_refl : eq_hint_db.
-Definition SFBit_eqb_eq: (forall (s: SFBit_u) (t: SFBit_u) , (is_true (SFBit_eq s t)) -> (s = t)). 
+Theorem SFBit_eqb_eq: (forall (s: SFBit_u) (t: SFBit_u) , (is_true (SFBit_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -766,18 +860,18 @@ Definition B1: SFBit :=
 #[global] Hint Resolve SFBit_eq : ref_constr_db.
 #[global] Hint Unfold B0 : ref_constr_db.
 #[global] Hint Unfold B1 : ref_constr_db.
-Inductive SFBin_u : Set := 
+Inductive SFBin_u : Type := 
 	 | Bin0_u: SFBin_u -> SFBin_u
 	 | Bin1_u: SFBin_u -> SFBin_u
 	 | SoftwareFoundations__Z_u: SFBin_u. 
 Fixpoint SFBin_eq (x: SFBin_u) (y: SFBin_u): bool := 
 	match (x, y) with (Bin0_u x, Bin0_u x') => (true && (SFBin_eq x x')) | (Bin1_u x, Bin1_u x') => (true && (SFBin_eq x x')) | (SoftwareFoundations__Z_u, SoftwareFoundations__Z_u) => true | (_, _) => false end. 
-Definition SFBin_eq_refl: (forall (x: SFBin_u) , is_true (SFBin_eq x x)). 
+Theorem SFBin_eq_refl: (forall (x: SFBin_u) , is_true (SFBin_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve SFBin_eq_refl : eq_hint_db.
-Definition SFBin_eqb_eq: (forall (s: SFBin_u) (t: SFBin_u) , (is_true (SFBin_eq s t)) -> (s = t)). 
+Theorem SFBin_eqb_eq: (forall (s: SFBin_u) (t: SFBin_u) , (is_true (SFBin_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -829,7 +923,10 @@ Defined.
 #[global] Hint Unfold Bin0 : ref_constr_db.
 #[global] Hint Unfold Bin1 : ref_constr_db.
 #[global] Hint Unfold SoftwareFoundations__Z : ref_constr_db.
-Definition bin_to_nat (m: SFBin): {VV: Z | True}. 
+Definition bin_to_nat_spec (m: SFBin): Type := 
+	{VV: Z | True}. 
+#[global] Hint Unfold bin_to_nat_spec : lia_unfold.
+Definition bin_to_nat (m: SFBin): bin_to_nat_spec m. 
 Proof. 
 	destruct m as [m m_p]. 
 	induction m as [(*Bin0*) m' IH_m' | (*Bin1*) m' IH_m' | (*SoftwareFoundations__Z*) ]. 
@@ -859,7 +956,7 @@ Inductive bin_to_nat_rel : (SFBin_u -> (Z -> Prop)) :=
 #[global] Instance bin_to_nat_getF : getFunc bin_to_nat_rel := { 
 	getF' := bin_to_nat
 }.
-Definition bin_to_nat_rel_funct [m: SFBin_u]: (forall (VV: Z) (VV': Z) (H: bin_to_nat_rel m VV) (K: bin_to_nat_rel m VV') , VV = VV'). 
+Theorem bin_to_nat_rel_funct [m: SFBin_u]: (forall (VV: Z) (VV': Z) (H: bin_to_nat_rel m VV) (K: bin_to_nat_rel m VV') , VV = VV'). 
 Proof. 
 	induction m as [(*Bin0*) m' IH_m' | (*Bin1*) m' IH_m' | (*SoftwareFoundations__Z*) ]; 
 	intros ; 
@@ -883,6 +980,7 @@ Qed.
 #[global] Hint Rewrite bin_to_nat_Bin1_lem : f_rel_back.
 Theorem bin_to_nat_rel_ex (m: SFBin_u) (m_p: (SFBin_wf m) /\ True): bin_to_nat_rel m (⌊ bin_to_nat (exist _ m m_p) -⌋). 
 Proof. 
+	Opaque bin_to_nat.
 	existence_lemma_pre bin_to_nat; 
 	induction m as [(*Bin0*) m' IH_m' | (*Bin1*) m' IH_m' | (*SoftwareFoundations__Z*) ]; 
 	intros ; 
@@ -895,12 +993,14 @@ Proof.
 	solver))) as IH_40715420; 
 	try clear IH_m'| 
 	fix_notations]; 
-	existence_lemma_quicksolve bin_to_nat; 
+	simpl in *. 
+	Transparent bin_to_nat.
+	all: existence_lemma_quicksolve bin_to_nat; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve bin_to_nat_rel_ex : rel_ax_db.
-Opaque bin_to_nat. 
+#[global] Opaque bin_to_nat. 
 Theorem bin_to_nat__bin_to_nat_rel_rw (m: SFBin_u) (m_p: (SFBin_wf m) /\ True) (VV: Z): ((⌊ bin_to_nat (exist _ m m_p) -⌋) = VV) <-> (bin_to_nat_rel m VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -921,7 +1021,7 @@ Proof.
 	refine (bin_to_nat__bin_to_nat_rel m_r VV). 
 Qed. 
 #[global] Hint Resolve bin_to_nat__bin_to_nat_rel' : f_rel_funct_db.
-Definition bin_to_nat_rel_mk [m: SFBin_u] (m_p: (SFBin_wf m) /\ True): {VV: _ | bin_to_nat_rel m VV}. 
+Theorem bin_to_nat_rel_mk [m: SFBin_u] (m_p: (SFBin_wf m) /\ True): {VV: _ | bin_to_nat_rel m VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (bin_to_nat_rel m VV)) (bin_to_nat (exist _ m m_p)) _); 
@@ -933,12 +1033,18 @@ Qed.
 Proof. 
 	buildPackG bin_to_nat bin_to_nat_rel bin_to_nat__bin_to_nat_rel bin_to_nat_rel_funct. 
 Defined.
-Definition test_bin_incr4: {{forall (bin_to_natres: Z), (bin_to_nat_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) bin_to_natres) -> (bin_to_natres == 2)}}. 
+Definition test_bin_incr4_spec: Type := 
+	{{forall (bin_to_natres: Z), (bin_to_nat_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) bin_to_natres) -> (bin_to_natres == 2)}}. 
+#[global] Hint Unfold test_bin_incr4_spec : lia_unfold.
+Theorem test_bin_incr4: test_bin_incr4_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition incr (m: SFBin): SFBin. 
+Qed. 
+Definition incr_spec (m: SFBin): Type := 
+	SFBin. 
+#[global] Hint Unfold incr_spec : lia_unfold.
+Definition incr (m: SFBin): incr_spec m. 
 Proof. 
 	destruct m as [m m_p]. 
 	induction m as [(*Bin0*) m' IH_m' | (*Bin1*) m' IH_m' | (*SoftwareFoundations__Z*) ]. 
@@ -970,7 +1076,7 @@ Inductive incr_rel : (SFBin_u -> (SFBin_u -> Prop)) :=
 #[global] Instance incr_getF : getFunc incr_rel := { 
 	getF' := incr
 }.
-Definition incr_rel_funct [m: SFBin_u]: (forall (VV: SFBin_u) (VV': SFBin_u) (H: incr_rel m VV) (K: incr_rel m VV') , VV = VV'). 
+Theorem incr_rel_funct [m: SFBin_u]: (forall (VV: SFBin_u) (VV': SFBin_u) (H: incr_rel m VV) (K: incr_rel m VV') , VV = VV'). 
 Proof. 
 	induction m as [(*Bin0*) m' IH_m' | (*Bin1*) m' IH_m' | (*SoftwareFoundations__Z*) ]; 
 	intros ; 
@@ -994,6 +1100,7 @@ Qed.
 #[global] Hint Rewrite incr_Bin1_lem : f_rel_back.
 Theorem incr_rel_ex (m: SFBin_u) (m_p: (SFBin_wf m) /\ True): incr_rel m (⌊ incr (exist _ m m_p) -⌋). 
 Proof. 
+	Opaque incr.
 	existence_lemma_pre incr; 
 	induction m as [(*Bin0*) m' IH_m' | (*Bin1*) m' IH_m' | (*SoftwareFoundations__Z*) ]; 
 	intros ; 
@@ -1004,12 +1111,14 @@ Proof.
 	solver))) as IH_40715420; 
 	try clear IH_m'| 
 	fix_notations]; 
-	existence_lemma_quicksolve incr; 
+	simpl in *. 
+	Transparent incr.
+	all: existence_lemma_quicksolve incr; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve incr_rel_ex : rel_ax_db.
-Opaque incr. 
+#[global] Opaque incr. 
 Theorem incr__incr_rel_rw (m: SFBin_u) (m_p: (SFBin_wf m) /\ True) (VV: SFBin_u): ((⌊ incr (exist _ m m_p) -⌋) = VV) <-> (incr_rel m VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -1030,7 +1139,7 @@ Proof.
 	refine (incr__incr_rel m_r VV). 
 Qed. 
 #[global] Hint Resolve incr__incr_rel' : f_rel_funct_db.
-Definition incr_rel_mk [m: SFBin_u] (m_p: (SFBin_wf m) /\ True): {VV: _ | incr_rel m VV}. 
+Theorem incr_rel_mk [m: SFBin_u] (m_p: (SFBin_wf m) /\ True): {VV: _ | incr_rel m VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (incr_rel m VV)) (incr (exist _ m m_p)) _); 
@@ -1042,43 +1151,58 @@ Qed.
 Proof. 
 	buildPackG incr incr_rel incr__incr_rel incr_rel_funct. 
 Defined.
-Definition test_bin_incr1: {{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (incrres == (Bin0_u (Bin1_u SoftwareFoundations__Z_u)))}}. 
+Definition test_bin_incr1_spec: Type := 
+	{{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (incrres == (Bin0_u (Bin1_u SoftwareFoundations__Z_u)))}}. 
+#[global] Hint Unfold test_bin_incr1_spec : lia_unfold.
+Theorem test_bin_incr1: test_bin_incr1_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_bin_incr2: {{forall (incrres: SFBin_u), (incr_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) incrres) -> (incrres == (Bin1_u (Bin1_u SoftwareFoundations__Z_u)))}}. 
+Qed. 
+Definition test_bin_incr2_spec: Type := 
+	{{forall (incrres: SFBin_u), (incr_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) incrres) -> (incrres == (Bin1_u (Bin1_u SoftwareFoundations__Z_u)))}}. 
+#[global] Hint Unfold test_bin_incr2_spec : lia_unfold.
+Theorem test_bin_incr2: test_bin_incr2_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_bin_incr3: {{forall (incrres: SFBin_u), (incr_rel (Bin1_u (Bin1_u SoftwareFoundations__Z_u)) incrres) -> (incrres == (Bin0_u (Bin0_u (Bin1_u SoftwareFoundations__Z_u))))}}. 
+Qed. 
+Definition test_bin_incr3_spec: Type := 
+	{{forall (incrres: SFBin_u), (incr_rel (Bin1_u (Bin1_u SoftwareFoundations__Z_u)) incrres) -> (incrres == (Bin0_u (Bin0_u (Bin1_u SoftwareFoundations__Z_u))))}}. 
+#[global] Hint Unfold test_bin_incr3_spec : lia_unfold.
+Theorem test_bin_incr3: test_bin_incr3_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_bin_incr5: {{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (forall (bin_to_natres: Z), (bin_to_nat_rel incrres bin_to_natres) -> (forall (bin_to_nat_res_2: Z), (bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2) -> (forall (addZres: Z), (addZ_rel 1 bin_to_nat_res_2 addZres) -> (bin_to_natres == addZres))))}}. 
+Qed. 
+Definition test_bin_incr5_spec: Type := 
+	{{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (forall (bin_to_natres: Z), (bin_to_nat_rel incrres bin_to_natres) -> (forall (bin_to_nat_res_2: Z), (bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2) -> (forall (addZres: Z), (addZ_rel 1 bin_to_nat_res_2 addZres) -> (bin_to_natres == addZres))))}}. 
+#[global] Hint Unfold test_bin_incr5_spec : lia_unfold.
+Theorem test_bin_incr5: test_bin_incr5_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_bin_incr6: {{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (forall (incr_res_2: SFBin_u), (incr_rel incrres incr_res_2) -> (forall (bin_to_natres: Z), (bin_to_nat_rel incr_res_2 bin_to_natres) -> (forall (bin_to_nat_res_2: Z), (bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2) -> (forall (addZres: Z), (addZ_rel 2 bin_to_nat_res_2 addZres) -> (bin_to_natres == addZres)))))}}. 
+Qed. 
+Definition test_bin_incr6_spec: Type := 
+	{{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (forall (incr_res_2: SFBin_u), (incr_rel incrres incr_res_2) -> (forall (bin_to_natres: Z), (bin_to_nat_rel incr_res_2 bin_to_natres) -> (forall (bin_to_nat_res_2: Z), (bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2) -> (forall (addZres: Z), (addZ_rel 2 bin_to_nat_res_2 addZres) -> (bin_to_natres == addZres)))))}}. 
+#[global] Hint Unfold test_bin_incr6_spec : lia_unfold.
+Theorem test_bin_incr6: test_bin_incr6_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Inductive RGB_u : Set := 
+Qed. 
+Inductive RGB_u : Type := 
 	 | Blue_u: RGB_u
 	 | Green_u: RGB_u
 	 | Red_u: RGB_u. 
 Fixpoint RGB_eq (x: RGB_u) (y: RGB_u): bool := 
 	match (x, y) with (Blue_u, Blue_u) => true | (Green_u, Green_u) => true | (Red_u, Red_u) => true | (_, _) => false end. 
-Definition RGB_eq_refl: (forall (x: RGB_u) , is_true (RGB_eq x x)). 
+Theorem RGB_eq_refl: (forall (x: RGB_u) , is_true (RGB_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve RGB_eq_refl : eq_hint_db.
-Definition RGB_eqb_eq: (forall (s: RGB_u) (t: RGB_u) , (is_true (RGB_eq s t)) -> (s = t)). 
+Theorem RGB_eqb_eq: (forall (s: RGB_u) (t: RGB_u) , (is_true (RGB_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -1120,17 +1244,17 @@ Definition Red: RGB :=
 #[global] Hint Unfold Blue : ref_constr_db.
 #[global] Hint Unfold Green : ref_constr_db.
 #[global] Hint Unfold Red : ref_constr_db.
-Inductive OtherNat_u : Set := 
+Inductive OtherNat_u : Type := 
 	 | Stop_u: OtherNat_u
 	 | Tick_u: OtherNat_u -> OtherNat_u. 
 Fixpoint OtherNat_eq (x: OtherNat_u) (y: OtherNat_u): bool := 
 	match (x, y) with (Stop_u, Stop_u) => true | (Tick_u x, Tick_u x') => (true && (OtherNat_eq x x')) | (_, _) => false end. 
-Definition OtherNat_eq_refl: (forall (x: OtherNat_u) , is_true (OtherNat_eq x x)). 
+Theorem OtherNat_eq_refl: (forall (x: OtherNat_u) , is_true (OtherNat_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve OtherNat_eq_refl : eq_hint_db.
-Definition OtherNat_eqb_eq: (forall (s: OtherNat_u) (t: OtherNat_u) , (is_true (OtherNat_eq s t)) -> (s = t)). 
+Theorem OtherNat_eqb_eq: (forall (s: OtherNat_u) (t: OtherNat_u) , (is_true (OtherNat_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -1170,16 +1294,16 @@ Defined.
 #[global] Hint Resolve wf_Tick_VV : ref_constr_db.
 #[global] Hint Unfold Stop : ref_constr_db.
 #[global] Hint Unfold Tick : ref_constr_db.
-Inductive Nibble_u : Set := 
+Inductive Nibble_u : Type := 
 	 | Bits_u: SFBit_u -> (SFBit_u -> (SFBit_u -> (SFBit_u -> Nibble_u))). 
 Fixpoint Nibble_eq (x: Nibble_u) (y: Nibble_u): bool := 
 	match (x, y) with (Bits_u x x_1 x_2 x_3, Bits_u x' x_1' x_2' x_3') => ((((true && (x ==? x')) && (x_1 ==? x_1')) && (x_2 ==? x_2')) && (x_3 ==? x_3')) end. 
-Definition Nibble_eq_refl: (forall (x: Nibble_u) , is_true (Nibble_eq x x)). 
+Theorem Nibble_eq_refl: (forall (x: Nibble_u) , is_true (Nibble_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Nibble_eq_refl : eq_hint_db.
-Definition Nibble_eqb_eq: (forall (s: Nibble_u) (t: Nibble_u) , (is_true (Nibble_eq s t)) -> (s = t)). 
+Theorem Nibble_eqb_eq: (forall (s: Nibble_u) (t: Nibble_u) , (is_true (Nibble_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -1207,18 +1331,21 @@ Definition Bits (VV: SFBit) (VV_: SFBit) (VV__: SFBit) (VV___: SFBit): Nibble :=
 #[global] Hint Unfold Nibble_wf : wf_constr_db.
 #[global] Hint Resolve Nibble_eq : ref_constr_db.
 #[global] Hint Unfold Bits : ref_constr_db.
-Definition allzero (lq_tmp0: Nibble): SFBool. 
+Definition allzero_spec (lq_tmp0: Nibble): Type := 
+	SFBool. 
+#[global] Hint Unfold allzero_spec : lia_unfold.
+Definition allzero (lq_tmp0: Nibble): allzero_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
-	induction lq_tmp0 as [(*Bits*) ds_d5f6 ds_d5f7 ds_d5f8 ds_d5f9]. 
+	induction lq_tmp0 as [(*Bits*) ds_d5PD ds_d5PE ds_d5PF ds_d5PG]. 
 	  - intros . 
-		induction ds_d5f6 as [(*B0*)  | (*B1*) ]. 
+		induction ds_d5PD as [(*B0*)  | (*B1*) ]. 
 		  -- intros . 
-			induction ds_d5f7 as [(*B0*)  | (*B1*) ]. 
+			induction ds_d5PE as [(*B0*)  | (*B1*) ]. 
 			  --- intros . 
-				induction ds_d5f8 as [(*B0*)  | (*B1*) ]. 
+				induction ds_d5PF as [(*B0*)  | (*B1*) ]. 
 				  ---- intros . 
-					induction ds_d5f9 as [(*B0*)  | (*B1*) ]. 
+					induction ds_d5PG as [(*B0*)  | (*B1*) ]. 
 					  ----- intros . 
 						refine (subsumptionCast _ _ SFTrue _); 
 						solver.  
@@ -1235,17 +1362,17 @@ Proof.
 			refine (subsumptionCast _ _ SFFalse _); 
 			solver.   
 Defined. 
-Inductive MyNat_u : Set := 
+Inductive MyNat_u : Type := 
 	 | O_u: MyNat_u
 	 | S_u: MyNat_u -> MyNat_u. 
 Fixpoint MyNat_eq (x: MyNat_u) (y: MyNat_u): bool := 
 	match (x, y) with (O_u, O_u) => true | (S_u x, S_u x') => (true && (MyNat_eq x x')) | (_, _) => false end. 
-Definition MyNat_eq_refl: (forall (x: MyNat_u) , is_true (MyNat_eq x x)). 
+Theorem MyNat_eq_refl: (forall (x: MyNat_u) , is_true (MyNat_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve MyNat_eq_refl : eq_hint_db.
-Definition MyNat_eqb_eq: (forall (s: MyNat_u) (t: MyNat_u) , (is_true (MyNat_eq s t)) -> (s = t)). 
+Theorem MyNat_eqb_eq: (forall (s: MyNat_u) (t: MyNat_u) , (is_true (MyNat_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -1285,16 +1412,16 @@ Defined.
 #[global] Hint Resolve wf_S_VV : ref_constr_db.
 #[global] Hint Unfold O : ref_constr_db.
 #[global] Hint Unfold S : ref_constr_db.
-Inductive Natprod_u : Set := 
+Inductive Natprod_u : Type := 
 	 | Pair_u: MyNat_u -> (MyNat_u -> Natprod_u). 
 Fixpoint Natprod_eq (x: Natprod_u) (y: Natprod_u): bool := 
 	match (x, y) with (Pair_u x x_1, Pair_u x' x_1') => ((true && (x ==? x')) && (x_1 ==? x_1')) end. 
-Definition Natprod_eq_refl: (forall (x: Natprod_u) , is_true (Natprod_eq x x)). 
+Theorem Natprod_eq_refl: (forall (x: Natprod_u) , is_true (Natprod_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Natprod_eq_refl : eq_hint_db.
-Definition Natprod_eqb_eq: (forall (s: Natprod_u) (t: Natprod_u) , (is_true (Natprod_eq s t)) -> (s = t)). 
+Theorem Natprod_eqb_eq: (forall (s: Natprod_u) (t: Natprod_u) , (is_true (Natprod_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -1322,7 +1449,10 @@ Definition Pair (n1: MyNat) (n2: MyNat): Natprod :=
 #[global] Hint Unfold Natprod_wf : wf_constr_db.
 #[global] Hint Resolve Natprod_eq : ref_constr_db.
 #[global] Hint Unfold Pair : ref_constr_db.
-Definition swap_pair (p: Natprod): Natprod. 
+Definition swap_pair_spec (p: Natprod): Type := 
+	Natprod. 
+#[global] Hint Unfold swap_pair_spec : lia_unfold.
+Definition swap_pair (p: Natprod): swap_pair_spec p. 
 Proof. 
 	destruct p as [p p_p]. 
 	induction p as [(*Pair*) x y]. 
@@ -1342,7 +1472,7 @@ Inductive swap_pair_rel : (Natprod_u -> (Natprod_u -> Prop)) :=
 #[global] Instance swap_pair_getF : getFunc swap_pair_rel := { 
 	getF' := swap_pair
 }.
-Definition swap_pair_rel_funct [p: Natprod_u]: (forall (VV: Natprod_u) (VV': Natprod_u) (H: swap_pair_rel p VV) (K: swap_pair_rel p VV') , VV = VV'). 
+Theorem swap_pair_rel_funct [p: Natprod_u]: (forall (VV: Natprod_u) (VV': Natprod_u) (H: swap_pair_rel p VV) (K: swap_pair_rel p VV') , VV = VV'). 
 Proof. 
 	induction p as [(*Pair*) x y]; 
 	intros ; 
@@ -1356,16 +1486,19 @@ Qed.
 #[global] Hint Rewrite swap_pair_Pair_lem : f_rel_back.
 Theorem swap_pair_rel_ex (p: Natprod_u) (p_p: (Natprod_wf p) /\ True): swap_pair_rel p (⌊ swap_pair (exist _ p p_p) -⌋). 
 Proof. 
+	Opaque swap_pair.
 	existence_lemma_pre swap_pair; 
 	induction p as [(*Pair*) x y]; 
 	intros ; 
 	[fix_notations]; 
-	existence_lemma_quicksolve swap_pair; 
+	simpl in *. 
+	Transparent swap_pair.
+	all: existence_lemma_quicksolve swap_pair; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve swap_pair_rel_ex : rel_ax_db.
-Opaque swap_pair. 
+#[global] Opaque swap_pair. 
 Theorem swap_pair__swap_pair_rel_rw (p: Natprod_u) (p_p: (Natprod_wf p) /\ True) (VV: Natprod_u): ((⌊ swap_pair (exist _ p p_p) -⌋) = VV) <-> (swap_pair_rel p VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -1386,7 +1519,7 @@ Proof.
 	refine (swap_pair__swap_pair_rel p_r VV). 
 Qed. 
 #[global] Hint Resolve swap_pair__swap_pair_rel' : f_rel_funct_db.
-Definition swap_pair_rel_mk [p: Natprod_u] (p_p: (Natprod_wf p) /\ True): {VV: _ | swap_pair_rel p VV}. 
+Theorem swap_pair_rel_mk [p: Natprod_u] (p_p: (Natprod_wf p) /\ True): {VV: _ | swap_pair_rel p VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (swap_pair_rel p VV)) (swap_pair (exist _ p p_p)) _); 
@@ -1398,7 +1531,10 @@ Qed.
 Proof. 
 	buildPackG swap_pair swap_pair_rel swap_pair__swap_pair_rel swap_pair_rel_funct. 
 Defined.
-Definition eqb (n: MyNat) (m: MyNat): SFBool. 
+Definition eqb_spec (n: MyNat) (m: MyNat): Type := 
+	SFBool. 
+#[global] Hint Unfold eqb_spec : lia_unfold.
+Definition eqb (n: MyNat) (m: MyNat): eqb_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -1436,7 +1572,7 @@ Inductive eqb_rel : (MyNat_u -> (MyNat_u -> (SFBool_u -> Prop))) :=
 #[global] Instance eqb_getF : getFunc eqb_rel := { 
 	getF' := eqb
 }.
-Definition eqb_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: eqb_rel n m VV) (K: eqb_rel n m VV') , VV = VV'). 
+Theorem eqb_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: eqb_rel n m VV) (K: eqb_rel n m VV') , VV = VV'). 
 Proof. 
 	try revert m_p; generalize dependent m; 
 	induction n as [(*O*)  | (*S*) n' IH_n']; 
@@ -1470,6 +1606,7 @@ Qed.
 #[global] Hint Rewrite eqb_S_S_lem : f_rel_back.
 Theorem eqb_rel_ex (n: MyNat_u) (m: MyNat_u) (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): eqb_rel n m (⌊ eqb (exist _ n n_p) (exist _ m m_p) -⌋). 
 Proof. 
+	Opaque eqb.
 	existence_lemma_pre eqb; 
 	try revert m_p; generalize dependent m; 
 	induction n as [(*O*)  | (*S*) n' IH_n']; 
@@ -1489,12 +1626,14 @@ Proof.
 	solver))) as IH_48190612; 
 	try clear IH_n'; 
 	try clear IH_m']]; 
-	existence_lemma_quicksolve eqb; 
+	simpl in *. 
+	Transparent eqb.
+	all: existence_lemma_quicksolve eqb; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve eqb_rel_ex : rel_ax_db.
-Opaque eqb. 
+#[global] Opaque eqb. 
 Theorem eqb__eqb_rel_rw (n: MyNat_u) (m: MyNat_u) (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True) (VV: SFBool_u): ((⌊ eqb (exist _ n n_p) (exist _ m m_p) -⌋) = VV) <-> (eqb_rel n m VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -1515,7 +1654,7 @@ Proof.
 	refine (eqb__eqb_rel n_r m_r VV). 
 Qed. 
 #[global] Hint Resolve eqb__eqb_rel' : f_rel_funct_db.
-Definition eqb_rel_mk [n: MyNat_u] [m: MyNat_u] (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): {VV: _ | eqb_rel n m VV}. 
+Theorem eqb_rel_mk [n: MyNat_u] [m: MyNat_u] (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): {VV: _ | eqb_rel n m VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (eqb_rel n m VV)) (eqb (exist _ n n_p) (exist _ m m_p)) _); 
@@ -1527,7 +1666,10 @@ Qed.
 Proof. 
 	buildPackG eqb eqb_rel eqb__eqb_rel eqb_rel_funct. 
 Defined.
-Definition fstSF (p: Natprod): MyNat. 
+Definition fstSF_spec (p: Natprod): Type := 
+	MyNat. 
+#[global] Hint Unfold fstSF_spec : lia_unfold.
+Definition fstSF (p: Natprod): fstSF_spec p. 
 Proof. 
 	destruct p as [p p_p]. 
 	induction p as [(*Pair*) n1 n2]. 
@@ -1544,7 +1686,7 @@ Inductive fstSF_rel : (Natprod_u -> (MyNat_u -> Prop)) :=
 #[global] Instance fstSF_getF : getFunc fstSF_rel := { 
 	getF' := fstSF
 }.
-Definition fstSF_rel_funct [p: Natprod_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: fstSF_rel p VV) (K: fstSF_rel p VV') , VV = VV'). 
+Theorem fstSF_rel_funct [p: Natprod_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: fstSF_rel p VV) (K: fstSF_rel p VV') , VV = VV'). 
 Proof. 
 	induction p as [(*Pair*) n1 n2]; 
 	intros ; 
@@ -1558,16 +1700,19 @@ Qed.
 #[global] Hint Rewrite fstSF_Pair_lem : f_rel_back.
 Theorem fstSF_rel_ex (p: Natprod_u) (p_p: (Natprod_wf p) /\ True): fstSF_rel p (⌊ fstSF (exist _ p p_p) -⌋). 
 Proof. 
+	Opaque fstSF.
 	existence_lemma_pre fstSF; 
 	induction p as [(*Pair*) n1 n2]; 
 	intros ; 
 	[fix_notations]; 
-	existence_lemma_quicksolve fstSF; 
+	simpl in *. 
+	Transparent fstSF.
+	all: existence_lemma_quicksolve fstSF; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve fstSF_rel_ex : rel_ax_db.
-Opaque fstSF. 
+#[global] Opaque fstSF. 
 Theorem fstSF__fstSF_rel_rw (p: Natprod_u) (p_p: (Natprod_wf p) /\ True) (VV: MyNat_u): ((⌊ fstSF (exist _ p p_p) -⌋) = VV) <-> (fstSF_rel p VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -1588,7 +1733,7 @@ Proof.
 	refine (fstSF__fstSF_rel p_r VV). 
 Qed. 
 #[global] Hint Resolve fstSF__fstSF_rel' : f_rel_funct_db.
-Definition fstSF_rel_mk [p: Natprod_u] (p_p: (Natprod_wf p) /\ True): {VV: _ | fstSF_rel p VV}. 
+Theorem fstSF_rel_mk [p: Natprod_u] (p_p: (Natprod_wf p) /\ True): {VV: _ | fstSF_rel p VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (fstSF_rel p VV)) (fstSF (exist _ p p_p)) _); 
@@ -1600,7 +1745,10 @@ Qed.
 Proof. 
 	buildPackG fstSF fstSF_rel fstSF__fstSF_rel fstSF_rel_funct. 
 Defined.
-Definition leb (n: MyNat) (m: MyNat): SFBool. 
+Definition leb_spec (n: MyNat) (m: MyNat): Type := 
+	SFBool. 
+#[global] Hint Unfold leb_spec : lia_unfold.
+Definition leb (n: MyNat) (m: MyNat): leb_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -1632,7 +1780,7 @@ Inductive leb_rel : (MyNat_u -> (MyNat_u -> (SFBool_u -> Prop))) :=
 #[global] Instance leb_getF : getFunc leb_rel := { 
 	getF' := leb
 }.
-Definition leb_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: leb_rel n m VV) (K: leb_rel n m VV') , VV = VV'). 
+Theorem leb_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: leb_rel n m VV) (K: leb_rel n m VV') , VV = VV'). 
 Proof. 
 	try revert m_p; generalize dependent m; 
 	induction n as [(*O*)  | (*S*) n' IH_n']; 
@@ -1660,6 +1808,7 @@ Qed.
 #[global] Hint Rewrite leb_S_S_lem : f_rel_back.
 Theorem leb_rel_ex (n: MyNat_u) (m: MyNat_u) (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): leb_rel n m (⌊ leb (exist _ n n_p) (exist _ m m_p) -⌋). 
 Proof. 
+	Opaque leb.
 	existence_lemma_pre leb; 
 	try revert m_p; generalize dependent m; 
 	induction n as [(*O*)  | (*S*) n' IH_n']; 
@@ -1675,12 +1824,14 @@ Proof.
 	solver))) as IH_48190612; 
 	try clear IH_n'; 
 	try clear IH_m']]; 
-	existence_lemma_quicksolve leb; 
+	simpl in *. 
+	Transparent leb.
+	all: existence_lemma_quicksolve leb; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve leb_rel_ex : rel_ax_db.
-Opaque leb. 
+#[global] Opaque leb. 
 Theorem leb__leb_rel_rw (n: MyNat_u) (m: MyNat_u) (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True) (VV: SFBool_u): ((⌊ leb (exist _ n n_p) (exist _ m m_p) -⌋) = VV) <-> (leb_rel n m VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -1701,7 +1852,7 @@ Proof.
 	refine (leb__leb_rel n_r m_r VV). 
 Qed. 
 #[global] Hint Resolve leb__leb_rel' : f_rel_funct_db.
-Definition leb_rel_mk [n: MyNat_u] [m: MyNat_u] (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): {VV: _ | leb_rel n m VV}. 
+Theorem leb_rel_mk [n: MyNat_u] [m: MyNat_u] (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): {VV: _ | leb_rel n m VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (leb_rel n m VV)) (leb (exist _ n n_p) (exist _ m m_p)) _); 
@@ -1713,7 +1864,10 @@ Qed.
 Proof. 
 	buildPackG leb leb_rel leb__leb_rel leb_rel_funct. 
 Defined.
-Definition ltb (n: MyNat) (m: MyNat): SFBool. 
+Definition ltb_spec (n: MyNat) (m: MyNat): Type := 
+	SFBool. 
+#[global] Hint Unfold ltb_spec : lia_unfold.
+Definition ltb (n: MyNat) (m: MyNat): ltb_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -1751,7 +1905,7 @@ Inductive ltb_rel : (MyNat_u -> (MyNat_u -> (SFBool_u -> Prop))) :=
 #[global] Instance ltb_getF : getFunc ltb_rel := { 
 	getF' := ltb
 }.
-Definition ltb_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: ltb_rel n m VV) (K: ltb_rel n m VV') , VV = VV'). 
+Theorem ltb_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: ltb_rel n m VV) (K: ltb_rel n m VV') , VV = VV'). 
 Proof. 
 	try revert m_p; generalize dependent m; 
 	induction n as [(*O*)  | (*S*) n' IH_n']; 
@@ -1785,6 +1939,7 @@ Qed.
 #[global] Hint Rewrite ltb_S_S_lem : f_rel_back.
 Theorem ltb_rel_ex (n: MyNat_u) (m: MyNat_u) (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): ltb_rel n m (⌊ ltb (exist _ n n_p) (exist _ m m_p) -⌋). 
 Proof. 
+	Opaque ltb.
 	existence_lemma_pre ltb; 
 	try revert m_p; generalize dependent m; 
 	induction n as [(*O*)  | (*S*) n' IH_n']; 
@@ -1804,12 +1959,14 @@ Proof.
 	solver))) as IH_48190612; 
 	try clear IH_n'; 
 	try clear IH_m']]; 
-	existence_lemma_quicksolve ltb; 
+	simpl in *. 
+	Transparent ltb.
+	all: existence_lemma_quicksolve ltb; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve ltb_rel_ex : rel_ax_db.
-Opaque ltb. 
+#[global] Opaque ltb. 
 Theorem ltb__ltb_rel_rw (n: MyNat_u) (m: MyNat_u) (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True) (VV: SFBool_u): ((⌊ ltb (exist _ n n_p) (exist _ m m_p) -⌋) = VV) <-> (ltb_rel n m VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -1830,7 +1987,7 @@ Proof.
 	refine (ltb__ltb_rel n_r m_r VV). 
 Qed. 
 #[global] Hint Resolve ltb__ltb_rel' : f_rel_funct_db.
-Definition ltb_rel_mk [n: MyNat_u] [m: MyNat_u] (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): {VV: _ | ltb_rel n m VV}. 
+Theorem ltb_rel_mk [n: MyNat_u] [m: MyNat_u] (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): {VV: _ | ltb_rel n m VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (ltb_rel n m VV)) (ltb (exist _ n n_p) (exist _ m m_p)) _); 
@@ -1842,12 +1999,15 @@ Qed.
 Proof. 
 	buildPackG ltb ltb_rel ltb__ltb_rel ltb_rel_funct. 
 Defined.
-Definition minus (n: MyNat) (m: MyNat): MyNat. 
+Definition minus_spec (n: MyNat) (m: MyNat): Type := 
+	MyNat. 
+#[global] Hint Unfold minus_spec : lia_unfold.
+Definition minus (n: MyNat) (m: MyNat): minus_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d5eD IH_ds_d5eD]. 
+	induction n as [(*O*)  | (*S*) ds_d5Pa IH_ds_d5Pa]. 
 	  - intros . 
 		refine (subsumptionCast _ _ O _); 
 		solver.  
@@ -1856,19 +2016,19 @@ Proof.
 		  -- intros . 
 			refine (subsumptionCast _ _ 
 		(S 
-		(exist (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) ds_d5eD (ltac: (solver)))) _); 
+		(exist (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) ds_d5Pa (ltac: (solver)))) _); 
 			solver.  
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(IH_ds_d5eD (ltac: (try clear IH_ds_d5eD; 
-	solver)) m' (ltac: (try clear IH_ds_d5eD; 
+		(IH_ds_d5Pa (ltac: (try clear IH_ds_d5Pa; 
+	solver)) m' (ltac: (try clear IH_ds_d5Pa; 
 	solver))) _); 
 			solver.   
 Defined. 
 Inductive minus_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) := 
 	 | minus_O: (forall m , minus_rel O_u m O_u)
-	 | minus_S_O: (forall ds_d5eD , minus_rel (S_u ds_d5eD) O_u (S_u ds_d5eD))
-	 | minus_S_S: (forall ds_d5eD m' , forall (minusres: MyNat_u), (minus_rel ds_d5eD m' minusres) -> (minus_rel (S_u ds_d5eD) (S_u m') minusres)). 
+	 | minus_S_O: (forall ds_d5Pa , minus_rel (S_u ds_d5Pa) O_u (S_u ds_d5Pa))
+	 | minus_S_S: (forall ds_d5Pa m' , forall (minusres: MyNat_u), (minus_rel ds_d5Pa m' minusres) -> (minus_rel (S_u ds_d5Pa) (S_u m') minusres)). 
 #[global] Hint Constructors minus_rel : core_hint_db.
 #[global] Instance minus_lookup_rel : dictionary rel minus := { 
 	lookup' := minus_rel
@@ -1876,10 +2036,10 @@ Inductive minus_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) :=
 #[global] Instance minus_getF : getFunc minus_rel := { 
 	getF' := minus
 }.
-Definition minus_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: minus_rel n m VV) (K: minus_rel n m VV') , VV = VV'). 
+Theorem minus_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: minus_rel n m VV) (K: minus_rel n m VV') , VV = VV'). 
 Proof. 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d5eD IH_ds_d5eD]; 
+	induction n as [(*O*)  | (*S*) ds_d5Pa IH_ds_d5Pa]; 
 	intros ; 
 	[| 
 	induction m as [(*O*)  | (*S*) m' IH_m']; 
@@ -1892,39 +2052,42 @@ Proof.
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite minus_O_lem : f_rel_back.
-Theorem minus_S_O_lem (ds_d5eD: _): (minus_rel (S_u ds_d5eD) O_u (S_u ds_d5eD)) <-> True. 
+Theorem minus_S_O_lem (ds_d5Pa: _): (minus_rel (S_u ds_d5Pa) O_u (S_u ds_d5Pa)) <-> True. 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite minus_S_O_lem : f_rel_back.
-Theorem minus_S_S_lem (ds_d5eD: _) (m': _) (minusres: MyNat_u) (h_43612209: minus_rel ds_d5eD m' minusres): (minus_rel (S_u ds_d5eD) (S_u m') minusres) <-> True. 
+Theorem minus_S_S_lem (ds_d5Pa: _) (m': _) (minusres: MyNat_u) (h_43612209: minus_rel ds_d5Pa m' minusres): (minus_rel (S_u ds_d5Pa) (S_u m') minusres) <-> True. 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite minus_S_S_lem : f_rel_back.
 Theorem minus_rel_ex (n: MyNat_u) (m: MyNat_u) (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): minus_rel n m (⌊ minus (exist _ n n_p) (exist _ m m_p) -⌋). 
 Proof. 
+	Opaque minus.
 	existence_lemma_pre minus; 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d5eD IH_ds_d5eD]; 
+	induction n as [(*O*)  | (*S*) ds_d5Pa IH_ds_d5Pa]; 
 	intros ; 
 	[fix_notations| 
 	induction m as [(*O*)  | (*S*) m' IH_m']; 
 	intros ; 
 	[fix_notations; 
-	try clear IH_ds_d5eD| 
+	try clear IH_ds_d5Pa| 
 	fix_notations; 
-	pose proof (IH_ds_d5eD (ltac: (try clear IH_ds_d5eD; 
-	solver)) m' (ltac: (try clear IH_ds_d5eD; 
-	solver))) as IH_51235304; 
-	try clear IH_ds_d5eD; 
+	pose proof (IH_ds_d5Pa (ltac: (try clear IH_ds_d5Pa; 
+	solver)) m' (ltac: (try clear IH_ds_d5Pa; 
+	solver))) as IH_85992472; 
+	try clear IH_ds_d5Pa; 
 	try clear IH_m']]; 
-	existence_lemma_quicksolve minus; 
+	simpl in *. 
+	Transparent minus.
+	all: existence_lemma_quicksolve minus; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve minus_rel_ex : rel_ax_db.
-Opaque minus. 
+#[global] Opaque minus. 
 Theorem minus__minus_rel_rw (n: MyNat_u) (m: MyNat_u) (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True) (VV: MyNat_u): ((⌊ minus (exist _ n n_p) (exist _ m m_p) -⌋) = VV) <-> (minus_rel n m VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -1945,7 +2108,7 @@ Proof.
 	refine (minus__minus_rel n_r m_r VV). 
 Qed. 
 #[global] Hint Resolve minus__minus_rel' : f_rel_funct_db.
-Definition minus_rel_mk [n: MyNat_u] [m: MyNat_u] (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): {VV: _ | minus_rel n m VV}. 
+Theorem minus_rel_mk [n: MyNat_u] [m: MyNat_u] (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): {VV: _ | minus_rel n m VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (minus_rel n m VV)) (minus (exist _ n n_p) (exist _ m m_p)) _); 
@@ -1957,7 +2120,10 @@ Qed.
 Proof. 
 	buildPackG minus minus_rel minus__minus_rel minus_rel_funct. 
 Defined.
-Definition minus_n_n (n: MyNat): {{forall (minusres: MyNat_u), (minus_rel (⌊ n -⌋) (⌊ n -⌋) minusres) -> (minusres = O_u)}}. 
+Definition minus_n_n_spec (n: MyNat): Type := 
+	{{forall (minusres: MyNat_u), (minus_rel (⌊ n -⌋) (⌊ n -⌋) minusres) -> (minusres = O_u)}}. 
+#[global] Hint Unfold minus_n_n_spec : lia_unfold.
+Theorem minus_n_n (n: MyNat): minus_n_n_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*O*)  | (*S*) n' IH_n']. 
@@ -1968,16 +2134,19 @@ Proof.
 		refine (subsumptionCast _ _ (IH_n' (ltac: (try clear IH_n'; 
 	solver))) _); 
 		solver.  
-Defined. 
-Definition minustwo (lq_tmp0: MyNat): MyNat. 
+Qed. 
+Definition minustwo_spec (lq_tmp0: MyNat): Type := 
+	MyNat. 
+#[global] Hint Unfold minustwo_spec : lia_unfold.
+Definition minustwo (lq_tmp0: MyNat): minustwo_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
-	induction lq_tmp0 as [(*O*)  | (*S*) ds_d5f3 IH_ds_d5f3]. 
+	induction lq_tmp0 as [(*O*)  | (*S*) ds_d5PA IH_ds_d5PA]. 
 	  - intros . 
 		refine (subsumptionCast _ _ O _); 
 		solver.  
 	  - intros . 
-		induction ds_d5f3 as [(*O*)  | (*S*) n' IH_n']. 
+		induction ds_d5PA as [(*O*)  | (*S*) n' IH_n']. 
 		  -- intros . 
 			refine (subsumptionCast _ _ O _); 
 			solver.  
@@ -1985,7 +2154,10 @@ Proof.
 			refine (exist _ n' _); 
 			solver.   
 Defined. 
-Definition one: MyNat. 
+Definition one_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold one_spec : lia_unfold.
+Definition one: one_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -2001,7 +2173,7 @@ Inductive one_rel : (MyNat_u -> Prop) :=
 #[global] Instance one_getF : getFunc one_rel := { 
 	getF' := one
 }.
-Definition one_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: one_rel VV) (K: one_rel VV') , VV = VV'). 
+Theorem one_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: one_rel VV) (K: one_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -2013,14 +2185,17 @@ Qed.
 #[global] Hint Rewrite one_def_lem : f_rel_back.
 Theorem one_rel_ex: one_rel (⌊ one -⌋). 
 Proof. 
+	Opaque one.
 	existence_lemma_pre one; 
 	fix_notations; 
-	existence_lemma_quicksolve one; 
+	simpl in *. 
+	Transparent one.
+	all: existence_lemma_quicksolve one; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve one_rel_ex : rel_ax_db.
-Opaque one. 
+#[global] Opaque one. 
 Theorem one__one_rel_rw (VV: MyNat_u): ((⌊ one -⌋) = VV) <-> (one_rel VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -2041,7 +2216,7 @@ Proof.
 	refine (one__one_rel VV). 
 Qed. 
 #[global] Hint Resolve one__one_rel' : f_rel_funct_db.
-Definition one_rel_mk: {VV: _ | one_rel VV}. 
+Theorem one_rel_mk: {VV: _ | one_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (one_rel VV)) one _); 
@@ -2049,7 +2224,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve one_rel_mk : f_rel_funct_db.
-Definition plus (n: MyNat) (m: MyNat): MyNat. 
+Definition plus_spec (n: MyNat) (m: MyNat): Type := 
+	MyNat. 
+#[global] Hint Unfold plus_spec : lia_unfold.
+Definition plus (n: MyNat) (m: MyNat): plus_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2076,7 +2254,7 @@ Inductive plus_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) :=
 #[global] Instance plus_getF : getFunc plus_rel := { 
 	getF' := plus
 }.
-Definition plus_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: plus_rel n m VV) (K: plus_rel n m VV') , VV = VV'). 
+Theorem plus_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: plus_rel n m VV) (K: plus_rel n m VV') , VV = VV'). 
 Proof. 
 	try revert m_p; generalize dependent m; 
 	induction n as [(*O*)  | (*S*) n' IH_n']; 
@@ -2096,6 +2274,7 @@ Qed.
 #[global] Hint Rewrite plus_S_lem : f_rel_back.
 Theorem plus_rel_ex (n: MyNat_u) (m: MyNat_u) (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): plus_rel n m (⌊ plus (exist _ n n_p) (exist _ m m_p) -⌋). 
 Proof. 
+	Opaque plus.
 	existence_lemma_pre plus; 
 	try revert m_p; generalize dependent m; 
 	induction n as [(*O*)  | (*S*) n' IH_n']; 
@@ -2106,12 +2285,14 @@ Proof.
 	solver)) m (ltac: (try clear IH_n'; 
 	solver))) as IH_18143414; 
 	try clear IH_n']; 
-	existence_lemma_quicksolve plus; 
+	simpl in *. 
+	Transparent plus.
+	all: existence_lemma_quicksolve plus; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve plus_rel_ex : rel_ax_db.
-Opaque plus. 
+#[global] Opaque plus. 
 Theorem plus__plus_rel_rw (n: MyNat_u) (m: MyNat_u) (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True) (VV: MyNat_u): ((⌊ plus (exist _ n n_p) (exist _ m m_p) -⌋) = VV) <-> (plus_rel n m VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -2132,7 +2313,7 @@ Proof.
 	refine (plus__plus_rel n_r m_r VV). 
 Qed. 
 #[global] Hint Resolve plus__plus_rel' : f_rel_funct_db.
-Definition plus_rel_mk [n: MyNat_u] [m: MyNat_u] (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): {VV: _ | plus_rel n m VV}. 
+Theorem plus_rel_mk [n: MyNat_u] [m: MyNat_u] (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): {VV: _ | plus_rel n m VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (plus_rel n m VV)) (plus (exist _ n n_p) (exist _ m m_p)) _); 
@@ -2144,7 +2325,10 @@ Qed.
 Proof. 
 	buildPackG plus plus_rel plus__plus_rel plus_rel_funct. 
 Defined.
-Definition add_0_r (n: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) O_u plusres) -> (plusres = (⌊ n -⌋))}}. 
+Definition add_0_r_spec (n: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) O_u plusres) -> (plusres = (⌊ n -⌋))}}. 
+#[global] Hint Unfold add_0_r_spec : lia_unfold.
+Theorem add_0_r (n: MyNat): add_0_r_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*O*)  | (*S*) n' IH_n']. 
@@ -2155,8 +2339,11 @@ Proof.
 		refine (subsumptionCast _ _ (IH_n' (ltac: (try clear IH_n'; 
 	solver))) _); 
 		solver.  
-Defined. 
-Definition add_assoc (n: MyNat) (m: MyNat) (p: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ p -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) plusres plus_res_2) -> (forall (plus_res_3: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plus_res_3) -> (forall (plus_res_4: MyNat_u), (plus_rel plus_res_3 (⌊ p -⌋) plus_res_4) -> (plus_res_2 == plus_res_4))))}}. 
+Qed. 
+Definition add_assoc_spec (n: MyNat) (m: MyNat) (p: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ p -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) plusres plus_res_2) -> (forall (plus_res_3: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plus_res_3) -> (forall (plus_res_4: MyNat_u), (plus_rel plus_res_3 (⌊ p -⌋) plus_res_4) -> (plus_res_2 == plus_res_4))))}}. 
+#[global] Hint Unfold add_assoc_spec : lia_unfold.
+Theorem add_assoc (n: MyNat) (m: MyNat) (p: MyNat): add_assoc_spec n m p. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2173,8 +2360,11 @@ Proof.
 	solver)) p (ltac: (try clear IH_n'; 
 	solver))) _); 
 		solver.  
-Defined. 
-Definition add_succ_r (n: MyNat) (m: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plus_res_2) -> (plusres == (S_u plus_res_2)))}}. 
+Qed. 
+Definition add_succ_r_spec (n: MyNat) (m: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plus_res_2) -> (plusres == (S_u plus_res_2)))}}. 
+#[global] Hint Unfold add_succ_r_spec : lia_unfold.
+Theorem add_succ_r (n: MyNat) (m: MyNat): add_succ_r_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2189,8 +2379,11 @@ Proof.
 	solver)) m (ltac: (try clear IH_n'; 
 	solver))) _); 
 		solver.  
-Defined. 
-Definition mult (n: MyNat) (m: MyNat): MyNat. 
+Qed. 
+Definition mult_spec (n: MyNat) (m: MyNat): Type := 
+	MyNat. 
+#[global] Hint Unfold mult_spec : lia_unfold.
+Definition mult (n: MyNat) (m: MyNat): mult_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2219,7 +2412,7 @@ Inductive mult_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) :=
 #[global] Instance mult_getF : getFunc mult_rel := { 
 	getF' := mult
 }.
-Definition mult_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: mult_rel n m VV) (K: mult_rel n m VV') , VV = VV'). 
+Theorem mult_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: mult_rel n m VV) (K: mult_rel n m VV') , VV = VV'). 
 Proof. 
 	try revert m_p; generalize dependent m; 
 	induction n as [(*O*)  | (*S*) n' IH_n']; 
@@ -2239,6 +2432,7 @@ Qed.
 #[global] Hint Rewrite mult_S_lem : f_rel_back.
 Theorem mult_rel_ex (n: MyNat_u) (m: MyNat_u) (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): mult_rel n m (⌊ mult (exist _ n n_p) (exist _ m m_p) -⌋). 
 Proof. 
+	Opaque mult.
 	existence_lemma_pre mult; 
 	try revert m_p; generalize dependent m; 
 	induction n as [(*O*)  | (*S*) n' IH_n']; 
@@ -2249,12 +2443,14 @@ Proof.
 	solver)) m (ltac: (try clear IH_n'; 
 	solver))) as IH_18143414; 
 	try clear IH_n']; 
-	existence_lemma_quicksolve mult; 
+	simpl in *. 
+	Transparent mult.
+	all: existence_lemma_quicksolve mult; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve mult_rel_ex : rel_ax_db.
-Opaque mult. 
+#[global] Opaque mult. 
 Theorem mult__mult_rel_rw (n: MyNat_u) (m: MyNat_u) (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True) (VV: MyNat_u): ((⌊ mult (exist _ n n_p) (exist _ m m_p) -⌋) = VV) <-> (mult_rel n m VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -2275,7 +2471,7 @@ Proof.
 	refine (mult__mult_rel n_r m_r VV). 
 Qed. 
 #[global] Hint Resolve mult__mult_rel' : f_rel_funct_db.
-Definition mult_rel_mk [n: MyNat_u] [m: MyNat_u] (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): {VV: _ | mult_rel n m VV}. 
+Theorem mult_rel_mk [n: MyNat_u] [m: MyNat_u] (n_p: (MyNat_wf n) /\ True) (m_p: (MyNat_wf m) /\ True): {VV: _ | mult_rel n m VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (mult_rel n m VV)) (mult (exist _ n n_p) (exist _ m m_p)) _); 
@@ -2287,7 +2483,10 @@ Qed.
 Proof. 
 	buildPackG mult mult_rel mult__mult_rel mult_rel_funct. 
 Defined.
-Definition factorial (lq_tmp0: MyNat): MyNat. 
+Definition factorial_spec (lq_tmp0: MyNat): Type := 
+	MyNat. 
+#[global] Hint Unfold factorial_spec : lia_unfold.
+Definition factorial (lq_tmp0: MyNat): factorial_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	induction lq_tmp0 as [(*O*)  | (*S*) n' IH_n']. 
@@ -2316,7 +2515,7 @@ Inductive factorial_rel : (MyNat_u -> (MyNat_u -> Prop)) :=
 #[global] Instance factorial_getF : getFunc factorial_rel := { 
 	getF' := factorial
 }.
-Definition factorial_rel_funct [lq_tmp0: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: factorial_rel lq_tmp0 VV) (K: factorial_rel lq_tmp0 VV') , VV = VV'). 
+Theorem factorial_rel_funct [lq_tmp0: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: factorial_rel lq_tmp0 VV) (K: factorial_rel lq_tmp0 VV') , VV = VV'). 
 Proof. 
 	induction lq_tmp0 as [(*O*)  | (*S*) n' IH_n']; 
 	intros ; 
@@ -2335,6 +2534,7 @@ Qed.
 #[global] Hint Rewrite factorial_S_lem : f_rel_back.
 Theorem factorial_rel_ex (lq_tmp0: MyNat_u) (lq_tmp0_p: (MyNat_wf lq_tmp0) /\ True): factorial_rel lq_tmp0 (⌊ factorial (exist _ lq_tmp0 lq_tmp0_p) -⌋). 
 Proof. 
+	Opaque factorial.
 	existence_lemma_pre factorial; 
 	induction lq_tmp0 as [(*O*)  | (*S*) n' IH_n']; 
 	intros ; 
@@ -2343,12 +2543,14 @@ Proof.
 	pose proof (IH_n' (ltac: (try clear IH_n'; 
 	solver))) as IH_87935079; 
 	try clear IH_n']; 
-	existence_lemma_quicksolve factorial; 
+	simpl in *. 
+	Transparent factorial.
+	all: existence_lemma_quicksolve factorial; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve factorial_rel_ex : rel_ax_db.
-Opaque factorial. 
+#[global] Opaque factorial. 
 Theorem factorial__factorial_rel_rw (lq_tmp0: MyNat_u) (lq_tmp0_p: (MyNat_wf lq_tmp0) /\ True) (VV: MyNat_u): ((⌊ factorial (exist _ lq_tmp0 lq_tmp0_p) -⌋) = VV) <-> (factorial_rel lq_tmp0 VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -2369,7 +2571,7 @@ Proof.
 	refine (factorial__factorial_rel lq_tmp0_r VV). 
 Qed. 
 #[global] Hint Resolve factorial__factorial_rel' : f_rel_funct_db.
-Definition factorial_rel_mk [lq_tmp0: MyNat_u] (lq_tmp0_p: (MyNat_wf lq_tmp0) /\ True): {VV: _ | factorial_rel lq_tmp0 VV}. 
+Theorem factorial_rel_mk [lq_tmp0: MyNat_u] (lq_tmp0_p: (MyNat_wf lq_tmp0) /\ True): {VV: _ | factorial_rel lq_tmp0 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (factorial_rel lq_tmp0 VV)) (factorial (exist _ lq_tmp0 lq_tmp0_p)) _); 
@@ -2381,7 +2583,10 @@ Qed.
 Proof. 
 	buildPackG factorial factorial_rel factorial__factorial_rel factorial_rel_funct. 
 Defined.
-Definition mul_0_r (n: MyNat): {{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) O_u multres) -> (multres = O_u)}}. 
+Definition mul_0_r_spec (n: MyNat): Type := 
+	{{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) O_u multres) -> (multres = O_u)}}. 
+#[global] Hint Unfold mul_0_r_spec : lia_unfold.
+Theorem mul_0_r (n: MyNat): mul_0_r_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*O*)  | (*S*) n' IH_n']. 
@@ -2392,14 +2597,20 @@ Proof.
 		refine (subsumptionCast _ _ (IH_n' (ltac: (try clear IH_n'; 
 	solver))) _); 
 		solver.  
-Defined. 
-Definition mult_0_1 (n: MyNat): {{forall (multres: MyNat_u), (mult_rel O_u (⌊ n -⌋) multres) -> (multres = O_u)}}. 
+Qed. 
+Definition mult_0_1_spec (n: MyNat): Type := 
+	{{forall (multres: MyNat_u), (mult_rel O_u (⌊ n -⌋) multres) -> (multres = O_u)}}. 
+#[global] Hint Unfold mult_0_1_spec : lia_unfold.
+Theorem mult_0_1 (n: MyNat): mult_0_1_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition mult_n_O (n: MyNat): {{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) O_u multres) -> (O_u = multres)}}. 
+Qed. 
+Definition mult_n_O_spec (n: MyNat): Type := 
+	{{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) O_u multres) -> (O_u = multres)}}. 
+#[global] Hint Unfold mult_n_O_spec : lia_unfold.
+Theorem mult_n_O (n: MyNat): mult_n_O_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*O*)  | (*S*) n' IH_n']. 
@@ -2410,20 +2621,26 @@ Proof.
 		refine (subsumptionCast _ _ (IH_n' (ltac: (try clear IH_n'; 
 	solver))) _); 
 		solver.  
-Defined. 
-Definition mult_n_0_m_0 (p: MyNat) (q: MyNat): {{forall (multres: MyNat_u), (mult_rel (⌊ q -⌋) O_u multres) -> (forall (mult_res_2: MyNat_u), (mult_rel (⌊ p -⌋) O_u mult_res_2) -> (forall (plusres: MyNat_u), (plus_rel mult_res_2 multres plusres) -> (plusres = O_u)))}}. 
+Qed. 
+Definition mult_n_0_m_0_spec (p: MyNat) (q: MyNat): Type := 
+	{{forall (multres: MyNat_u), (mult_rel (⌊ q -⌋) O_u multres) -> (forall (mult_res_2: MyNat_u), (mult_rel (⌊ p -⌋) O_u mult_res_2) -> (forall (plusres: MyNat_u), (plus_rel mult_res_2 multres plusres) -> (plusres = O_u)))}}. 
+#[global] Hint Unfold mult_n_0_m_0_spec : lia_unfold.
+Theorem mult_n_0_m_0 (p: MyNat) (q: MyNat): mult_n_0_m_0_spec p q. 
 Proof. 
 	destruct p as [p p_p]. 
 	destruct q as [q q_p]. 
 	pose proof (mult_n_O 
 		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) q (ltac: (solver)))) as H_34880653. 
-	fix_notations. 
+	simpl in H_34880653. 
 	refine (subsumptionCast _ _ 
 		(mult_n_O 
 		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)))) _); 
 	solver. 
-Defined. 
-Definition mult_n_Sm (n: MyNat) (m: MyNat): {{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) (⌊ m -⌋) multres) -> (forall (plusres: MyNat_u), (plus_rel multres (⌊ n -⌋) plusres) -> (forall (mult_res_2: MyNat_u), (mult_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) mult_res_2) -> (plusres == mult_res_2)))}}. 
+Qed. 
+Definition mult_n_Sm_spec (n: MyNat) (m: MyNat): Type := 
+	{{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) (⌊ m -⌋) multres) -> (forall (plusres: MyNat_u), (plus_rel multres (⌊ n -⌋) plusres) -> (forall (mult_res_2: MyNat_u), (mult_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) mult_res_2) -> (plusres == mult_res_2)))}}. 
+#[global] Hint Unfold mult_n_Sm_spec : lia_unfold.
+Theorem mult_n_Sm (n: MyNat) (m: MyNat): mult_n_Sm_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2440,7 +2657,7 @@ Proof.
 		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) n' (ltac: (solver))) 
 		(exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) m (ltac: (solver)))) (ltac: (solver))) 
 		(exist (fun (p: MyNat_u) => ((MyNat_wf p) /\ True)) n' (ltac: (solver)))) as H_28156190. 
-		fix_notations. 
+		simpl in H_28156190. 
 		pose proof (add_succ_r 
 		(subsumptionCast MyNat_u (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) 
 		(plus 
@@ -2450,57 +2667,75 @@ Proof.
 		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) n' (ltac: (solver))) 
 		(exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) m (ltac: (solver)))) (ltac: (solver)))) (ltac: (solver))) 
 		(exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) n' (ltac: (solver)))) as H_66800893. 
-		fix_notations. 
+		simpl in H_66800893. 
 		refine (subsumptionCast _ _ 
 		(IH_n' (ltac: (try clear IH_n'; 
 	solver)) m (ltac: (try clear IH_n'; 
 	solver))) _); 
 		solver.  
-Defined. 
-Definition mult_n_1 (p: MyNat): {{forall (multres: MyNat_u), (mult_rel (⌊ p -⌋) (⌊ one -⌋) multres) -> (multres = (⌊ p -⌋))}}. 
+Qed. 
+Definition mult_n_1_spec (p: MyNat): Type := 
+	{{forall (multres: MyNat_u), (mult_rel (⌊ p -⌋) (⌊ one -⌋) multres) -> (multres = (⌊ p -⌋))}}. 
+#[global] Hint Unfold mult_n_1_spec : lia_unfold.
+Theorem mult_n_1 (p: MyNat): mult_n_1_spec p. 
 Proof. 
 	destruct p as [p p_p]. 
 	pose proof (mult_n_O 
 		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)))) as H_10188893. 
-	fix_notations. 
+	simpl in H_10188893. 
 	refine (subsumptionCast _ _ 
 		(mult_n_Sm 
 		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver))) 
 		(subsumptionCast MyNat_u (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) O (ltac: (solver)))) _); 
 	solver. 
-Defined. 
-Definition plus_1_1 (n: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ one -⌋) (⌊ n -⌋) plusres) -> (plusres == (S_u (⌊ n -⌋)))}}. 
+Qed. 
+Definition plus_1_1_spec (n: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ one -⌋) (⌊ n -⌋) plusres) -> (plusres == (S_u (⌊ n -⌋)))}}. 
+#[global] Hint Unfold plus_1_1_spec : lia_unfold.
+Theorem plus_1_1 (n: MyNat): plus_1_1_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition plus_1_neq_0 (n: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ one -⌋) plusres) -> (plusres <> O_u)}}. 
+Qed. 
+Definition plus_1_neq_0_spec (n: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ one -⌋) plusres) -> (plusres <> O_u)}}. 
+#[global] Hint Unfold plus_1_neq_0_spec : lia_unfold.
+Theorem plus_1_neq_0 (n: MyNat): plus_1_neq_0_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
-	induction n as [(*O*)  | (*S*) ds_d5eo IH_ds_d5eo]. 
+	induction n as [(*O*)  | (*S*) ds_d5OV IH_ds_d5OV]. 
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
-Definition plus_O_n (n: MyNat): {{forall (plusres: MyNat_u), (plus_rel O_u (⌊ n -⌋) plusres) -> (plusres = (⌊ n -⌋))}}. 
+Qed. 
+Definition plus_O_n_spec (n: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel O_u (⌊ n -⌋) plusres) -> (plusres = (⌊ n -⌋))}}. 
+#[global] Hint Unfold plus_O_n_spec : lia_unfold.
+Theorem plus_O_n (n: MyNat): plus_O_n_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition plus_id_example (n: MyNat) (m: MyNat) (z: {{(⌊ n -⌋) = (⌊ m -⌋)}}): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ n -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ m -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+Qed. 
+Definition plus_id_example_spec (n: MyNat) (m: MyNat) (z: {{(⌊ n -⌋) = (⌊ m -⌋)}}): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ n -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ m -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+#[global] Hint Unfold plus_id_example_spec : lia_unfold.
+Theorem plus_id_example (n: MyNat) (m: MyNat) (z: {{(⌊ n -⌋) = (⌊ m -⌋)}}): plus_id_example_spec n m z. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
 	destruct z as [z z_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition plus_id_exercise (n: MyNat) (m: MyNat) (o: MyNat) (p: {{(⌊ n -⌋) = (⌊ m -⌋)}}) (q: {{(⌊ m -⌋) = (⌊ o -⌋)}}): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ o -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+Qed. 
+Definition plus_id_exercise_spec (n: MyNat) (m: MyNat) (o: MyNat) (p: {{(⌊ n -⌋) = (⌊ m -⌋)}}) (q: {{(⌊ m -⌋) = (⌊ o -⌋)}}): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ o -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+#[global] Hint Unfold plus_id_exercise_spec : lia_unfold.
+Theorem plus_id_exercise (n: MyNat) (m: MyNat) (o: MyNat) (p: {{(⌊ n -⌋) = (⌊ m -⌋)}}) (q: {{(⌊ m -⌋) = (⌊ o -⌋)}}): plus_id_exercise_spec n m o p q. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2509,8 +2744,11 @@ Proof.
 	destruct q as [q q_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition plus_n_Sm (n: MyNat) (m: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) plus_res_2) -> ((S_u plusres) == plus_res_2))}}. 
+Qed. 
+Definition plus_n_Sm_spec (n: MyNat) (m: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) plus_res_2) -> ((S_u plusres) == plus_res_2))}}. 
+#[global] Hint Unfold plus_n_Sm_spec : lia_unfold.
+Theorem plus_n_Sm (n: MyNat) (m: MyNat): plus_n_Sm_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2525,8 +2763,11 @@ Proof.
 	solver)) m (ltac: (try clear IH_n'; 
 	solver))) _); 
 		solver.  
-Defined. 
-Definition add_comm (n: MyNat) (m: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ n -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+Qed. 
+Definition add_comm_spec (n: MyNat) (m: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ n -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+#[global] Hint Unfold add_comm_spec : lia_unfold.
+Theorem add_comm (n: MyNat) (m: MyNat): add_comm_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
@@ -2541,14 +2782,17 @@ Proof.
 		pose proof (IH_n' (ltac: (try clear IH_n'; 
 	solver)) m (ltac: (try clear IH_n'; 
 	solver))) as H_75441852. 
-		fix_notations. 
+		simpl in H_75441852. 
 		refine (subsumptionCast _ _ 
 		(plus_n_Sm 
 		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) m (ltac: (solver))) 
 		(exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) n' (ltac: (solver)))) _); 
 		solver.  
-Defined. 
-Definition pred (lq_tmp0: MyNat): MyNat. 
+Qed. 
+Definition pred_spec (lq_tmp0: MyNat): Type := 
+	MyNat. 
+#[global] Hint Unfold pred_spec : lia_unfold.
+Definition pred (lq_tmp0: MyNat): pred_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	induction lq_tmp0 as [(*O*)  | (*S*) n' IH_n']. 
@@ -2569,7 +2813,7 @@ Inductive pred_rel : (MyNat_u -> (MyNat_u -> Prop)) :=
 #[global] Instance pred_getF : getFunc pred_rel := { 
 	getF' := pred
 }.
-Definition pred_rel_funct [lq_tmp0: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: pred_rel lq_tmp0 VV) (K: pred_rel lq_tmp0 VV') , VV = VV'). 
+Theorem pred_rel_funct [lq_tmp0: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: pred_rel lq_tmp0 VV) (K: pred_rel lq_tmp0 VV') , VV = VV'). 
 Proof. 
 	induction lq_tmp0 as [(*O*)  | (*S*) n' IH_n']; 
 	intros ; 
@@ -2588,18 +2832,21 @@ Qed.
 #[global] Hint Rewrite pred_S_lem : f_rel_back.
 Theorem pred_rel_ex (lq_tmp0: MyNat_u) (lq_tmp0_p: (MyNat_wf lq_tmp0) /\ True): pred_rel lq_tmp0 (⌊ pred (exist _ lq_tmp0 lq_tmp0_p) -⌋). 
 Proof. 
+	Opaque pred.
 	existence_lemma_pre pred; 
 	induction lq_tmp0 as [(*O*)  | (*S*) n' IH_n']; 
 	intros ; 
 	[fix_notations| 
 	fix_notations; 
 	try clear IH_n']; 
-	existence_lemma_quicksolve pred; 
+	simpl in *. 
+	Transparent pred.
+	all: existence_lemma_quicksolve pred; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve pred_rel_ex : rel_ax_db.
-Opaque pred. 
+#[global] Opaque pred. 
 Theorem pred__pred_rel_rw (lq_tmp0: MyNat_u) (lq_tmp0_p: (MyNat_wf lq_tmp0) /\ True) (VV: MyNat_u): ((⌊ pred (exist _ lq_tmp0 lq_tmp0_p) -⌋) = VV) <-> (pred_rel lq_tmp0 VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -2620,7 +2867,7 @@ Proof.
 	refine (pred__pred_rel lq_tmp0_r VV). 
 Qed. 
 #[global] Hint Resolve pred__pred_rel' : f_rel_funct_db.
-Definition pred_rel_mk [lq_tmp0: MyNat_u] (lq_tmp0_p: (MyNat_wf lq_tmp0) /\ True): {VV: _ | pred_rel lq_tmp0 VV}. 
+Theorem pred_rel_mk [lq_tmp0: MyNat_u] (lq_tmp0_p: (MyNat_wf lq_tmp0) /\ True): {VV: _ | pred_rel lq_tmp0 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (pred_rel lq_tmp0 VV)) (pred (exist _ lq_tmp0 lq_tmp0_p)) _); 
@@ -2632,7 +2879,10 @@ Qed.
 Proof. 
 	buildPackG pred pred_rel pred__pred_rel pred_rel_funct. 
 Defined.
-Definition sf_exp (base: MyNat) (power: MyNat): MyNat. 
+Definition sf_exp_spec (base: MyNat) (power: MyNat): Type := 
+	MyNat. 
+#[global] Hint Unfold sf_exp_spec : lia_unfold.
+Definition sf_exp (base: MyNat) (power: MyNat): sf_exp_spec base power. 
 Proof. 
 	destruct base as [base base_p]. 
 	destruct power as [power power_p]. 
@@ -2663,7 +2913,7 @@ Inductive sf_exp_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) :=
 #[global] Instance sf_exp_getF : getFunc sf_exp_rel := { 
 	getF' := sf_exp
 }.
-Definition sf_exp_rel_funct [base: MyNat_u] [power: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: sf_exp_rel base power VV) (K: sf_exp_rel base power VV') , VV = VV'). 
+Theorem sf_exp_rel_funct [base: MyNat_u] [power: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: sf_exp_rel base power VV) (K: sf_exp_rel base power VV') , VV = VV'). 
 Proof. 
 	try revert base_p; generalize dependent base; 
 	induction power as [(*O*)  | (*S*) p IH_p]; 
@@ -2683,6 +2933,7 @@ Qed.
 #[global] Hint Rewrite sf_exp_S_lem : f_rel_back.
 Theorem sf_exp_rel_ex (base: MyNat_u) (power: MyNat_u) (base_p: (MyNat_wf base) /\ True) (power_p: (MyNat_wf power) /\ True): sf_exp_rel base power (⌊ sf_exp (exist _ base base_p) (exist _ power power_p) -⌋). 
 Proof. 
+	Opaque sf_exp.
 	existence_lemma_pre sf_exp; 
 	try revert base_p; generalize dependent base; 
 	induction power as [(*O*)  | (*S*) p IH_p]; 
@@ -2693,12 +2944,14 @@ Proof.
 	solver)) base (ltac: (try clear IH_p; 
 	solver))) as IH_37549769; 
 	try clear IH_p]; 
-	existence_lemma_quicksolve sf_exp; 
+	simpl in *. 
+	Transparent sf_exp.
+	all: existence_lemma_quicksolve sf_exp; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve sf_exp_rel_ex : rel_ax_db.
-Opaque sf_exp. 
+#[global] Opaque sf_exp. 
 Theorem sf_exp__sf_exp_rel_rw (base: MyNat_u) (power: MyNat_u) (base_p: (MyNat_wf base) /\ True) (power_p: (MyNat_wf power) /\ True) (VV: MyNat_u): ((⌊ sf_exp (exist _ base base_p) (exist _ power power_p) -⌋) = VV) <-> (sf_exp_rel base power VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -2719,7 +2972,7 @@ Proof.
 	refine (sf_exp__sf_exp_rel base_r power_r VV). 
 Qed. 
 #[global] Hint Resolve sf_exp__sf_exp_rel' : f_rel_funct_db.
-Definition sf_exp_rel_mk [base: MyNat_u] [power: MyNat_u] (base_p: (MyNat_wf base) /\ True) (power_p: (MyNat_wf power) /\ True): {VV: _ | sf_exp_rel base power VV}. 
+Theorem sf_exp_rel_mk [base: MyNat_u] [power: MyNat_u] (base_p: (MyNat_wf base) /\ True) (power_p: (MyNat_wf power) /\ True): {VV: _ | sf_exp_rel base power VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (sf_exp_rel base power VV)) (sf_exp (exist _ base base_p) (exist _ power power_p)) _); 
@@ -2731,7 +2984,10 @@ Qed.
 Proof. 
 	buildPackG sf_exp sf_exp_rel sf_exp__sf_exp_rel sf_exp_rel_funct. 
 Defined.
-Definition sndSF (p: Natprod): MyNat. 
+Definition sndSF_spec (p: Natprod): Type := 
+	MyNat. 
+#[global] Hint Unfold sndSF_spec : lia_unfold.
+Definition sndSF (p: Natprod): sndSF_spec p. 
 Proof. 
 	destruct p as [p p_p]. 
 	induction p as [(*Pair*) n1 n2]. 
@@ -2748,7 +3004,7 @@ Inductive sndSF_rel : (Natprod_u -> (MyNat_u -> Prop)) :=
 #[global] Instance sndSF_getF : getFunc sndSF_rel := { 
 	getF' := sndSF
 }.
-Definition sndSF_rel_funct [p: Natprod_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: sndSF_rel p VV) (K: sndSF_rel p VV') , VV = VV'). 
+Theorem sndSF_rel_funct [p: Natprod_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: sndSF_rel p VV) (K: sndSF_rel p VV') , VV = VV'). 
 Proof. 
 	induction p as [(*Pair*) n1 n2]; 
 	intros ; 
@@ -2762,16 +3018,19 @@ Qed.
 #[global] Hint Rewrite sndSF_Pair_lem : f_rel_back.
 Theorem sndSF_rel_ex (p: Natprod_u) (p_p: (Natprod_wf p) /\ True): sndSF_rel p (⌊ sndSF (exist _ p p_p) -⌋). 
 Proof. 
+	Opaque sndSF.
 	existence_lemma_pre sndSF; 
 	induction p as [(*Pair*) n1 n2]; 
 	intros ; 
 	[fix_notations]; 
-	existence_lemma_quicksolve sndSF; 
+	simpl in *. 
+	Transparent sndSF.
+	all: existence_lemma_quicksolve sndSF; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve sndSF_rel_ex : rel_ax_db.
-Opaque sndSF. 
+#[global] Opaque sndSF. 
 Theorem sndSF__sndSF_rel_rw (p: Natprod_u) (p_p: (Natprod_wf p) /\ True) (VV: MyNat_u): ((⌊ sndSF (exist _ p p_p) -⌋) = VV) <-> (sndSF_rel p VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -2792,7 +3051,7 @@ Proof.
 	refine (sndSF__sndSF_rel p_r VV). 
 Qed. 
 #[global] Hint Resolve sndSF__sndSF_rel' : f_rel_funct_db.
-Definition sndSF_rel_mk [p: Natprod_u] (p_p: (Natprod_wf p) /\ True): {VV: _ | sndSF_rel p VV}. 
+Theorem sndSF_rel_mk [p: Natprod_u] (p_p: (Natprod_wf p) /\ True): {VV: _ | sndSF_rel p VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (sndSF_rel p VV)) (sndSF (exist _ p p_p)) _); 
@@ -2804,22 +3063,31 @@ Qed.
 Proof. 
 	buildPackG sndSF sndSF_rel sndSF__sndSF_rel sndSF_rel_funct. 
 Defined.
-Definition surjective_pairing (p: Natprod): {{forall (sndSFres: MyNat_u), (sndSF_rel (⌊ p -⌋) sndSFres) -> (forall (fstSFres: MyNat_u), (fstSF_rel (⌊ p -⌋) fstSFres) -> ((⌊ p -⌋) = (Pair_u fstSFres sndSFres)))}}. 
+Definition surjective_pairing_spec (p: Natprod): Type := 
+	{{forall (sndSFres: MyNat_u), (sndSF_rel (⌊ p -⌋) sndSFres) -> (forall (fstSFres: MyNat_u), (fstSF_rel (⌊ p -⌋) fstSFres) -> ((⌊ p -⌋) = (Pair_u fstSFres sndSFres)))}}. 
+#[global] Hint Unfold surjective_pairing_spec : lia_unfold.
+Theorem surjective_pairing (p: Natprod): surjective_pairing_spec p. 
 Proof. 
 	destruct p as [p p_p]. 
 	induction p as [(*Pair*) n m]. 
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
-Definition surjective_pairing' (n: MyNat) (m: MyNat): {{forall (sndSFres: MyNat_u), (sndSF_rel (Pair_u (⌊ n -⌋) (⌊ m -⌋)) sndSFres) -> (forall (fstSFres: MyNat_u), (fstSF_rel (Pair_u (⌊ n -⌋) (⌊ m -⌋)) fstSFres) -> ((Pair_u (⌊ n -⌋) (⌊ m -⌋)) == (Pair_u fstSFres sndSFres)))}}. 
+Qed. 
+Definition surjective_pairing'_spec (n: MyNat) (m: MyNat): Type := 
+	{{forall (sndSFres: MyNat_u), (sndSF_rel (Pair_u (⌊ n -⌋) (⌊ m -⌋)) sndSFres) -> (forall (fstSFres: MyNat_u), (fstSF_rel (Pair_u (⌊ n -⌋) (⌊ m -⌋)) fstSFres) -> ((Pair_u (⌊ n -⌋) (⌊ m -⌋)) == (Pair_u fstSFres sndSFres)))}}. 
+#[global] Hint Unfold surjective_pairing'_spec : lia_unfold.
+Theorem surjective_pairing' (n: MyNat) (m: MyNat): surjective_pairing'_spec n m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition two: MyNat. 
+Qed. 
+Definition two_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold two_spec : lia_unfold.
+Definition two: two_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -2835,7 +3103,7 @@ Inductive two_rel : (MyNat_u -> Prop) :=
 #[global] Instance two_getF : getFunc two_rel := { 
 	getF' := two
 }.
-Definition two_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: two_rel VV) (K: two_rel VV') , VV = VV'). 
+Theorem two_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: two_rel VV) (K: two_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -2847,14 +3115,17 @@ Qed.
 #[global] Hint Rewrite two_def_lem : f_rel_back.
 Theorem two_rel_ex: two_rel (⌊ two -⌋). 
 Proof. 
+	Opaque two.
 	existence_lemma_pre two; 
 	fix_notations; 
-	existence_lemma_quicksolve two; 
+	simpl in *. 
+	Transparent two.
+	all: existence_lemma_quicksolve two; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve two_rel_ex : rel_ax_db.
-Opaque two. 
+#[global] Opaque two. 
 Theorem two__two_rel_rw (VV: MyNat_u): ((⌊ two -⌋) = VV) <-> (two_rel VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -2875,7 +3146,7 @@ Proof.
 	refine (two__two_rel VV). 
 Qed. 
 #[global] Hint Resolve two__two_rel' : f_rel_funct_db.
-Definition two_rel_mk: {VV: _ | two_rel VV}. 
+Theorem two_rel_mk: {VV: _ | two_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (two_rel VV)) two _); 
@@ -2883,17 +3154,26 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve two_rel_mk : f_rel_funct_db.
-Definition test_leb1: {{forall (lebres: SFBool_u), (leb_rel (⌊ two -⌋) (⌊ two -⌋) lebres) -> (lebres = SFTrue_u)}}. 
+Definition test_leb1_spec: Type := 
+	{{forall (lebres: SFBool_u), (leb_rel (⌊ two -⌋) (⌊ two -⌋) lebres) -> (lebres = SFTrue_u)}}. 
+#[global] Hint Unfold test_leb1_spec : lia_unfold.
+Theorem test_leb1: test_leb1_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_ltb1: {{forall (ltbres: SFBool_u), (ltb_rel (⌊ two -⌋) (⌊ two -⌋) ltbres) -> (ltbres = SFFalse_u)}}. 
+Qed. 
+Definition test_ltb1_spec: Type := 
+	{{forall (ltbres: SFBool_u), (ltb_rel (⌊ two -⌋) (⌊ two -⌋) ltbres) -> (ltbres = SFFalse_u)}}. 
+#[global] Hint Unfold test_ltb1_spec : lia_unfold.
+Theorem test_ltb1: test_ltb1_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition three: MyNat. 
+Qed. 
+Definition three_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold three_spec : lia_unfold.
+Definition three: three_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -2909,7 +3189,7 @@ Inductive three_rel : (MyNat_u -> Prop) :=
 #[global] Instance three_getF : getFunc three_rel := { 
 	getF' := three
 }.
-Definition three_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: three_rel VV) (K: three_rel VV') , VV = VV'). 
+Theorem three_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: three_rel VV) (K: three_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -2921,14 +3201,17 @@ Qed.
 #[global] Hint Rewrite three_def_lem : f_rel_back.
 Theorem three_rel_ex: three_rel (⌊ three -⌋). 
 Proof. 
+	Opaque three.
 	existence_lemma_pre three; 
 	fix_notations; 
-	existence_lemma_quicksolve three; 
+	simpl in *. 
+	Transparent three.
+	all: existence_lemma_quicksolve three; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve three_rel_ex : rel_ax_db.
-Opaque three. 
+#[global] Opaque three. 
 Theorem three__three_rel_rw (VV: MyNat_u): ((⌊ three -⌋) = VV) <-> (three_rel VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -2949,7 +3232,7 @@ Proof.
 	refine (three__three_rel VV). 
 Qed. 
 #[global] Hint Resolve three__three_rel' : f_rel_funct_db.
-Definition three_rel_mk: {VV: _ | three_rel VV}. 
+Theorem three_rel_mk: {VV: _ | three_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (three_rel VV)) three _); 
@@ -2957,7 +3240,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve three_rel_mk : f_rel_funct_db.
-Definition four: MyNat. 
+Definition four_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold four_spec : lia_unfold.
+Definition four: four_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -2973,7 +3259,7 @@ Inductive four_rel : (MyNat_u -> Prop) :=
 #[global] Instance four_getF : getFunc four_rel := { 
 	getF' := four
 }.
-Definition four_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: four_rel VV) (K: four_rel VV') , VV = VV'). 
+Theorem four_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: four_rel VV) (K: four_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -2985,14 +3271,17 @@ Qed.
 #[global] Hint Rewrite four_def_lem : f_rel_back.
 Theorem four_rel_ex: four_rel (⌊ four -⌋). 
 Proof. 
+	Opaque four.
 	existence_lemma_pre four; 
 	fix_notations; 
-	existence_lemma_quicksolve four; 
+	simpl in *. 
+	Transparent four.
+	all: existence_lemma_quicksolve four; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve four_rel_ex : rel_ax_db.
-Opaque four. 
+#[global] Opaque four. 
 Theorem four__four_rel_rw (VV: MyNat_u): ((⌊ four -⌋) = VV) <-> (four_rel VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -3013,7 +3302,7 @@ Proof.
 	refine (four__four_rel VV). 
 Qed. 
 #[global] Hint Resolve four__four_rel' : f_rel_funct_db.
-Definition four_rel_mk: {VV: _ | four_rel VV}. 
+Theorem four_rel_mk: {VV: _ | four_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (four_rel VV)) four _); 
@@ -3021,7 +3310,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve four_rel_mk : f_rel_funct_db.
-Definition five: MyNat. 
+Definition five_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold five_spec : lia_unfold.
+Definition five: five_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3037,7 +3329,7 @@ Inductive five_rel : (MyNat_u -> Prop) :=
 #[global] Instance five_getF : getFunc five_rel := { 
 	getF' := five
 }.
-Definition five_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: five_rel VV) (K: five_rel VV') , VV = VV'). 
+Theorem five_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: five_rel VV) (K: five_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -3049,14 +3341,17 @@ Qed.
 #[global] Hint Rewrite five_def_lem : f_rel_back.
 Theorem five_rel_ex: five_rel (⌊ five -⌋). 
 Proof. 
+	Opaque five.
 	existence_lemma_pre five; 
 	fix_notations; 
-	existence_lemma_quicksolve five; 
+	simpl in *. 
+	Transparent five.
+	all: existence_lemma_quicksolve five; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve five_rel_ex : rel_ax_db.
-Opaque five. 
+#[global] Opaque five. 
 Theorem five__five_rel_rw (VV: MyNat_u): ((⌊ five -⌋) = VV) <-> (five_rel VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -3077,7 +3372,7 @@ Proof.
 	refine (five__five_rel VV). 
 Qed. 
 #[global] Hint Resolve five__five_rel' : f_rel_funct_db.
-Definition five_rel_mk: {VV: _ | five_rel VV}. 
+Theorem five_rel_mk: {VV: _ | five_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (five_rel VV)) five _); 
@@ -3085,7 +3380,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve five_rel_mk : f_rel_funct_db.
-Definition six: MyNat. 
+Definition six_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold six_spec : lia_unfold.
+Definition six: six_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3101,7 +3399,7 @@ Inductive six_rel : (MyNat_u -> Prop) :=
 #[global] Instance six_getF : getFunc six_rel := { 
 	getF' := six
 }.
-Definition six_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: six_rel VV) (K: six_rel VV') , VV = VV'). 
+Theorem six_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: six_rel VV) (K: six_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -3113,14 +3411,17 @@ Qed.
 #[global] Hint Rewrite six_def_lem : f_rel_back.
 Theorem six_rel_ex: six_rel (⌊ six -⌋). 
 Proof. 
+	Opaque six.
 	existence_lemma_pre six; 
 	fix_notations; 
-	existence_lemma_quicksolve six; 
+	simpl in *. 
+	Transparent six.
+	all: existence_lemma_quicksolve six; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve six_rel_ex : rel_ax_db.
-Opaque six. 
+#[global] Opaque six. 
 Theorem six__six_rel_rw (VV: MyNat_u): ((⌊ six -⌋) = VV) <-> (six_rel VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -3141,7 +3442,7 @@ Proof.
 	refine (six__six_rel VV). 
 Qed. 
 #[global] Hint Resolve six__six_rel' : f_rel_funct_db.
-Definition six_rel_mk: {VV: _ | six_rel VV}. 
+Theorem six_rel_mk: {VV: _ | six_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (six_rel VV)) six _); 
@@ -3149,7 +3450,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve six_rel_mk : f_rel_funct_db.
-Definition seven: MyNat. 
+Definition seven_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold seven_spec : lia_unfold.
+Definition seven: seven_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3165,7 +3469,7 @@ Inductive seven_rel : (MyNat_u -> Prop) :=
 #[global] Instance seven_getF : getFunc seven_rel := { 
 	getF' := seven
 }.
-Definition seven_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: seven_rel VV) (K: seven_rel VV') , VV = VV'). 
+Theorem seven_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: seven_rel VV) (K: seven_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -3177,14 +3481,17 @@ Qed.
 #[global] Hint Rewrite seven_def_lem : f_rel_back.
 Theorem seven_rel_ex: seven_rel (⌊ seven -⌋). 
 Proof. 
+	Opaque seven.
 	existence_lemma_pre seven; 
 	fix_notations; 
-	existence_lemma_quicksolve seven; 
+	simpl in *. 
+	Transparent seven.
+	all: existence_lemma_quicksolve seven; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve seven_rel_ex : rel_ax_db.
-Opaque seven. 
+#[global] Opaque seven. 
 Theorem seven__seven_rel_rw (VV: MyNat_u): ((⌊ seven -⌋) = VV) <-> (seven_rel VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -3205,7 +3512,7 @@ Proof.
 	refine (seven__seven_rel VV). 
 Qed. 
 #[global] Hint Resolve seven__seven_rel' : f_rel_funct_db.
-Definition seven_rel_mk: {VV: _ | seven_rel VV}. 
+Theorem seven_rel_mk: {VV: _ | seven_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (seven_rel VV)) seven _); 
@@ -3213,7 +3520,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve seven_rel_mk : f_rel_funct_db.
-Definition eight: MyNat. 
+Definition eight_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold eight_spec : lia_unfold.
+Definition eight: eight_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3229,7 +3539,7 @@ Inductive eight_rel : (MyNat_u -> Prop) :=
 #[global] Instance eight_getF : getFunc eight_rel := { 
 	getF' := eight
 }.
-Definition eight_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: eight_rel VV) (K: eight_rel VV') , VV = VV'). 
+Theorem eight_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: eight_rel VV) (K: eight_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -3241,14 +3551,17 @@ Qed.
 #[global] Hint Rewrite eight_def_lem : f_rel_back.
 Theorem eight_rel_ex: eight_rel (⌊ eight -⌋). 
 Proof. 
+	Opaque eight.
 	existence_lemma_pre eight; 
 	fix_notations; 
-	existence_lemma_quicksolve eight; 
+	simpl in *. 
+	Transparent eight.
+	all: existence_lemma_quicksolve eight; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve eight_rel_ex : rel_ax_db.
-Opaque eight. 
+#[global] Opaque eight. 
 Theorem eight__eight_rel_rw (VV: MyNat_u): ((⌊ eight -⌋) = VV) <-> (eight_rel VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -3269,7 +3582,7 @@ Proof.
 	refine (eight__eight_rel VV). 
 Qed. 
 #[global] Hint Resolve eight__eight_rel' : f_rel_funct_db.
-Definition eight_rel_mk: {VV: _ | eight_rel VV}. 
+Theorem eight_rel_mk: {VV: _ | eight_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (eight_rel VV)) eight _); 
@@ -3277,7 +3590,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve eight_rel_mk : f_rel_funct_db.
-Definition nine: MyNat. 
+Definition nine_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold nine_spec : lia_unfold.
+Definition nine: nine_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3293,7 +3609,7 @@ Inductive nine_rel : (MyNat_u -> Prop) :=
 #[global] Instance nine_getF : getFunc nine_rel := { 
 	getF' := nine
 }.
-Definition nine_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: nine_rel VV) (K: nine_rel VV') , VV = VV'). 
+Theorem nine_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: nine_rel VV) (K: nine_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -3305,14 +3621,17 @@ Qed.
 #[global] Hint Rewrite nine_def_lem : f_rel_back.
 Theorem nine_rel_ex: nine_rel (⌊ nine -⌋). 
 Proof. 
+	Opaque nine.
 	existence_lemma_pre nine; 
 	fix_notations; 
-	existence_lemma_quicksolve nine; 
+	simpl in *. 
+	Transparent nine.
+	all: existence_lemma_quicksolve nine; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve nine_rel_ex : rel_ax_db.
-Opaque nine. 
+#[global] Opaque nine. 
 Theorem nine__nine_rel_rw (VV: MyNat_u): ((⌊ nine -⌋) = VV) <-> (nine_rel VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -3333,7 +3652,7 @@ Proof.
 	refine (nine__nine_rel VV). 
 Qed. 
 #[global] Hint Resolve nine__nine_rel' : f_rel_funct_db.
-Definition nine_rel_mk: {VV: _ | nine_rel VV}. 
+Theorem nine_rel_mk: {VV: _ | nine_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (nine_rel VV)) nine _); 
@@ -3341,7 +3660,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve nine_rel_mk : f_rel_funct_db.
-Definition ten: MyNat. 
+Definition ten_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold ten_spec : lia_unfold.
+Definition ten: ten_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3357,7 +3679,7 @@ Inductive ten_rel : (MyNat_u -> Prop) :=
 #[global] Instance ten_getF : getFunc ten_rel := { 
 	getF' := ten
 }.
-Definition ten_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: ten_rel VV) (K: ten_rel VV') , VV = VV'). 
+Theorem ten_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: ten_rel VV) (K: ten_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -3369,14 +3691,17 @@ Qed.
 #[global] Hint Rewrite ten_def_lem : f_rel_back.
 Theorem ten_rel_ex: ten_rel (⌊ ten -⌋). 
 Proof. 
+	Opaque ten.
 	existence_lemma_pre ten; 
 	fix_notations; 
-	existence_lemma_quicksolve ten; 
+	simpl in *. 
+	Transparent ten.
+	all: existence_lemma_quicksolve ten; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve ten_rel_ex : rel_ax_db.
-Opaque ten. 
+#[global] Opaque ten. 
 Theorem ten__ten_rel_rw (VV: MyNat_u): ((⌊ ten -⌋) = VV) <-> (ten_rel VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -3397,7 +3722,7 @@ Proof.
 	refine (ten__ten_rel VV). 
 Qed. 
 #[global] Hint Resolve ten__ten_rel' : f_rel_funct_db.
-Definition ten_rel_mk: {VV: _ | ten_rel VV}. 
+Theorem ten_rel_mk: {VV: _ | ten_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (ten_rel VV)) ten _); 
@@ -3405,7 +3730,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve ten_rel_mk : f_rel_funct_db.
-Definition eleven: MyNat. 
+Definition eleven_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold eleven_spec : lia_unfold.
+Definition eleven: eleven_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3421,7 +3749,7 @@ Inductive eleven_rel : (MyNat_u -> Prop) :=
 #[global] Instance eleven_getF : getFunc eleven_rel := { 
 	getF' := eleven
 }.
-Definition eleven_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: eleven_rel VV) (K: eleven_rel VV') , VV = VV'). 
+Theorem eleven_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: eleven_rel VV) (K: eleven_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -3433,14 +3761,17 @@ Qed.
 #[global] Hint Rewrite eleven_def_lem : f_rel_back.
 Theorem eleven_rel_ex: eleven_rel (⌊ eleven -⌋). 
 Proof. 
+	Opaque eleven.
 	existence_lemma_pre eleven; 
 	fix_notations; 
-	existence_lemma_quicksolve eleven; 
+	simpl in *. 
+	Transparent eleven.
+	all: existence_lemma_quicksolve eleven; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve eleven_rel_ex : rel_ax_db.
-Opaque eleven. 
+#[global] Opaque eleven. 
 Theorem eleven__eleven_rel_rw (VV: MyNat_u): ((⌊ eleven -⌋) = VV) <-> (eleven_rel VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -3461,7 +3792,7 @@ Proof.
 	refine (eleven__eleven_rel VV). 
 Qed. 
 #[global] Hint Resolve eleven__eleven_rel' : f_rel_funct_db.
-Definition eleven_rel_mk: {VV: _ | eleven_rel VV}. 
+Theorem eleven_rel_mk: {VV: _ | eleven_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (eleven_rel VV)) eleven _); 
@@ -3469,7 +3800,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve eleven_rel_mk : f_rel_funct_db.
-Definition twelve: MyNat. 
+Definition twelve_spec: Type := 
+	MyNat. 
+#[global] Hint Unfold twelve_spec : lia_unfold.
+Definition twelve: twelve_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
 		(S 
@@ -3485,7 +3819,7 @@ Inductive twelve_rel : (MyNat_u -> Prop) :=
 #[global] Instance twelve_getF : getFunc twelve_rel := { 
 	getF' := twelve
 }.
-Definition twelve_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: twelve_rel VV) (K: twelve_rel VV') , VV = VV'). 
+Theorem twelve_rel_funct: (forall (VV: MyNat_u) (VV': MyNat_u) (H: twelve_rel VV) (K: twelve_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -3497,14 +3831,17 @@ Qed.
 #[global] Hint Rewrite twelve_def_lem : f_rel_back.
 Theorem twelve_rel_ex: twelve_rel (⌊ twelve -⌋). 
 Proof. 
+	Opaque twelve.
 	existence_lemma_pre twelve; 
 	fix_notations; 
-	existence_lemma_quicksolve twelve; 
+	simpl in *. 
+	Transparent twelve.
+	all: existence_lemma_quicksolve twelve; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve twelve_rel_ex : rel_ax_db.
-Opaque twelve. 
+#[global] Opaque twelve. 
 Theorem twelve__twelve_rel_rw (VV: MyNat_u): ((⌊ twelve -⌋) = VV) <-> (twelve_rel VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -3525,7 +3862,7 @@ Proof.
 	refine (twelve__twelve_rel VV). 
 Qed. 
 #[global] Hint Resolve twelve__twelve_rel' : f_rel_funct_db.
-Definition twelve_rel_mk: {VV: _ | twelve_rel VV}. 
+Theorem twelve_rel_mk: {VV: _ | twelve_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (twelve_rel VV)) twelve _); 
@@ -3533,37 +3870,58 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve twelve_rel_mk : f_rel_funct_db.
-Definition test_leb2: {{forall (lebres: SFBool_u), (leb_rel (⌊ two -⌋) (⌊ four -⌋) lebres) -> (lebres = SFTrue_u)}}. 
+Definition test_leb2_spec: Type := 
+	{{forall (lebres: SFBool_u), (leb_rel (⌊ two -⌋) (⌊ four -⌋) lebres) -> (lebres = SFTrue_u)}}. 
+#[global] Hint Unfold test_leb2_spec : lia_unfold.
+Theorem test_leb2: test_leb2_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_leb3: {{forall (lebres: SFBool_u), (leb_rel (⌊ four -⌋) (⌊ two -⌋) lebres) -> (lebres = SFFalse_u)}}. 
+Qed. 
+Definition test_leb3_spec: Type := 
+	{{forall (lebres: SFBool_u), (leb_rel (⌊ four -⌋) (⌊ two -⌋) lebres) -> (lebres = SFFalse_u)}}. 
+#[global] Hint Unfold test_leb3_spec : lia_unfold.
+Theorem test_leb3: test_leb3_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_ltb2: {{forall (ltbres: SFBool_u), (ltb_rel (⌊ two -⌋) (⌊ four -⌋) ltbres) -> (ltbres = SFTrue_u)}}. 
+Qed. 
+Definition test_ltb2_spec: Type := 
+	{{forall (ltbres: SFBool_u), (ltb_rel (⌊ two -⌋) (⌊ four -⌋) ltbres) -> (ltbres = SFTrue_u)}}. 
+#[global] Hint Unfold test_ltb2_spec : lia_unfold.
+Theorem test_ltb2: test_ltb2_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_ltb3: {{forall (ltbres: SFBool_u), (ltb_rel (⌊ four -⌋) (⌊ two -⌋) ltbres) -> (ltbres = SFFalse_u)}}. 
+Qed. 
+Definition test_ltb3_spec: Type := 
+	{{forall (ltbres: SFBool_u), (ltb_rel (⌊ four -⌋) (⌊ two -⌋) ltbres) -> (ltbres = SFFalse_u)}}. 
+#[global] Hint Unfold test_ltb3_spec : lia_unfold.
+Theorem test_ltb3: test_ltb3_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_factorial1: {{forall (factorialres: MyNat_u), (factorial_rel (⌊ three -⌋) factorialres) -> (factorialres = (⌊ six -⌋))}}. 
+Qed. 
+Definition test_factorial1_spec: Type := 
+	{{forall (factorialres: MyNat_u), (factorial_rel (⌊ three -⌋) factorialres) -> (factorialres = (⌊ six -⌋))}}. 
+#[global] Hint Unfold test_factorial1_spec : lia_unfold.
+Theorem test_factorial1: test_factorial1_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition test_mult1: {{forall (multres: MyNat_u), (mult_rel (⌊ three -⌋) (⌊ three -⌋) multres) -> (multres = (⌊ nine -⌋))}}. 
+Qed. 
+Definition test_mult1_spec: Type := 
+	{{forall (multres: MyNat_u), (mult_rel (⌊ three -⌋) (⌊ three -⌋) multres) -> (multres = (⌊ nine -⌋))}}. 
+#[global] Hint Unfold test_mult1_spec : lia_unfold.
+Theorem test_mult1: test_mult1_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition zero_nbeq_plus_1 (n: MyNat): {{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ one -⌋) plusres) -> (forall (eqbres: SFBool_u), (eqb_rel O_u plusres eqbres) -> (eqbres = SFFalse_u))}}. 
+Qed. 
+Definition zero_nbeq_plus_1_spec (n: MyNat): Type := 
+	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ one -⌋) plusres) -> (forall (eqbres: SFBool_u), (eqb_rel O_u plusres eqbres) -> (eqbres = SFFalse_u))}}. 
+#[global] Hint Unfold zero_nbeq_plus_1_spec : lia_unfold.
+Theorem zero_nbeq_plus_1 (n: MyNat): zero_nbeq_plus_1_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*O*)  | (*S*) n' IH_n']. 
@@ -3573,19 +3931,19 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
-Inductive Modifier_u : Set := 
+Qed. 
+Inductive Modifier_u : Type := 
 	 | Minus_u: Modifier_u
 	 | Natural_u: Modifier_u
 	 | Plus_u: Modifier_u. 
 Fixpoint Modifier_eq (x: Modifier_u) (y: Modifier_u): bool := 
 	match (x, y) with (Minus_u, Minus_u) => true | (Natural_u, Natural_u) => true | (Plus_u, Plus_u) => true | (_, _) => false end. 
-Definition Modifier_eq_refl: (forall (x: Modifier_u) , is_true (Modifier_eq x x)). 
+Theorem Modifier_eq_refl: (forall (x: Modifier_u) , is_true (Modifier_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Modifier_eq_refl : eq_hint_db.
-Definition Modifier_eqb_eq: (forall (s: Modifier_u) (t: Modifier_u) , (is_true (Modifier_eq s t)) -> (s = t)). 
+Theorem Modifier_eqb_eq: (forall (s: Modifier_u) (t: Modifier_u) , (is_true (Modifier_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -3627,7 +3985,7 @@ Definition Plus: Modifier :=
 #[global] Hint Unfold Minus : ref_constr_db.
 #[global] Hint Unfold Natural : ref_constr_db.
 #[global] Hint Unfold Plus : ref_constr_db.
-Inductive Letter_u : Set := 
+Inductive Letter_u : Type := 
 	 | A_u: Letter_u
 	 | B_u: Letter_u
 	 | C_u: Letter_u
@@ -3635,12 +3993,12 @@ Inductive Letter_u : Set :=
 	 | F_u: Letter_u. 
 Fixpoint Letter_eq (x: Letter_u) (y: Letter_u): bool := 
 	match (x, y) with (A_u, A_u) => true | (B_u, B_u) => true | (C_u, C_u) => true | (D_u, D_u) => true | (F_u, F_u) => true | (_, _) => false end. 
-Definition Letter_eq_refl: (forall (x: Letter_u) , is_true (Letter_eq x x)). 
+Theorem Letter_eq_refl: (forall (x: Letter_u) , is_true (Letter_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Letter_eq_refl : eq_hint_db.
-Definition Letter_eqb_eq: (forall (s: Letter_u) (t: Letter_u) , (is_true (Letter_eq s t)) -> (s = t)). 
+Theorem Letter_eqb_eq: (forall (s: Letter_u) (t: Letter_u) , (is_true (Letter_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -3696,7 +4054,10 @@ Definition F: Letter :=
 #[global] Hint Unfold C : ref_constr_db.
 #[global] Hint Unfold D : ref_constr_db.
 #[global] Hint Unfold F : ref_constr_db.
-Definition lower_letter (l: Letter): Letter. 
+Definition lower_letter_spec (l: Letter): Type := 
+	Letter. 
+#[global] Hint Unfold lower_letter_spec : lia_unfold.
+Definition lower_letter (l: Letter): lower_letter_spec l. 
 Proof. 
 	destruct l as [l l_p]. 
 	induction l as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]. 
@@ -3729,7 +4090,7 @@ Inductive lower_letter_rel : (Letter_u -> (Letter_u -> Prop)) :=
 #[global] Instance lower_letter_getF : getFunc lower_letter_rel := { 
 	getF' := lower_letter
 }.
-Definition lower_letter_rel_funct [l: Letter_u]: (forall (VV: Letter_u) (VV': Letter_u) (H: lower_letter_rel l VV) (K: lower_letter_rel l VV') , VV = VV'). 
+Theorem lower_letter_rel_funct [l: Letter_u]: (forall (VV: Letter_u) (VV': Letter_u) (H: lower_letter_rel l VV) (K: lower_letter_rel l VV') , VV = VV'). 
 Proof. 
 	destruct l as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]; 
 	intros ; 
@@ -3763,6 +4124,7 @@ Qed.
 #[global] Hint Rewrite lower_letter_F_lem : f_rel_back.
 Theorem lower_letter_rel_ex (l: Letter_u) (l_p: (Letter_wf l) /\ True): lower_letter_rel l (⌊ lower_letter (exist _ l l_p) -⌋). 
 Proof. 
+	Opaque lower_letter.
 	existence_lemma_pre lower_letter; 
 	destruct l as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]; 
 	intros ; 
@@ -3771,12 +4133,14 @@ Proof.
 	fix_notations| 
 	fix_notations| 
 	fix_notations]; 
-	existence_lemma_quicksolve lower_letter; 
+	simpl in *. 
+	Transparent lower_letter.
+	all: existence_lemma_quicksolve lower_letter; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve lower_letter_rel_ex : rel_ax_db.
-Opaque lower_letter. 
+#[global] Opaque lower_letter. 
 Theorem lower_letter__lower_letter_rel_rw (l: Letter_u) (l_p: (Letter_wf l) /\ True) (VV: Letter_u): ((⌊ lower_letter (exist _ l l_p) -⌋) = VV) <-> (lower_letter_rel l VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -3797,7 +4161,7 @@ Proof.
 	refine (lower_letter__lower_letter_rel l_r VV). 
 Qed. 
 #[global] Hint Resolve lower_letter__lower_letter_rel' : f_rel_funct_db.
-Definition lower_letter_rel_mk [l: Letter_u] (l_p: (Letter_wf l) /\ True): {VV: _ | lower_letter_rel l VV}. 
+Theorem lower_letter_rel_mk [l: Letter_u] (l_p: (Letter_wf l) /\ True): {VV: _ | lower_letter_rel l VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (lower_letter_rel l VV)) (lower_letter (exist _ l l_p)) _); 
@@ -3809,21 +4173,24 @@ Qed.
 Proof. 
 	buildPackG lower_letter lower_letter_rel lower_letter__lower_letter_rel lower_letter_rel_funct. 
 Defined.
-Definition lower_letter_F_is_F: {{forall (lower_letterres: Letter_u), (lower_letter_rel F_u lower_letterres) -> (lower_letterres = F_u)}}. 
+Definition lower_letter_F_is_F_spec: Type := 
+	{{forall (lower_letterres: Letter_u), (lower_letter_rel F_u lower_letterres) -> (lower_letterres = F_u)}}. 
+#[global] Hint Unfold lower_letter_F_is_F_spec : lia_unfold.
+Theorem lower_letter_F_is_F: lower_letter_F_is_F_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Inductive Grades_u : Set := 
+Qed. 
+Inductive Grades_u : Type := 
 	 | Grade_u: Letter_u -> (Modifier_u -> Grades_u). 
 Fixpoint Grades_eq (x: Grades_u) (y: Grades_u): bool := 
 	match (x, y) with (Grade_u x x_1, Grade_u x' x_1') => ((true && (x ==? x')) && (x_1 ==? x_1')) end. 
-Definition Grades_eq_refl: (forall (x: Grades_u) , is_true (Grades_eq x x)). 
+Theorem Grades_eq_refl: (forall (x: Grades_u) , is_true (Grades_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Grades_eq_refl : eq_hint_db.
-Definition Grades_eqb_eq: (forall (s: Grades_u) (t: Grades_u) , (is_true (Grades_eq s t)) -> (s = t)). 
+Theorem Grades_eqb_eq: (forall (s: Grades_u) (t: Grades_u) , (is_true (Grades_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -3851,7 +4218,10 @@ Definition Grade (VV: Letter) (VV_: Modifier): Grades :=
 #[global] Hint Unfold Grades_wf : wf_constr_db.
 #[global] Hint Resolve Grades_eq : ref_constr_db.
 #[global] Hint Unfold Grade : ref_constr_db.
-Definition lower_grade (g: Grades): Grades. 
+Definition lower_grade_spec (g: Grades): Type := 
+	Grades. 
+#[global] Hint Unfold lower_grade_spec : lia_unfold.
+Definition lower_grade (g: Grades): lower_grade_spec g. 
 Proof. 
 	destruct g as [g g_p]. 
 	induction g as [(*Grade*) l m]. 
@@ -3918,7 +4288,7 @@ Inductive lower_grade_rel : (Grades_u -> (Grades_u -> Prop)) :=
 #[global] Instance lower_grade_getF : getFunc lower_grade_rel := { 
 	getF' := lower_grade
 }.
-Definition lower_grade_rel_funct [g: Grades_u]: (forall (VV: Grades_u) (VV': Grades_u) (H: lower_grade_rel g VV) (K: lower_grade_rel g VV') , VV = VV'). 
+Theorem lower_grade_rel_funct [g: Grades_u]: (forall (VV: Grades_u) (VV': Grades_u) (H: lower_grade_rel g VV) (K: lower_grade_rel g VV') , VV = VV'). 
 Proof. 
 	induction g as [(*Grade*) l m]; 
 	intros ; 
@@ -3968,6 +4338,7 @@ Qed.
 #[global] Hint Rewrite lower_grade_Grade_______lem : f_rel_back.
 Theorem lower_grade_rel_ex (g: Grades_u) (g_p: (Grades_wf g) /\ True): lower_grade_rel g (⌊ lower_grade (exist _ g g_p) -⌋). 
 Proof. 
+	Opaque lower_grade.
 	existence_lemma_pre lower_grade; 
 	induction g as [(*Grade*) l m]; 
 	intros ; 
@@ -3982,12 +4353,14 @@ Proof.
 	fix_notations]| 
 	fix_notations| 
 	fix_notations]]; 
-	existence_lemma_quicksolve lower_grade; 
+	simpl in *. 
+	Transparent lower_grade.
+	all: existence_lemma_quicksolve lower_grade; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve lower_grade_rel_ex : rel_ax_db.
-Opaque lower_grade. 
+#[global] Opaque lower_grade. 
 Theorem lower_grade__lower_grade_rel_rw (g: Grades_u) (g_p: (Grades_wf g) /\ True) (VV: Grades_u): ((⌊ lower_grade (exist _ g g_p) -⌋) = VV) <-> (lower_grade_rel g VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -4008,7 +4381,7 @@ Proof.
 	refine (lower_grade__lower_grade_rel g_r VV). 
 Qed. 
 #[global] Hint Resolve lower_grade__lower_grade_rel' : f_rel_funct_db.
-Definition lower_grade_rel_mk [g: Grades_u] (g_p: (Grades_wf g) /\ True): {VV: _ | lower_grade_rel g VV}. 
+Theorem lower_grade_rel_mk [g: Grades_u] (g_p: (Grades_wf g) /\ True): {VV: _ | lower_grade_rel g VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (lower_grade_rel g VV)) (lower_grade (exist _ g g_p)) _); 
@@ -4020,7 +4393,10 @@ Qed.
 Proof. 
 	buildPackG lower_grade lower_grade_rel lower_grade__lower_grade_rel lower_grade_rel_funct. 
 Defined.
-Definition apply_late_policy (late_days: {late_days: Z | True}) (g: Grades): Grades. 
+Definition apply_late_policy_spec (late_days: {late_days: Z | True}) (g: Grades): Type := 
+	Grades. 
+#[global] Hint Unfold apply_late_policy_spec : lia_unfold.
+Definition apply_late_policy (late_days: {late_days: Z | True}) (g: Grades): apply_late_policy_spec late_days g. 
 Proof. 
 	destruct late_days as [late_days late_days_p]. 
 	destruct g as [g g_p]. 
@@ -4057,7 +4433,7 @@ Inductive apply_late_policy_rel : (Z -> (Grades_u -> (Grades_u -> Prop))) :=
 #[global] Instance apply_late_policy_getF : getFunc apply_late_policy_rel := { 
 	getF' := apply_late_policy
 }.
-Definition apply_late_policy_rel_funct [late_days: Z] [g: Grades_u]: (forall (VV: Grades_u) (VV': Grades_u) (H: apply_late_policy_rel late_days g VV) (K: apply_late_policy_rel late_days g VV') , VV = VV'). 
+Theorem apply_late_policy_rel_funct [late_days: Z] [g: Grades_u]: (forall (VV: Grades_u) (VV': Grades_u) (H: apply_late_policy_rel late_days g VV) (K: apply_late_policy_rel late_days g VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -4070,17 +4446,20 @@ Qed.
 Theorem apply_late_policy_rel_ex (late_days: Z) (g: Grades_u) (late_days_p: True) (g_p: (Grades_wf g) /\ True): apply_late_policy_rel late_days g 
 		(⌊ apply_late_policy (exist _ late_days late_days_p) (exist _ g g_p) -⌋). 
 Proof. 
+	Opaque apply_late_policy.
 	existence_lemma_pre apply_late_policy; 
 	let E := fresh "E" in 
 	destruct (late_days <? 9) as [ | ] eqn:E; [fix_notations | let E := fresh "E" in 
 	destruct (late_days <? 17) as [ | ] eqn:E; [fix_notations | let E := fresh "E" in 
 	destruct (late_days <? 21) as [ | ] eqn:E; [fix_notations | fix_notations]]]; 
-	existence_lemma_quicksolve apply_late_policy; 
+	simpl in *. 
+	Transparent apply_late_policy.
+	all: existence_lemma_quicksolve apply_late_policy; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve apply_late_policy_rel_ex : rel_ax_db.
-Opaque apply_late_policy. 
+#[global] Opaque apply_late_policy. 
 Theorem apply_late_policy__apply_late_policy_rel_rw (late_days: Z) (g: Grades_u) (late_days_p: True) (g_p: (Grades_wf g) /\ True) (VV: Grades_u): ((⌊ apply_late_policy (exist _ late_days late_days_p) (exist _ g g_p) -⌋) = VV) <-> (apply_late_policy_rel late_days g VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -4101,7 +4480,7 @@ Proof.
 	refine (apply_late_policy__apply_late_policy_rel late_days_r g_r VV). 
 Qed. 
 #[global] Hint Resolve apply_late_policy__apply_late_policy_rel' : f_rel_funct_db.
-Definition apply_late_policy_rel_mk [late_days: Z] [g: Grades_u] (late_days_p: True) (g_p: (Grades_wf g) /\ True): {VV: _ | apply_late_policy_rel late_days g VV}. 
+Theorem apply_late_policy_rel_mk [late_days: Z] [g: Grades_u] (late_days_p: True) (g_p: (Grades_wf g) /\ True): {VV: _ | apply_late_policy_rel late_days g VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (apply_late_policy_rel late_days g VV)) 
@@ -4114,22 +4493,34 @@ Qed.
 Proof. 
 	buildPackG apply_late_policy apply_late_policy_rel apply_late_policy__apply_late_policy_rel apply_late_policy_rel_funct. 
 Defined.
-Definition lower_grade_F_Minus: {{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u F_u Minus_u) lower_graderes) -> (lower_graderes == (Grade_u F_u Minus_u))}}. 
+Definition lower_grade_F_Minus_spec: Type := 
+	{{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u F_u Minus_u) lower_graderes) -> (lower_graderes == (Grade_u F_u Minus_u))}}. 
+#[global] Hint Unfold lower_grade_F_Minus_spec : lia_unfold.
+Theorem lower_grade_F_Minus: lower_grade_F_Minus_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition lower_grade_thrice: {{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u B_u Minus_u) lower_graderes) -> (forall (lower_grade_res_2: Grades_u), (lower_grade_rel lower_graderes lower_grade_res_2) -> (forall (lower_grade_res_3: Grades_u), (lower_grade_rel lower_grade_res_2 lower_grade_res_3) -> (lower_grade_res_3 == (Grade_u C_u Minus_u))))}}. 
+Qed. 
+Definition lower_grade_thrice_spec: Type := 
+	{{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u B_u Minus_u) lower_graderes) -> (forall (lower_grade_res_2: Grades_u), (lower_grade_rel lower_graderes lower_grade_res_2) -> (forall (lower_grade_res_3: Grades_u), (lower_grade_rel lower_grade_res_2 lower_grade_res_3) -> (lower_grade_res_3 == (Grade_u C_u Minus_u))))}}. 
+#[global] Hint Unfold lower_grade_thrice_spec : lia_unfold.
+Theorem lower_grade_thrice: lower_grade_thrice_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition lower_grade_twice: {{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u B_u Minus_u) lower_graderes) -> (forall (lower_grade_res_2: Grades_u), (lower_grade_rel lower_graderes lower_grade_res_2) -> (lower_grade_res_2 == (Grade_u C_u Natural_u)))}}. 
+Qed. 
+Definition lower_grade_twice_spec: Type := 
+	{{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u B_u Minus_u) lower_graderes) -> (forall (lower_grade_res_2: Grades_u), (lower_grade_rel lower_graderes lower_grade_res_2) -> (lower_grade_res_2 == (Grade_u C_u Natural_u)))}}. 
+#[global] Hint Unfold lower_grade_twice_spec : lia_unfold.
+Theorem lower_grade_twice: lower_grade_twice_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition no_penalty_for_mostly_on_time (late_days: {late_days: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ late_days -⌋) 9 true}}): {{forall (apply_late_policyres: Grades_u), (apply_late_policy_rel (⌊ late_days -⌋) (⌊ g -⌋) apply_late_policyres) -> (apply_late_policyres = (⌊ g -⌋))}}. 
+Qed. 
+Definition no_penalty_for_mostly_on_time_spec (late_days: {late_days: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ late_days -⌋) 9 true}}): Type := 
+	{{forall (apply_late_policyres: Grades_u), (apply_late_policy_rel (⌊ late_days -⌋) (⌊ g -⌋) apply_late_policyres) -> (apply_late_policyres = (⌊ g -⌋))}}. 
+#[global] Hint Unfold no_penalty_for_mostly_on_time_spec : lia_unfold.
+Theorem no_penalty_for_mostly_on_time (late_days: {late_days: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ late_days -⌋) 9 true}}): no_penalty_for_mostly_on_time_spec late_days g h. 
 Proof. 
 	destruct late_days as [late_days late_days_p]. 
 	destruct g as [g g_p]. 
@@ -4138,8 +4529,8 @@ Proof.
 	destruct (late_days <? 9) as [ | ] eqn:E; [refine (exist _ unit _); 
 	solver | refine (exist _ h _); 
 	solver]. 
-Defined. 
-Inductive Day_u : Set := 
+Qed. 
+Inductive Day_u : Type := 
 	 | Friday_u: Day_u
 	 | Monday_u: Day_u
 	 | Saturday_u: Day_u
@@ -4149,12 +4540,12 @@ Inductive Day_u : Set :=
 	 | Wednesday_u: Day_u. 
 Fixpoint Day_eq (x: Day_u) (y: Day_u): bool := 
 	match (x, y) with (Friday_u, Friday_u) => true | (Monday_u, Monday_u) => true | (Saturday_u, Saturday_u) => true | (Sunday_u, Sunday_u) => true | (Thursday_u, Thursday_u) => true | (Tuesday_u, Tuesday_u) => true | (Wednesday_u, Wednesday_u) => true | (_, _) => false end. 
-Definition Day_eq_refl: (forall (x: Day_u) , is_true (Day_eq x x)). 
+Theorem Day_eq_refl: (forall (x: Day_u) , is_true (Day_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Day_eq_refl : eq_hint_db.
-Definition Day_eqb_eq: (forall (s: Day_u) (t: Day_u) , (is_true (Day_eq s t)) -> (s = t)). 
+Theorem Day_eqb_eq: (forall (s: Day_u) (t: Day_u) , (is_true (Day_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -4224,7 +4615,10 @@ Definition Wednesday: Day :=
 #[global] Hint Unfold Thursday : ref_constr_db.
 #[global] Hint Unfold Tuesday : ref_constr_db.
 #[global] Hint Unfold Wednesday : ref_constr_db.
-Definition next_weekday (d: Day): Day. 
+Definition next_weekday_spec (d: Day): Type := 
+	Day. 
+#[global] Hint Unfold next_weekday_spec : lia_unfold.
+Definition next_weekday (d: Day): next_weekday_spec d. 
 Proof. 
 	destruct d as [d d_p]. 
 	induction d as [(*Friday*)  | (*Monday*)  | (*Saturday*)  | (*Sunday*)  | (*Thursday*)  | (*Tuesday*)  | (*Wednesday*) ]. 
@@ -4265,7 +4659,7 @@ Inductive next_weekday_rel : (Day_u -> (Day_u -> Prop)) :=
 #[global] Instance next_weekday_getF : getFunc next_weekday_rel := { 
 	getF' := next_weekday
 }.
-Definition next_weekday_rel_funct [d: Day_u]: (forall (VV: Day_u) (VV': Day_u) (H: next_weekday_rel d VV) (K: next_weekday_rel d VV') , VV = VV'). 
+Theorem next_weekday_rel_funct [d: Day_u]: (forall (VV: Day_u) (VV': Day_u) (H: next_weekday_rel d VV) (K: next_weekday_rel d VV') , VV = VV'). 
 Proof. 
 	destruct d as [(*Friday*)  | (*Monday*)  | (*Saturday*)  | (*Sunday*)  | (*Thursday*)  | (*Tuesday*)  | (*Wednesday*) ]; 
 	intros ; 
@@ -4309,6 +4703,7 @@ Qed.
 #[global] Hint Rewrite next_weekday_Sunday_lem : f_rel_back.
 Theorem next_weekday_rel_ex (d: Day_u) (d_p: (Day_wf d) /\ True): next_weekday_rel d (⌊ next_weekday (exist _ d d_p) -⌋). 
 Proof. 
+	Opaque next_weekday.
 	existence_lemma_pre next_weekday; 
 	destruct d as [(*Friday*)  | (*Monday*)  | (*Saturday*)  | (*Sunday*)  | (*Thursday*)  | (*Tuesday*)  | (*Wednesday*) ]; 
 	intros ; 
@@ -4319,12 +4714,14 @@ Proof.
 	fix_notations| 
 	fix_notations| 
 	fix_notations]; 
-	existence_lemma_quicksolve next_weekday; 
+	simpl in *. 
+	Transparent next_weekday.
+	all: existence_lemma_quicksolve next_weekday; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve next_weekday_rel_ex : rel_ax_db.
-Opaque next_weekday. 
+#[global] Opaque next_weekday. 
 Theorem next_weekday__next_weekday_rel_rw (d: Day_u) (d_p: (Day_wf d) /\ True) (VV: Day_u): ((⌊ next_weekday (exist _ d d_p) -⌋) = VV) <-> (next_weekday_rel d VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -4345,7 +4742,7 @@ Proof.
 	refine (next_weekday__next_weekday_rel d_r VV). 
 Qed. 
 #[global] Hint Resolve next_weekday__next_weekday_rel' : f_rel_funct_db.
-Definition next_weekday_rel_mk [d: Day_u] (d_p: (Day_wf d) /\ True): {VV: _ | next_weekday_rel d VV}. 
+Theorem next_weekday_rel_mk [d: Day_u] (d_p: (Day_wf d) /\ True): {VV: _ | next_weekday_rel d VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (next_weekday_rel d VV)) (next_weekday (exist _ d d_p)) _); 
@@ -4357,23 +4754,26 @@ Qed.
 Proof. 
 	buildPackG next_weekday next_weekday_rel next_weekday__next_weekday_rel next_weekday_rel_funct. 
 Defined.
-Definition test_next_weekday: {{forall (next_weekdayres: Day_u), (next_weekday_rel Saturday_u next_weekdayres) -> (forall (next_weekday_res_2: Day_u), (next_weekday_rel next_weekdayres next_weekday_res_2) -> (next_weekday_res_2 = Tuesday_u))}}. 
+Definition test_next_weekday_spec: Type := 
+	{{forall (next_weekdayres: Day_u), (next_weekday_rel Saturday_u next_weekdayres) -> (forall (next_weekday_res_2: Day_u), (next_weekday_rel next_weekdayres next_weekday_res_2) -> (next_weekday_res_2 = Tuesday_u))}}. 
+#[global] Hint Unfold test_next_weekday_spec : lia_unfold.
+Theorem test_next_weekday: test_next_weekday_spec. 
 Proof. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Inductive Comparison_u : Set := 
+Qed. 
+Inductive Comparison_u : Type := 
 	 | Eq_u: Comparison_u
 	 | Gt_u: Comparison_u
 	 | Lt_u: Comparison_u. 
 Fixpoint Comparison_eq (x: Comparison_u) (y: Comparison_u): bool := 
 	match (x, y) with (Eq_u, Eq_u) => true | (Gt_u, Gt_u) => true | (Lt_u, Lt_u) => true | (_, _) => false end. 
-Definition Comparison_eq_refl: (forall (x: Comparison_u) , is_true (Comparison_eq x x)). 
+Theorem Comparison_eq_refl: (forall (x: Comparison_u) , is_true (Comparison_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Comparison_eq_refl : eq_hint_db.
-Definition Comparison_eqb_eq: (forall (s: Comparison_u) (t: Comparison_u) , (is_true (Comparison_eq s t)) -> (s = t)). 
+Theorem Comparison_eqb_eq: (forall (s: Comparison_u) (t: Comparison_u) , (is_true (Comparison_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -4415,7 +4815,10 @@ Definition Lt: Comparison :=
 #[global] Hint Unfold Eq : ref_constr_db.
 #[global] Hint Unfold Gt : ref_constr_db.
 #[global] Hint Unfold Lt : ref_constr_db.
-Definition letter_comparison (l1: Letter) (l2: Letter): Comparison. 
+Definition letter_comparison_spec (l1: Letter) (l2: Letter): Type := 
+	Comparison. 
+#[global] Hint Unfold letter_comparison_spec : lia_unfold.
+Definition letter_comparison (l1: Letter) (l2: Letter): letter_comparison_spec l1 l2. 
 Proof. 
 	destruct l1 as [l1 l1_p]. 
 	destruct l2 as [l2 l2_p]. 
@@ -4540,7 +4943,7 @@ Inductive letter_comparison_rel : (Letter_u -> (Letter_u -> (Comparison_u -> Pro
 #[global] Instance letter_comparison_getF : getFunc letter_comparison_rel := { 
 	getF' := letter_comparison
 }.
-Definition letter_comparison_rel_funct [l1: Letter_u] [l2: Letter_u]: (forall (VV: Comparison_u) (VV': Comparison_u) (H: letter_comparison_rel l1 l2 VV) (K: letter_comparison_rel l1 l2 VV') , VV = VV'). 
+Theorem letter_comparison_rel_funct [l1: Letter_u] [l2: Letter_u]: (forall (VV: Comparison_u) (VV': Comparison_u) (H: letter_comparison_rel l1 l2 VV) (K: letter_comparison_rel l1 l2 VV') , VV = VV'). 
 Proof. 
 	try revert l2_p; generalize dependent l2; 
 	destruct l1 as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]; 
@@ -4685,6 +5088,7 @@ Qed.
 #[global] Hint Rewrite letter_comparison_F_F_lem : f_rel_back.
 Theorem letter_comparison_rel_ex (l1: Letter_u) (l2: Letter_u) (l1_p: (Letter_wf l1) /\ True) (l2_p: (Letter_wf l2) /\ True): letter_comparison_rel l1 l2 (⌊ letter_comparison (exist _ l1 l1_p) (exist _ l2 l2_p) -⌋). 
 Proof. 
+	Opaque letter_comparison.
 	existence_lemma_pre letter_comparison; 
 	try revert l2_p; generalize dependent l2; 
 	destruct l1 as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]; 
@@ -4724,12 +5128,14 @@ Proof.
 	fix_notations| 
 	fix_notations| 
 	fix_notations]]; 
-	existence_lemma_quicksolve letter_comparison; 
+	simpl in *. 
+	Transparent letter_comparison.
+	all: existence_lemma_quicksolve letter_comparison; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve letter_comparison_rel_ex : rel_ax_db.
-Opaque letter_comparison. 
+#[global] Opaque letter_comparison. 
 Theorem letter_comparison__letter_comparison_rel_rw (l1: Letter_u) (l2: Letter_u) (l1_p: (Letter_wf l1) /\ True) (l2_p: (Letter_wf l2) /\ True) (VV: Comparison_u): ((⌊ letter_comparison (exist _ l1 l1_p) (exist _ l2 l2_p) -⌋) = VV) <-> (letter_comparison_rel l1 l2 VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -4750,7 +5156,7 @@ Proof.
 	refine (letter_comparison__letter_comparison_rel l1_r l2_r VV). 
 Qed. 
 #[global] Hint Resolve letter_comparison__letter_comparison_rel' : f_rel_funct_db.
-Definition letter_comparison_rel_mk [l1: Letter_u] [l2: Letter_u] (l1_p: (Letter_wf l1) /\ True) (l2_p: (Letter_wf l2) /\ True): {VV: _ | letter_comparison_rel l1 l2 VV}. 
+Theorem letter_comparison_rel_mk [l1: Letter_u] [l2: Letter_u] (l1_p: (Letter_wf l1) /\ True) (l2_p: (Letter_wf l2) /\ True): {VV: _ | letter_comparison_rel l1 l2 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (letter_comparison_rel l1 l2 VV)) (letter_comparison (exist _ l1 l1_p) (exist _ l2 l2_p)) _); 
@@ -4762,7 +5168,10 @@ Qed.
 Proof. 
 	buildPackG letter_comparison letter_comparison_rel letter_comparison__letter_comparison_rel letter_comparison_rel_funct. 
 Defined.
-Definition letter_comparison_eq (l: Letter): {{forall (letter_comparisonres: Comparison_u), (letter_comparison_rel (⌊ l -⌋) (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Eq_u)}}. 
+Definition letter_comparison_eq_spec (l: Letter): Type := 
+	{{forall (letter_comparisonres: Comparison_u), (letter_comparison_rel (⌊ l -⌋) (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Eq_u)}}. 
+#[global] Hint Unfold letter_comparison_eq_spec : lia_unfold.
+Theorem letter_comparison_eq (l: Letter): letter_comparison_eq_spec l. 
 Proof. 
 	destruct l as [l l_p]. 
 	induction l as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]. 
@@ -4781,8 +5190,11 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
-Definition lower_letter_lowers (l: Letter) (p: {{forall (letter_comparisonres: Comparison_u), (letter_comparison_rel F_u (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Lt_u)}}): {{forall (lower_letterres: Letter_u), (lower_letter_rel (⌊ l -⌋) lower_letterres) -> (forall (letter_comparisonres: Comparison_u), (letter_comparison_rel lower_letterres (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Lt_u))}}. 
+Qed. 
+Definition lower_letter_lowers_spec (l: Letter) (p: {{forall (letter_comparisonres: Comparison_u), (letter_comparison_rel F_u (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Lt_u)}}): Type := 
+	{{forall (lower_letterres: Letter_u), (lower_letter_rel (⌊ l -⌋) lower_letterres) -> (forall (letter_comparisonres: Comparison_u), (letter_comparison_rel lower_letterres (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Lt_u))}}. 
+#[global] Hint Unfold lower_letter_lowers_spec : lia_unfold.
+Theorem lower_letter_lowers (l: Letter) (p: {{forall (letter_comparisonres: Comparison_u), (letter_comparison_rel F_u (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Lt_u)}}): lower_letter_lowers_spec l p. 
 Proof. 
 	destruct l as [l l_p]. 
 	destruct p as [p p_p]. 
@@ -4803,8 +5215,11 @@ Proof.
 	  - intros . 
 		refine (exist _ p _); 
 		solver.  
-Defined. 
-Definition modifier_comparison (m1: Modifier) (m2: Modifier): Comparison. 
+Qed. 
+Definition modifier_comparison_spec (m1: Modifier) (m2: Modifier): Type := 
+	Comparison. 
+#[global] Hint Unfold modifier_comparison_spec : lia_unfold.
+Definition modifier_comparison (m1: Modifier) (m2: Modifier): modifier_comparison_spec m1 m2. 
 Proof. 
 	destruct m1 as [m1 m1_p]. 
 	destruct m2 as [m2 m2_p]. 
@@ -4861,7 +5276,7 @@ Inductive modifier_comparison_rel : (Modifier_u -> (Modifier_u -> (Comparison_u 
 #[global] Instance modifier_comparison_getF : getFunc modifier_comparison_rel := { 
 	getF' := modifier_comparison
 }.
-Definition modifier_comparison_rel_funct [m1: Modifier_u] [m2: Modifier_u]: (forall (VV: Comparison_u) (VV': Comparison_u) (H: modifier_comparison_rel m1 m2 VV) (K: modifier_comparison_rel m1 m2 VV') , VV = VV'). 
+Theorem modifier_comparison_rel_funct [m1: Modifier_u] [m2: Modifier_u]: (forall (VV: Comparison_u) (VV': Comparison_u) (H: modifier_comparison_rel m1 m2 VV) (K: modifier_comparison_rel m1 m2 VV') , VV = VV'). 
 Proof. 
 	try revert m2_p; generalize dependent m2; 
 	destruct m1 as [(*Minus*)  | (*Natural*)  | (*Plus*) ]; 
@@ -4923,6 +5338,7 @@ Qed.
 Theorem modifier_comparison_rel_ex (m1: Modifier_u) (m2: Modifier_u) (m1_p: (Modifier_wf m1) /\ True) (m2_p: (Modifier_wf m2) /\ True): modifier_comparison_rel m1 m2 
 		(⌊ modifier_comparison (exist _ m1 m1_p) (exist _ m2 m2_p) -⌋). 
 Proof. 
+	Opaque modifier_comparison.
 	existence_lemma_pre modifier_comparison; 
 	try revert m2_p; generalize dependent m2; 
 	destruct m1 as [(*Minus*)  | (*Natural*)  | (*Plus*) ]; 
@@ -4942,12 +5358,14 @@ Proof.
 	[fix_notations| 
 	fix_notations| 
 	fix_notations]]; 
-	existence_lemma_quicksolve modifier_comparison; 
+	simpl in *. 
+	Transparent modifier_comparison.
+	all: existence_lemma_quicksolve modifier_comparison; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve modifier_comparison_rel_ex : rel_ax_db.
-Opaque modifier_comparison. 
+#[global] Opaque modifier_comparison. 
 Theorem modifier_comparison__modifier_comparison_rel_rw (m1: Modifier_u) (m2: Modifier_u) (m1_p: (Modifier_wf m1) /\ True) (m2_p: (Modifier_wf m2) /\ True) (VV: Comparison_u): ((⌊ modifier_comparison (exist _ m1 m1_p) (exist _ m2 m2_p) -⌋) = VV) <-> (modifier_comparison_rel m1 m2 VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -4968,7 +5386,7 @@ Proof.
 	refine (modifier_comparison__modifier_comparison_rel m1_r m2_r VV). 
 Qed. 
 #[global] Hint Resolve modifier_comparison__modifier_comparison_rel' : f_rel_funct_db.
-Definition modifier_comparison_rel_mk [m1: Modifier_u] [m2: Modifier_u] (m1_p: (Modifier_wf m1) /\ True) (m2_p: (Modifier_wf m2) /\ True): {VV: _ | modifier_comparison_rel m1 m2 VV}. 
+Theorem modifier_comparison_rel_mk [m1: Modifier_u] [m2: Modifier_u] (m1_p: (Modifier_wf m1) /\ True) (m2_p: (Modifier_wf m2) /\ True): {VV: _ | modifier_comparison_rel m1 m2 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (modifier_comparison_rel m1 m2 VV)) (modifier_comparison (exist _ m1 m1_p) (exist _ m2 m2_p)) _); 
@@ -4980,18 +5398,18 @@ Qed.
 Proof. 
 	buildPackG modifier_comparison modifier_comparison_rel modifier_comparison__modifier_comparison_rel modifier_comparison_rel_funct. 
 Defined.
-Inductive Color_u : Set := 
+Inductive Color_u : Type := 
 	 | Black_u: Color_u
 	 | Primary_u: RGB_u -> Color_u
 	 | White_u: Color_u. 
 Fixpoint Color_eq (x: Color_u) (y: Color_u): bool := 
 	match (x, y) with (Black_u, Black_u) => true | (Primary_u x, Primary_u x') => (true && (x ==? x')) | (White_u, White_u) => true | (_, _) => false end. 
-Definition Color_eq_refl: (forall (x: Color_u) , is_true (Color_eq x x)). 
+Theorem Color_eq_refl: (forall (x: Color_u) , is_true (Color_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Color_eq_refl : eq_hint_db.
-Definition Color_eqb_eq: (forall (s: Color_u) (t: Color_u) , (is_true (Color_eq s t)) -> (s = t)). 
+Theorem Color_eqb_eq: (forall (s: Color_u) (t: Color_u) , (is_true (Color_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -5033,15 +5451,18 @@ Definition White: Color :=
 #[global] Hint Unfold Black : ref_constr_db.
 #[global] Hint Unfold Primary : ref_constr_db.
 #[global] Hint Unfold White : ref_constr_db.
-Definition isred (c: Color): SFBool. 
+Definition isred_spec (c: Color): Type := 
+	SFBool. 
+#[global] Hint Unfold isred_spec : lia_unfold.
+Definition isred (c: Color): isred_spec c. 
 Proof. 
 	destruct c as [c c_p]. 
-	induction c as [(*Black*)  | (*Primary*) ds_d5ff | (*White*) ]. 
+	induction c as [(*Black*)  | (*Primary*) ds_d5PM | (*White*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ SFFalse _); 
 		solver.  
 	  - intros . 
-		induction ds_d5ff as [(*Blue*)  | (*Green*)  | (*Red*) ]. 
+		induction ds_d5PM as [(*Blue*)  | (*Green*)  | (*Red*) ]. 
 		  -- intros . 
 			refine (subsumptionCast _ _ SFFalse _); 
 			solver.  
@@ -5055,7 +5476,10 @@ Proof.
 		refine (subsumptionCast _ _ SFFalse _); 
 		solver.  
 Defined. 
-Definition monochrome (c: Color): SFBool. 
+Definition monochrome_spec (c: Color): Type := 
+	SFBool. 
+#[global] Hint Unfold monochrome_spec : lia_unfold.
+Definition monochrome (c: Color): monochrome_spec c. 
 Proof. 
 	destruct c as [c c_p]. 
 	induction c as [(*Black*)  | (*Primary*) p | (*White*) ]. 
@@ -5080,7 +5504,7 @@ Inductive monochrome_rel : (Color_u -> (SFBool_u -> Prop)) :=
 #[global] Instance monochrome_getF : getFunc monochrome_rel := { 
 	getF' := monochrome
 }.
-Definition monochrome_rel_funct [c: Color_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: monochrome_rel c VV) (K: monochrome_rel c VV') , VV = VV'). 
+Theorem monochrome_rel_funct [c: Color_u]: (forall (VV: SFBool_u) (VV': SFBool_u) (H: monochrome_rel c VV) (K: monochrome_rel c VV') , VV = VV'). 
 Proof. 
 	induction c as [(*Black*)  | (*Primary*) p | (*White*) ]; 
 	intros ; 
@@ -5104,18 +5528,21 @@ Qed.
 #[global] Hint Rewrite monochrome_Primary_lem : f_rel_back.
 Theorem monochrome_rel_ex (c: Color_u) (c_p: (Color_wf c) /\ True): monochrome_rel c (⌊ monochrome (exist _ c c_p) -⌋). 
 Proof. 
+	Opaque monochrome.
 	existence_lemma_pre monochrome; 
 	induction c as [(*Black*)  | (*Primary*) p | (*White*) ]; 
 	intros ; 
 	[fix_notations| 
 	fix_notations| 
 	fix_notations]; 
-	existence_lemma_quicksolve monochrome; 
+	simpl in *. 
+	Transparent monochrome.
+	all: existence_lemma_quicksolve monochrome; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve monochrome_rel_ex : rel_ax_db.
-Opaque monochrome. 
+#[global] Opaque monochrome. 
 Theorem monochrome__monochrome_rel_rw (c: Color_u) (c_p: (Color_wf c) /\ True) (VV: SFBool_u): ((⌊ monochrome (exist _ c c_p) -⌋) = VV) <-> (monochrome_rel c VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -5136,7 +5563,7 @@ Proof.
 	refine (monochrome__monochrome_rel c_r VV). 
 Qed. 
 #[global] Hint Resolve monochrome__monochrome_rel' : f_rel_funct_db.
-Definition monochrome_rel_mk [c: Color_u] (c_p: (Color_wf c) /\ True): {VV: _ | monochrome_rel c VV}. 
+Theorem monochrome_rel_mk [c: Color_u] (c_p: (Color_wf c) /\ True): {VV: _ | monochrome_rel c VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (monochrome_rel c VV)) (monochrome (exist _ c c_p)) _); 

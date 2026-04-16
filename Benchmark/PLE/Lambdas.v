@@ -1,7 +1,11 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Definition fvInLambda (x: {x: Z | True}): {VV: Z | True}. 
+Set Universe Polymorphism.
+Definition fvInLambda_spec (x: {x: Z | True}): Type := 
+	{VV: Z | True}. 
+#[global] Hint Unfold fvInLambda_spec : lia_unfold.
+Definition fvInLambda (x: {x: Z | True}): fvInLambda_spec x. 
 Proof. 
 	destruct x as [x x_p]. 
 	assert (f_84163371: (forall (y: {y: Z | True}) , {v: Z | forall (addZres: Z), (addZ_rel x (⌊ y -⌋) addZres) -> (v == addZres)})) by (intros y; 
@@ -14,7 +18,10 @@ Proof.
 		((getPackF f) (exist (fun (y: Z) => True) x (ltac: (solver)))) _); 
 	solver. 
 Defined. 
-Definition appId (x: {x: Z | True}): {VV: Z | True}. 
+Definition appId_spec (x: {x: Z | True}): Type := 
+	{VV: Z | True}. 
+#[global] Hint Unfold appId_spec : lia_unfold.
+Definition appId (x: {x: Z | True}): appId_spec x. 
 Proof. 
 	destruct x as [x x_p]. 
 	assert (f_73066757: (forall (y: {y: Z | True}) , {v: Z | v = (⌊ y -⌋)})) by (intros y; 

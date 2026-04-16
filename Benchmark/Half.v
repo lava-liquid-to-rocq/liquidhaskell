@@ -1,17 +1,18 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive Nats_u : Set := 
+Set Universe Polymorphism.
+Inductive Nats_u : Type := 
 	 | Suc_u: Nats_u -> Nats_u
 	 | Zero_u: Nats_u. 
 Fixpoint Nats_eq (x: Nats_u) (y: Nats_u): bool := 
 	match (x, y) with (Suc_u x, Suc_u x') => (true && (Nats_eq x x')) | (Zero_u, Zero_u) => true | (_, _) => false end. 
-Definition Nats_eq_refl: (forall (x: Nats_u) , is_true (Nats_eq x x)). 
+Theorem Nats_eq_refl: (forall (x: Nats_u) , is_true (Nats_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Nats_eq_refl : eq_hint_db.
-Definition Nats_eqb_eq: (forall (s: Nats_u) (t: Nats_u) , (is_true (Nats_eq s t)) -> (s = t)). 
+Theorem Nats_eqb_eq: (forall (s: Nats_u) (t: Nats_u) , (is_true (Nats_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -51,7 +52,10 @@ Defined.
 #[global] Hint Resolve wf_Suc_n : ref_constr_db.
 #[global] Hint Unfold Suc : ref_constr_db.
 #[global] Hint Unfold Zero : ref_constr_db.
-Definition even (n: Nats): Bool. 
+Definition even_spec (n: Nats): Type := 
+	Bool. 
+#[global] Hint Unfold even_spec : lia_unfold.
+Definition even (n: Nats): even_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
 	induction n as [(*Suc*) n IH_n | (*Zero*) ]. 
@@ -73,7 +77,7 @@ Inductive even_rel : (Nats_u -> (bool -> Prop)) :=
 #[global] Instance even_getF : getFunc even_rel := { 
 	getF' := even
 }.
-Definition even_rel_funct [n: Nats_u]: (forall (VV: bool) (VV': bool) (H: even_rel n VV) (K: even_rel n VV') , VV = VV'). 
+Theorem even_rel_funct [n: Nats_u]: (forall (VV: bool) (VV': bool) (H: even_rel n VV) (K: even_rel n VV') , VV = VV'). 
 Proof. 
 	induction n as [(*Suc*) n IH_n | (*Zero*) ]; 
 	intros ; 
@@ -92,6 +96,7 @@ Qed.
 #[global] Hint Rewrite even_Suc_lem : f_rel_back.
 Theorem even_rel_ex (n: Nats_u) (n_p: (Nats_wf n) /\ True): even_rel n (⌊ even (exist _ n n_p) -⌋). 
 Proof. 
+	Opaque even.
 	existence_lemma_pre even; 
 	induction n as [(*Suc*) n IH_n | (*Zero*) ]; 
 	intros ; 
@@ -100,12 +105,14 @@ Proof.
 	solver))) as IH_52571464; 
 	try clear IH_n| 
 	fix_notations]; 
-	existence_lemma_quicksolve even; 
+	simpl in *. 
+	Transparent even.
+	all: existence_lemma_quicksolve even; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve even_rel_ex : rel_ax_db.
-Opaque even. 
+#[global] Opaque even. 
 Theorem even__even_rel_rw (n: Nats_u) (n_p: (Nats_wf n) /\ True) (VV: bool): ((⌊ even (exist _ n n_p) -⌋) = VV) <-> (even_rel n VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -126,7 +133,7 @@ Proof.
 	refine (even__even_rel n_r VV). 
 Qed. 
 #[global] Hint Resolve even__even_rel' : f_rel_funct_db.
-Definition even_rel_mk [n: Nats_u] (n_p: (Nats_wf n) /\ True): {VV: _ | even_rel n VV}. 
+Theorem even_rel_mk [n: Nats_u] (n_p: (Nats_wf n) /\ True): {VV: _ | even_rel n VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (even_rel n VV)) (even (exist _ n n_p)) _); 

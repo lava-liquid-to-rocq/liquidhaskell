@@ -1,17 +1,18 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive MaybeInt_u : Set := 
+Set Universe Polymorphism.
+Inductive MaybeInt_u : Type := 
 	 | Just_u: Z -> MaybeInt_u
 	 | Nothing_u: MaybeInt_u. 
 Fixpoint MaybeInt_eq (x: MaybeInt_u) (y: MaybeInt_u): bool := 
 	match (x, y) with (Just_u x, Just_u x') => (true && (x ==? x')) | (Nothing_u, Nothing_u) => true | (_, _) => false end. 
-Definition MaybeInt_eq_refl: (forall (x: MaybeInt_u) , is_true (MaybeInt_eq x x)). 
+Theorem MaybeInt_eq_refl: (forall (x: MaybeInt_u) , is_true (MaybeInt_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve MaybeInt_eq_refl : eq_hint_db.
-Definition MaybeInt_eqb_eq: (forall (s: MaybeInt_u) (t: MaybeInt_u) , (is_true (MaybeInt_eq s t)) -> (s = t)). 
+Theorem MaybeInt_eqb_eq: (forall (s: MaybeInt_u) (t: MaybeInt_u) , (is_true (MaybeInt_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -46,7 +47,10 @@ Definition Nothing: MaybeInt :=
 #[global] Hint Resolve MaybeInt_eq : ref_constr_db.
 #[global] Hint Unfold Just : ref_constr_db.
 #[global] Hint Unfold Nothing : ref_constr_db.
-Definition mappend (lq_tmp0: MaybeInt) (lq_tmp1: MaybeInt): MaybeInt. 
+Definition mappend_spec (lq_tmp0: MaybeInt) (lq_tmp1: MaybeInt): Type := 
+	MaybeInt. 
+#[global] Hint Unfold mappend_spec : lia_unfold.
+Definition mappend (lq_tmp0: MaybeInt) (lq_tmp1: MaybeInt): mappend_spec lq_tmp0 lq_tmp1. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	destruct lq_tmp1 as [lq_tmp1 lq_tmp1_p]. 
@@ -69,7 +73,7 @@ Inductive mappend_rel : (MaybeInt_u -> (MaybeInt_u -> (MaybeInt_u -> Prop))) :=
 #[global] Instance mappend_getF : getFunc mappend_rel := { 
 	getF' := mappend
 }.
-Definition mappend_rel_funct [lq_tmp0: MaybeInt_u] [lq_tmp1: MaybeInt_u]: (forall (VV: MaybeInt_u) (VV': MaybeInt_u) (H: mappend_rel lq_tmp0 lq_tmp1 VV) (K: mappend_rel lq_tmp0 lq_tmp1 VV') , VV = VV'). 
+Theorem mappend_rel_funct [lq_tmp0: MaybeInt_u] [lq_tmp1: MaybeInt_u]: (forall (VV: MaybeInt_u) (VV': MaybeInt_u) (H: mappend_rel lq_tmp0 lq_tmp1 VV) (K: mappend_rel lq_tmp0 lq_tmp1 VV') , VV = VV'). 
 Proof. 
 	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
 	induction lq_tmp0 as [(*Just*) x | (*Nothing*) ]; 
@@ -90,18 +94,21 @@ Qed.
 Theorem mappend_rel_ex (lq_tmp0: MaybeInt_u) (lq_tmp1: MaybeInt_u) (lq_tmp0_p: (MaybeInt_wf lq_tmp0) /\ True) (lq_tmp1_p: (MaybeInt_wf lq_tmp1) /\ True): mappend_rel lq_tmp0 lq_tmp1 
 		(⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋). 
 Proof. 
+	Opaque mappend.
 	existence_lemma_pre mappend; 
 	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
 	induction lq_tmp0 as [(*Just*) x | (*Nothing*) ]; 
 	intros ; 
 	[fix_notations| 
 	fix_notations]; 
-	existence_lemma_quicksolve mappend; 
+	simpl in *. 
+	Transparent mappend.
+	all: existence_lemma_quicksolve mappend; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve mappend_rel_ex : rel_ax_db.
-Opaque mappend. 
+#[global] Opaque mappend. 
 Theorem mappend__mappend_rel_rw (lq_tmp0: MaybeInt_u) (lq_tmp1: MaybeInt_u) (lq_tmp0_p: (MaybeInt_wf lq_tmp0) /\ True) (lq_tmp1_p: (MaybeInt_wf lq_tmp1) /\ True) (VV: MaybeInt_u): ((⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋) = VV) <-> (mappend_rel lq_tmp0 lq_tmp1 VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -122,7 +129,7 @@ Proof.
 	refine (mappend__mappend_rel lq_tmp0_r lq_tmp1_r VV). 
 Qed. 
 #[global] Hint Resolve mappend__mappend_rel' : f_rel_funct_db.
-Definition mappend_rel_mk [lq_tmp0: MaybeInt_u] [lq_tmp1: MaybeInt_u] (lq_tmp0_p: (MaybeInt_wf lq_tmp0) /\ True) (lq_tmp1_p: (MaybeInt_wf lq_tmp1) /\ True): {VV: _ | mappend_rel lq_tmp0 lq_tmp1 VV}. 
+Theorem mappend_rel_mk [lq_tmp0: MaybeInt_u] [lq_tmp1: MaybeInt_u] (lq_tmp0_p: (MaybeInt_wf lq_tmp0) /\ True) (lq_tmp1_p: (MaybeInt_wf lq_tmp1) /\ True): {VV: _ | mappend_rel lq_tmp0 lq_tmp1 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (mappend_rel lq_tmp0 lq_tmp1 VV)) 
@@ -135,7 +142,10 @@ Qed.
 Proof. 
 	buildPackG mappend mappend_rel mappend__mappend_rel mappend_rel_funct. 
 Defined.
-Definition mappend_assoc (xs: MaybeInt) (ys: MaybeInt) (zs: MaybeInt): {{forall (mappendres: MaybeInt_u), (mappend_rel (⌊ xs -⌋) (⌊ ys -⌋) mappendres) -> (forall (mappend_res_2: MaybeInt_u), (mappend_rel mappendres (⌊ zs -⌋) mappend_res_2) -> (forall (mappend_res_3: MaybeInt_u), (mappend_rel (⌊ ys -⌋) (⌊ zs -⌋) mappend_res_3) -> (forall (mappend_res_4: MaybeInt_u), (mappend_rel (⌊ xs -⌋) mappend_res_3 mappend_res_4) -> (mappend_res_2 == mappend_res_4))))}}. 
+Definition mappend_assoc_spec (xs: MaybeInt) (ys: MaybeInt) (zs: MaybeInt): Type := 
+	{{forall (mappendres: MaybeInt_u), (mappend_rel (⌊ xs -⌋) (⌊ ys -⌋) mappendres) -> (forall (mappend_res_2: MaybeInt_u), (mappend_rel mappendres (⌊ zs -⌋) mappend_res_2) -> (forall (mappend_res_3: MaybeInt_u), (mappend_rel (⌊ ys -⌋) (⌊ zs -⌋) mappend_res_3) -> (forall (mappend_res_4: MaybeInt_u), (mappend_rel (⌊ xs -⌋) mappend_res_3 mappend_res_4) -> (mappend_res_2 == mappend_res_4))))}}. 
+#[global] Hint Unfold mappend_assoc_spec : lia_unfold.
+Theorem mappend_assoc (xs: MaybeInt) (ys: MaybeInt) (zs: MaybeInt): mappend_assoc_spec xs ys zs. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct ys as [ys ys_p]. 
@@ -153,8 +163,11 @@ Proof.
 		  -- intros . 
 			refine (exist _ unit _); 
 			solver.   
-Defined. 
-Definition mempty: MaybeInt. 
+Qed. 
+Definition mempty_spec: Type := 
+	MaybeInt. 
+#[global] Hint Unfold mempty_spec : lia_unfold.
+Definition mempty: mempty_spec. 
 Proof. 
 	refine (subsumptionCast _ _ Nothing _); 
 	solver. 
@@ -168,7 +181,7 @@ Inductive mempty_rel : (MaybeInt_u -> Prop) :=
 #[global] Instance mempty_getF : getFunc mempty_rel := { 
 	getF' := mempty
 }.
-Definition mempty_rel_funct: (forall (VV: MaybeInt_u) (VV': MaybeInt_u) (H: mempty_rel VV) (K: mempty_rel VV') , VV = VV'). 
+Theorem mempty_rel_funct: (forall (VV: MaybeInt_u) (VV': MaybeInt_u) (H: mempty_rel VV) (K: mempty_rel VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -180,14 +193,17 @@ Qed.
 #[global] Hint Rewrite mempty_def_lem : f_rel_back.
 Theorem mempty_rel_ex: mempty_rel (⌊ mempty -⌋). 
 Proof. 
+	Opaque mempty.
 	existence_lemma_pre mempty; 
 	fix_notations; 
-	existence_lemma_quicksolve mempty; 
+	simpl in *. 
+	Transparent mempty.
+	all: existence_lemma_quicksolve mempty; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve mempty_rel_ex : rel_ax_db.
-Opaque mempty. 
+#[global] Opaque mempty. 
 Theorem mempty__mempty_rel_rw (VV: MaybeInt_u): ((⌊ mempty -⌋) = VV) <-> (mempty_rel VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -208,7 +224,7 @@ Proof.
 	refine (mempty__mempty_rel VV). 
 Qed. 
 #[global] Hint Resolve mempty__mempty_rel' : f_rel_funct_db.
-Definition mempty_rel_mk: {VV: _ | mempty_rel VV}. 
+Theorem mempty_rel_mk: {VV: _ | mempty_rel VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (mempty_rel VV)) mempty _); 
@@ -216,13 +232,19 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve mempty_rel_mk : f_rel_funct_db.
-Definition mempty_left (x: MaybeInt): {{forall (mappendres: MaybeInt_u), (mappend_rel (⌊ mempty -⌋) (⌊ x -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+Definition mempty_left_spec (x: MaybeInt): Type := 
+	{{forall (mappendres: MaybeInt_u), (mappend_rel (⌊ mempty -⌋) (⌊ x -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+#[global] Hint Unfold mempty_left_spec : lia_unfold.
+Theorem mempty_left (x: MaybeInt): mempty_left_spec x. 
 Proof. 
 	destruct x as [x x_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition mempty_right (x: MaybeInt): {{forall (mappendres: MaybeInt_u), (mappend_rel (⌊ x -⌋) (⌊ mempty -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+Qed. 
+Definition mempty_right_spec (x: MaybeInt): Type := 
+	{{forall (mappendres: MaybeInt_u), (mappend_rel (⌊ x -⌋) (⌊ mempty -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+#[global] Hint Unfold mempty_right_spec : lia_unfold.
+Theorem mempty_right (x: MaybeInt): mempty_right_spec x. 
 Proof. 
 	destruct x as [x x_p]. 
 	induction x as [(*Just*) x | (*Nothing*) ]. 
@@ -232,4 +254,4 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
+Qed. 

@@ -1,17 +1,18 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive L_u : Set := 
+Set Universe Polymorphism.
+Inductive L_u : Type := 
 	 | C_u: Z -> (L_u -> L_u)
 	 | Emp_u: L_u. 
 Fixpoint L_eq (x: L_u) (y: L_u): bool := 
 	match (x, y) with (C_u x x_1, C_u x' x_1') => ((true && (x ==? x')) && (L_eq x_1 x_1')) | (Emp_u, Emp_u) => true | (_, _) => false end. 
-Definition L_eq_refl: (forall (x: L_u) , is_true (L_eq x x)). 
+Theorem L_eq_refl: (forall (x: L_u) , is_true (L_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve L_eq_refl : eq_hint_db.
-Definition L_eqb_eq: (forall (s: L_u) (t: L_u) , (is_true (L_eq s t)) -> (s = t)). 
+Theorem L_eqb_eq: (forall (s: L_u) (t: L_u) , (is_true (L_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -51,7 +52,10 @@ Defined.
 #[global] Hint Resolve wf_C_VV_ : ref_constr_db.
 #[global] Hint Unfold C : ref_constr_db.
 #[global] Hint Unfold Emp : ref_constr_db.
-Definition compose (lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_39721497: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))) => (fun (v_x_39721497: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True)) x_39721497 v_x_39721497)))))) (lq_tmp3: (@Pack (L ::RT (fun (lq_tmp4: L) => nilRT)) (L_u ::UT nilUT) (ltac: (mkProjectsArgListTG (L ::RT (fun (lq_tmp4: L) => nilRT)) (L_u ::UT nilUT))) Z (fun (x_12632004: (ArgList L ::RT (fun (lq_tmp4: L) => nilRT))) => (fun (v_x_12632004: Z) => (ltac: (flattenP (fun (lq_tmp4: L) => (fun (VV: Z) => True)) x_12632004 v_x_12632004)))))) (lq_tmp6: L): {VV: Z | True}. 
+Definition compose_spec (lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_39721497: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))) => (fun (v_x_39721497: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True)) x_39721497 v_x_39721497)))))) (lq_tmp3: (@Pack (L ::RT (fun (lq_tmp4: L) => nilRT)) (L_u ::UT nilUT) (ltac: (mkProjectsArgListTG (L ::RT (fun (lq_tmp4: L) => nilRT)) (L_u ::UT nilUT))) Z (fun (x_12632004: (ArgList L ::RT (fun (lq_tmp4: L) => nilRT))) => (fun (v_x_12632004: Z) => (ltac: (flattenP (fun (lq_tmp4: L) => (fun (VV: Z) => True)) x_12632004 v_x_12632004)))))) (lq_tmp6: L): Type := 
+	{VV: Z | True}. 
+#[global] Hint Unfold compose_spec : lia_unfold.
+Definition compose (lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_39721497: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))) => (fun (v_x_39721497: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True)) x_39721497 v_x_39721497)))))) (lq_tmp3: (@Pack (L ::RT (fun (lq_tmp4: L) => nilRT)) (L_u ::UT nilUT) (ltac: (mkProjectsArgListTG (L ::RT (fun (lq_tmp4: L) => nilRT)) (L_u ::UT nilUT))) Z (fun (x_12632004: (ArgList L ::RT (fun (lq_tmp4: L) => nilRT))) => (fun (v_x_12632004: Z) => (ltac: (flattenP (fun (lq_tmp4: L) => (fun (VV: Z) => True)) x_12632004 v_x_12632004)))))) (lq_tmp6: L): compose_spec lq_tmp0 lq_tmp3 lq_tmp6. 
 Proof. 
 	destruct lq_tmp6 as [lq_tmp6 lq_tmp6_p]. 
 	refine (subsumptionCast _ _ 
@@ -70,7 +74,7 @@ Inductive compose_rel : ((@uPack (Z ::UT nilUT) Z) -> ((@uPack (L_u ::UT nilUT) 
 #[global] Instance compose_getF : getFunc compose_rel := { 
 	getF' := compose
 }.
-Definition compose_rel_funct [lq_tmp0: @uPack (Z ::UT nilUT) Z] [lq_tmp3: @uPack (L_u ::UT nilUT) Z] [lq_tmp6: L_u]: (forall (VV: Z) (VV': Z) (H: compose_rel lq_tmp0 lq_tmp3 lq_tmp6 VV) (K: compose_rel lq_tmp0 lq_tmp3 lq_tmp6 VV') , VV = VV'). 
+Theorem compose_rel_funct [lq_tmp0: @uPack (Z ::UT nilUT) Z] [lq_tmp3: @uPack (L_u ::UT nilUT) Z] [lq_tmp6: L_u]: (forall (VV: Z) (VV': Z) (H: compose_rel lq_tmp0 lq_tmp3 lq_tmp6 VV) (K: compose_rel lq_tmp0 lq_tmp3 lq_tmp6 VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -82,14 +86,17 @@ Qed.
 #[global] Hint Rewrite compose_def_lem : f_rel_back.
 Theorem compose_rel_ex (lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_39721497: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))) => (fun (v_x_39721497: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True)) x_39721497 v_x_39721497)))))) (lq_tmp3: (@Pack (L ::RT (fun (lq_tmp4: L) => nilRT)) (L_u ::UT nilUT) (ltac: (mkProjectsArgListTG (L ::RT (fun (lq_tmp4: L) => nilRT)) (L_u ::UT nilUT))) Z (fun (x_12632004: (ArgList L ::RT (fun (lq_tmp4: L) => nilRT))) => (fun (v_x_12632004: Z) => (ltac: (flattenP (fun (lq_tmp4: L) => (fun (VV: Z) => True)) x_12632004 v_x_12632004)))))) (lq_tmp6: L_u) (lq_tmp6_p: (L_wf lq_tmp6) /\ True): compose_rel (packProj lq_tmp0) (packProj lq_tmp3) lq_tmp6 (⌊ compose lq_tmp0 lq_tmp3 (exist _ lq_tmp6 lq_tmp6_p) -⌋). 
 Proof. 
+	Opaque compose.
 	existence_lemma_pre compose; 
 	fix_notations; 
-	existence_lemma_quicksolve compose; 
+	simpl in *. 
+	Transparent compose.
+	all: existence_lemma_quicksolve compose; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve compose_rel_ex : rel_ax_db.
-Opaque compose. 
+#[global] Opaque compose. 
 Theorem compose__compose_rel_rw (lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_39721497: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))) => (fun (v_x_39721497: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True)) x_39721497 v_x_39721497)))))) (lq_tmp3: (@Pack (L ::RT (fun (lq_tmp4: L) => nilRT)) (L_u ::UT nilUT) (ltac: (mkProjectsArgListTG (L ::RT (fun (lq_tmp4: L) => nilRT)) (L_u ::UT nilUT))) Z (fun (x_12632004: (ArgList L ::RT (fun (lq_tmp4: L) => nilRT))) => (fun (v_x_12632004: Z) => (ltac: (flattenP (fun (lq_tmp4: L) => (fun (VV: Z) => True)) x_12632004 v_x_12632004)))))) (lq_tmp6: L_u) (lq_tmp6_p: (L_wf lq_tmp6) /\ True) (VV: Z): ((⌊ compose lq_tmp0 lq_tmp3 (exist _ lq_tmp6 lq_tmp6_p) -⌋) = VV) <-> (compose_rel (packProj lq_tmp0) (packProj lq_tmp3) lq_tmp6 VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -110,7 +117,7 @@ Proof.
 	refine (compose__compose_rel lq_tmp0_r lq_tmp3_r lq_tmp6_r VV). 
 Qed. 
 #[global] Hint Resolve compose__compose_rel' : f_rel_funct_db.
-Definition compose_rel_mk [lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_39721497: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))) => (fun (v_x_39721497: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True)) x_39721497 v_x_39721497)))))] [lq_tmp3: (@Pack (L ::RT (fun (lq_tmp4: L) => nilRT)) (L_u ::UT nilUT) (ltac: (mkProjectsArgListTG (L ::RT (fun (lq_tmp4: L) => nilRT)) (L_u ::UT nilUT))) Z (fun (x_12632004: (ArgList L ::RT (fun (lq_tmp4: L) => nilRT))) => (fun (v_x_12632004: Z) => (ltac: (flattenP (fun (lq_tmp4: L) => (fun (VV: Z) => True)) x_12632004 v_x_12632004)))))] [lq_tmp6: L_u] (lq_tmp6_p: (L_wf lq_tmp6) /\ True): {VV: _ | compose_rel (packProj lq_tmp0) (packProj lq_tmp3) lq_tmp6 VV}. 
+Theorem compose_rel_mk [lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_39721497: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))) => (fun (v_x_39721497: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True)) x_39721497 v_x_39721497)))))] [lq_tmp3: (@Pack (L ::RT (fun (lq_tmp4: L) => nilRT)) (L_u ::UT nilUT) (ltac: (mkProjectsArgListTG (L ::RT (fun (lq_tmp4: L) => nilRT)) (L_u ::UT nilUT))) Z (fun (x_12632004: (ArgList L ::RT (fun (lq_tmp4: L) => nilRT))) => (fun (v_x_12632004: Z) => (ltac: (flattenP (fun (lq_tmp4: L) => (fun (VV: Z) => True)) x_12632004 v_x_12632004)))))] [lq_tmp6: L_u] (lq_tmp6_p: (L_wf lq_tmp6) /\ True): {VV: _ | compose_rel (packProj lq_tmp0) (packProj lq_tmp3) lq_tmp6 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ 
@@ -119,7 +126,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve compose_rel_mk : f_rel_funct_db.
-Definition foldr (lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)))) Z (fun (x_67570197: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))))) => (fun (v_x_67570197: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: Z) => True))) x_67570197 v_x_67570197)))))) (lq_tmp4: {lq_tmp4: Z | True}) (lq_tmp5: L): {VV: Z | True}. 
+Definition foldr_spec (lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)))) Z (fun (x_67570197: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))))) => (fun (v_x_67570197: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: Z) => True))) x_67570197 v_x_67570197)))))) (lq_tmp4: {lq_tmp4: Z | True}) (lq_tmp5: L): Type := 
+	{VV: Z | True}. 
+#[global] Hint Unfold foldr_spec : lia_unfold.
+Definition foldr (lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)))) Z (fun (x_67570197: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))))) => (fun (v_x_67570197: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: Z) => True))) x_67570197 v_x_67570197)))))) (lq_tmp4: {lq_tmp4: Z | True}) (lq_tmp5: L): foldr_spec lq_tmp0 lq_tmp4 lq_tmp5. 
 Proof. 
 	destruct lq_tmp4 as [lq_tmp4 lq_tmp4_p]. 
 	destruct lq_tmp5 as [lq_tmp5 lq_tmp5_p]. 
@@ -147,7 +157,7 @@ Inductive foldr_rel : ((@uPack (Z ::UT (Z ::UT nilUT)) Z) -> (Z -> (L_u -> (Z ->
 #[global] Instance foldr_getF : getFunc foldr_rel := { 
 	getF' := foldr
 }.
-Definition foldr_rel_funct [lq_tmp0: @uPack (Z ::UT (Z ::UT nilUT)) Z] [lq_tmp4: Z] [lq_tmp5: L_u]: (forall (VV: Z) (VV': Z) (H: foldr_rel lq_tmp0 lq_tmp4 lq_tmp5 VV) (K: foldr_rel lq_tmp0 lq_tmp4 lq_tmp5 VV') , VV = VV'). 
+Theorem foldr_rel_funct [lq_tmp0: @uPack (Z ::UT (Z ::UT nilUT)) Z] [lq_tmp4: Z] [lq_tmp5: L_u]: (forall (VV: Z) (VV': Z) (H: foldr_rel lq_tmp0 lq_tmp4 lq_tmp5 VV) (K: foldr_rel lq_tmp0 lq_tmp4 lq_tmp5 VV') , VV = VV'). 
 Proof. 
 	try revert lq_tmp4_p; generalize dependent lq_tmp4; try revert lq_tmp0_p; generalize dependent lq_tmp0; 
 	induction lq_tmp5 as [(*C*) x xs IH_xs | (*Emp*) ]; 
@@ -168,6 +178,7 @@ Qed.
 Theorem foldr_rel_ex (lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)))) Z (fun (x_67570197: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))))) => (fun (v_x_67570197: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: Z) => True))) x_67570197 v_x_67570197)))))) (lq_tmp4: Z) (lq_tmp5: L_u) (lq_tmp4_p: True) (lq_tmp5_p: (L_wf lq_tmp5) /\ True): foldr_rel (packProj lq_tmp0) lq_tmp4 lq_tmp5 
 		(⌊ foldr lq_tmp0 (exist _ lq_tmp4 lq_tmp4_p) (exist _ lq_tmp5 lq_tmp5_p) -⌋). 
 Proof. 
+	Opaque foldr.
 	existence_lemma_pre foldr; 
 	try revert lq_tmp4_p; generalize dependent lq_tmp4; try revert lq_tmp0_p; generalize dependent lq_tmp0; 
 	induction lq_tmp5 as [(*C*) x xs IH_xs | (*Emp*) ]; 
@@ -178,12 +189,14 @@ Proof.
 	solver))) as IH_42647660; 
 	try clear IH_xs| 
 	fix_notations]; 
-	existence_lemma_quicksolve foldr; 
+	simpl in *. 
+	Transparent foldr.
+	all: existence_lemma_quicksolve foldr; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve foldr_rel_ex : rel_ax_db.
-Opaque foldr. 
+#[global] Opaque foldr. 
 Theorem foldr__foldr_rel_rw (lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)))) Z (fun (x_67570197: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))))) => (fun (v_x_67570197: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: Z) => True))) x_67570197 v_x_67570197)))))) (lq_tmp4: Z) (lq_tmp5: L_u) (lq_tmp4_p: True) (lq_tmp5_p: (L_wf lq_tmp5) /\ True) (VV: Z): ((⌊ foldr lq_tmp0 (exist _ lq_tmp4 lq_tmp4_p) (exist _ lq_tmp5 lq_tmp5_p) -⌋) = VV) <-> (foldr_rel (packProj lq_tmp0) lq_tmp4 lq_tmp5 VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -204,7 +217,7 @@ Proof.
 	refine (foldr__foldr_rel lq_tmp0_r lq_tmp4_r lq_tmp5_r VV). 
 Qed. 
 #[global] Hint Resolve foldr__foldr_rel' : f_rel_funct_db.
-Definition foldr_rel_mk [lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)))) Z (fun (x_67570197: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))))) => (fun (v_x_67570197: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: Z) => True))) x_67570197 v_x_67570197)))))] [lq_tmp4: Z] [lq_tmp5: L_u] (lq_tmp4_p: True) (lq_tmp5_p: (L_wf lq_tmp5) /\ True): {VV: _ | foldr_rel (packProj lq_tmp0) lq_tmp4 lq_tmp5 VV}. 
+Theorem foldr_rel_mk [lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)))) Z (fun (x_67570197: (ArgList {lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))))) => (fun (v_x_67570197: Z) => (ltac: (flattenP (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: Z) => True))) x_67570197 v_x_67570197)))))] [lq_tmp4: Z] [lq_tmp5: L_u] (lq_tmp4_p: True) (lq_tmp5_p: (L_wf lq_tmp5) /\ True): {VV: _ | foldr_rel (packProj lq_tmp0) lq_tmp4 lq_tmp5 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ 
@@ -214,7 +227,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve foldr_rel_mk : f_rel_funct_db.
-Definition foldrUniversal (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)))) Z (fun (x_33150792: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))))) => (fun (v_x_33150792: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True))) x_33150792 v_x_33150792)))))) (h: (@Pack (L ::RT (fun (lq_tmp3: L) => nilRT)) (L_u ::UT nilUT) (ltac: (mkProjectsArgListTG (L ::RT (fun (lq_tmp3: L) => nilRT)) (L_u ::UT nilUT))) Z (fun (x_72943783: (ArgList L ::RT (fun (lq_tmp3: L) => nilRT))) => (fun (v_x_72943783: Z) => (ltac: (flattenP (fun (lq_tmp3: L) => (fun (VV: Z) => True)) x_72943783 v_x_72943783)))))) (e: {e: Z | True}) (ys: L) (base: {{forall (hres: _), ((getPackRel h) Emp_u hres) -> (hres = (⌊ e -⌋))}}) (step: (forall (x: {x: Z | True}) (xs: L) , {{forall (hres: _), ((getPackRel h) (C_u (⌊ x -⌋) (⌊ xs -⌋)) hres) -> (forall (h_res_2: _), ((getPackRel h) (⌊ xs -⌋) h_res_2) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) h_res_2 fres) -> (hres == fres)))}})): {{forall (hres: _), ((getPackRel h) (⌊ ys -⌋) hres) -> (forall (foldrres: Z), (foldr_rel (packProj f) (⌊ e -⌋) (⌊ ys -⌋) foldrres) -> (hres == foldrres))}}. 
+Definition foldrUniversal_spec (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)))) Z (fun (x_33150792: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))))) => (fun (v_x_33150792: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True))) x_33150792 v_x_33150792)))))) (h: (@Pack (L ::RT (fun (lq_tmp3: L) => nilRT)) (L_u ::UT nilUT) (ltac: (mkProjectsArgListTG (L ::RT (fun (lq_tmp3: L) => nilRT)) (L_u ::UT nilUT))) Z (fun (x_72943783: (ArgList L ::RT (fun (lq_tmp3: L) => nilRT))) => (fun (v_x_72943783: Z) => (ltac: (flattenP (fun (lq_tmp3: L) => (fun (VV: Z) => True)) x_72943783 v_x_72943783)))))) (e: {e: Z | True}) (ys: L) (base: {{forall (hres: _), ((getPackRel h) Emp_u hres) -> (hres = (⌊ e -⌋))}}) (step: (forall (x: {x: Z | True}) (xs: L) , {{forall (hres: _), ((getPackRel h) (C_u (⌊ x -⌋) (⌊ xs -⌋)) hres) -> (forall (h_res_2: _), ((getPackRel h) (⌊ xs -⌋) h_res_2) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) h_res_2 fres) -> (hres == fres)))}})): Type := 
+	{{forall (hres: _), ((getPackRel h) (⌊ ys -⌋) hres) -> (forall (foldrres: Z), (foldr_rel (packProj f) (⌊ e -⌋) (⌊ ys -⌋) foldrres) -> (hres == foldrres))}}. 
+#[global] Hint Unfold foldrUniversal_spec : lia_unfold.
+Theorem foldrUniversal (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)))) Z (fun (x_33150792: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))))) => (fun (v_x_33150792: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True))) x_33150792 v_x_33150792)))))) (h: (@Pack (L ::RT (fun (lq_tmp3: L) => nilRT)) (L_u ::UT nilUT) (ltac: (mkProjectsArgListTG (L ::RT (fun (lq_tmp3: L) => nilRT)) (L_u ::UT nilUT))) Z (fun (x_72943783: (ArgList L ::RT (fun (lq_tmp3: L) => nilRT))) => (fun (v_x_72943783: Z) => (ltac: (flattenP (fun (lq_tmp3: L) => (fun (VV: Z) => True)) x_72943783 v_x_72943783)))))) (e: {e: Z | True}) (ys: L) (base: {{forall (hres: _), ((getPackRel h) Emp_u hres) -> (hres = (⌊ e -⌋))}}) (step: (forall (x: {x: Z | True}) (xs: L) , {{forall (hres: _), ((getPackRel h) (C_u (⌊ x -⌋) (⌊ xs -⌋)) hres) -> (forall (h_res_2: _), ((getPackRel h) (⌊ xs -⌋) h_res_2) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) h_res_2 fres) -> (hres == fres)))}})): foldrUniversal_spec f h e ys base step. 
 Proof. 
 	destruct e as [e e_p]. 
 	destruct ys as [ys ys_p]. 
@@ -226,7 +242,7 @@ Proof.
 	solver)) f h e (ltac: (try clear IH_xs; 
 	solver)) base (ltac: (try clear IH_xs; 
 	solver)) step) as H_49944768. 
-		fix_notations. 
+		simpl in H_49944768. 
 		refine (subsumptionCast _ _ 
 		(step (exist (fun (x: Z) => True) x (ltac: (solver))) 
 		(exist (fun (xs: L_u) => ((L_wf xs) /\ True)) xs (ltac: (solver)))) _); 
@@ -234,4 +250,4 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
+Qed. 

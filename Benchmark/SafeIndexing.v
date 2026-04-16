@@ -1,17 +1,18 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive IList_u : Set := 
+Set Universe Polymorphism.
+Inductive IList_u : Type := 
 	 | Cons_u: Z -> (IList_u -> IList_u)
 	 | Nil_u: IList_u. 
 Fixpoint IList_eq (x: IList_u) (y: IList_u): bool := 
 	match (x, y) with (Cons_u x x_1, Cons_u x' x_1') => ((true && (x ==? x')) && (IList_eq x_1 x_1')) | (Nil_u, Nil_u) => true | (_, _) => false end. 
-Definition IList_eq_refl: (forall (x: IList_u) , is_true (IList_eq x x)). 
+Theorem IList_eq_refl: (forall (x: IList_u) , is_true (IList_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve IList_eq_refl : eq_hint_db.
-Definition IList_eqb_eq: (forall (s: IList_u) (t: IList_u) , (is_true (IList_eq s t)) -> (s = t)). 
+Theorem IList_eqb_eq: (forall (s: IList_u) (t: IList_u) , (is_true (IList_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -51,10 +52,13 @@ Defined.
 #[global] Hint Resolve wf_Cons_l : ref_constr_db.
 #[global] Hint Unfold Cons : ref_constr_db.
 #[global] Hint Unfold Nil : ref_constr_db.
-Definition llen (l: IList): {v: Z | gebZ_rel v 0 true}. 
+Definition llen_spec (l: IList): Type := 
+	{v: Z | gebZ_rel v 0 true}. 
+#[global] Hint Unfold llen_spec : lia_unfold.
+Definition llen (l: IList): llen_spec l. 
 Proof. 
 	destruct l as [l l_p]. 
-	induction l as [(*Cons*) ds_d4hF l' IH_l' | (*Nil*) ]. 
+	induction l as [(*Cons*) ds_d4Sc l' IH_l' | (*Nil*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
 		((subsumptionCast Z (fun (x_1: Z) => True) (IH_l' (ltac: (try clear IH_l'; 
@@ -65,7 +69,7 @@ Proof.
 		solver.  
 Defined. 
 Inductive llen_rel : (IList_u -> (Z -> Prop)) := 
-	 | llen_Cons: (forall ds_d4hF l' , forall (llenres: Z), (llen_rel l' llenres) -> (forall (addZres: Z), (addZ_rel llenres 1 addZres) -> (llen_rel (Cons_u ds_d4hF l') addZres)))
+	 | llen_Cons: (forall ds_d4Sc l' , forall (llenres: Z), (llen_rel l' llenres) -> (forall (addZres: Z), (addZ_rel llenres 1 addZres) -> (llen_rel (Cons_u ds_d4Sc l') addZres)))
 	 | llen_Nil: llen_rel Nil_u 0. 
 #[global] Hint Constructors llen_rel : core_hint_db.
 #[global] Instance llen_lookup_rel : dictionary rel llen := { 
@@ -74,14 +78,14 @@ Inductive llen_rel : (IList_u -> (Z -> Prop)) :=
 #[global] Instance llen_getF : getFunc llen_rel := { 
 	getF' := llen
 }.
-Definition llen_rel_funct [l: IList_u]: (forall (v: Z) (v': Z) (H: llen_rel l v) (K: llen_rel l v') , v = v'). 
+Theorem llen_rel_funct [l: IList_u]: (forall (v: Z) (v': Z) (H: llen_rel l v) (K: llen_rel l v') , v = v'). 
 Proof. 
-	induction l as [(*Cons*) ds_d4hF l' IH_l' | (*Nil*) ]; 
+	induction l as [(*Cons*) ds_d4Sc l' IH_l' | (*Nil*) ]; 
 	intros ; 
 	rel_functionhood_body. 
 Qed. 
 #[global] Hint Resolve llen_rel_funct : f_rel_funct_db.
-Theorem llen_Cons_lem (ds_d4hF: _) (l': _) (addZres: Z): (llen_rel (Cons_u ds_d4hF l') addZres) <-> (exists (llenres: Z), (llen_rel l' llenres) /\ (addZ_rel llenres 1 addZres)). 
+Theorem llen_Cons_lem (ds_d4Sc: _) (l': _) (addZres: Z): (llen_rel (Cons_u ds_d4Sc l') addZres) <-> (exists (llenres: Z), (llen_rel l' llenres) /\ (addZ_rel llenres 1 addZres)). 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
@@ -93,20 +97,23 @@ Qed.
 #[global] Hint Rewrite llen_Nil_lem : f_rel_back.
 Theorem llen_rel_ex (l: IList_u) (l_p: (IList_wf l) /\ True): llen_rel l (⌊ llen (exist _ l l_p) -⌋). 
 Proof. 
+	Opaque llen.
 	existence_lemma_pre llen; 
-	induction l as [(*Cons*) ds_d4hF l' IH_l' | (*Nil*) ]; 
+	induction l as [(*Cons*) ds_d4Sc l' IH_l' | (*Nil*) ]; 
 	intros ; 
 	[fix_notations; 
 	pose proof (IH_l' (ltac: (try clear IH_l'; 
 	solver))) as IH_11973733; 
 	try clear IH_l'| 
 	fix_notations]; 
-	existence_lemma_quicksolve llen; 
+	simpl in *. 
+	Transparent llen.
+	all: existence_lemma_quicksolve llen; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve llen_rel_ex : rel_ax_db.
-Opaque llen. 
+#[global] Opaque llen. 
 Theorem llen__llen_rel_rw (l: IList_u) (l_p: (IList_wf l) /\ True) (v: Z): ((⌊ llen (exist _ l l_p) -⌋) = v) <-> (llen_rel l v). 
 Proof. 
 	f__f_rel_rw. 
@@ -127,7 +134,7 @@ Proof.
 	refine (llen__llen_rel l_r v). 
 Qed. 
 #[global] Hint Resolve llen__llen_rel' : f_rel_funct_db.
-Definition llen_rel_mk [l: IList_u] (l_p: (IList_wf l) /\ True): {v: _ | llen_rel l v}. 
+Theorem llen_rel_mk [l: IList_u] (l_p: (IList_wf l) /\ True): {v: _ | llen_rel l v}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (v: _) => (llen_rel l v)) (llen (exist _ l l_p)) _); 
@@ -139,7 +146,10 @@ Qed.
 Proof. 
 	buildPackG llen llen_rel llen__llen_rel llen_rel_funct. 
 Defined.
-Definition append (xs: IList) (ys: IList): {v: IList_u | (IList_wf v) /\ (forall (llenres: Z), (llen_rel v llenres) -> (forall (llen_res_2: Z), (llen_rel (⌊ xs -⌋) llen_res_2) -> (forall (llen_res_3: Z), (llen_rel (⌊ ys -⌋) llen_res_3) -> (forall (addZres: Z), (addZ_rel llen_res_2 llen_res_3 addZres) -> (llenres == addZres)))))}. 
+Definition append_spec (xs: IList) (ys: IList): Type := 
+	{v: IList_u | (IList_wf v) /\ (forall (llenres: Z), (llen_rel v llenres) -> (forall (llen_res_2: Z), (llen_rel (⌊ xs -⌋) llen_res_2) -> (forall (llen_res_3: Z), (llen_rel (⌊ ys -⌋) llen_res_3) -> (forall (addZres: Z), (addZ_rel llen_res_2 llen_res_3 addZres) -> (llenres == addZres)))))}. 
+#[global] Hint Unfold append_spec : lia_unfold.
+Definition append (xs: IList) (ys: IList): append_spec xs ys. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct ys as [ys ys_p]. 
@@ -168,7 +178,7 @@ Inductive append_rel : (IList_u -> (IList_u -> (IList_u -> Prop))) :=
 #[global] Instance append_getF : getFunc append_rel := { 
 	getF' := append
 }.
-Definition append_rel_funct [xs: IList_u] [ys: IList_u]: (forall (v: IList_u) (v': IList_u) (H: append_rel xs ys v) (K: append_rel xs ys v') , v = v'). 
+Theorem append_rel_funct [xs: IList_u] [ys: IList_u]: (forall (v: IList_u) (v': IList_u) (H: append_rel xs ys v) (K: append_rel xs ys v') , v = v'). 
 Proof. 
 	try revert ys_p; generalize dependent ys; 
 	induction xs as [(*Cons*) x xs IH_xs | (*Nil*) ]; 
@@ -188,6 +198,7 @@ Qed.
 #[global] Hint Rewrite append_Nil_lem : f_rel_back.
 Theorem append_rel_ex (xs: IList_u) (ys: IList_u) (xs_p: (IList_wf xs) /\ True) (ys_p: (IList_wf ys) /\ True): append_rel xs ys (⌊ append (exist _ xs xs_p) (exist _ ys ys_p) -⌋). 
 Proof. 
+	Opaque append.
 	existence_lemma_pre append; 
 	try revert ys_p; generalize dependent ys; 
 	induction xs as [(*Cons*) x xs IH_xs | (*Nil*) ]; 
@@ -198,12 +209,14 @@ Proof.
 	solver))) as IH_46568342; 
 	try clear IH_xs| 
 	fix_notations]; 
-	existence_lemma_quicksolve append; 
+	simpl in *. 
+	Transparent append.
+	all: existence_lemma_quicksolve append; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve append_rel_ex : rel_ax_db.
-Opaque append. 
+#[global] Opaque append. 
 Theorem append__append_rel_rw (xs: IList_u) (ys: IList_u) (xs_p: (IList_wf xs) /\ True) (ys_p: (IList_wf ys) /\ True) (v: IList_u): ((⌊ append (exist _ xs xs_p) (exist _ ys ys_p) -⌋) = v) <-> (append_rel xs ys v). 
 Proof. 
 	f__f_rel_rw. 
@@ -224,7 +237,7 @@ Proof.
 	refine (append__append_rel xs_r ys_r v). 
 Qed. 
 #[global] Hint Resolve append__append_rel' : f_rel_funct_db.
-Definition append_rel_mk [xs: IList_u] [ys: IList_u] (xs_p: (IList_wf xs) /\ True) (ys_p: (IList_wf ys) /\ True): {v: _ | append_rel xs ys v}. 
+Theorem append_rel_mk [xs: IList_u] [ys: IList_u] (xs_p: (IList_wf xs) /\ True) (ys_p: (IList_wf ys) /\ True): {v: _ | append_rel xs ys v}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (v: _) => (append_rel xs ys v)) (append (exist _ xs xs_p) (exist _ ys ys_p)) _); 
@@ -236,7 +249,10 @@ Qed.
 Proof. 
 	buildPackG append append_rel append__append_rel append_rel_funct. 
 Defined.
-Definition get (xs: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): {v: Z | ltbZ_rel 5 v true}. 
+Definition get_spec (xs: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): Type := 
+	{v: Z | ltbZ_rel 5 v true}. 
+#[global] Hint Unfold get_spec : lia_unfold.
+Definition get (xs: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): get_spec xs i. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct i as [i i_p]. 
@@ -265,7 +281,7 @@ Inductive get_rel : (IList_u -> (Z -> (Z -> Prop))) :=
 #[global] Instance get_getF : getFunc get_rel := { 
 	getF' := get
 }.
-Definition get_rel_funct [xs: IList_u] [i: Z]: (forall (v: Z) (v': Z) (H: get_rel xs i v) (K: get_rel xs i v') , v = v'). 
+Theorem get_rel_funct [xs: IList_u] [i: Z]: (forall (v: Z) (v': Z) (H: get_rel xs i v) (K: get_rel xs i v') , v = v'). 
 Proof. 
 	try revert i_p; generalize dependent i; 
 	induction xs as [(*Cons*) x xs' IH_xs' | (*Nil*) ]; 
@@ -280,6 +296,7 @@ Qed.
 #[global] Hint Rewrite get_Cons_false_Cons_true_lem : f_rel_back.
 Theorem get_rel_ex (xs: IList_u) (i: Z) (xs_p: (IList_wf xs) /\ True) (i_p: forall (llenres: Z), (llen_rel xs llenres) -> ((0 <= i) /\ (i < llenres))): get_rel xs i (⌊ get (exist _ xs xs_p) (exist _ i i_p) -⌋). 
 Proof. 
+	Opaque get.
 	existence_lemma_pre get; 
 	try revert i_p; generalize dependent i; 
 	induction xs as [(*Cons*) x xs' IH_xs' | (*Nil*) ]; 
@@ -292,12 +309,14 @@ Proof.
 	solver))) as IH_33585716; 
 	try clear IH_xs']| 
 	fix_notations]; 
-	existence_lemma_quicksolve get; 
+	simpl in *. 
+	Transparent get.
+	all: existence_lemma_quicksolve get; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve get_rel_ex : rel_ax_db.
-Opaque get. 
+#[global] Opaque get. 
 Theorem get__get_rel_rw (xs: IList_u) (i: Z) (xs_p: (IList_wf xs) /\ True) (i_p: forall (llenres: Z), (llen_rel xs llenres) -> ((0 <= i) /\ (i < llenres))) (v: Z): ((⌊ get (exist _ xs xs_p) (exist _ i i_p) -⌋) = v) <-> (get_rel xs i v). 
 Proof. 
 	f__f_rel_rw. 
@@ -318,7 +337,7 @@ Proof.
 	refine (get__get_rel xs_r i_r v). 
 Qed. 
 #[global] Hint Resolve get__get_rel' : f_rel_funct_db.
-Definition get_rel_mk [xs: IList_u] [i: Z] (xs_p: (IList_wf xs) /\ True) (i_p: forall (llenres: Z), (llen_rel xs llenres) -> ((0 <= i) /\ (i < llenres))): {v: _ | get_rel xs i v}. 
+Theorem get_rel_mk [xs: IList_u] [i: Z] (xs_p: (IList_wf xs) /\ True) (i_p: forall (llenres: Z), (llen_rel xs llenres) -> ((0 <= i) /\ (i < llenres))): {v: _ | get_rel xs i v}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (v: _) => (get_rel xs i v)) (get (exist _ xs xs_p) (exist _ i i_p)) _); 
@@ -330,15 +349,21 @@ Qed.
 Proof. 
 	buildPackG get get_rel get__get_rel get_rel_funct. 
 Defined.
-Definition thm1 (xs: IList) (x: {x: Z | ltbZ_rel 5 x true}) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): {{forall (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) -> (forall (addZres: Z), (addZ_rel (⌊ i -⌋) 1 addZres) -> (forall (get_res_2: Z), (get_rel (Cons_u (⌊ x -⌋) (⌊ xs -⌋)) addZres get_res_2) -> (getres == get_res_2)))}}. 
+Definition thm1_spec (xs: IList) (x: {x: Z | ltbZ_rel 5 x true}) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): Type := 
+	{{forall (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) -> (forall (addZres: Z), (addZ_rel (⌊ i -⌋) 1 addZres) -> (forall (get_res_2: Z), (get_rel (Cons_u (⌊ x -⌋) (⌊ xs -⌋)) addZres get_res_2) -> (getres == get_res_2)))}}. 
+#[global] Hint Unfold thm1_spec : lia_unfold.
+Theorem thm1 (xs: IList) (x: {x: Z | ltbZ_rel 5 x true}) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): thm1_spec xs x i. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct x as [x x_p]. 
 	destruct i as [i i_p]. 
 	refine (exist _ unit _); 
 	solver. 
-Defined. 
-Definition thm2 (xs: IList) (ys: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): {{forall (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) -> (forall (llenres: Z), (llen_rel (⌊ ys -⌋) llenres) -> (forall (addZres: Z), (addZ_rel (⌊ i -⌋) llenres addZres) -> (forall (appendres: IList_u), (append_rel (⌊ ys -⌋) (⌊ xs -⌋) appendres) -> (forall (get_res_2: Z), (get_rel appendres addZres get_res_2) -> (getres == get_res_2)))))}}. 
+Qed. 
+Definition thm2_spec (xs: IList) (ys: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): Type := 
+	{{forall (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) -> (forall (llenres: Z), (llen_rel (⌊ ys -⌋) llenres) -> (forall (addZres: Z), (addZ_rel (⌊ i -⌋) llenres addZres) -> (forall (appendres: IList_u), (append_rel (⌊ ys -⌋) (⌊ xs -⌋) appendres) -> (forall (get_res_2: Z), (get_rel appendres addZres get_res_2) -> (getres == get_res_2)))))}}. 
+#[global] Hint Unfold thm2_spec : lia_unfold.
+Theorem thm2 (xs: IList) (ys: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): thm2_spec xs ys i. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct ys as [ys ys_p]. 
@@ -360,7 +385,7 @@ Proof.
 		((exist (fun (x_1: Z) => True) i (ltac: (solver))) +Z (subsumptionCast Z (fun (x_2: Z) => True) 
 		(llen 
 		(exist (fun (l: IList_u) => ((IList_wf l) /\ True)) ys (ltac: (solver)))) (ltac: (solver)))) (ltac: (solver)))) as H_33856097. 
-		fix_notations. 
+		simpl in H_33856097. 
 		refine (subsumptionCast _ _ 
 		(IH_ys (ltac: (try clear IH_ys; 
 	solver)) xs (ltac: (try clear IH_ys; 
@@ -370,4 +395,4 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
+Qed. 

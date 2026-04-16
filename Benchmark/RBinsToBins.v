@@ -1,18 +1,19 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive RBin_u : Set := 
+Set Universe Polymorphism.
+Inductive RBin_u : Type := 
 	 | RB0_u: RBin_u -> RBin_u
 	 | RB1_u: RBin_u -> RBin_u
 	 | RZ_u: RBin_u. 
 Fixpoint RBin_eq (x: RBin_u) (y: RBin_u): bool := 
 	match (x, y) with (RB0_u x, RB0_u x') => (true && (RBin_eq x x')) | (RB1_u x, RB1_u x') => (true && (RBin_eq x x')) | (RZ_u, RZ_u) => true | (_, _) => false end. 
-Definition RBin_eq_refl: (forall (x: RBin_u) , is_true (RBin_eq x x)). 
+Theorem RBin_eq_refl: (forall (x: RBin_u) , is_true (RBin_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve RBin_eq_refl : eq_hint_db.
-Definition RBin_eqb_eq: (forall (s: RBin_u) (t: RBin_u) , (is_true (RBin_eq s t)) -> (s = t)). 
+Theorem RBin_eqb_eq: (forall (s: RBin_u) (t: RBin_u) , (is_true (RBin_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -64,18 +65,18 @@ Defined.
 #[global] Hint Unfold RB0 : ref_constr_db.
 #[global] Hint Unfold RB1 : ref_constr_db.
 #[global] Hint Unfold RZ : ref_constr_db.
-Inductive Bin_u : Set := 
+Inductive Bin_u : Type := 
 	 | B0_u: Bin_u -> Bin_u
 	 | B1_u: Bin_u -> Bin_u
 	 | RBinsToBins__Z_u: Bin_u. 
 Fixpoint Bin_eq (x: Bin_u) (y: Bin_u): bool := 
 	match (x, y) with (B0_u x, B0_u x') => (true && (Bin_eq x x')) | (B1_u x, B1_u x') => (true && (Bin_eq x x')) | (RBinsToBins__Z_u, RBinsToBins__Z_u) => true | (_, _) => false end. 
-Definition Bin_eq_refl: (forall (x: Bin_u) , is_true (Bin_eq x x)). 
+Theorem Bin_eq_refl: (forall (x: Bin_u) , is_true (Bin_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve Bin_eq_refl : eq_hint_db.
-Definition Bin_eqb_eq: (forall (s: Bin_u) (t: Bin_u) , (is_true (Bin_eq s t)) -> (s = t)). 
+Theorem Bin_eqb_eq: (forall (s: Bin_u) (t: Bin_u) , (is_true (Bin_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -127,7 +128,10 @@ Defined.
 #[global] Hint Unfold B0 : ref_constr_db.
 #[global] Hint Unfold B1 : ref_constr_db.
 #[global] Hint Unfold RBinsToBins__Z : ref_constr_db.
-Definition rbinToBin (b: RBin): Bin. 
+Definition rbinToBin_spec (b: RBin): Type := 
+	Bin. 
+#[global] Hint Unfold rbinToBin_spec : lia_unfold.
+Definition rbinToBin (b: RBin): rbinToBin_spec b. 
 Proof. 
 	destruct b as [b b_p]. 
 	induction b as [(*RB0*) n IH_n | (*RB1*) n IH_n | (*RZ*) ]. 

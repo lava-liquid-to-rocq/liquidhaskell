@@ -1,17 +1,18 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Inductive L_u : Set := 
+Set Universe Polymorphism.
+Inductive L_u : Type := 
 	 | C_u: Z -> (L_u -> L_u)
 	 | Emp_u: L_u. 
 Fixpoint L_eq (x: L_u) (y: L_u): bool := 
 	match (x, y) with (C_u x x_1, C_u x' x_1') => ((true && (x ==? x')) && (L_eq x_1 x_1')) | (Emp_u, Emp_u) => true | (_, _) => false end. 
-Definition L_eq_refl: (forall (x: L_u) , is_true (L_eq x x)). 
+Theorem L_eq_refl: (forall (x: L_u) , is_true (L_eq x x)). 
 Proof. 
-	eq_refl. 
+	eq_refl_rec. 
 Qed. 
 #[global] Hint Resolve L_eq_refl : eq_hint_db.
-Definition L_eqb_eq: (forall (s: L_u) (t: L_u) , (is_true (L_eq s t)) -> (s = t)). 
+Theorem L_eqb_eq: (forall (s: L_u) (t: L_u) , (is_true (L_eq s t)) -> (s = t)). 
 Proof. 
 	eqb_eq_lem. 
 Qed. 
@@ -51,7 +52,10 @@ Defined.
 #[global] Hint Resolve wf_C_VV_ : ref_constr_db.
 #[global] Hint Unfold C : ref_constr_db.
 #[global] Hint Unfold Emp : ref_constr_db.
-Definition append (lq_tmp0: L) (lq_tmp1: L): L. 
+Definition append_spec (lq_tmp0: L) (lq_tmp1: L): Type := 
+	L. 
+#[global] Hint Unfold append_spec : lia_unfold.
+Definition append (lq_tmp0: L) (lq_tmp1: L): append_spec lq_tmp0 lq_tmp1. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	destruct lq_tmp1 as [lq_tmp1 lq_tmp1_p]. 
@@ -78,7 +82,7 @@ Inductive append_rel : (L_u -> (L_u -> (L_u -> Prop))) :=
 #[global] Instance append_getF : getFunc append_rel := { 
 	getF' := append
 }.
-Definition append_rel_funct [lq_tmp0: L_u] [lq_tmp1: L_u]: (forall (VV: L_u) (VV': L_u) (H: append_rel lq_tmp0 lq_tmp1 VV) (K: append_rel lq_tmp0 lq_tmp1 VV') , VV = VV'). 
+Theorem append_rel_funct [lq_tmp0: L_u] [lq_tmp1: L_u]: (forall (VV: L_u) (VV': L_u) (H: append_rel lq_tmp0 lq_tmp1 VV) (K: append_rel lq_tmp0 lq_tmp1 VV') , VV = VV'). 
 Proof. 
 	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
 	induction lq_tmp0 as [(*C*) x xs IH_xs | (*Emp*) ]; 
@@ -99,6 +103,7 @@ Qed.
 Theorem append_rel_ex (lq_tmp0: L_u) (lq_tmp1: L_u) (lq_tmp0_p: (L_wf lq_tmp0) /\ True) (lq_tmp1_p: (L_wf lq_tmp1) /\ True): append_rel lq_tmp0 lq_tmp1 
 		(⌊ append (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋). 
 Proof. 
+	Opaque append.
 	existence_lemma_pre append; 
 	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
 	induction lq_tmp0 as [(*C*) x xs IH_xs | (*Emp*) ]; 
@@ -109,12 +114,14 @@ Proof.
 	solver))) as IH_63046731; 
 	try clear IH_xs| 
 	fix_notations]; 
-	existence_lemma_quicksolve append; 
+	simpl in *. 
+	Transparent append.
+	all: existence_lemma_quicksolve append; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve append_rel_ex : rel_ax_db.
-Opaque append. 
+#[global] Opaque append. 
 Theorem append__append_rel_rw (lq_tmp0: L_u) (lq_tmp1: L_u) (lq_tmp0_p: (L_wf lq_tmp0) /\ True) (lq_tmp1_p: (L_wf lq_tmp1) /\ True) (VV: L_u): ((⌊ append (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋) = VV) <-> (append_rel lq_tmp0 lq_tmp1 VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -135,7 +142,7 @@ Proof.
 	refine (append__append_rel lq_tmp0_r lq_tmp1_r VV). 
 Qed. 
 #[global] Hint Resolve append__append_rel' : f_rel_funct_db.
-Definition append_rel_mk [lq_tmp0: L_u] [lq_tmp1: L_u] (lq_tmp0_p: (L_wf lq_tmp0) /\ True) (lq_tmp1_p: (L_wf lq_tmp1) /\ True): {VV: _ | append_rel lq_tmp0 lq_tmp1 VV}. 
+Theorem append_rel_mk [lq_tmp0: L_u] [lq_tmp1: L_u] (lq_tmp0_p: (L_wf lq_tmp0) /\ True) (lq_tmp1_p: (L_wf lq_tmp1) /\ True): {VV: _ | append_rel lq_tmp0 lq_tmp1 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (append_rel lq_tmp0 lq_tmp1 VV)) 
@@ -148,7 +155,10 @@ Qed.
 Proof. 
 	buildPackG append append_rel append__append_rel append_rel_funct. 
 Defined.
-Definition bind (lq_tmp0: L) (lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: L_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_61572807 v_x_61572807)))))): L. 
+Definition bind_spec (lq_tmp0: L) (lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: L_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_61572807 v_x_61572807)))))): Type := 
+	L. 
+#[global] Hint Unfold bind_spec : lia_unfold.
+Definition bind (lq_tmp0: L) (lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: L_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_61572807 v_x_61572807)))))): bind_spec lq_tmp0 lq_tmp1. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
@@ -175,7 +185,7 @@ Inductive bind_rel : (L_u -> ((@uPack (Z ::UT nilUT) L_u) -> (L_u -> Prop))) :=
 #[global] Instance bind_getF : getFunc bind_rel := { 
 	getF' := bind
 }.
-Definition bind_rel_funct [lq_tmp0: L_u] [lq_tmp1: @uPack (Z ::UT nilUT) L_u]: (forall (VV: L_u) (VV': L_u) (H: bind_rel lq_tmp0 lq_tmp1 VV) (K: bind_rel lq_tmp0 lq_tmp1 VV') , VV = VV'). 
+Theorem bind_rel_funct [lq_tmp0: L_u] [lq_tmp1: @uPack (Z ::UT nilUT) L_u]: (forall (VV: L_u) (VV': L_u) (H: bind_rel lq_tmp0 lq_tmp1 VV) (K: bind_rel lq_tmp0 lq_tmp1 VV') , VV = VV'). 
 Proof. 
 	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
 	induction lq_tmp0 as [(*C*) x xs IH_xs | (*Emp*) ]; 
@@ -195,6 +205,7 @@ Qed.
 #[global] Hint Rewrite bind_C_lem : f_rel_back.
 Theorem bind_rel_ex (lq_tmp0: L_u) (lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: L_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_61572807 v_x_61572807)))))) (lq_tmp0_p: (L_wf lq_tmp0) /\ True): bind_rel lq_tmp0 (packProj lq_tmp1) (⌊ bind (exist _ lq_tmp0 lq_tmp0_p) lq_tmp1 -⌋). 
 Proof. 
+	Opaque bind.
 	existence_lemma_pre bind; 
 	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
 	induction lq_tmp0 as [(*C*) x xs IH_xs | (*Emp*) ]; 
@@ -204,12 +215,14 @@ Proof.
 	solver)) lq_tmp1) as IH_72941671; 
 	try clear IH_xs| 
 	fix_notations]; 
-	existence_lemma_quicksolve bind; 
+	simpl in *. 
+	Transparent bind.
+	all: existence_lemma_quicksolve bind; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve bind_rel_ex : rel_ax_db.
-Opaque bind. 
+#[global] Opaque bind. 
 Theorem bind__bind_rel_rw (lq_tmp0: L_u) (lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: L_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_61572807 v_x_61572807)))))) (lq_tmp0_p: (L_wf lq_tmp0) /\ True) (VV: L_u): ((⌊ bind (exist _ lq_tmp0 lq_tmp0_p) lq_tmp1 -⌋) = VV) <-> (bind_rel lq_tmp0 (packProj lq_tmp1) VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -230,7 +243,7 @@ Proof.
 	refine (bind__bind_rel lq_tmp0_r lq_tmp1_r VV). 
 Qed. 
 #[global] Hint Resolve bind__bind_rel' : f_rel_funct_db.
-Definition bind_rel_mk [lq_tmp0: L_u] [lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: L_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_61572807 v_x_61572807)))))] (lq_tmp0_p: (L_wf lq_tmp0) /\ True): {VV: _ | bind_rel lq_tmp0 (packProj lq_tmp1) VV}. 
+Theorem bind_rel_mk [lq_tmp0: L_u] [lq_tmp1: (@Pack ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_61572807: (ArgList {lq_tmp2: Z | True} ::RT (fun (lq_tmp2: {lq_tmp2: Z | True}) => nilRT))) => (fun (v_x_61572807: L_u) => (ltac: (flattenP (fun (lq_tmp2: {lq_tmp2: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_61572807 v_x_61572807)))))] (lq_tmp0_p: (L_wf lq_tmp0) /\ True): {VV: _ | bind_rel lq_tmp0 (packProj lq_tmp1) VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (bind_rel lq_tmp0 (packProj lq_tmp1) VV)) (bind (exist _ lq_tmp0 lq_tmp0_p) lq_tmp1) _); 
@@ -238,7 +251,10 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve bind_rel_mk : f_rel_funct_db.
-Definition prop_append_neutral (xs: L): {{forall (appendres: L_u), (append_rel (⌊ xs -⌋) Emp_u appendres) -> (appendres = (⌊ xs -⌋))}}. 
+Definition prop_append_neutral_spec (xs: L): Type := 
+	{{forall (appendres: L_u), (append_rel (⌊ xs -⌋) Emp_u appendres) -> (appendres = (⌊ xs -⌋))}}. 
+#[global] Hint Unfold prop_append_neutral_spec : lia_unfold.
+Theorem prop_append_neutral (xs: L): prop_append_neutral_spec xs. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	induction xs as [(*C*) x xs IH_xs | (*Emp*) ]. 
@@ -249,8 +265,11 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
-Definition retrn (lq_tmp0: {lq_tmp0: Z | True}): L. 
+Qed. 
+Definition retrn_spec (lq_tmp0: {lq_tmp0: Z | True}): Type := 
+	L. 
+#[global] Hint Unfold retrn_spec : lia_unfold.
+Definition retrn (lq_tmp0: {lq_tmp0: Z | True}): retrn_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	refine (subsumptionCast _ _ 
@@ -267,7 +286,7 @@ Inductive retrn_rel : (Z -> (L_u -> Prop)) :=
 #[global] Instance retrn_getF : getFunc retrn_rel := { 
 	getF' := retrn
 }.
-Definition retrn_rel_funct [lq_tmp0: Z]: (forall (VV: L_u) (VV': L_u) (H: retrn_rel lq_tmp0 VV) (K: retrn_rel lq_tmp0 VV') , VV = VV'). 
+Theorem retrn_rel_funct [lq_tmp0: Z]: (forall (VV: L_u) (VV': L_u) (H: retrn_rel lq_tmp0 VV) (K: retrn_rel lq_tmp0 VV') , VV = VV'). 
 Proof. 
 	rel_functionhood_body. 
 Qed. 
@@ -279,14 +298,17 @@ Qed.
 #[global] Hint Rewrite retrn_def_lem : f_rel_back.
 Theorem retrn_rel_ex (lq_tmp0: Z) (lq_tmp0_p: True): retrn_rel lq_tmp0 (⌊ retrn (exist _ lq_tmp0 lq_tmp0_p) -⌋). 
 Proof. 
+	Opaque retrn.
 	existence_lemma_pre retrn; 
 	fix_notations; 
-	existence_lemma_quicksolve retrn; 
+	simpl in *. 
+	Transparent retrn.
+	all: existence_lemma_quicksolve retrn; 
 	f__f_rel_ex_body; 
 	f_rel_finish. 
 Qed. 
 #[global] Hint Resolve retrn_rel_ex : rel_ax_db.
-Opaque retrn. 
+#[global] Opaque retrn. 
 Theorem retrn__retrn_rel_rw (lq_tmp0: Z) (lq_tmp0_p: True) (VV: L_u): ((⌊ retrn (exist _ lq_tmp0 lq_tmp0_p) -⌋) = VV) <-> (retrn_rel lq_tmp0 VV). 
 Proof. 
 	f__f_rel_rw. 
@@ -307,7 +329,7 @@ Proof.
 	refine (retrn__retrn_rel lq_tmp0_r VV). 
 Qed. 
 #[global] Hint Resolve retrn__retrn_rel' : f_rel_funct_db.
-Definition retrn_rel_mk [lq_tmp0: Z] (lq_tmp0_p: True): {VV: _ | retrn_rel lq_tmp0 VV}. 
+Theorem retrn_rel_mk [lq_tmp0: Z] (lq_tmp0_p: True): {VV: _ | retrn_rel lq_tmp0 VV}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (VV: _) => (retrn_rel lq_tmp0 VV)) (retrn (exist _ lq_tmp0 lq_tmp0_p)) _); 
@@ -319,7 +341,10 @@ Qed.
 Proof. 
 	buildPackG retrn retrn_rel retrn__retrn_rel retrn_rel_funct. 
 Defined.
-Definition left_identity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: L_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_86410777 v_x_86410777)))))): {{forall (retrnres: L_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (bindres: L_u), (bind_rel retrnres (packProj f) bindres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (bindres == fres)))}}. 
+Definition left_identity_spec (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: L_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_86410777 v_x_86410777)))))): Type := 
+	{{forall (retrnres: L_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (bindres: L_u), (bind_rel retrnres (packProj f) bindres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (bindres == fres)))}}. 
+#[global] Hint Unfold left_identity_spec : lia_unfold.
+Theorem left_identity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: L_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_86410777 v_x_86410777)))))): left_identity_spec x f. 
 Proof. 
 	destruct x as [x x_p]. 
 	refine (subsumptionCast _ _ 
@@ -327,11 +352,14 @@ Proof.
 		(subsumptionCast L_u (fun (xs: L_u) => ((L_wf xs) /\ True)) 
 		((getPackF f) (exist (fun (lq_tmp0: Z) => True) x (ltac: (solver)))) (ltac: (solver)))) _); 
 	solver. 
-Defined. 
-Definition right_identity (x: L): {{forall (bindres: L_u), (bind_rel (⌊ x -⌋) 
+Qed. 
+Definition right_identity_spec (x: L): Type := 
+	{{forall (bindres: L_u), (bind_rel (⌊ x -⌋) 
 		(ltac: (pose retrn_rel as Rel; 
 	pose retrn_rel_funct as Funct; 
 	buildUPackG Rel Funct)) bindres) -> (bindres = (⌊ x -⌋))}}. 
+#[global] Hint Unfold right_identity_spec : lia_unfold.
+Theorem right_identity (x: L): right_identity_spec x. 
 Proof. 
 	destruct x as [x x_p]. 
 	induction x as [(*C*) x xs IH_xs | (*Emp*) ]. 
@@ -342,4 +370,4 @@ Proof.
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
-Defined. 
+Qed. 
