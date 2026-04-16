@@ -2691,6 +2691,9 @@ executable benchmark-lava
                     , Benchmark.RBinsToBins
                     , Benchmark.SafeIndexing
                     , Benchmark.SoftwareFoundations
+                    , Benchmark.SoftwareFoundationsBasics
+                    , Benchmark.SoftwareFoundationsInduction
+                    , Benchmark.SoftwareFoundationsLists
     build-depends:    base
                     , liquid-prelude
                     -- , containers

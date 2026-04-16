@@ -475,8 +475,7 @@ Proof.
 		(IH_ys (ltac: (try clear IH_ys; 
 	solver)) xs (ltac: (try clear IH_ys; 
 	solver)) i (ltac: (try clear IH_ys; 
-	solver))) _).
-    
+	solver))) _); 
 		solver.  
 	  - intros . 
 		refine (exist _ unit _); 

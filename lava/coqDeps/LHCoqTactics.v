@@ -291,7 +291,7 @@ Ltac applyRwLem h :=
         | ((exist _ ?x1 ?x1p) _::_ (exist _ ?x2 ?x2p) _::_ (exist _ ?x3 ?x3p) _::_ (exist _ ?x4 ?x4p) _::_ (exist _ ?x5 ?x5p) _::_ _nil) => 
           rewrite (rwLemSimpl x1 x2 x3 x4 x5 x1p x2p x3p x4p x5p v) in h
         | _ => 
-          idtac "Function " f " has arity >5 and arguments " ts ". ";
+          tryif (isVar h) then idtac else idtac "Global function " f " has arity >5 and arguments " ts ". ";
           let remTs := fresh "remTs" in
           let remTsRefl := fresh "remTsRefl" in
           let resArgs := fresh "resArgs" in
@@ -345,6 +345,7 @@ Tactic Notation "axiomatize_term" constr(tm) "as " ident(name) ident(def) :=
   let def_rw := fresh "def_rw" in
   pose proof def as def_rw; try unfold tm in def;
   try clearbody tm;
+  try autounfold with lia_unfold in tm;
   try (applyRwLem def; simpl in def); 
   
   tryif (destruct tm' as [[v v_wit] v_def];
@@ -499,7 +500,7 @@ Ltac axProjTm exp :=
     end
   (* this is an optimization that detects if the found refined term is an application of a reflected function and otherwise aborts immediately *)
   | ?res = _ => clear ResRefl; 
-    tryif (isFAppl res) then idtac else (* idtac "Projection is not an application of a previously defined reflected function, not going to try to get rid of it here"; *) fail;
+    tryif (isFAppl res) then idtac else ((*idtac "Projection " res " is not an application of a previously defined reflected function (or local one), so not going to try to get rid of it here";*) fail);
     match goal with
     (* this optimization detects if we already have a hypothesis we can use to rewrite away the projection *)
     | [rwH: ⌊ res -⌋ = ?v |- _] => isVar v; idtac "A variable axiomatizing the terms already exists. ";
@@ -508,13 +509,6 @@ Ltac axProjTm exp :=
       (* idtac "Calling axiomatize_term Res as " tmv tmp " on "; print_res Res; *)
       tryif (axiomatize_term Res as tmv tmp) then idtac else idtac "axiomatize_term failed on subexpression " res " of expression " exp;
       try cleanup_subterms res;
-      let tmpTp := type of tmp in
-      tryif (applyRwLem tmp) then 
-          (idtac (* "rewrote " tmp ": " tmpTp " from an equality into the application of the graph relation. " *) ) 
-        else 
-          (idtac (* "Failed to rewrite " tmp ": " tmpTp " from an equality into the application of the graph relation. " *) (*; fail *) );
-      let tmpTp1 := type of tmp in
-      (* idtac "The new type of " tmp " is: " tmpTp1; *)
       match type of tmp with
       | ?f_rel_ap ?w => revert tmp; match goal with
         | [_:f_rel_ap ?v |- _] => intro tmp; assert (w = v) as temp by (eauto with f_rel_funct_db); rewriteAll temp
@@ -524,10 +518,14 @@ Ltac axProjTm exp :=
           (* idtac "axProjTm cannot axiomatize term (like " tmpTp1 " that isn't an application of a reflected definition, but " f_rel_ap "isn't the corresponding relation application. "; *)
           fail
         end
-      | ?t => (* idtac "axProjTm produced an ill-formed result" t; *) fail
+      | ?t => (*idtac "axProjTm produced an ill-formed result" t; *) fail
       end; 
       match goal with
-      | [eq: ⌊ ?Res -⌋ = ?v |- _] => rewrite eq in *
+      | [eq: ⌊ ?Res -⌋ = ?v |- _] => repeat rewrite eq in *;
+        try (let tmp := fresh "temp" in
+        pose proof eq as tmp;
+        simpl in tmp;
+        revert tmp; intros <-)
       end
     end
   end.
@@ -1199,6 +1197,8 @@ Ltac instantiate_hyp :=
         simpl in vRes;
         pose (exist _ (⌊ vRes -⌋) eq_refl) as vRef;
         subst vRes;
+        let v := fresh "v" in
+        let v_p := fresh "v_p" in
         destruct vRef as [v v_p];
         applyRwLem v_p; simpl in v_p;
         specialize (ih v); specialize_wit ih v_p;
@@ -1227,6 +1227,8 @@ Ltac instantiate_hyp :=
         simpl in vRes;
         pose (exist _ (⌊ vRes -⌋) eq_refl) as vRef;
         subst vRes;
+        let v := fresh "v" in
+        let v_p := fresh "v_p" in
         destruct vRef as [v v_p];
         applyRwLem v_p; simpl in v_p;
         idtac "Unable to specialize " ih " with newly created axiomatized variable " v;
