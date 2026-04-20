@@ -1,4 +1,5 @@
 {-@ LIQUID "--lava" @-}
+{-@ LIQUID "--reflection" @-}
 {-@ LIQUID "--ple" @-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PackageImports #-}
@@ -25,4 +26,13 @@ rbinToBin RZ = Z
 rbinToBin (RB0 n) = B0 (rbinToBin n)
 rbinToBin (RB1 n) = B1 (rbinToBin n)
 
--- 23 real LH LoC
+{-@ reflect incAndConvert @-}
+{-@ incAndConvert :: b:RBin -> Bin @-}
+incAndConvert :: RBin -> Bin
+incAndConvert b = rbinToBin (incRBin b)
+
+{-@ incRBinNotZ :: b:RBin -> { incRBin b != RZ } @-}
+incRBinNotZ :: RBin -> Proof
+incRBinNotZ RZ = trivial
+incRBinNotZ (RB0 _) = trivial
+incRBinNotZ (RB1 _) = trivial

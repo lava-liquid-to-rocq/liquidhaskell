@@ -259,6 +259,21 @@ wfDecls γ (Definition f tpf e isRefl : decls) = do
   γf' <- changeRecToGlobal f γf
   decls' <- wfDecls γf' decls
   return $ Definition f tpf' e' isRefl : decls'
+-- doesn't exist in the paper, could be called WF-DImp
+wfDecls γ (Import modName decls : rest) = do
+  -- Trust imported declarations and insert their types into the environment.
+  -- We do not re-elaborate imported decls (they are elaborated in their own module).
+  let γ' = populateFromImport γ decls
+  decls' <- wfDecls γ' rest
+  return $ Import modName decls : decls'
+  where
+    populateFromImport env [] = env
+    populateFromImport env (Data tc constrs : ds) =
+      populateFromImport (insertTC (tc, constrs) env) ds
+    populateFromImport env (Definition f tp _ _ : ds) =
+      populateFromImport (insertGlobalVar (f, tp) env) ds
+    populateFromImport env (Import _ innerDecls : ds) =
+      populateFromImport (populateFromImport env innerDecls) ds
 wfDecls _ [] = return []
 
 -- * Type synthesis for refinements
