@@ -25,3 +25,8 @@ incRBin :: RBin -> RBin
 incRBin RZ = RB1 RZ
 incRBin (RB0 n) = RB1 n
 incRBin (RB1 n) = RB0 (incRBin n)
+
+{-@ reflect doubleIncRBin @-}
+{-@ doubleIncRBin :: RBin -> {x: RBin | x != RZ} @-}
+doubleIncRBin :: RBin -> RBin
+doubleIncRBin b = incRBin (incRBin b)

@@ -20,6 +20,7 @@ data Bin where
   B1 :: Bin -> Bin
   deriving (Eq)
 
+{-@ reflect rbinToBin @-}
 {-@ rbinToBin :: b:RBin -> Bin @-}
 rbinToBin :: RBin -> Bin
 rbinToBin RZ = Z
@@ -36,3 +37,11 @@ incRBinNotZ :: RBin -> Proof
 incRBinNotZ RZ = trivial
 incRBinNotZ (RB0 _) = trivial
 incRBinNotZ (RB1 _) = trivial
+
+{-@ incAndConvertZ :: { incAndConvert RZ == B1 Z } @-}
+incAndConvertZ :: Proof
+incAndConvertZ = trivial
+
+{-@ doubleIncAndConvertZ :: { rbinToBin (doubleIncRBin RZ) == B0 (B1 Z) } @-}
+doubleIncAndConvertZ :: Proof
+doubleIncAndConvertZ = trivial
