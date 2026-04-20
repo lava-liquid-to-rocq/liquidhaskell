@@ -286,7 +286,7 @@ trReft (LH.Sub tm from to) = Coq.SubCast (trRefType to) (trRefType from) (trReft
 trReft (LH.Inj tm tp) = mkExist (trRefType tp) (trReft tm)
 trReft tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
 trReft tm@(LH.App {}) = case apps tm of
-  (LH.Var _ _ (Recursive indVar pats), args) -> trRecCall indVar pats args
+  (LH.Var _ _ (Recursive indVar state), args) -> trRecCall indVar state args
   (LH.Var f _ Local, args) -> Coq.App (packGetF (Coq.Var f)) (map trReft args)
   (LH.Var f _ Global, args) -> Coq.App (Coq.Def f) (map trReft args)
   (hd, args) -> Coq.App (trReft hd) (map trReft args)
@@ -326,52 +326,33 @@ trExprTacs (Case tm alts genVars) =
 
 -- | Given an inductive variable y, the branch pattern and arguments,
 -- build an application of IHy to the arguments
-trRecCall :: Id -> BranchPattern -> [Reft] -> CoqTerm
+trRecCall :: Id -> [DesState] -> [Reft] -> CoqTerm
 -- trRecCall indVar pats args | traceFunc "trRecCall" [text indVar, pPrint pats, pPrint args] = undefined
--- TODO: fix for when we use a double induction
-trRecCall indVar pats args =
-  -- FIX: if the inductive variable appears several times, we only want to delete once
-  let argsNoIndVar = filter (not . castOfIndVar) args
-      -- During elaboration, we removed the pattern for the inductive variable from pats
-      argsAndPats = zip argsNoIndVar (map apps pats)
-      -- ltac:(try clear ihHyp; solver)
-      oracleTac = Coq.PrfTerm Coq.Hole $ Coq.ProofHole (Just $ ihName indVar)
-      -- Translation of the arguments:
-      -- A higher-order argument is translated directly with RtoR;
-      -- we recognize it with its pattern, necessarily intact and
-      -- contains the arity.
-      -- A first-order argument must be decomposed into its first
-      -- projection and the witness, for which we use ltac:(oracle)
-      trArg (ri, (LH.Var _ n _, _)) | n > 0 = [trReft ri]
-      trArg (ri, _) = [mkProject $ trReft ri, oracleTac]
-      argsT = oracleTac : concatMap trArg argsAndPats
-   in Coq.App (Coq.Var $ ihName indVar) argsT
+trRecCall indVar state args =
+  Coq.App (Coq.Var $ ihName indVar) (oracleTac : concatMap trArg (zip args state))
   where
-    castOfIndVar (LH.Var y _ _) | y == indVar = True
-    castOfIndVar (Sub r _ _) = castOfIndVar r
-    castOfIndVar (Inj r _) = castOfIndVar r
-    castOfIndVar _ = False
+    -- ltac:(try clear ihHyp; solver)
+    oracleTac = Coq.PrfTerm Coq.Hole $ Coq.ProofHole (Just $ ihName indVar)
+    -- Translation of the arguments:
+    -- A higher-order argument is translated directly with RtoR
+    trArg (ri, Param _ n) | n > 0 = [trReft ri]
+    -- a first-order argument must be decomposed either
+    -- into its first projection and the witness (for which we use ltac:(oracle))
+    trArg (ri, Param _ _) = [mkProject $ trReft ri, oracleTac]
+    -- or into nothing if it is at the position of a destructed parameter
+    trArg (_, Destructed) = []
 
 -- | Translation of a case expression as destruct or as induct
 -- An induct such that none of the introduced IHs are used is transformed to destruct
 -- This function is factorized by the function to apply to the branches,
 -- in particular in the translation of a function we use trExprTacs
-mkMatching :: (Maybe Expr -> [Tactic]) -> Reft -> [((Id, [(Id, Bool)]), Maybe Expr)] -> [Id] -> Tactic
+mkMatching :: (Maybe Expr -> [Tactic]) -> Reft -> [((Id, [(Id, Bool)]), Maybe Expr)] -> Maybe [Id] -> Tactic
 -- mkMatching _ tm alts genVars | traceFunc "mkMatching" [pPrint tm, pPrint alts, pPrint genVars] = undefined
 mkMatching trans tm alts genVars =
-  if induct
-    then Induction (mkProject $ trReft tm) (map trAlt alts) genVars
-    else Coq.Destruct (mkProject $ trReft tm) (map trAlt alts)
+  case genVars of
+    Just genVars' -> Induction (mkProject $ trReft tm) (map trAlt alts) genVars'
+    Nothing -> Coq.Destruct (mkProject $ trReft tm) (map trAlt alts)
   where
-    -- Compute what variables will be actually used for later inductions
-    indVars = map indVarsAlt alts
-    indVarsAlt ((_, ys), e) = map fst $ filter (\(y, isInd) -> isInd && y `isIndVar` e) ys
-    -- Whether y is used as an inductive variable, by checking the
-    -- information contained in the localization of the recursive variables
-    isIndVar y (Just e) = any (\case (_, (_, Recursive y' _)) -> y == y'; _ -> False) (freeVarsArLoc e)
-    isIndVar _ Nothing = False
-    -- If an induction hypothesis is used, we translate to induct
-    induct = not (all null indVars)
     -- Translation of the branches using the parametrized function
     trAlt ((c, ys), e) = (c, (ysDesPat ys e, trans e))
     -- Build the patterns for the introduced variables.
@@ -382,5 +363,8 @@ mkMatching trans tm alts genVars =
       where
         -- For inductive variables, in the pattern we add either the name of the IH if it is used later, or a hole _
         varPattern (y, isInd) =
-          let ihy = if y `isIndVar` e then SingleIdPat $ ihName y else UnnamedIdPat
-           in SingleIdPat y : [ihy | isInd, induct]
+          let ihy = if isIndVar y then SingleIdPat $ ihName y else UnnamedIdPat
+           in SingleIdPat y : [ihy | isInd]
+        -- Whether y is used as an inductive variable, by checking the
+        -- information contained in the localization of the recursive variables
+        isIndVar y = any (\case (_, (_, Recursive y' _)) -> y == y'; _ -> False) (freeVarsArLoc e)

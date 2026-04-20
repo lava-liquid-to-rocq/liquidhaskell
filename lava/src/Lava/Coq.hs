@@ -662,7 +662,7 @@ instance Show Binop where
   show (Binop Neq kind) = case kind of
     PropBop -> "≠"
     UnrefBop -> "/=?" -- there is no infix notation in Coq for bool-valued equality on Z, so we define one
-    RefBop -> "/=?"
+    RefBop -> "/=Z"
   show (Binop Leq kind) = case kind of
     PropBop -> "<="
     UnrefBop -> "<=?"

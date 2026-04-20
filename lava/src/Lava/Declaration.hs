@@ -343,7 +343,7 @@ traceDC s tc dc = trace ("Defining " ++ s ++ "(" ++ tc ++ "." ++ dc ++ ")") Fals
 
 -- | Translation of a definition `f` to the refined definition `f` (defined with tactics)
 trDefRefDef :: FuncData -> Coq.Decl
-trDefRefDef f | traceF "trDefRefDef" f = undefined
+-- trDefRefDef f | traceF "trDefRefDef" f = undefined
 trDefRefDef f =
   -- FIX: for a constant, the type for the pack is wrong (see PeanoNats.one_pack)
   Coq.Definition (name f) (map (,False) (argsT f)) (retT f) (ProofBody tacs) Transparent
@@ -742,16 +742,16 @@ mkIndSkel (Reft r) specIhs =
     if specIhs then [] else Custom "fix_notations" : [poseIHCall call | call <- ihCalls] ++ [Try $ Clear indhyp | indhyp <- allIHs]
   where
     -- translation of recursive calls
-    ihCalls = map (\(indVar, pats, args) -> trRecCall indVar pats args) $ findRecCalls r
+    ihCalls = map (\(indVar, state, args) -> trRecCall indVar state args) $ findRecCalls r
     -- all induction hypotheses used
     allIHs = map (\(indVar, _, _) -> ihName indVar) $ findRecCalls r
     poseIHCall ihCall = ProofPose ("IH_" ++ hashName ihCall) ihCall
 
-    findRecCalls :: Reft -> [(Id, BranchPattern, [Reft])]
-    findRecCalls (LH.Var _ _ (Recursive indVar pats)) = [(indVar, pats, [])]
+    findRecCalls :: Reft -> [(Id, [DesState], [Reft])]
+    findRecCalls (LH.Var _ _ (Recursive indVar state)) = [(indVar, state, [])]
     findRecCalls r'@(LH.App {}) =
       case apps r' of
-        (LH.Var _ _ (Recursive indVar pats), args) -> [(indVar, pats, args)]
+        (LH.Var _ _ (Recursive indVar state), args) -> [(indVar, state, args)]
         _ -> []
     findRecCalls (LH.Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = []
     findRecCalls (LH.Neg r') = findRecCalls r'
