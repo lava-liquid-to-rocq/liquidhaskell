@@ -719,10 +719,11 @@ relMkLemma f = [refRelMkLem, AddHint ResolveHint (relDefMkLemName $ name f) Grap
 packInstance :: FuncData -> [Coq.Decl]
 -- packInstance f | traceF "packInstance" f = undefined
 packInstance f =
-  [TacInstance (packInstanceName $ name f) (trRefType $ tpf f) def | firstOrder]
+  [TacInstance (packInstanceName $ name f) (trRefType $ tpf f) def | firstOrder, arrowType]
   where
     def = Custom $ unwords ["buildPackG", name f, relDefName $ name f, relDefThmName $ name f, funcHoodLemName $ name f]
     firstOrder = all (\case (_, RefType {}) -> True; (_, ArrType {}) -> False) (args f)
+    arrowType = case tpf f of ArrType {} -> True; RefType {} -> False
 
 -- ** Utility functions
 
