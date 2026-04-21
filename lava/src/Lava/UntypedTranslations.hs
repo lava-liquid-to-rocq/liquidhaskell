@@ -14,7 +14,7 @@ import Data.Tuple.Extra (uncurry3)
 import Lava.Coq (unrefinedConstrName)
 import qualified Lava.Coq as Coq
 import Lava.CoqSyntaxUtil
-import Lava.CoqUtil (funcHoodLemName, mkIsTrue, mkUPackName, ppForall, projectTm, relDefName, relPostfix, toPack, toUPack, upackFunctName, upackRelName)
+import Lava.CoqUtil (funcHoodLemName, mkIsTrue, mkUPackName, ppExist, projectTm, relDefName, relPostfix, toPack, toUPack, upackFunctName, upackRelName)
 import Lava.InternalLH as ILH
 import Lava.PaperUtils
 import qualified Lava.TypingContext as Ctx
@@ -100,7 +100,7 @@ utrSmpTermGenericAux γ (φ, r_core) isUnrefined = {-traceFuncRet ["utrSmpTermGe
     createForalls _ = error "Expected application in map of applications to fresh variables φ"
 
 utrSmpTermPropAux :: [(Id, Coq.RocqType, (Id, [Coq.CoqTerm]))] -> Coq.CoqTerm -> Coq.CoqTerm
-utrSmpTermPropAux foralls r' = if null foralls then mkIsTrue r' else foldr (uncurry3 ppForall) r'' initForalls
+utrSmpTermPropAux foralls r' = if null foralls then mkIsTrue r' else foldr (uncurry3 ppExist) r'' initForalls
   where
     initForalls :: [(Id, Coq.RocqType, (Id, [Coq.CoqTerm]))]
     initForalls = init foralls
@@ -120,7 +120,7 @@ utrSmpTermPropAux foralls r' = if null foralls then mkIsTrue r' else foldr (uncu
       Coq.Bop Coq.EqProp tm (Coq.Var z_) | z_ == z -> Coq.App (Coq.Def fu) (args ++ [tm])
       Coq.Bop Coq.EqualB tm (Coq.Var z_) | z_ == z -> Coq.App (Coq.Def fu) (args ++ [tm])
       -}
-      _ -> Coq.Forall [(z, zTp)] $ Coq.Impl (Coq.App (Coq.Def fu) args_z) (mkIsTrue r')
+      _ -> ppExist z zTp (fu, args_z) (mkIsTrue r') -- Coq.Exists [(z, zTp)] $ Coq.And (Coq.App (Coq.Def fu) args_z) (mkIsTrue r')
 
 -- | unrefined translation of a bunch of nested conditions to propositions
 utrSmpTermsProp :: Ctx.TypingCtx -> [LHSimpleTerm] -> [Coq.CoqTerm]

@@ -211,7 +211,7 @@ Proof.
 	buildPackG retrn retrn_rel retrn__retrn_rel retrn_rel_funct. 
 Defined.
 Definition left_identity_spec (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) MaybeInt_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: MaybeInt_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: MaybeInt_u) => ((MaybeInt_wf VV) /\ True))) x_86410777 v_x_86410777)))))): Type := 
-	{{forall (retrnres: MaybeInt_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (bindres: MaybeInt_u), (bind_rel retrnres (packProj f) bindres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (bindres == fres)))}}. 
+	{{exists (retrnres: MaybeInt_u), (retrn_rel (⌊ x -⌋) retrnres) /\ (exists (bindres: MaybeInt_u), (bind_rel retrnres (packProj f) bindres) /\ (exists (fres: _), ((getPackRel f) (⌊ x -⌋) fres) /\ (bindres == fres)))}}. 
 #[global] Hint Unfold left_identity_spec : lia_unfold.
 Theorem left_identity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) MaybeInt_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: MaybeInt_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: MaybeInt_u) => ((MaybeInt_wf VV) /\ True))) x_86410777 v_x_86410777)))))): left_identity_spec x f. 
 Proof. 
@@ -220,10 +220,10 @@ Proof.
 	solver. 
 Qed. 
 Definition right_identity_spec (x: MaybeInt): Type := 
-	{{forall (bindres: MaybeInt_u), (bind_rel (⌊ x -⌋) 
+	{{exists (bindres: MaybeInt_u), (bind_rel (⌊ x -⌋) 
 		(ltac: (pose retrn_rel as Rel; 
 	pose retrn_rel_funct as Funct; 
-	buildUPackG Rel Funct)) bindres) -> (bindres = (⌊ x -⌋))}}. 
+	buildUPackG Rel Funct)) bindres) /\ (bindres = (⌊ x -⌋))}}. 
 #[global] Hint Unfold right_identity_spec : lia_unfold.
 Theorem right_identity (x: MaybeInt): right_identity_spec x. 
 Proof. 

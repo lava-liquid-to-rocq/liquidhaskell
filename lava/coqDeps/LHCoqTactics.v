@@ -18,6 +18,7 @@ Ltac is_trivial tp :=
   match tp with
   | True => idtac
   | ?tm = ?tm => idtac
+  | ?tm == ?tm => idtac
   | _ => fail
   end.
 
@@ -804,6 +805,11 @@ Ltac specialize_hyp h :=
       specialize (h (s / t));
       specialize (h (ltac:(constructor)))
     | _ /\ ?T => destruct h as [? h]; try specialize_hyp h
+    | exists (w:?T), (?f_rel_ap w) /\ _ => 
+      neq_fail T Prop; isRelAppl f_rel_ap;
+      let v := fresh "v_" in
+      let vdef := fresh "v_def_" in
+      destruct h as [v [vdef ?]]
     | forall (w:?T), (?f_rel_ap w) -> _ => 
       neq_fail T Prop;
       (* idtac "found hypothesis to potentially specialize " h " with variable " w " of type " T; *)
@@ -1122,8 +1128,24 @@ Tactic Notation "recreate_refined_term" constr(relApp) ident(fAppl_res) :=
   end; 
   try clear f_ts.
 
+Ltac nonbranching_destruct :=
+  match goal with
+  | [v: ?Tp |- _] => replace v with v by reflexivity;
+    tryif (match Tp with
+      | _ == _ => idtac
+      | _ = _ => idtac 
+      end) then fail else idtac;
+    do_nonbranching (destruct v(*; idtac "Destructed the variable " v " of an inductive data type with only one constructor." *) )
+  end.
+
 Tactic Notation "recreate_var" constr(relApp) ident(vRes) := 
   match relApp with
+  | _ => isRelAppl relApp;
+    let temp := fresh "temp" in
+    let v := fresh "v_" in 
+    let v_def := fresh "v_def_" in
+    assert (exists v, relApp v) as temp by (solve [try timeout 2 repeat nonbranching_destruct; now unshelve (eexists _; rconstructor)]);
+    destruct temp as [vRes v_def]
   | _ ?v => isVar v; match goal with
     | [def: ⌊ ?tm -⌋ = v |- _] => pose (exist _ v ⌈ tm ⌉) as vRes
     end
@@ -1142,6 +1164,22 @@ Tactic Notation "recreate_var" constr(relApp) ident(vRes) :=
     tryif (applyRwLem v_p) then idtac else (idtac (* "Failed to rewrite " v_p ": " pTp " from an equality into the application of the graph relation. " *); fail);
     simpl_proj; 
     pose v as vRes; try clear fAppl_res
+  end.
+
+Ltac instExistGoal :=
+  match goal with
+  | [vdef: ?relAp ?V |- exists (w:_), ?relAp w /\ _] => isRelAppl relAp;
+    exists V; split; [apply vdef|]
+  | [vdef: ?relAp ?v |- exists (w:_), ?relAp w] => isRelAppl relAp;
+    exists v; apply vdef
+  | [vdef: ?relAp ?v |- exists (w:_), ?relAp w /\ _] => isRelAppl relAp;
+    exists v; split; [apply vdef|]
+  | |- exists (w:_), ?relAp w /\ _ => isRelAppl relAp;
+    assert (exists (w:_), relAp w)
+  | |- exists (w:_), ?relAp w => isRelAppl relAp;
+    let v := fresh "v_" in 
+    recreate_var relAp v;
+    exists v; try assumption
   end.
 
 (* create variables to instantiate hypothesis *)
@@ -1369,7 +1407,9 @@ Ltac remove_refined :=
 Ltac quick_simple_cleanup_steps :=
   repeat unfold rel_u in *;
   simpl_proj; (* repeat progress autounfold with lia_unfold in *; repeat progress autorewrite with lia_rewrites in *; *)
-  concat_either (unify_vars) (specialize_hyps; try unify_vars);
+  concat_either (unify_vars) (
+    concat_either (instExistGoal)
+    (specialize_hyps; try unify_vars));
   try timeout 1 simpl_loop.
 
 Ltac initial_simple_cleanup_steps :=
@@ -1575,28 +1615,6 @@ Ltac rel_functionhood indVars :=
   multivariable_induction indVars _nil (x _::_ x' _::_ H _::_ K _::_ _nil); 
   rel_functionhood_body.
 
-Ltac rassumption := 
-  match goal with
-  | [h: _ |- _] => apply h; first [rassumption | quicksolve]
-  end.
-
-Ltac rconstructor := first [
-    constructor; quicksolve |
-    unshelve (econstructor; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
-    unshelve econstructor; try (quick_simpl; reflexivity); try rassumption; quicksolve |
-    unshelve (econstructor 1; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
-    unshelve econstructor 1; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
-    unshelve (econstructor 2; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
-    unshelve econstructor 2; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
-    unshelve (econstructor 3; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
-    unshelve econstructor 3; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
-    unshelve (econstructor 4; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
-    unshelve econstructor 4; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
-    unshelve (econstructor 5; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
-    unshelve econstructor 5; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
-    unshelve (econstructor 6; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
-    unshelve econstructor 6; try (quick_simpl; reflexivity); try rassumption;  quicksolve
-  ].
 Global Tactic Notation "rconstructor" "by" tactic(tac) := first [
     unshelve econstructor; try (quick_simpl; reflexivity); tac |
     unshelve econstructor 1; try (quick_simpl; reflexivity); tac |

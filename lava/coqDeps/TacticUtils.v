@@ -612,6 +612,29 @@ Ltac destrFunc tp Res :=
   | _ => pose (unit, tp) as Res
   end.
 
+Ltac rassumption := 
+  match goal with
+  | [h: _ |- _] => apply h; first [rassumption | quicksolve]
+  end.
+
+Ltac rconstructor := first [
+    constructor; quicksolve |
+    unshelve (econstructor; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor; try (quick_simpl; reflexivity); try rassumption; quicksolve |
+    unshelve (econstructor 1; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 1; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 2; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 2; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 3; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 3; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 4; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 4; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 5; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 5; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 6; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 6; try (quick_simpl; reflexivity); try rassumption;  quicksolve
+  ].
+
 (*
 Ltac 
   recreate_refined v relApp map Res := idtac v ", " relApp;

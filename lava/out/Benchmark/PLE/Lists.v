@@ -156,7 +156,7 @@ Proof.
 	buildPackG append append_rel append__append_rel append_rel_funct. 
 Defined.
 Definition propConst1_spec (lq_tmp0: {{True}}): Type := 
-	{{forall (appendres: L_u), (append_rel (C_u 1 Emp_u) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 Emp_u)))}}. 
+	{{exists (appendres: L_u), (append_rel (C_u 1 Emp_u) Emp_u appendres) /\ (exists (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) /\ (append_res_2 == (C_u 1 Emp_u)))}}. 
 #[global] Hint Unfold propConst1_spec : lia_unfold.
 Theorem propConst1 (lq_tmp0: {{True}}): propConst1_spec lq_tmp0. 
 Proof. 
@@ -165,7 +165,7 @@ Proof.
 	solver. 
 Qed. 
 Definition propConst2_spec (lq_tmp0: {{True}}): Type := 
-	{{forall (appendres: L_u), (append_rel (C_u 1 (C_u 2 Emp_u)) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 (C_u 2 Emp_u))))}}. 
+	{{exists (appendres: L_u), (append_rel (C_u 1 (C_u 2 Emp_u)) Emp_u appendres) /\ (exists (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) /\ (append_res_2 == (C_u 1 (C_u 2 Emp_u))))}}. 
 #[global] Hint Unfold propConst2_spec : lia_unfold.
 Theorem propConst2 (lq_tmp0: {{True}}): propConst2_spec lq_tmp0. 
 Proof. 
@@ -174,7 +174,7 @@ Proof.
 	solver. 
 Qed. 
 Definition propConst3_spec (lq_tmp0: {{True}}): Type := 
-	{{forall (appendres: L_u), (append_rel (C_u 1 (C_u 2 (C_u 3 Emp_u))) Emp_u appendres) -> (forall (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) -> (append_res_2 == (C_u 1 (C_u 2 (C_u 3 Emp_u)))))}}. 
+	{{exists (appendres: L_u), (append_rel (C_u 1 (C_u 2 (C_u 3 Emp_u))) Emp_u appendres) /\ (exists (append_res_2: L_u), (append_rel appendres Emp_u append_res_2) /\ (append_res_2 == (C_u 1 (C_u 2 (C_u 3 Emp_u)))))}}. 
 #[global] Hint Unfold propConst3_spec : lia_unfold.
 Theorem propConst3 (lq_tmp0: {{True}}): propConst3_spec lq_tmp0. 
 Proof. 
@@ -277,7 +277,7 @@ Proof.
 	buildPackG length length_rel length__length_rel length_rel_funct. 
 Defined.
 Definition prop_spec (x: {x: Z | True}) (xs: L) (ys: L) (zs: L): Type := 
-	{{forall (appendres: L_u), (append_rel (C_u (⌊ x -⌋) (⌊ xs -⌋)) (⌊ ys -⌋) appendres) -> (forall (append_res_2: L_u), (append_rel appendres (⌊ zs -⌋) append_res_2) -> (forall (append_res_3: L_u), (append_rel (⌊ xs -⌋) (⌊ ys -⌋) append_res_3) -> (forall (append_res_4: L_u), (append_rel append_res_3 (⌊ zs -⌋) append_res_4) -> (append_res_2 == (C_u (⌊ x -⌋) append_res_4)))))}}. 
+	{{exists (appendres: L_u), (append_rel (C_u (⌊ x -⌋) (⌊ xs -⌋)) (⌊ ys -⌋) appendres) /\ (exists (append_res_2: L_u), (append_rel appendres (⌊ zs -⌋) append_res_2) /\ (exists (append_res_3: L_u), (append_rel (⌊ xs -⌋) (⌊ ys -⌋) append_res_3) /\ (exists (append_res_4: L_u), (append_rel append_res_3 (⌊ zs -⌋) append_res_4) /\ (append_res_2 == (C_u (⌊ x -⌋) append_res_4)))))}}. 
 #[global] Hint Unfold prop_spec : lia_unfold.
 Theorem prop (x: {x: Z | True}) (xs: L) (ys: L) (zs: L): prop_spec x xs ys zs. 
 Proof. 

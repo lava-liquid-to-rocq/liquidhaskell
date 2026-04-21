@@ -6,6 +6,8 @@ module Lava.CoqSyntaxUtil where
 
 import Lava.Coq
 import Lava.Util
+import Data.Bifunctor (first)
+
 
 -- * Tactic names for "projections" out of packs
 
@@ -148,6 +150,11 @@ matchImplProp (Impl ante conseq) = (ante : antes, res)
     (antes, res) = matchImplProp conseq
 matchImplProp other = ([], other)
 
+matchAxs :: CoqTerm -> ([(Id, RocqType, CoqTerm)], CoqTerm)
+-- matchAxs (Forall [(z, zTp)] (Impl zDefTp p)) = first ((z, zTp, zDefTp) :) $ matchAxs p
+matchAxs (Exists [(z, zTp)] (And zDefTp p)) = first ((z, zTp, zDefTp) :) $ matchAxs p
+matchAxs r = ([], r)
+  
 -- | Create the function type with given domain 'Arg's and return 'CoqType'.
 -- This is the inverse of function 'matchFunctionType'
 mkFuncType :: [(Id, RocqType)] -> RocqType -> RocqType

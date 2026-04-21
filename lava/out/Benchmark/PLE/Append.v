@@ -654,10 +654,10 @@ Qed.
 Proof. 
 	buildPackG append append_rel append__append_rel append_rel_funct. 
 Defined.
-Definition append_nonempty_xs_spec (xs: L) (ys: L) (p: {{forall (appendres: L_u), (append_rel (⌊ xs -⌋) (⌊ ys -⌋) appendres) -> (appendres = Emp_u)}}): Type := 
+Definition append_nonempty_xs_spec (xs: L) (ys: L) (p: {{exists (appendres: L_u), (append_rel (⌊ xs -⌋) (⌊ ys -⌋) appendres) /\ (appendres = Emp_u)}}): Type := 
 	{{(⌊ xs -⌋) = Emp_u}}. 
 #[global] Hint Unfold append_nonempty_xs_spec : lia_unfold.
-Theorem append_nonempty_xs (xs: L) (ys: L) (p: {{forall (appendres: L_u), (append_rel (⌊ xs -⌋) (⌊ ys -⌋) appendres) -> (appendres = Emp_u)}}): append_nonempty_xs_spec xs ys p. 
+Theorem append_nonempty_xs (xs: L) (ys: L) (p: {{exists (appendres: L_u), (append_rel (⌊ xs -⌋) (⌊ ys -⌋) appendres) /\ (appendres = Emp_u)}}): append_nonempty_xs_spec xs ys p. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct ys as [ys ys_p]. 
@@ -676,10 +676,10 @@ Proof.
 			refine (exist _ unit _); 
 			solver.   
 Qed. 
-Definition append_nonempty_ys_spec (xs: L) (ys: L) (p: {{forall (appendres: L_u), (append_rel (⌊ xs -⌋) (⌊ ys -⌋) appendres) -> (appendres = Emp_u)}}): Type := 
+Definition append_nonempty_ys_spec (xs: L) (ys: L) (p: {{exists (appendres: L_u), (append_rel (⌊ xs -⌋) (⌊ ys -⌋) appendres) /\ (appendres = Emp_u)}}): Type := 
 	{{(⌊ ys -⌋) = Emp_u}}. 
 #[global] Hint Unfold append_nonempty_ys_spec : lia_unfold.
-Theorem append_nonempty_ys (xs: L) (ys: L) (p: {{forall (appendres: L_u), (append_rel (⌊ xs -⌋) (⌊ ys -⌋) appendres) -> (appendres = Emp_u)}}): append_nonempty_ys_spec xs ys p. 
+Theorem append_nonempty_ys (xs: L) (ys: L) (p: {{exists (appendres: L_u), (append_rel (⌊ xs -⌋) (⌊ ys -⌋) appendres) /\ (appendres = Emp_u)}}): append_nonempty_ys_spec xs ys p. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct ys as [ys ys_p]. 
@@ -1093,7 +1093,7 @@ Proof.
 	buildPackG length length_rel length__length_rel length_rel_funct. 
 Defined.
 Definition length_unzip_1_spec (l: L2): Type := 
-	{{forall (length2res: Nats_u), (length2_rel (⌊ l -⌋) length2res) -> (forall (l2_pr1res: L_u), (l2_pr1_rel (⌊ l -⌋) l2_pr1res) -> (forall (lengthres: Nats_u), (length_rel l2_pr1res lengthres) -> (length2res == lengthres)))}}. 
+	{{exists (length2res: Nats_u), (length2_rel (⌊ l -⌋) length2res) /\ (exists (l2_pr1res: L_u), (l2_pr1_rel (⌊ l -⌋) l2_pr1res) /\ (exists (lengthres: Nats_u), (length_rel l2_pr1res lengthres) /\ (length2res == lengthres)))}}. 
 #[global] Hint Unfold length_unzip_1_spec : lia_unfold.
 Theorem length_unzip_1 (l: L2): length_unzip_1_spec l. 
 Proof. 
@@ -1108,7 +1108,7 @@ Proof.
 		solver.  
 Qed. 
 Definition length_unzip_2_spec (l: L2): Type := 
-	{{forall (length2res: Nats_u), (length2_rel (⌊ l -⌋) length2res) -> (forall (l2_pr2res: L_u), (l2_pr2_rel (⌊ l -⌋) l2_pr2res) -> (forall (lengthres: Nats_u), (length_rel l2_pr2res lengthres) -> (length2res == lengthres)))}}. 
+	{{exists (length2res: Nats_u), (length2_rel (⌊ l -⌋) length2res) /\ (exists (l2_pr2res: L_u), (l2_pr2_rel (⌊ l -⌋) l2_pr2res) /\ (exists (lengthres: Nats_u), (length_rel l2_pr2res lengthres) /\ (length2res == lengthres)))}}. 
 #[global] Hint Unfold length_unzip_2_spec : lia_unfold.
 Theorem length_unzip_2 (l: L2): length_unzip_2_spec l. 
 Proof. 
@@ -1217,7 +1217,7 @@ Proof.
 Qed. 
 #[global] Hint Resolve map_rel_mk : f_rel_funct_db.
 Definition length_map_spec (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: Z) => True)) x_86410777 v_x_86410777)))))) (l: L): Type := 
-	{{forall (mapres: L_u), (map_rel (packProj f) (⌊ l -⌋) mapres) -> (forall (lengthres: Nats_u), (length_rel mapres lengthres) -> (forall (length_res_2: Nats_u), (length_rel (⌊ l -⌋) length_res_2) -> (lengthres == length_res_2)))}}. 
+	{{exists (mapres: L_u), (map_rel (packProj f) (⌊ l -⌋) mapres) /\ (exists (lengthres: Nats_u), (length_rel mapres lengthres) /\ (exists (length_res_2: Nats_u), (length_rel (⌊ l -⌋) length_res_2) /\ (lengthres == length_res_2)))}}. 
 #[global] Hint Unfold length_map_spec : lia_unfold.
 Theorem length_map (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Z (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: Z) => True)) x_86410777 v_x_86410777)))))) (l: L): length_map_spec f l. 
 Proof. 
@@ -1330,10 +1330,10 @@ Qed.
 Proof. 
 	buildPackG reverse reverse_rel reverse__reverse_rel reverse_rel_funct. 
 Defined.
-Definition reverse_nonempty_spec (l: L) (p: {{forall (reverseres: L_u), (reverse_rel (⌊ l -⌋) reverseres) -> (reverseres = Emp_u)}}): Type := 
+Definition reverse_nonempty_spec (l: L) (p: {{exists (reverseres: L_u), (reverse_rel (⌊ l -⌋) reverseres) /\ (reverseres = Emp_u)}}): Type := 
 	{{(⌊ l -⌋) = Emp_u}}. 
 #[global] Hint Unfold reverse_nonempty_spec : lia_unfold.
-Theorem reverse_nonempty (l: L) (p: {{forall (reverseres: L_u), (reverse_rel (⌊ l -⌋) reverseres) -> (reverseres = Emp_u)}}): reverse_nonempty_spec l p. 
+Theorem reverse_nonempty (l: L) (p: {{exists (reverseres: L_u), (reverse_rel (⌊ l -⌋) reverseres) /\ (reverseres = Emp_u)}}): reverse_nonempty_spec l p. 
 Proof. 
 	destruct l as [l l_p]. 
 	destruct p as [p p_p]. 
@@ -1348,9 +1348,9 @@ Proof.
 		(subsumptionCast L_u (fun (ys: L_u) => ((L_wf ys) /\ True)) 
 		(App (exist (fun (VV: Z) => True) x (ltac: (solver))) 
 		(subsumptionCast L_u (fun (VV: L_u) => ((L_wf VV) /\ True)) Emp (ltac: (solver)))) (ltac: (solver))) 
-		(exist (fun (p: Unit) => (forall (appendres: L_u), (append_rel 
+		(exist (fun (p: Unit) => (exists (appendres: L_u), (append_rel 
 		(⌊ reverse 
-		(exist (fun (l: L_u) => ((L_wf l) /\ True)) xs (ltac: (solver))) -⌋) (App_u x Emp_u) appendres) -> (appendres = Emp_u))) p (ltac: (solver)))) _); 
+		(exist (fun (l: L_u) => ((L_wf l) /\ True)) xs (ltac: (solver))) -⌋) (App_u x Emp_u) appendres) /\ (appendres = Emp_u))) p (ltac: (solver)))) _); 
 		solver.  
 	  - intros . 
 		refine (exist _ unit _); 
@@ -1476,10 +1476,10 @@ Qed.
 Proof. 
 	buildPackG take take_rel take__take_rel take_rel_funct. 
 Defined.
-Definition take_all_spec (n: Nats) (l: {l: L_u | (L_wf l) /\ (forall (lengthres: Nats_u), (length_rel l lengthres) -> (geqN_rel (⌊ n -⌋) lengthres true))}): Type := 
-	{{forall (takeres: L_u), (take_rel (⌊ n -⌋) (⌊ l -⌋) takeres) -> (takeres = (⌊ l -⌋))}}. 
+Definition take_all_spec (n: Nats) (l: {l: L_u | (L_wf l) /\ (exists (lengthres: Nats_u), (length_rel l lengthres) /\ (geqN_rel (⌊ n -⌋) lengthres true))}): Type := 
+	{{exists (takeres: L_u), (take_rel (⌊ n -⌋) (⌊ l -⌋) takeres) /\ (takeres = (⌊ l -⌋))}}. 
 #[global] Hint Unfold take_all_spec : lia_unfold.
-Theorem take_all (n: Nats) (l: {l: L_u | (L_wf l) /\ (forall (lengthres: Nats_u), (length_rel l lengthres) -> (geqN_rel (⌊ n -⌋) lengthres true))}): take_all_spec n l. 
+Theorem take_all (n: Nats) (l: {l: L_u | (L_wf l) /\ (exists (lengthres: Nats_u), (length_rel l lengthres) /\ (geqN_rel (⌊ n -⌋) lengthres true))}): take_all_spec n l. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct l as [l l_p]. 
@@ -1629,10 +1629,10 @@ Qed.
 Proof. 
 	buildPackG zip zip_rel zip__zip_rel zip_rel_funct. 
 Defined.
-Definition length_zip_spec (n: Nats) (l: {l: L_u | (L_wf l) /\ (forall (lengthres: Nats_u), (length_rel l lengthres) -> (lengthres = (⌊ n -⌋)))}) (m: {m: L_u | (L_wf m) /\ (forall (lengthres: Nats_u), (length_rel m lengthres) -> (lengthres = (⌊ n -⌋)))}): Type := 
-	{{forall (zipres: L2_u), (zip_rel (⌊ l -⌋) (⌊ m -⌋) zipres) -> (forall (length2res: Nats_u), (length2_rel zipres length2res) -> (length2res = (⌊ n -⌋)))}}. 
+Definition length_zip_spec (n: Nats) (l: {l: L_u | (L_wf l) /\ (exists (lengthres: Nats_u), (length_rel l lengthres) /\ (lengthres = (⌊ n -⌋)))}) (m: {m: L_u | (L_wf m) /\ (exists (lengthres: Nats_u), (length_rel m lengthres) /\ (lengthres = (⌊ n -⌋)))}): Type := 
+	{{exists (zipres: L2_u), (zip_rel (⌊ l -⌋) (⌊ m -⌋) zipres) /\ (exists (length2res: Nats_u), (length2_rel zipres length2res) /\ (length2res = (⌊ n -⌋)))}}. 
 #[global] Hint Unfold length_zip_spec : lia_unfold.
-Theorem length_zip (n: Nats) (l: {l: L_u | (L_wf l) /\ (forall (lengthres: Nats_u), (length_rel l lengthres) -> (lengthres = (⌊ n -⌋)))}) (m: {m: L_u | (L_wf m) /\ (forall (lengthres: Nats_u), (length_rel m lengthres) -> (lengthres = (⌊ n -⌋)))}): length_zip_spec n l m. 
+Theorem length_zip (n: Nats) (l: {l: L_u | (L_wf l) /\ (exists (lengthres: Nats_u), (length_rel l lengthres) /\ (lengthres = (⌊ n -⌋)))}) (m: {m: L_u | (L_wf m) /\ (exists (lengthres: Nats_u), (length_rel m lengthres) /\ (lengthres = (⌊ n -⌋)))}): length_zip_spec n l m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct l as [l l_p]. 
@@ -1674,10 +1674,10 @@ Proof.
 				refine (exist _ unit _); 
 				solver.    
 Qed. 
-Definition length_zipWith_spec (n: Nats) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)))) Z (fun (x_33150792: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))))) => (fun (v_x_33150792: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True))) x_33150792 v_x_33150792)))))) (l: {l: L_u | (L_wf l) /\ (forall (lengthres: Nats_u), (length_rel l lengthres) -> (lengthres = (⌊ n -⌋)))}) (m: {m: L_u | (L_wf m) /\ (forall (lengthres: Nats_u), (length_rel m lengthres) -> (lengthres = (⌊ n -⌋)))}): Type := 
-	{{forall (zipres: L2_u), (zip_rel (⌊ l -⌋) (⌊ m -⌋) zipres) -> (forall (length2res: Nats_u), (length2_rel zipres length2res) -> (length2res = (⌊ n -⌋)))}}. 
+Definition length_zipWith_spec (n: Nats) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)))) Z (fun (x_33150792: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))))) => (fun (v_x_33150792: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True))) x_33150792 v_x_33150792)))))) (l: {l: L_u | (L_wf l) /\ (exists (lengthres: Nats_u), (length_rel l lengthres) /\ (lengthres = (⌊ n -⌋)))}) (m: {m: L_u | (L_wf m) /\ (exists (lengthres: Nats_u), (length_rel m lengthres) /\ (lengthres = (⌊ n -⌋)))}): Type := 
+	{{exists (zipres: L2_u), (zip_rel (⌊ l -⌋) (⌊ m -⌋) zipres) /\ (exists (length2res: Nats_u), (length2_rel zipres length2res) /\ (length2res = (⌊ n -⌋)))}}. 
 #[global] Hint Unfold length_zipWith_spec : lia_unfold.
-Theorem length_zipWith (n: Nats) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)))) Z (fun (x_33150792: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))))) => (fun (v_x_33150792: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True))) x_33150792 v_x_33150792)))))) (l: {l: L_u | (L_wf l) /\ (forall (lengthres: Nats_u), (length_rel l lengthres) -> (lengthres = (⌊ n -⌋)))}) (m: {m: L_u | (L_wf m) /\ (forall (lengthres: Nats_u), (length_rel m lengthres) -> (lengthres = (⌊ n -⌋)))}): length_zipWith_spec n f l m. 
+Theorem length_zipWith (n: Nats) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT)))) (Z ::UT (Z ::UT nilUT)))) Z (fun (x_33150792: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq_tmp1: Z | True}) => nilRT))))) => (fun (v_x_33150792: Z) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (lq_tmp1: {lq_tmp1: Z | True}) => (fun (VV: Z) => True))) x_33150792 v_x_33150792)))))) (l: {l: L_u | (L_wf l) /\ (exists (lengthres: Nats_u), (length_rel l lengthres) /\ (lengthres = (⌊ n -⌋)))}) (m: {m: L_u | (L_wf m) /\ (exists (lengthres: Nats_u), (length_rel m lengthres) /\ (lengthres = (⌊ n -⌋)))}): length_zipWith_spec n f l m. 
 Proof. 
 	destruct n as [n n_p]. 
 	destruct l as [l l_p]. 
@@ -1837,7 +1837,7 @@ Proof.
 Qed. 
 #[global] Hint Resolve zipWith_rel_mk : f_rel_funct_db.
 Definition zip_take_spec (l: L) (m: L): Type := 
-	{{forall (zipres: L2_u), (zip_rel (⌊ l -⌋) (⌊ m -⌋) zipres) -> (forall (lengthres: Nats_u), (length_rel (⌊ l -⌋) lengthres) -> (forall (takeres: L_u), (take_rel lengthres (⌊ m -⌋) takeres) -> (forall (length_res_2: Nats_u), (length_rel (⌊ m -⌋) length_res_2) -> (forall (take_res_2: L_u), (take_rel length_res_2 (⌊ l -⌋) take_res_2) -> (forall (zip_res_2: L2_u), (zip_rel take_res_2 takeres zip_res_2) -> (zipres == zip_res_2))))))}}. 
+	{{exists (zipres: L2_u), (zip_rel (⌊ l -⌋) (⌊ m -⌋) zipres) /\ (exists (lengthres: Nats_u), (length_rel (⌊ l -⌋) lengthres) /\ (exists (takeres: L_u), (take_rel lengthres (⌊ m -⌋) takeres) /\ (exists (length_res_2: Nats_u), (length_rel (⌊ m -⌋) length_res_2) /\ (exists (take_res_2: L_u), (take_rel length_res_2 (⌊ l -⌋) take_res_2) /\ (exists (zip_res_2: L2_u), (zip_rel take_res_2 takeres zip_res_2) /\ (zipres == zip_res_2))))))}}. 
 #[global] Hint Unfold zip_take_spec : lia_unfold.
 Theorem zip_take (l: L) (m: L): zip_take_spec l m. 
 Proof. 
@@ -1859,15 +1859,15 @@ Proof.
 	  - intros . 
 		fix_notations. 
 		pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_37341435. 
-		assert (H_37341435': forall (lengthres: Nats_u), (length_rel m lengthres) -> (forall (takeres: L_u), (take_rel lengthres Emp_u takeres) -> (forall (zipres: L2_u), (zip_rel takeres Emp_u zipres) -> (forall (length_res_2: Nats_u), (length_rel Emp_u length_res_2) -> (forall (take_res_2: L_u), (take_rel length_res_2 m take_res_2) -> (forall (zip_res_2: L2_u), (zip_rel takeres take_res_2 zip_res_2) -> (True /\ (zipres == zip_res_2)))))))) by solver. 
+		assert (H_37341435': exists (lengthres: Nats_u), (length_rel m lengthres) /\ (exists (takeres: L_u), (take_rel lengthres Emp_u takeres) /\ (exists (zipres: L2_u), (zip_rel takeres Emp_u zipres) /\ (exists (length_res_2: Nats_u), (length_rel Emp_u length_res_2) /\ (exists (take_res_2: L_u), (take_rel length_res_2 m take_res_2) /\ (exists (zip_res_2: L2_u), (zip_rel takeres take_res_2 zip_res_2) /\ (True /\ (zipres == zip_res_2)))))))) by solver. 
 		simpl in H_37341435'. 
 		fix_notations. 
 		pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_54170553. 
-		assert (H_54170553': forall (zipres: L2_u), (zip_rel Emp_u Emp_u zipres) -> (forall (lengthres: Nats_u), (length_rel m lengthres) -> (forall (takeres: L_u), (take_rel lengthres Emp_u takeres) -> (forall (zip_res_2: L2_u), (zip_rel takeres Emp_u zip_res_2) -> (True /\ (zipres == zip_res_2)))))) by solver. 
+		assert (H_54170553': exists (zipres: L2_u), (zip_rel Emp_u Emp_u zipres) /\ (exists (lengthres: Nats_u), (length_rel m lengthres) /\ (exists (takeres: L_u), (take_rel lengthres Emp_u takeres) /\ (exists (zip_res_2: L2_u), (zip_rel takeres Emp_u zip_res_2) /\ (True /\ (zipres == zip_res_2)))))) by solver. 
 		simpl in H_54170553'. 
 		fix_notations. 
 		pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_67642907. 
-		assert (H_67642907': forall (zipres: L2_u), (zip_rel Emp_u m zipres) -> (forall (zip_res_2: L2_u), (zip_rel Emp_u Emp_u zip_res_2) -> (True /\ (zipres == zip_res_2)))) by solver. 
+		assert (H_67642907': exists (zipres: L2_u), (zip_rel Emp_u m zipres) /\ (exists (zip_res_2: L2_u), (zip_rel Emp_u Emp_u zip_res_2) /\ (True /\ (zipres == zip_res_2)))) by solver. 
 		simpl in H_67642907'. 
 		pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_54982670; 
 		refine (exist _ unit _); 

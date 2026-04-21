@@ -192,7 +192,7 @@ Proof.
 	buildPackG retrn retrn_rel retrn__retrn_rel retrn_rel_funct. 
 Defined.
 Definition leftIdentity_spec (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Identity_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Identity_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: Identity_u) => ((Identity_wf VV) /\ True))) x_86410777 v_x_86410777)))))): Type := 
-	{{forall (retrnres: Identity_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (composeres: Identity_u), (compose_rel retrnres (packProj f) composeres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (composeres == fres)))}}. 
+	{{exists (retrnres: Identity_u), (retrn_rel (⌊ x -⌋) retrnres) /\ (exists (composeres: Identity_u), (compose_rel retrnres (packProj f) composeres) /\ (exists (fres: _), ((getPackRel f) (⌊ x -⌋) fres) /\ (composeres == fres)))}}. 
 #[global] Hint Unfold leftIdentity_spec : lia_unfold.
 Theorem leftIdentity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) Identity_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: Identity_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: Identity_u) => ((Identity_wf VV) /\ True))) x_86410777 v_x_86410777)))))): leftIdentity_spec x f. 
 Proof. 
@@ -201,10 +201,10 @@ Proof.
 	solver. 
 Qed. 
 Definition rightIdentity_spec (x: Identity): Type := 
-	{{forall (composeres: Identity_u), (compose_rel (⌊ x -⌋) 
+	{{exists (composeres: Identity_u), (compose_rel (⌊ x -⌋) 
 		(ltac: (pose retrn_rel as Rel; 
 	pose retrn_rel_funct as Funct; 
-	buildUPackG Rel Funct)) composeres) -> (composeres = (⌊ x -⌋))}}. 
+	buildUPackG Rel Funct)) composeres) /\ (composeres = (⌊ x -⌋))}}. 
 #[global] Hint Unfold rightIdentity_spec : lia_unfold.
 Theorem rightIdentity (x: Identity): rightIdentity_spec x. 
 Proof. 

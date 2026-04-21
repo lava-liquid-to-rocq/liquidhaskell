@@ -12,7 +12,7 @@ where
 import Control.Monad (foldM, void)
 import Lava.Coq (projPackName, subsetWitnessNm)
 import qualified Lava.Coq as Coq
-import Lava.CoqUtil (assertFresh, assertFreshName, funcHoodLemName, relDefBranchName, ihName, injCast, mkForallT, mkReflAuxDecls, mkIsTrue, mkInductiveSkeleton, IndTree (..), ppForall, projectTm, relDefName, relDefThmName, relDefLemName, relPostfix, transRefTC, mkCoqTheorem, packInstanceName, packDefName, destructSubsetArg, unrefRocqType)
+import Lava.CoqUtil (assertFresh, assertFreshName, funcHoodLemName, relDefBranchName, ihName, injCast, mkForallT, mkReflAuxDecls, mkIsTrue, mkInductiveSkeleton, IndTree (..), ppForall, ppExist, projectTm, relDefName, relDefThmName, relDefLemName, relPostfix, transRefTC, mkCoqTheorem, packInstanceName, packDefName, destructSubsetArg, unrefRocqType)
 import Lava.CoqSyntaxUtil (mkArrowT, matchFunctionType, matchImplFunctionType, mkFuncType, packGetF)
 import Data.Bifunctor (bimap, first, second)
 import Data.Either.Extra (maybeToEither)
@@ -798,7 +798,7 @@ createRelationBranch γ f ((pats, body), antes, matchedVars) = {- traceFuncRet [
     {-toProp (Coq.Neg p) = Coq.Bop Coq.Eq p Coq.bfalse
     toProp p = {- Coq.IsTrue p -} Coq.Bop Coq.Eq p Coq.btrue-}
 
-    -- | add the relations for the result variables in the antecedents and the nthe antecedents as hypothesis to prop'
+    -- | add the relations for the result variables in the antecedents and then the antecedents as hypothesis to prop'
     anteProp = foldr (uncurry3 ppForall) (foldr (Coq.Impl . toProp) prop' trAntes) anteForalls
     -- Adding the free variables of the patterns and antecedents
     patFVs = Set.toList . flip Set.difference (Set.fromList fs) . Set.unions $ map freeVars (pats ++ antes)

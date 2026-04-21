@@ -156,7 +156,7 @@ Proof.
 	buildPackG mappend mappend_rel mappend__mappend_rel mappend_rel_funct. 
 Defined.
 Definition mappend_assoc_spec (xs: L) (ys: L) (zs: L): Type := 
-	{{forall (mappendres: L_u), (mappend_rel (⌊ xs -⌋) (⌊ ys -⌋) mappendres) -> (forall (mappend_res_2: L_u), (mappend_rel mappendres (⌊ zs -⌋) mappend_res_2) -> (forall (mappend_res_3: L_u), (mappend_rel (⌊ ys -⌋) (⌊ zs -⌋) mappend_res_3) -> (forall (mappend_res_4: L_u), (mappend_rel (⌊ xs -⌋) mappend_res_3 mappend_res_4) -> (mappend_res_2 == mappend_res_4))))}}. 
+	{{exists (mappendres: L_u), (mappend_rel (⌊ xs -⌋) (⌊ ys -⌋) mappendres) /\ (exists (mappend_res_2: L_u), (mappend_rel mappendres (⌊ zs -⌋) mappend_res_2) /\ (exists (mappend_res_3: L_u), (mappend_rel (⌊ ys -⌋) (⌊ zs -⌋) mappend_res_3) /\ (exists (mappend_res_4: L_u), (mappend_rel (⌊ xs -⌋) mappend_res_3 mappend_res_4) /\ (mappend_res_2 == mappend_res_4))))}}. 
 #[global] Hint Unfold mappend_assoc_spec : lia_unfold.
 Theorem mappend_assoc (xs: L) (ys: L) (zs: L): mappend_assoc_spec xs ys zs. 
 Proof. 
@@ -245,7 +245,7 @@ Proof.
 Qed. 
 #[global] Hint Resolve mempty_rel_mk : f_rel_funct_db.
 Definition mempty_left_spec (x: L): Type := 
-	{{forall (mappendres: L_u), (mappend_rel (⌊ mempty -⌋) (⌊ x -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+	{{exists (mappendres: L_u), (mappend_rel (⌊ mempty -⌋) (⌊ x -⌋) mappendres) /\ (mappendres = (⌊ x -⌋))}}. 
 #[global] Hint Unfold mempty_left_spec : lia_unfold.
 Theorem mempty_left (x: L): mempty_left_spec x. 
 Proof. 
@@ -254,7 +254,7 @@ Proof.
 	solver. 
 Qed. 
 Definition mempty_right_spec (x: L): Type := 
-	{{forall (mappendres: L_u), (mappend_rel (⌊ x -⌋) (⌊ mempty -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
+	{{exists (mappendres: L_u), (mappend_rel (⌊ x -⌋) (⌊ mempty -⌋) mappendres) /\ (mappendres = (⌊ x -⌋))}}. 
 #[global] Hint Unfold mempty_right_spec : lia_unfold.
 Theorem mempty_right (x: L): mempty_right_spec x. 
 Proof. 

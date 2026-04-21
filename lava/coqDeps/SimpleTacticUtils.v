@@ -53,7 +53,12 @@ Global Tactic Notation "clean_inversion" tactic(invTac) hyp(h) :=
   | ?tp => fail "Hypothesis to invert is not of expected shape, but has shape " tp 
   end.
 
-Global Ltac strong_inversion h := first [clean_inversion (inversion h) h | clean_inversion (dependent inversion h) h].
+Global Ltac strong_inversion h := 
+  first [
+    clean_inversion (inversion h) h 
+  | clean_inversion (dependent inversion h) h
+  ].
+
 Ltac intro_inv := 
   let h := fresh "H" in
   intros h; strong_inversion h.

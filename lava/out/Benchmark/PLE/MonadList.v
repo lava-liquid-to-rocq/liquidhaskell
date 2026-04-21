@@ -252,7 +252,7 @@ Proof.
 Qed. 
 #[global] Hint Resolve bind_rel_mk : f_rel_funct_db.
 Definition prop_append_neutral_spec (xs: L): Type := 
-	{{forall (appendres: L_u), (append_rel (⌊ xs -⌋) Emp_u appendres) -> (appendres = (⌊ xs -⌋))}}. 
+	{{exists (appendres: L_u), (append_rel (⌊ xs -⌋) Emp_u appendres) /\ (appendres = (⌊ xs -⌋))}}. 
 #[global] Hint Unfold prop_append_neutral_spec : lia_unfold.
 Theorem prop_append_neutral (xs: L): prop_append_neutral_spec xs. 
 Proof. 
@@ -342,7 +342,7 @@ Proof.
 	buildPackG retrn retrn_rel retrn__retrn_rel retrn_rel_funct. 
 Defined.
 Definition left_identity_spec (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: L_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_86410777 v_x_86410777)))))): Type := 
-	{{forall (retrnres: L_u), (retrn_rel (⌊ x -⌋) retrnres) -> (forall (bindres: L_u), (bind_rel retrnres (packProj f) bindres) -> (forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (bindres == fres)))}}. 
+	{{exists (retrnres: L_u), (retrn_rel (⌊ x -⌋) retrnres) /\ (exists (bindres: L_u), (bind_rel retrnres (packProj f) bindres) /\ (exists (fres: _), ((getPackRel f) (⌊ x -⌋) fres) /\ (bindres == fres)))}}. 
 #[global] Hint Unfold left_identity_spec : lia_unfold.
 Theorem left_identity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT) (ltac: (mkProjectsArgListTG ({lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT)) (Z ::UT nilUT))) L_u (fun (x_86410777: (ArgList {lq_tmp0: Z | True} ::RT (fun (lq_tmp0: {lq_tmp0: Z | True}) => nilRT))) => (fun (v_x_86410777: L_u) => (ltac: (flattenP (fun (lq_tmp0: {lq_tmp0: Z | True}) => (fun (VV: L_u) => ((L_wf VV) /\ True))) x_86410777 v_x_86410777)))))): left_identity_spec x f. 
 Proof. 
@@ -354,10 +354,10 @@ Proof.
 	solver. 
 Qed. 
 Definition right_identity_spec (x: L): Type := 
-	{{forall (bindres: L_u), (bind_rel (⌊ x -⌋) 
+	{{exists (bindres: L_u), (bind_rel (⌊ x -⌋) 
 		(ltac: (pose retrn_rel as Rel; 
 	pose retrn_rel_funct as Funct; 
-	buildUPackG Rel Funct)) bindres) -> (bindres = (⌊ x -⌋))}}. 
+	buildUPackG Rel Funct)) bindres) /\ (bindres = (⌊ x -⌋))}}. 
 #[global] Hint Unfold right_identity_spec : lia_unfold.
 Theorem right_identity (x: L): right_identity_spec x. 
 Proof. 

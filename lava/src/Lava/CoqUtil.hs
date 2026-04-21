@@ -36,6 +36,7 @@ module Lava.CoqUtil
     -- * Miscellanious functions for the 'TypedTranslations'
     injCast,
     ppForall,
+    ppExist,
     mkReflAuxDecls,
     mkInductiveSkeleton,
     IndTree (..),
@@ -65,7 +66,7 @@ where
 import Data.Bifunctor
 import Data.List (intersect, nub, sortBy)
 import Data.List.Extra ((\\))
-import Data.Tuple.Extra (uncurry3)
+import Data.Tuple.Extra (uncurry3, second3, third3)
 import Lava.Coq
 import Lava.CoqSyntaxUtil
 import Lava.Util
@@ -425,17 +426,16 @@ mkReflAuxDecls f retArg rArgs uArgs conds branches indBrs =
     relConstrLemmas :: [CoqDecl]
     relConstrLemmas = mkRelBranchLemmas args retArgU univArgs univAxs conds' branches
       where
-        matchAxs :: CoqTerm -> ([(Id, RocqType, RocqType)], CoqTerm)
-        matchAxs (Forall [(z, zTp)] (Impl zDefTp p)) = first ((z, zTp, Prop zDefTp) :) $ matchAxs p
-        matchAxs r = ([], r)
+        matchAxs' :: CoqTerm -> ([(Id, RocqType, RocqType)], CoqTerm)
+        matchAxs' tm = first (map (third3 Prop)) $ matchAxs tm
         mkX (x, xTp, xDefTp) = (x, xTp)
         mkXDef (x, xTp, xDefTp) = (x ++ "_def", xDefTp)
         (univArgs, univAxs, conds') = case conds of
           [] -> ([], [], conds)
           cond : condTl -> (map mkX commonAxs, map mkXDef commonAxs, zipWith mkCond' remConds (cond' : cond's))
             where
-              (condAxs, cond') = matchAxs cond
-              (condAxss, cond's) = unzip $ map matchAxs condTl
+              (condAxs, cond') = matchAxs' cond
+              (condAxss, cond's) = unzip $ map (matchAxs') condTl
               commonAxs = filter (\ax -> all (ax `elem`) condAxss) condAxs
               remConds = map (\\ commonAxs) (condAxs : condAxss)
               mkCond' caxs = mkForall (map mkX caxs ++ map mkXDef caxs)
@@ -453,28 +453,39 @@ mkReflAuxDecls f retArg rArgs uArgs conds branches indBrs =
         pack = toPack rfArgs (snd rfRetArg)
 
 mkRelBranchLemmas :: [(Id, RocqType)] -> (Id, RocqType) -> [(Id, RocqType)] -> [(Id, RocqType)] -> [CoqTerm] -> [(Id, RocqType)] -> [CoqDecl]
-mkRelBranchLemmas args retArg univArgs univAxs conds branches = {- traceFuncRet ["mkRelBranchLemmas", show args, show retArg, show univArgs, show univAxs, show conds, show branches] $ -} map mkBackwardsReasoningLemma univVarsClasses
+mkRelBranchLemmas args retArg univArgs univAxs conds branches = {- trace (unwords ["mkRelBranchLemmas", show args, show retArg, show univArgs, show univAxs, show conds, show branches]) $ -} {- traceFuncRet ["mkRelBranchLemmas", show args, show retArg, show univArgs, show univAxs, show conds, show branches] $ -} map mkBackwardsReasoningLemma univVarsClasses
   where
     -- \| a list of branches with the (nested) implication in the result unfolded into a list of antecedents and a final consequent
     deconstrBranches :: [(Id, [(Id, RocqType)], ([CoqTerm], CoqTerm))]
-    deconstrBranches = map deconstrConstr branches
+    deconstrBranches = map (\(c,cTp) -> (c,fst $ deconstrConstr cTp, snd $ deconstrConstr cTp)) branches
     -- mapThd
     --   ( \(Prop implRes) ->
     --       first (\\ map (\(_, Prop def) -> def) univAxs) $ matchImplProp implRes
     --   )
     --   branches
-    deconstrConstr :: (Id, RocqType) -> (Id, [(Id, RocqType)], ([CoqTerm], CoqTerm))
-    deconstrConstr (c, cTp) =
+    deconstrConstr :: RocqType -> ([(Id, RocqType)], ([CoqTerm], CoqTerm))
+    deconstrConstr cTp = 
       let (cargs, cret) = matchFunctionType [] cTp
-       in case cret of
-            Prop implRes -> (c, cargs, first (\\ map (\(_, Prop def) -> def) univAxs) $ matchImplProp implRes)
-            _ -> error "Prop expected as a return of branch in mkRelBranchLemmas"
+      in case cret of
+          Prop implRes -> (cargs, first (\\ map (\(_, Prop def) -> def) univAxs) $ matchImplProp implRes)
+          _ -> error "Prop expected as a return of branch in mkRelBranchLemmas"
+      {-(cargsPre ++ cargs ++ cargsPost, first (cdefs ++) cdefsPost) where
+      (cargsPre, ret) = matchImplFunctionType [] cTp
+      (argAxs, bdy) = case ret of
+        Prop exRes -> matchAxs exRes
+        _ -> error "Prop expected as a return of branch in mkRelBranchLemmas"
+      (cargs, cdefs') = unzip $ map (\(x, xTp, xDef) -> ((x, xTp), xDef)) argAxs
+      cdefs = cdefs' \\ map (\(_, Prop def) -> def) univAxs
+      (cargsPost, cdefsPost) = case matchImplFunctionType [] (Prop bdy) of
+        ([], _) -> ([], ([], bdy))
+        _ -> deconstrConstr (Prop bdy) -}
+      
     -- \| a list of triples of the result of a branch with fresh unification variables instead of the actual variables, the substitutions (represented as pairs of names) for the unification variables and the branch itself (with the variables substitutes to the unification variables in antecedent and result)
     univVarsBranches :: [(CoqTerm, [(Id, Id)], (Id, [(Id, RocqType)], [CoqTerm], CoqTerm))]
     univVarsBranches = map mkUnivVarBranch deconstrBranches
       where
         mkUnivVarBranch :: (Id, [(Id, RocqType)], ([CoqTerm], CoqTerm)) -> (CoqTerm, [(Id, Id)], (Id, [(Id, RocqType)], [CoqTerm], CoqTerm))
-        mkUnivVarBranch (f_c, brArgs, (antes, res)) = {-traceFuncRet ["mkUnivVarBranch", show (f_c, brArgs, (antes, res))] $ -} (resUnivVars, univSubst, (f_c, brArgs' ++ relDefArgs, antes' \\ relDefAntes, res'))
+        mkUnivVarBranch (f_c, brArgs, (antes, res)) = {- traceFuncRet ["mkUnivVarBranch", show (f_c, brArgs, (antes, res))] $ -} (resUnivVars, univSubst, (f_c, brArgs' ++ relDefArgs, antes' \\ relDefAntes, res'))
           where
             (resUnivVars, univSubst, _) = mkUnivVars 0 res
             substUniv = map (\(x, y) -> (y, Var x)) univSubst
@@ -819,3 +830,7 @@ injCast rt tm pO = Exist (Lambda "x" (unrefRocqType rt) ref) tm prfTm
 -- | models the totally weird ppForall operator in the Rocq grammar
 ppForall :: Id -> RocqType -> (Id, [CoqTerm]) -> CoqTerm -> CoqTerm
 ppForall z zTp (f, ts) p = Forall [(z, zTp)] $ Impl (App (Def f) ts) p
+
+-- | models the totally weird ppForall operator in the Rocq grammar
+ppExist :: Id -> RocqType -> (Id, [CoqTerm]) -> CoqTerm -> CoqTerm
+ppExist z zTp (f, ts) p = Exists [(z, zTp)] $ And (App (Def f) ts) p

@@ -147,7 +147,7 @@ Proof.
 	buildPackG llen llen_rel llen__llen_rel llen_rel_funct. 
 Defined.
 Definition append_spec (xs: IList) (ys: IList): Type := 
-	{v: IList_u | (IList_wf v) /\ (forall (llenres: Z), (llen_rel v llenres) -> (forall (llen_res_2: Z), (llen_rel (⌊ xs -⌋) llen_res_2) -> (forall (llen_res_3: Z), (llen_rel (⌊ ys -⌋) llen_res_3) -> (forall (addZres: Z), (addZ_rel llen_res_2 llen_res_3 addZres) -> (llenres == addZres)))))}. 
+	{v: IList_u | (IList_wf v) /\ (exists (llenres: Z), (llen_rel v llenres) /\ (exists (llen_res_2: Z), (llen_rel (⌊ xs -⌋) llen_res_2) /\ (exists (llen_res_3: Z), (llen_rel (⌊ ys -⌋) llen_res_3) /\ (exists (addZres: Z), (addZ_rel llen_res_2 llen_res_3 addZres) /\ (llenres == addZres)))))}. 
 #[global] Hint Unfold append_spec : lia_unfold.
 Definition append (xs: IList) (ys: IList): append_spec xs ys. 
 Proof. 
@@ -245,14 +245,14 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve append_rel_mk : f_rel_funct_db.
-#[global] Instance appendPack : (@Pack (IList ::RT (fun (xs_r: IList) => (IList ::RT (fun (ys_r: IList) => nilRT)))) (IList_u ::UT (IList_u ::UT nilUT)) (ltac: (mkProjectsArgListTG (IList ::RT (fun (xs_r: IList) => (IList ::RT (fun (ys_r: IList) => nilRT)))) (IList_u ::UT (IList_u ::UT nilUT)))) IList_u (fun (x_73412615: (ArgList IList ::RT (fun (xs_r: IList) => (IList ::RT (fun (ys_r: IList) => nilRT))))) => (fun (v_x_73412615: IList_u) => (ltac: (flattenP (fun (xs_r: IList) => (fun (ys_r: IList) => (fun (v: IList_u) => ((IList_wf v) /\ (forall (llenres: Z), (llen_rel v llenres) -> (forall (llen_res_2: Z), (llen_rel (⌊ xs_r -⌋) llen_res_2) -> (forall (llen_res_3: Z), (llen_rel (⌊ ys_r -⌋) llen_res_3) -> (forall (addZres: Z), (addZ_rel llen_res_2 llen_res_3 addZres) -> (llenres == addZres))))))))) x_73412615 v_x_73412615))))).
+#[global] Instance appendPack : (@Pack (IList ::RT (fun (xs_r: IList) => (IList ::RT (fun (ys_r: IList) => nilRT)))) (IList_u ::UT (IList_u ::UT nilUT)) (ltac: (mkProjectsArgListTG (IList ::RT (fun (xs_r: IList) => (IList ::RT (fun (ys_r: IList) => nilRT)))) (IList_u ::UT (IList_u ::UT nilUT)))) IList_u (fun (x_73412615: (ArgList IList ::RT (fun (xs_r: IList) => (IList ::RT (fun (ys_r: IList) => nilRT))))) => (fun (v_x_73412615: IList_u) => (ltac: (flattenP (fun (xs_r: IList) => (fun (ys_r: IList) => (fun (v: IList_u) => ((IList_wf v) /\ (exists (llenres: Z), (llen_rel v llenres) /\ (exists (llen_res_2: Z), (llen_rel (⌊ xs_r -⌋) llen_res_2) /\ (exists (llen_res_3: Z), (llen_rel (⌊ ys_r -⌋) llen_res_3) /\ (exists (addZres: Z), (addZ_rel llen_res_2 llen_res_3 addZres) /\ (llenres == addZres))))))))) x_73412615 v_x_73412615))))).
 Proof. 
 	buildPackG append append_rel append__append_rel append_rel_funct. 
 Defined.
-Definition get_spec (xs: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): Type := 
+Definition get_spec (xs: IList) (i: {i: Z | exists (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))}): Type := 
 	{v: Z | ltbZ_rel 5 v true}. 
 #[global] Hint Unfold get_spec : lia_unfold.
-Definition get (xs: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): get_spec xs i. 
+Definition get (xs: IList) (i: {i: Z | exists (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))}): get_spec xs i. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct i as [i i_p]. 
@@ -294,7 +294,7 @@ Proof.
 	rel_back' ((i ==? 0) _::_ _nil). 
 Qed. 
 #[global] Hint Rewrite get_Cons_false_Cons_true_lem : f_rel_back.
-Theorem get_rel_ex (xs: IList_u) (i: Z) (xs_p: (IList_wf xs) /\ True) (i_p: forall (llenres: Z), (llen_rel xs llenres) -> ((0 <= i) /\ (i < llenres))): get_rel xs i (⌊ get (exist _ xs xs_p) (exist _ i i_p) -⌋). 
+Theorem get_rel_ex (xs: IList_u) (i: Z) (xs_p: (IList_wf xs) /\ True) (i_p: exists (llenres: Z), (llen_rel xs llenres) /\ ((0 <= i) /\ (i < llenres))): get_rel xs i (⌊ get (exist _ xs xs_p) (exist _ i i_p) -⌋). 
 Proof. 
 	Opaque get.
 	existence_lemma_pre get; 
@@ -317,7 +317,7 @@ Proof.
 Qed. 
 #[global] Hint Resolve get_rel_ex : rel_ax_db.
 #[global] Opaque get. 
-Theorem get__get_rel_rw (xs: IList_u) (i: Z) (xs_p: (IList_wf xs) /\ True) (i_p: forall (llenres: Z), (llen_rel xs llenres) -> ((0 <= i) /\ (i < llenres))) (v: Z): ((⌊ get (exist _ xs xs_p) (exist _ i i_p) -⌋) = v) <-> (get_rel xs i v). 
+Theorem get__get_rel_rw (xs: IList_u) (i: Z) (xs_p: (IList_wf xs) /\ True) (i_p: exists (llenres: Z), (llen_rel xs llenres) /\ ((0 <= i) /\ (i < llenres))) (v: Z): ((⌊ get (exist _ xs xs_p) (exist _ i i_p) -⌋) = v) <-> (get_rel xs i v). 
 Proof. 
 	f__f_rel_rw. 
 Qed. 
@@ -326,18 +326,18 @@ Qed.
 #[global] Instance get_lookup_rw : dictionary rwLem get := { 
 	lookup' := get__get_rel_rw
 }.
-Theorem get__get_rel (xs_r: IList) (i_r: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}) (v: Z): ((⌊ get xs_r i_r -⌋) = v) <-> (get_rel (⌊ xs_r -⌋) (⌊ i_r -⌋) v). 
+Theorem get__get_rel (xs_r: IList) (i_r: {i: Z | exists (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))}) (v: Z): ((⌊ get xs_r i_r -⌋) = v) <-> (get_rel (⌊ xs_r -⌋) (⌊ i_r -⌋) v). 
 Proof. 
 	f__f_rel. 
 Qed. 
 #[global] Hint Rewrite get__get_rel : f_rel_funct_db.
-Theorem get__get_rel' (xs: IList_u) (i: Z) (xs_r: IList) (i_r: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}) (v: Z): (xs = (⌊ xs_r -⌋)) -> ((i = (⌊ i_r -⌋)) -> (((⌊ get xs_r i_r -⌋) = v) <-> (get_rel xs i v))). 
+Theorem get__get_rel' (xs: IList_u) (i: Z) (xs_r: IList) (i_r: {i: Z | exists (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))}) (v: Z): (xs = (⌊ xs_r -⌋)) -> ((i = (⌊ i_r -⌋)) -> (((⌊ get xs_r i_r -⌋) = v) <-> (get_rel xs i v))). 
 Proof. 
 	intros -> ->. 
 	refine (get__get_rel xs_r i_r v). 
 Qed. 
 #[global] Hint Resolve get__get_rel' : f_rel_funct_db.
-Theorem get_rel_mk [xs: IList_u] [i: Z] (xs_p: (IList_wf xs) /\ True) (i_p: forall (llenres: Z), (llen_rel xs llenres) -> ((0 <= i) /\ (i < llenres))): {v: _ | get_rel xs i v}. 
+Theorem get_rel_mk [xs: IList_u] [i: Z] (xs_p: (IList_wf xs) /\ True) (i_p: exists (llenres: Z), (llen_rel xs llenres) /\ ((0 <= i) /\ (i < llenres))): {v: _ | get_rel xs i v}. 
 Proof. 
 	intros ; 
 	refine (subsumptionCast _ (fun (v: _) => (get_rel xs i v)) (get (exist _ xs xs_p) (exist _ i i_p)) _); 
@@ -345,14 +345,14 @@ Proof.
 	quicksolve. 
 Qed. 
 #[global] Hint Resolve get_rel_mk : f_rel_funct_db.
-#[global] Instance getPack : (@Pack (IList ::RT (fun (xs_r: IList) => ({i: Z | forall (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) -> ((0 <= i) /\ (i < llenres))} ::RT (fun (i_r: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}) => nilRT)))) (IList_u ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG (IList ::RT (fun (xs_r: IList) => ({i: Z | forall (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) -> ((0 <= i) /\ (i < llenres))} ::RT (fun (i_r: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}) => nilRT)))) (IList_u ::UT (Z ::UT nilUT)))) Z (fun (x_86261872: (ArgList IList ::RT (fun (xs_r: IList) => ({i: Z | forall (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) -> ((0 <= i) /\ (i < llenres))} ::RT (fun (i_r: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}) => nilRT))))) => (fun (v_x_86261872: Z) => (ltac: (flattenP (fun (xs_r: IList) => (fun (i_r: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}) => (fun (v: Z) => (ltbZ_rel 5 v true)))) x_86261872 v_x_86261872))))).
+#[global] Instance getPack : (@Pack (IList ::RT (fun (xs_r: IList) => ({i: Z | exists (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))} ::RT (fun (i_r: {i: Z | exists (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))}) => nilRT)))) (IList_u ::UT (Z ::UT nilUT)) (ltac: (mkProjectsArgListTG (IList ::RT (fun (xs_r: IList) => ({i: Z | exists (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))} ::RT (fun (i_r: {i: Z | exists (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))}) => nilRT)))) (IList_u ::UT (Z ::UT nilUT)))) Z (fun (x_11925917: (ArgList IList ::RT (fun (xs_r: IList) => ({i: Z | exists (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))} ::RT (fun (i_r: {i: Z | exists (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))}) => nilRT))))) => (fun (v_x_11925917: Z) => (ltac: (flattenP (fun (xs_r: IList) => (fun (i_r: {i: Z | exists (llenres: Z), (llen_rel (⌊ xs_r -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))}) => (fun (v: Z) => (ltbZ_rel 5 v true)))) x_11925917 v_x_11925917))))).
 Proof. 
 	buildPackG get get_rel get__get_rel get_rel_funct. 
 Defined.
-Definition thm1_spec (xs: IList) (x: {x: Z | ltbZ_rel 5 x true}) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): Type := 
-	{{forall (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) -> (forall (addZres: Z), (addZ_rel (⌊ i -⌋) 1 addZres) -> (forall (get_res_2: Z), (get_rel (Cons_u (⌊ x -⌋) (⌊ xs -⌋)) addZres get_res_2) -> (getres == get_res_2)))}}. 
+Definition thm1_spec (xs: IList) (x: {x: Z | ltbZ_rel 5 x true}) (i: {i: Z | exists (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))}): Type := 
+	{{exists (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) /\ (exists (addZres: Z), (addZ_rel (⌊ i -⌋) 1 addZres) /\ (exists (get_res_2: Z), (get_rel (Cons_u (⌊ x -⌋) (⌊ xs -⌋)) addZres get_res_2) /\ (getres == get_res_2)))}}. 
 #[global] Hint Unfold thm1_spec : lia_unfold.
-Theorem thm1 (xs: IList) (x: {x: Z | ltbZ_rel 5 x true}) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): thm1_spec xs x i. 
+Theorem thm1 (xs: IList) (x: {x: Z | ltbZ_rel 5 x true}) (i: {i: Z | exists (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))}): thm1_spec xs x i. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct x as [x x_p]. 
@@ -360,10 +360,10 @@ Proof.
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
-Definition thm2_spec (xs: IList) (ys: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): Type := 
-	{{forall (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) -> (forall (llenres: Z), (llen_rel (⌊ ys -⌋) llenres) -> (forall (addZres: Z), (addZ_rel (⌊ i -⌋) llenres addZres) -> (forall (appendres: IList_u), (append_rel (⌊ ys -⌋) (⌊ xs -⌋) appendres) -> (forall (get_res_2: Z), (get_rel appendres addZres get_res_2) -> (getres == get_res_2)))))}}. 
+Definition thm2_spec (xs: IList) (ys: IList) (i: {i: Z | exists (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))}): Type := 
+	{{exists (getres: Z), (get_rel (⌊ xs -⌋) (⌊ i -⌋) getres) /\ (exists (llenres: Z), (llen_rel (⌊ ys -⌋) llenres) /\ (exists (addZres: Z), (addZ_rel (⌊ i -⌋) llenres addZres) /\ (exists (appendres: IList_u), (append_rel (⌊ ys -⌋) (⌊ xs -⌋) appendres) /\ (exists (get_res_2: Z), (get_rel appendres addZres get_res_2) /\ (getres == get_res_2)))))}}. 
 #[global] Hint Unfold thm2_spec : lia_unfold.
-Theorem thm2 (xs: IList) (ys: IList) (i: {i: Z | forall (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) -> ((0 <= i) /\ (i < llenres))}): thm2_spec xs ys i. 
+Theorem thm2 (xs: IList) (ys: IList) (i: {i: Z | exists (llenres: Z), (llen_rel (⌊ xs -⌋) llenres) /\ ((0 <= i) /\ (i < llenres))}): thm2_spec xs ys i. 
 Proof. 
 	destruct xs as [xs xs_p]. 
 	destruct ys as [ys ys_p]. 
@@ -378,14 +378,14 @@ Proof.
 		(exist (fun (ys: IList_u) => ((IList_wf ys) /\ True)) xs (ltac: (solver)))) (ltac: (solver))) 
 		(exist (fun (x: Z) => (ltbZ_rel 5 x true)) y (ltac: (solver))) 
 		(subsumptionCast Z 
-		(fun (i: Z) => (forall (llenres: Z), (llen_rel 
+		(fun (i: Z) => (exists (llenres: Z), (llen_rel 
 		(⌊ append 
 		(exist (fun (xs: IList_u) => ((IList_wf xs) /\ True)) ys (ltac: (solver))) 
-		(exist (fun (ys: IList_u) => ((IList_wf ys) /\ True)) xs (ltac: (solver))) -⌋) llenres) -> ((0 <= i) /\ (i < llenres)))) 
+		(exist (fun (ys: IList_u) => ((IList_wf ys) /\ True)) xs (ltac: (solver))) -⌋) llenres) /\ ((0 <= i) /\ (i < llenres)))) 
 		((exist (fun (x_1: Z) => True) i (ltac: (solver))) +Z (subsumptionCast Z (fun (x_2: Z) => True) 
 		(llen 
-		(exist (fun (l: IList_u) => ((IList_wf l) /\ True)) ys (ltac: (solver)))) (ltac: (solver)))) (ltac: (solver)))) as H_33856097. 
-		simpl in H_33856097. 
+		(exist (fun (l: IList_u) => ((IList_wf l) /\ True)) ys (ltac: (solver)))) (ltac: (solver)))) (ltac: (solver)))) as H_46661263. 
+		simpl in H_46661263. 
 		refine (subsumptionCast _ _ 
 		(IH_ys (ltac: (try clear IH_ys; 
 	solver)) xs (ltac: (try clear IH_ys; 

@@ -283,7 +283,7 @@ Proof.
 	buildPackG andb3 andb3_rel andb3__andb3_rel andb3_rel_funct. 
 Defined.
 Definition test_andb31_spec: Type := 
-	{{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3res) -> (andb3res = SFTrue_u)}}. 
+	{{exists (andb3res: SFBool_u), (andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3res) /\ (andb3res = SFTrue_u)}}. 
 #[global] Hint Unfold test_andb31_spec : lia_unfold.
 Theorem test_andb31: test_andb31_spec. 
 Proof. 
@@ -291,7 +291,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_andb32_spec: Type := 
-	{{forall (andb3res: SFBool_u), (andb3_rel SFFalse_u SFTrue_u SFTrue_u andb3res) -> (andb3res = SFFalse_u)}}. 
+	{{exists (andb3res: SFBool_u), (andb3_rel SFFalse_u SFTrue_u SFTrue_u andb3res) /\ (andb3res = SFFalse_u)}}. 
 #[global] Hint Unfold test_andb32_spec : lia_unfold.
 Theorem test_andb32: test_andb32_spec. 
 Proof. 
@@ -299,7 +299,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_andb33_spec: Type := 
-	{{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFFalse_u SFTrue_u andb3res) -> (andb3res = SFFalse_u)}}. 
+	{{exists (andb3res: SFBool_u), (andb3_rel SFTrue_u SFFalse_u SFTrue_u andb3res) /\ (andb3res = SFFalse_u)}}. 
 #[global] Hint Unfold test_andb33_spec : lia_unfold.
 Theorem test_andb33: test_andb33_spec. 
 Proof. 
@@ -307,7 +307,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_andb34_spec: Type := 
-	{{forall (andb3res: SFBool_u), (andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3res) -> (andb3res = SFFalse_u)}}. 
+	{{exists (andb3res: SFBool_u), (andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3res) /\ (andb3res = SFFalse_u)}}. 
 #[global] Hint Unfold test_andb34_spec : lia_unfold.
 Theorem test_andb34: test_andb34_spec. 
 Proof. 
@@ -315,7 +315,7 @@ Proof.
 	solver. 
 Qed. 
 Definition andb_commutative_spec (b: SFBool) (c: SFBool): Type := 
-	{{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (forall (andb_res_2: SFBool_u), (andb_rel (⌊ c -⌋) (⌊ b -⌋) andb_res_2) -> (andbres == andb_res_2))}}. 
+	{{exists (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) /\ (exists (andb_res_2: SFBool_u), (andb_rel (⌊ c -⌋) (⌊ b -⌋) andb_res_2) /\ (andbres == andb_res_2))}}. 
 #[global] Hint Unfold andb_commutative_spec : lia_unfold.
 Theorem andb_commutative (b: SFBool) (c: SFBool): andb_commutative_spec b c. 
 Proof. 
@@ -340,10 +340,10 @@ Proof.
 			refine (exist _ unit _); 
 			solver.   
 Qed. 
-Definition andb_true_elim2_spec (b: SFBool) (c: SFBool) (p: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (andbres = SFTrue_u)}}): Type := 
+Definition andb_true_elim2_spec (b: SFBool) (c: SFBool) (p: {{exists (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) /\ (andbres = SFTrue_u)}}): Type := 
 	{{(⌊ c -⌋) = SFTrue_u}}. 
 #[global] Hint Unfold andb_true_elim2_spec : lia_unfold.
-Theorem andb_true_elim2 (b: SFBool) (c: SFBool) (p: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (andbres = SFTrue_u)}}): andb_true_elim2_spec b c p. 
+Theorem andb_true_elim2 (b: SFBool) (c: SFBool) (p: {{exists (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) /\ (andbres = SFTrue_u)}}): andb_true_elim2_spec b c p. 
 Proof. 
 	destruct b as [b b_p]. 
 	destruct c as [c c_p]. 
@@ -367,10 +367,10 @@ Proof.
 			refine (exist _ unit _); 
 			solver.   
 Qed. 
-Definition identity_fn_applied_twice_spec (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (forall (x: SFBool) , {{forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (fres = (⌊ x -⌋))}})) (b: SFBool): Type := 
-	{{forall (fres: _), ((getPackRel f) (⌊ b -⌋) fres) -> (forall (f_res_2: _), ((getPackRel f) fres f_res_2) -> (f_res_2 = (⌊ b -⌋)))}}. 
+Definition identity_fn_applied_twice_spec (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (forall (x: SFBool) , {{exists (fres: _), ((getPackRel f) (⌊ x -⌋) fres) /\ (fres = (⌊ x -⌋))}})) (b: SFBool): Type := 
+	{{exists (fres: _), ((getPackRel f) (⌊ b -⌋) fres) /\ (exists (f_res_2: _), ((getPackRel f) fres f_res_2) /\ (f_res_2 = (⌊ b -⌋)))}}. 
 #[global] Hint Unfold identity_fn_applied_twice_spec : lia_unfold.
-Theorem identity_fn_applied_twice (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (forall (x: SFBool) , {{forall (fres: _), ((getPackRel f) (⌊ x -⌋) fres) -> (fres = (⌊ x -⌋))}})) (b: SFBool): identity_fn_applied_twice_spec f h b. 
+Theorem identity_fn_applied_twice (f: (@Pack (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT) (ltac: (mkProjectsArgListTG (SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT)) (SFBool_u ::UT nilUT))) SFBool_u (fun (x_24207487: (ArgList SFBool ::RT (fun (lq_tmp0: SFBool) => nilRT))) => (fun (v_x_24207487: SFBool_u) => (ltac: (flattenP (fun (lq_tmp0: SFBool) => (fun (VV: SFBool_u) => ((SFBool_wf VV) /\ True))) x_24207487 v_x_24207487)))))) (h: (forall (x: SFBool) , {{exists (fres: _), ((getPackRel f) (⌊ x -⌋) fres) /\ (fres = (⌊ x -⌋))}})) (b: SFBool): identity_fn_applied_twice_spec f h b. 
 Proof. 
 	destruct b as [b b_p]. 
 	pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_39899679. 
@@ -378,7 +378,7 @@ Proof.
 	fix_notations. 
 	pose proof (h 
 		(exist (fun (x: SFBool_u) => ((SFBool_wf x) /\ True)) b (ltac: (solver)))) as H_42296745. 
-	assert (H_42296745': forall (fres: _), ((getPackRel f) b fres) -> (True /\ (fres == b))) by solver. 
+	assert (H_42296745': exists (fres: _), ((getPackRel f) b fres) /\ (True /\ (fres == b))) by solver. 
 	simpl in H_42296745'. 
 	pose proof (h 
 		(subsumptionCast SFBool_u (fun (x: SFBool_u) => ((SFBool_wf x) /\ True)) 
@@ -498,7 +498,7 @@ Proof.
 	buildPackG nandb nandb_rel nandb__nandb_rel nandb_rel_funct. 
 Defined.
 Definition test_nandb1_spec: Type := 
-	{{forall (nandbres: SFBool_u), (nandb_rel SFTrue_u SFFalse_u nandbres) -> (nandbres = SFTrue_u)}}. 
+	{{exists (nandbres: SFBool_u), (nandb_rel SFTrue_u SFFalse_u nandbres) /\ (nandbres = SFTrue_u)}}. 
 #[global] Hint Unfold test_nandb1_spec : lia_unfold.
 Theorem test_nandb1: test_nandb1_spec. 
 Proof. 
@@ -506,7 +506,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_nandb2_spec: Type := 
-	{{forall (nandbres: SFBool_u), (nandb_rel SFFalse_u SFFalse_u nandbres) -> (nandbres = SFTrue_u)}}. 
+	{{exists (nandbres: SFBool_u), (nandb_rel SFFalse_u SFFalse_u nandbres) /\ (nandbres = SFTrue_u)}}. 
 #[global] Hint Unfold test_nandb2_spec : lia_unfold.
 Theorem test_nandb2: test_nandb2_spec. 
 Proof. 
@@ -514,7 +514,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_nandb3_spec: Type := 
-	{{forall (nandbres: SFBool_u), (nandb_rel SFFalse_u SFTrue_u nandbres) -> (nandbres = SFTrue_u)}}. 
+	{{exists (nandbres: SFBool_u), (nandb_rel SFFalse_u SFTrue_u nandbres) /\ (nandbres = SFTrue_u)}}. 
 #[global] Hint Unfold test_nandb3_spec : lia_unfold.
 Theorem test_nandb3: test_nandb3_spec. 
 Proof. 
@@ -522,7 +522,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_nandb4_spec: Type := 
-	{{forall (nandbres: SFBool_u), (nandb_rel SFTrue_u SFTrue_u nandbres) -> (nandbres = SFFalse_u)}}. 
+	{{exists (nandbres: SFBool_u), (nandb_rel SFTrue_u SFTrue_u nandbres) /\ (nandbres = SFFalse_u)}}. 
 #[global] Hint Unfold test_nandb4_spec : lia_unfold.
 Theorem test_nandb4: test_nandb4_spec. 
 Proof. 
@@ -630,7 +630,7 @@ Proof.
 	solver]. 
 Defined. 
 Definition negb_involutive_spec (b: SFBool): Type := 
-	{{forall (negbres: SFBool_u), (negb_rel (⌊ b -⌋) negbres) -> (forall (negb_res_2: SFBool_u), (negb_rel negbres negb_res_2) -> (negb_res_2 = (⌊ b -⌋)))}}. 
+	{{exists (negbres: SFBool_u), (negb_rel (⌊ b -⌋) negbres) /\ (exists (negb_res_2: SFBool_u), (negb_rel negbres negb_res_2) /\ (negb_res_2 = (⌊ b -⌋)))}}. 
 #[global] Hint Unfold negb_involutive_spec : lia_unfold.
 Theorem negb_involutive (b: SFBool): negb_involutive_spec b. 
 Proof. 
@@ -736,10 +736,10 @@ Qed.
 Proof. 
 	buildPackG orb orb_rel orb__orb_rel orb_rel_funct. 
 Defined.
-Definition andb_eq_orb_spec (b: SFBool) (c: SFBool) (h: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (forall (orbres: SFBool_u), (orb_rel (⌊ b -⌋) (⌊ c -⌋) orbres) -> (andbres == orbres))}}): Type := 
+Definition andb_eq_orb_spec (b: SFBool) (c: SFBool) (h: {{exists (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) /\ (exists (orbres: SFBool_u), (orb_rel (⌊ b -⌋) (⌊ c -⌋) orbres) /\ (andbres == orbres))}}): Type := 
 	{{(⌊ b -⌋) = (⌊ c -⌋)}}. 
 #[global] Hint Unfold andb_eq_orb_spec : lia_unfold.
-Theorem andb_eq_orb (b: SFBool) (c: SFBool) (h: {{forall (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) -> (forall (orbres: SFBool_u), (orb_rel (⌊ b -⌋) (⌊ c -⌋) orbres) -> (andbres == orbres))}}): andb_eq_orb_spec b c h. 
+Theorem andb_eq_orb (b: SFBool) (c: SFBool) (h: {{exists (andbres: SFBool_u), (andb_rel (⌊ b -⌋) (⌊ c -⌋) andbres) /\ (exists (orbres: SFBool_u), (orb_rel (⌊ b -⌋) (⌊ c -⌋) orbres) /\ (andbres == orbres))}}): andb_eq_orb_spec b c h. 
 Proof. 
 	destruct b as [b b_p]. 
 	destruct c as [c c_p]. 
@@ -764,7 +764,7 @@ Proof.
 			solver.   
 Qed. 
 Definition test_orb1_spec: Type := 
-	{{forall (orbres: SFBool_u), (orb_rel SFTrue_u SFFalse_u orbres) -> (orbres = SFTrue_u)}}. 
+	{{exists (orbres: SFBool_u), (orb_rel SFTrue_u SFFalse_u orbres) /\ (orbres = SFTrue_u)}}. 
 #[global] Hint Unfold test_orb1_spec : lia_unfold.
 Theorem test_orb1: test_orb1_spec. 
 Proof. 
@@ -772,7 +772,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_orb2_spec: Type := 
-	{{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFFalse_u orbres) -> (orbres = SFFalse_u)}}. 
+	{{exists (orbres: SFBool_u), (orb_rel SFFalse_u SFFalse_u orbres) /\ (orbres = SFFalse_u)}}. 
 #[global] Hint Unfold test_orb2_spec : lia_unfold.
 Theorem test_orb2: test_orb2_spec. 
 Proof. 
@@ -780,7 +780,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_orb3_spec: Type := 
-	{{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFTrue_u orbres) -> (orbres = SFTrue_u)}}. 
+	{{exists (orbres: SFBool_u), (orb_rel SFFalse_u SFTrue_u orbres) /\ (orbres = SFTrue_u)}}. 
 #[global] Hint Unfold test_orb3_spec : lia_unfold.
 Theorem test_orb3: test_orb3_spec. 
 Proof. 
@@ -788,7 +788,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_orb4_spec: Type := 
-	{{forall (orbres: SFBool_u), (orb_rel SFTrue_u SFTrue_u orbres) -> (orbres = SFTrue_u)}}. 
+	{{exists (orbres: SFBool_u), (orb_rel SFTrue_u SFTrue_u orbres) /\ (orbres = SFTrue_u)}}. 
 #[global] Hint Unfold test_orb4_spec : lia_unfold.
 Theorem test_orb4: test_orb4_spec. 
 Proof. 
@@ -796,7 +796,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_orb5_spec: Type := 
-	{{forall (orbres: SFBool_u), (orb_rel SFFalse_u SFTrue_u orbres) -> (forall (orb_res_2: SFBool_u), (orb_rel SFFalse_u orbres orb_res_2) -> (orb_res_2 = SFTrue_u))}}. 
+	{{exists (orbres: SFBool_u), (orb_rel SFFalse_u SFTrue_u orbres) /\ (exists (orb_res_2: SFBool_u), (orb_rel SFFalse_u orbres orb_res_2) /\ (orb_res_2 = SFTrue_u))}}. 
 #[global] Hint Unfold test_orb5_spec : lia_unfold.
 Theorem test_orb5: test_orb5_spec. 
 Proof. 
@@ -1034,7 +1034,7 @@ Proof.
 	buildPackG bin_to_nat bin_to_nat_rel bin_to_nat__bin_to_nat_rel bin_to_nat_rel_funct. 
 Defined.
 Definition test_bin_incr4_spec: Type := 
-	{{forall (bin_to_natres: Z), (bin_to_nat_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) bin_to_natres) -> (bin_to_natres == 2)}}. 
+	{{exists (bin_to_natres: Z), (bin_to_nat_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) bin_to_natres) /\ (bin_to_natres == 2)}}. 
 #[global] Hint Unfold test_bin_incr4_spec : lia_unfold.
 Theorem test_bin_incr4: test_bin_incr4_spec. 
 Proof. 
@@ -1152,7 +1152,7 @@ Proof.
 	buildPackG incr incr_rel incr__incr_rel incr_rel_funct. 
 Defined.
 Definition test_bin_incr1_spec: Type := 
-	{{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (incrres == (Bin0_u (Bin1_u SoftwareFoundations__Z_u)))}}. 
+	{{exists (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) /\ (incrres == (Bin0_u (Bin1_u SoftwareFoundations__Z_u)))}}. 
 #[global] Hint Unfold test_bin_incr1_spec : lia_unfold.
 Theorem test_bin_incr1: test_bin_incr1_spec. 
 Proof. 
@@ -1160,7 +1160,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_bin_incr2_spec: Type := 
-	{{forall (incrres: SFBin_u), (incr_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) incrres) -> (incrres == (Bin1_u (Bin1_u SoftwareFoundations__Z_u)))}}. 
+	{{exists (incrres: SFBin_u), (incr_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) incrres) /\ (incrres == (Bin1_u (Bin1_u SoftwareFoundations__Z_u)))}}. 
 #[global] Hint Unfold test_bin_incr2_spec : lia_unfold.
 Theorem test_bin_incr2: test_bin_incr2_spec. 
 Proof. 
@@ -1168,7 +1168,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_bin_incr3_spec: Type := 
-	{{forall (incrres: SFBin_u), (incr_rel (Bin1_u (Bin1_u SoftwareFoundations__Z_u)) incrres) -> (incrres == (Bin0_u (Bin0_u (Bin1_u SoftwareFoundations__Z_u))))}}. 
+	{{exists (incrres: SFBin_u), (incr_rel (Bin1_u (Bin1_u SoftwareFoundations__Z_u)) incrres) /\ (incrres == (Bin0_u (Bin0_u (Bin1_u SoftwareFoundations__Z_u))))}}. 
 #[global] Hint Unfold test_bin_incr3_spec : lia_unfold.
 Theorem test_bin_incr3: test_bin_incr3_spec. 
 Proof. 
@@ -1176,7 +1176,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_bin_incr5_spec: Type := 
-	{{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (forall (bin_to_natres: Z), (bin_to_nat_rel incrres bin_to_natres) -> (forall (bin_to_nat_res_2: Z), (bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2) -> (forall (addZres: Z), (addZ_rel 1 bin_to_nat_res_2 addZres) -> (bin_to_natres == addZres))))}}. 
+	{{exists (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) /\ (exists (bin_to_natres: Z), (bin_to_nat_rel incrres bin_to_natres) /\ (exists (bin_to_nat_res_2: Z), (bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2) /\ (exists (addZres: Z), (addZ_rel 1 bin_to_nat_res_2 addZres) /\ (bin_to_natres == addZres))))}}. 
 #[global] Hint Unfold test_bin_incr5_spec : lia_unfold.
 Theorem test_bin_incr5: test_bin_incr5_spec. 
 Proof. 
@@ -1184,7 +1184,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_bin_incr6_spec: Type := 
-	{{forall (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) -> (forall (incr_res_2: SFBin_u), (incr_rel incrres incr_res_2) -> (forall (bin_to_natres: Z), (bin_to_nat_rel incr_res_2 bin_to_natres) -> (forall (bin_to_nat_res_2: Z), (bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2) -> (forall (addZres: Z), (addZ_rel 2 bin_to_nat_res_2 addZres) -> (bin_to_natres == addZres)))))}}. 
+	{{exists (incrres: SFBin_u), (incr_rel (Bin1_u SoftwareFoundations__Z_u) incrres) /\ (exists (incr_res_2: SFBin_u), (incr_rel incrres incr_res_2) /\ (exists (bin_to_natres: Z), (bin_to_nat_rel incr_res_2 bin_to_natres) /\ (exists (bin_to_nat_res_2: Z), (bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2) /\ (exists (addZres: Z), (addZ_rel 2 bin_to_nat_res_2 addZres) /\ (bin_to_natres == addZres)))))}}. 
 #[global] Hint Unfold test_bin_incr6_spec : lia_unfold.
 Theorem test_bin_incr6: test_bin_incr6_spec. 
 Proof. 
@@ -2121,7 +2121,7 @@ Proof.
 	buildPackG minus minus_rel minus__minus_rel minus_rel_funct. 
 Defined.
 Definition minus_n_n_spec (n: MyNat): Type := 
-	{{forall (minusres: MyNat_u), (minus_rel (⌊ n -⌋) (⌊ n -⌋) minusres) -> (minusres = O_u)}}. 
+	{{exists (minusres: MyNat_u), (minus_rel (⌊ n -⌋) (⌊ n -⌋) minusres) /\ (minusres = O_u)}}. 
 #[global] Hint Unfold minus_n_n_spec : lia_unfold.
 Theorem minus_n_n (n: MyNat): minus_n_n_spec n. 
 Proof. 
@@ -2326,7 +2326,7 @@ Proof.
 	buildPackG plus plus_rel plus__plus_rel plus_rel_funct. 
 Defined.
 Definition add_0_r_spec (n: MyNat): Type := 
-	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) O_u plusres) -> (plusres = (⌊ n -⌋))}}. 
+	{{exists (plusres: MyNat_u), (plus_rel (⌊ n -⌋) O_u plusres) /\ (plusres = (⌊ n -⌋))}}. 
 #[global] Hint Unfold add_0_r_spec : lia_unfold.
 Theorem add_0_r (n: MyNat): add_0_r_spec n. 
 Proof. 
@@ -2341,7 +2341,7 @@ Proof.
 		solver.  
 Qed. 
 Definition add_assoc_spec (n: MyNat) (m: MyNat) (p: MyNat): Type := 
-	{{forall (plusres: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ p -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) plusres plus_res_2) -> (forall (plus_res_3: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plus_res_3) -> (forall (plus_res_4: MyNat_u), (plus_rel plus_res_3 (⌊ p -⌋) plus_res_4) -> (plus_res_2 == plus_res_4))))}}. 
+	{{exists (plusres: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ p -⌋) plusres) /\ (exists (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) plusres plus_res_2) /\ (exists (plus_res_3: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plus_res_3) /\ (exists (plus_res_4: MyNat_u), (plus_rel plus_res_3 (⌊ p -⌋) plus_res_4) /\ (plus_res_2 == plus_res_4))))}}. 
 #[global] Hint Unfold add_assoc_spec : lia_unfold.
 Theorem add_assoc (n: MyNat) (m: MyNat) (p: MyNat): add_assoc_spec n m p. 
 Proof. 
@@ -2362,7 +2362,7 @@ Proof.
 		solver.  
 Qed. 
 Definition add_succ_r_spec (n: MyNat) (m: MyNat): Type := 
-	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plus_res_2) -> (plusres == (S_u plus_res_2)))}}. 
+	{{exists (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) plusres) /\ (exists (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plus_res_2) /\ (plusres == (S_u plus_res_2)))}}. 
 #[global] Hint Unfold add_succ_r_spec : lia_unfold.
 Theorem add_succ_r (n: MyNat) (m: MyNat): add_succ_r_spec n m. 
 Proof. 
@@ -2584,7 +2584,7 @@ Proof.
 	buildPackG factorial factorial_rel factorial__factorial_rel factorial_rel_funct. 
 Defined.
 Definition mul_0_r_spec (n: MyNat): Type := 
-	{{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) O_u multres) -> (multres = O_u)}}. 
+	{{exists (multres: MyNat_u), (mult_rel (⌊ n -⌋) O_u multres) /\ (multres = O_u)}}. 
 #[global] Hint Unfold mul_0_r_spec : lia_unfold.
 Theorem mul_0_r (n: MyNat): mul_0_r_spec n. 
 Proof. 
@@ -2599,7 +2599,7 @@ Proof.
 		solver.  
 Qed. 
 Definition mult_0_1_spec (n: MyNat): Type := 
-	{{forall (multres: MyNat_u), (mult_rel O_u (⌊ n -⌋) multres) -> (multres = O_u)}}. 
+	{{exists (multres: MyNat_u), (mult_rel O_u (⌊ n -⌋) multres) /\ (multres = O_u)}}. 
 #[global] Hint Unfold mult_0_1_spec : lia_unfold.
 Theorem mult_0_1 (n: MyNat): mult_0_1_spec n. 
 Proof. 
@@ -2608,7 +2608,7 @@ Proof.
 	solver. 
 Qed. 
 Definition mult_n_O_spec (n: MyNat): Type := 
-	{{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) O_u multres) -> (O_u = multres)}}. 
+	{{exists (multres: MyNat_u), (mult_rel (⌊ n -⌋) O_u multres) /\ (O_u = multres)}}. 
 #[global] Hint Unfold mult_n_O_spec : lia_unfold.
 Theorem mult_n_O (n: MyNat): mult_n_O_spec n. 
 Proof. 
@@ -2623,22 +2623,22 @@ Proof.
 		solver.  
 Qed. 
 Definition mult_n_0_m_0_spec (p: MyNat) (q: MyNat): Type := 
-	{{forall (multres: MyNat_u), (mult_rel (⌊ q -⌋) O_u multres) -> (forall (mult_res_2: MyNat_u), (mult_rel (⌊ p -⌋) O_u mult_res_2) -> (forall (plusres: MyNat_u), (plus_rel mult_res_2 multres plusres) -> (plusres = O_u)))}}. 
+	{{exists (multres: MyNat_u), (mult_rel (⌊ q -⌋) O_u multres) /\ (exists (mult_res_2: MyNat_u), (mult_rel (⌊ p -⌋) O_u mult_res_2) /\ (exists (plusres: MyNat_u), (plus_rel mult_res_2 multres plusres) /\ (plusres = O_u)))}}. 
 #[global] Hint Unfold mult_n_0_m_0_spec : lia_unfold.
 Theorem mult_n_0_m_0 (p: MyNat) (q: MyNat): mult_n_0_m_0_spec p q. 
 Proof. 
 	destruct p as [p p_p]. 
 	destruct q as [q q_p]. 
 	pose proof (mult_n_O 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) q (ltac: (solver)))) as H_34880653. 
-	simpl in H_34880653. 
+		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) q (ltac: (solver)))) as H_36979607. 
+	simpl in H_36979607. 
 	refine (subsumptionCast _ _ 
 		(mult_n_O 
 		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)))) _); 
 	solver. 
 Qed. 
 Definition mult_n_Sm_spec (n: MyNat) (m: MyNat): Type := 
-	{{forall (multres: MyNat_u), (mult_rel (⌊ n -⌋) (⌊ m -⌋) multres) -> (forall (plusres: MyNat_u), (plus_rel multres (⌊ n -⌋) plusres) -> (forall (mult_res_2: MyNat_u), (mult_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) mult_res_2) -> (plusres == mult_res_2)))}}. 
+	{{exists (multres: MyNat_u), (mult_rel (⌊ n -⌋) (⌊ m -⌋) multres) /\ (exists (plusres: MyNat_u), (plus_rel multres (⌊ n -⌋) plusres) /\ (exists (mult_res_2: MyNat_u), (mult_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) mult_res_2) /\ (plusres == mult_res_2)))}}. 
 #[global] Hint Unfold mult_n_Sm_spec : lia_unfold.
 Theorem mult_n_Sm (n: MyNat) (m: MyNat): mult_n_Sm_spec n m. 
 Proof. 
@@ -2656,8 +2656,8 @@ Proof.
 		(mult 
 		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) n' (ltac: (solver))) 
 		(exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) m (ltac: (solver)))) (ltac: (solver))) 
-		(exist (fun (p: MyNat_u) => ((MyNat_wf p) /\ True)) n' (ltac: (solver)))) as H_28156190. 
-		simpl in H_28156190. 
+		(exist (fun (p: MyNat_u) => ((MyNat_wf p) /\ True)) n' (ltac: (solver)))) as H_73795767. 
+		simpl in H_73795767. 
 		pose proof (add_succ_r 
 		(subsumptionCast MyNat_u (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) 
 		(plus 
@@ -2666,8 +2666,8 @@ Proof.
 		(mult 
 		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) n' (ltac: (solver))) 
 		(exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) m (ltac: (solver)))) (ltac: (solver)))) (ltac: (solver))) 
-		(exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) n' (ltac: (solver)))) as H_66800893. 
-		simpl in H_66800893. 
+		(exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) n' (ltac: (solver)))) as H_74791164. 
+		simpl in H_74791164. 
 		refine (subsumptionCast _ _ 
 		(IH_n' (ltac: (try clear IH_n'; 
 	solver)) m (ltac: (try clear IH_n'; 
@@ -2675,14 +2675,14 @@ Proof.
 		solver.  
 Qed. 
 Definition mult_n_1_spec (p: MyNat): Type := 
-	{{forall (multres: MyNat_u), (mult_rel (⌊ p -⌋) (⌊ one -⌋) multres) -> (multres = (⌊ p -⌋))}}. 
+	{{exists (multres: MyNat_u), (mult_rel (⌊ p -⌋) (⌊ one -⌋) multres) /\ (multres = (⌊ p -⌋))}}. 
 #[global] Hint Unfold mult_n_1_spec : lia_unfold.
 Theorem mult_n_1 (p: MyNat): mult_n_1_spec p. 
 Proof. 
 	destruct p as [p p_p]. 
 	pose proof (mult_n_O 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)))) as H_10188893. 
-	simpl in H_10188893. 
+		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)))) as H_81569173. 
+	simpl in H_81569173. 
 	refine (subsumptionCast _ _ 
 		(mult_n_Sm 
 		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver))) 
@@ -2690,7 +2690,7 @@ Proof.
 	solver. 
 Qed. 
 Definition plus_1_1_spec (n: MyNat): Type := 
-	{{forall (plusres: MyNat_u), (plus_rel (⌊ one -⌋) (⌊ n -⌋) plusres) -> (plusres == (S_u (⌊ n -⌋)))}}. 
+	{{exists (plusres: MyNat_u), (plus_rel (⌊ one -⌋) (⌊ n -⌋) plusres) /\ (plusres == (S_u (⌊ n -⌋)))}}. 
 #[global] Hint Unfold plus_1_1_spec : lia_unfold.
 Theorem plus_1_1 (n: MyNat): plus_1_1_spec n. 
 Proof. 
@@ -2699,7 +2699,7 @@ Proof.
 	solver. 
 Qed. 
 Definition plus_1_neq_0_spec (n: MyNat): Type := 
-	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ one -⌋) plusres) -> (plusres <> O_u)}}. 
+	{{exists (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ one -⌋) plusres) /\ (plusres <> O_u)}}. 
 #[global] Hint Unfold plus_1_neq_0_spec : lia_unfold.
 Theorem plus_1_neq_0 (n: MyNat): plus_1_neq_0_spec n. 
 Proof. 
@@ -2713,7 +2713,7 @@ Proof.
 		solver.  
 Qed. 
 Definition plus_O_n_spec (n: MyNat): Type := 
-	{{forall (plusres: MyNat_u), (plus_rel O_u (⌊ n -⌋) plusres) -> (plusres = (⌊ n -⌋))}}. 
+	{{exists (plusres: MyNat_u), (plus_rel O_u (⌊ n -⌋) plusres) /\ (plusres = (⌊ n -⌋))}}. 
 #[global] Hint Unfold plus_O_n_spec : lia_unfold.
 Theorem plus_O_n (n: MyNat): plus_O_n_spec n. 
 Proof. 
@@ -2722,7 +2722,7 @@ Proof.
 	solver. 
 Qed. 
 Definition plus_id_example_spec (n: MyNat) (m: MyNat) (z: {{(⌊ n -⌋) = (⌊ m -⌋)}}): Type := 
-	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ n -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ m -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+	{{exists (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ n -⌋) plusres) /\ (exists (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ m -⌋) plus_res_2) /\ (plusres == plus_res_2))}}. 
 #[global] Hint Unfold plus_id_example_spec : lia_unfold.
 Theorem plus_id_example (n: MyNat) (m: MyNat) (z: {{(⌊ n -⌋) = (⌊ m -⌋)}}): plus_id_example_spec n m z. 
 Proof. 
@@ -2733,7 +2733,7 @@ Proof.
 	solver. 
 Qed. 
 Definition plus_id_exercise_spec (n: MyNat) (m: MyNat) (o: MyNat) (p: {{(⌊ n -⌋) = (⌊ m -⌋)}}) (q: {{(⌊ m -⌋) = (⌊ o -⌋)}}): Type := 
-	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ o -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+	{{exists (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) /\ (exists (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ o -⌋) plus_res_2) /\ (plusres == plus_res_2))}}. 
 #[global] Hint Unfold plus_id_exercise_spec : lia_unfold.
 Theorem plus_id_exercise (n: MyNat) (m: MyNat) (o: MyNat) (p: {{(⌊ n -⌋) = (⌊ m -⌋)}}) (q: {{(⌊ m -⌋) = (⌊ o -⌋)}}): plus_id_exercise_spec n m o p q. 
 Proof. 
@@ -2746,7 +2746,7 @@ Proof.
 	solver. 
 Qed. 
 Definition plus_n_Sm_spec (n: MyNat) (m: MyNat): Type := 
-	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) plus_res_2) -> ((S_u plusres) == plus_res_2))}}. 
+	{{exists (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) /\ (exists (plus_res_2: MyNat_u), (plus_rel (⌊ n -⌋) (S_u (⌊ m -⌋)) plus_res_2) /\ ((S_u plusres) == plus_res_2))}}. 
 #[global] Hint Unfold plus_n_Sm_spec : lia_unfold.
 Theorem plus_n_Sm (n: MyNat) (m: MyNat): plus_n_Sm_spec n m. 
 Proof. 
@@ -2765,7 +2765,7 @@ Proof.
 		solver.  
 Qed. 
 Definition add_comm_spec (n: MyNat) (m: MyNat): Type := 
-	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) -> (forall (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ n -⌋) plus_res_2) -> (plusres == plus_res_2))}}. 
+	{{exists (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ m -⌋) plusres) /\ (exists (plus_res_2: MyNat_u), (plus_rel (⌊ m -⌋) (⌊ n -⌋) plus_res_2) /\ (plusres == plus_res_2))}}. 
 #[global] Hint Unfold add_comm_spec : lia_unfold.
 Theorem add_comm (n: MyNat) (m: MyNat): add_comm_spec n m. 
 Proof. 
@@ -2781,8 +2781,8 @@ Proof.
 	  - intros . 
 		pose proof (IH_n' (ltac: (try clear IH_n'; 
 	solver)) m (ltac: (try clear IH_n'; 
-	solver))) as H_75441852. 
-		simpl in H_75441852. 
+	solver))) as H_76826501. 
+		simpl in H_76826501. 
 		refine (subsumptionCast _ _ 
 		(plus_n_Sm 
 		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) m (ltac: (solver))) 
@@ -3064,7 +3064,7 @@ Proof.
 	buildPackG sndSF sndSF_rel sndSF__sndSF_rel sndSF_rel_funct. 
 Defined.
 Definition surjective_pairing_spec (p: Natprod): Type := 
-	{{forall (sndSFres: MyNat_u), (sndSF_rel (⌊ p -⌋) sndSFres) -> (forall (fstSFres: MyNat_u), (fstSF_rel (⌊ p -⌋) fstSFres) -> ((⌊ p -⌋) = (Pair_u fstSFres sndSFres)))}}. 
+	{{exists (sndSFres: MyNat_u), (sndSF_rel (⌊ p -⌋) sndSFres) /\ (exists (fstSFres: MyNat_u), (fstSF_rel (⌊ p -⌋) fstSFres) /\ ((⌊ p -⌋) = (Pair_u fstSFres sndSFres)))}}. 
 #[global] Hint Unfold surjective_pairing_spec : lia_unfold.
 Theorem surjective_pairing (p: Natprod): surjective_pairing_spec p. 
 Proof. 
@@ -3075,7 +3075,7 @@ Proof.
 		solver.  
 Qed. 
 Definition surjective_pairing'_spec (n: MyNat) (m: MyNat): Type := 
-	{{forall (sndSFres: MyNat_u), (sndSF_rel (Pair_u (⌊ n -⌋) (⌊ m -⌋)) sndSFres) -> (forall (fstSFres: MyNat_u), (fstSF_rel (Pair_u (⌊ n -⌋) (⌊ m -⌋)) fstSFres) -> ((Pair_u (⌊ n -⌋) (⌊ m -⌋)) == (Pair_u fstSFres sndSFres)))}}. 
+	{{exists (sndSFres: MyNat_u), (sndSF_rel (Pair_u (⌊ n -⌋) (⌊ m -⌋)) sndSFres) /\ (exists (fstSFres: MyNat_u), (fstSF_rel (Pair_u (⌊ n -⌋) (⌊ m -⌋)) fstSFres) /\ ((Pair_u (⌊ n -⌋) (⌊ m -⌋)) == (Pair_u fstSFres sndSFres)))}}. 
 #[global] Hint Unfold surjective_pairing'_spec : lia_unfold.
 Theorem surjective_pairing' (n: MyNat) (m: MyNat): surjective_pairing'_spec n m. 
 Proof. 
@@ -3155,7 +3155,7 @@ Proof.
 Qed. 
 #[global] Hint Resolve two_rel_mk : f_rel_funct_db.
 Definition test_leb1_spec: Type := 
-	{{forall (lebres: SFBool_u), (leb_rel (⌊ two -⌋) (⌊ two -⌋) lebres) -> (lebres = SFTrue_u)}}. 
+	{{exists (lebres: SFBool_u), (leb_rel (⌊ two -⌋) (⌊ two -⌋) lebres) /\ (lebres = SFTrue_u)}}. 
 #[global] Hint Unfold test_leb1_spec : lia_unfold.
 Theorem test_leb1: test_leb1_spec. 
 Proof. 
@@ -3163,7 +3163,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_ltb1_spec: Type := 
-	{{forall (ltbres: SFBool_u), (ltb_rel (⌊ two -⌋) (⌊ two -⌋) ltbres) -> (ltbres = SFFalse_u)}}. 
+	{{exists (ltbres: SFBool_u), (ltb_rel (⌊ two -⌋) (⌊ two -⌋) ltbres) /\ (ltbres = SFFalse_u)}}. 
 #[global] Hint Unfold test_ltb1_spec : lia_unfold.
 Theorem test_ltb1: test_ltb1_spec. 
 Proof. 
@@ -3871,7 +3871,7 @@ Proof.
 Qed. 
 #[global] Hint Resolve twelve_rel_mk : f_rel_funct_db.
 Definition test_leb2_spec: Type := 
-	{{forall (lebres: SFBool_u), (leb_rel (⌊ two -⌋) (⌊ four -⌋) lebres) -> (lebres = SFTrue_u)}}. 
+	{{exists (lebres: SFBool_u), (leb_rel (⌊ two -⌋) (⌊ four -⌋) lebres) /\ (lebres = SFTrue_u)}}. 
 #[global] Hint Unfold test_leb2_spec : lia_unfold.
 Theorem test_leb2: test_leb2_spec. 
 Proof. 
@@ -3879,7 +3879,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_leb3_spec: Type := 
-	{{forall (lebres: SFBool_u), (leb_rel (⌊ four -⌋) (⌊ two -⌋) lebres) -> (lebres = SFFalse_u)}}. 
+	{{exists (lebres: SFBool_u), (leb_rel (⌊ four -⌋) (⌊ two -⌋) lebres) /\ (lebres = SFFalse_u)}}. 
 #[global] Hint Unfold test_leb3_spec : lia_unfold.
 Theorem test_leb3: test_leb3_spec. 
 Proof. 
@@ -3887,7 +3887,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_ltb2_spec: Type := 
-	{{forall (ltbres: SFBool_u), (ltb_rel (⌊ two -⌋) (⌊ four -⌋) ltbres) -> (ltbres = SFTrue_u)}}. 
+	{{exists (ltbres: SFBool_u), (ltb_rel (⌊ two -⌋) (⌊ four -⌋) ltbres) /\ (ltbres = SFTrue_u)}}. 
 #[global] Hint Unfold test_ltb2_spec : lia_unfold.
 Theorem test_ltb2: test_ltb2_spec. 
 Proof. 
@@ -3895,7 +3895,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_ltb3_spec: Type := 
-	{{forall (ltbres: SFBool_u), (ltb_rel (⌊ four -⌋) (⌊ two -⌋) ltbres) -> (ltbres = SFFalse_u)}}. 
+	{{exists (ltbres: SFBool_u), (ltb_rel (⌊ four -⌋) (⌊ two -⌋) ltbres) /\ (ltbres = SFFalse_u)}}. 
 #[global] Hint Unfold test_ltb3_spec : lia_unfold.
 Theorem test_ltb3: test_ltb3_spec. 
 Proof. 
@@ -3903,7 +3903,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_factorial1_spec: Type := 
-	{{forall (factorialres: MyNat_u), (factorial_rel (⌊ three -⌋) factorialres) -> (factorialres = (⌊ six -⌋))}}. 
+	{{exists (factorialres: MyNat_u), (factorial_rel (⌊ three -⌋) factorialres) /\ (factorialres = (⌊ six -⌋))}}. 
 #[global] Hint Unfold test_factorial1_spec : lia_unfold.
 Theorem test_factorial1: test_factorial1_spec. 
 Proof. 
@@ -3911,7 +3911,7 @@ Proof.
 	solver. 
 Qed. 
 Definition test_mult1_spec: Type := 
-	{{forall (multres: MyNat_u), (mult_rel (⌊ three -⌋) (⌊ three -⌋) multres) -> (multres = (⌊ nine -⌋))}}. 
+	{{exists (multres: MyNat_u), (mult_rel (⌊ three -⌋) (⌊ three -⌋) multres) /\ (multres = (⌊ nine -⌋))}}. 
 #[global] Hint Unfold test_mult1_spec : lia_unfold.
 Theorem test_mult1: test_mult1_spec. 
 Proof. 
@@ -3919,7 +3919,7 @@ Proof.
 	solver. 
 Qed. 
 Definition zero_nbeq_plus_1_spec (n: MyNat): Type := 
-	{{forall (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ one -⌋) plusres) -> (forall (eqbres: SFBool_u), (eqb_rel O_u plusres eqbres) -> (eqbres = SFFalse_u))}}. 
+	{{exists (plusres: MyNat_u), (plus_rel (⌊ n -⌋) (⌊ one -⌋) plusres) /\ (exists (eqbres: SFBool_u), (eqb_rel O_u plusres eqbres) /\ (eqbres = SFFalse_u))}}. 
 #[global] Hint Unfold zero_nbeq_plus_1_spec : lia_unfold.
 Theorem zero_nbeq_plus_1 (n: MyNat): zero_nbeq_plus_1_spec n. 
 Proof. 
@@ -4174,7 +4174,7 @@ Proof.
 	buildPackG lower_letter lower_letter_rel lower_letter__lower_letter_rel lower_letter_rel_funct. 
 Defined.
 Definition lower_letter_F_is_F_spec: Type := 
-	{{forall (lower_letterres: Letter_u), (lower_letter_rel F_u lower_letterres) -> (lower_letterres = F_u)}}. 
+	{{exists (lower_letterres: Letter_u), (lower_letter_rel F_u lower_letterres) /\ (lower_letterres = F_u)}}. 
 #[global] Hint Unfold lower_letter_F_is_F_spec : lia_unfold.
 Theorem lower_letter_F_is_F: lower_letter_F_is_F_spec. 
 Proof. 
@@ -4494,7 +4494,7 @@ Proof.
 	buildPackG apply_late_policy apply_late_policy_rel apply_late_policy__apply_late_policy_rel apply_late_policy_rel_funct. 
 Defined.
 Definition lower_grade_F_Minus_spec: Type := 
-	{{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u F_u Minus_u) lower_graderes) -> (lower_graderes == (Grade_u F_u Minus_u))}}. 
+	{{exists (lower_graderes: Grades_u), (lower_grade_rel (Grade_u F_u Minus_u) lower_graderes) /\ (lower_graderes == (Grade_u F_u Minus_u))}}. 
 #[global] Hint Unfold lower_grade_F_Minus_spec : lia_unfold.
 Theorem lower_grade_F_Minus: lower_grade_F_Minus_spec. 
 Proof. 
@@ -4502,7 +4502,7 @@ Proof.
 	solver. 
 Qed. 
 Definition lower_grade_thrice_spec: Type := 
-	{{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u B_u Minus_u) lower_graderes) -> (forall (lower_grade_res_2: Grades_u), (lower_grade_rel lower_graderes lower_grade_res_2) -> (forall (lower_grade_res_3: Grades_u), (lower_grade_rel lower_grade_res_2 lower_grade_res_3) -> (lower_grade_res_3 == (Grade_u C_u Minus_u))))}}. 
+	{{exists (lower_graderes: Grades_u), (lower_grade_rel (Grade_u B_u Minus_u) lower_graderes) /\ (exists (lower_grade_res_2: Grades_u), (lower_grade_rel lower_graderes lower_grade_res_2) /\ (exists (lower_grade_res_3: Grades_u), (lower_grade_rel lower_grade_res_2 lower_grade_res_3) /\ (lower_grade_res_3 == (Grade_u C_u Minus_u))))}}. 
 #[global] Hint Unfold lower_grade_thrice_spec : lia_unfold.
 Theorem lower_grade_thrice: lower_grade_thrice_spec. 
 Proof. 
@@ -4510,7 +4510,7 @@ Proof.
 	solver. 
 Qed. 
 Definition lower_grade_twice_spec: Type := 
-	{{forall (lower_graderes: Grades_u), (lower_grade_rel (Grade_u B_u Minus_u) lower_graderes) -> (forall (lower_grade_res_2: Grades_u), (lower_grade_rel lower_graderes lower_grade_res_2) -> (lower_grade_res_2 == (Grade_u C_u Natural_u)))}}. 
+	{{exists (lower_graderes: Grades_u), (lower_grade_rel (Grade_u B_u Minus_u) lower_graderes) /\ (exists (lower_grade_res_2: Grades_u), (lower_grade_rel lower_graderes lower_grade_res_2) /\ (lower_grade_res_2 == (Grade_u C_u Natural_u)))}}. 
 #[global] Hint Unfold lower_grade_twice_spec : lia_unfold.
 Theorem lower_grade_twice: lower_grade_twice_spec. 
 Proof. 
@@ -4518,7 +4518,7 @@ Proof.
 	solver. 
 Qed. 
 Definition no_penalty_for_mostly_on_time_spec (late_days: {late_days: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ late_days -⌋) 9 true}}): Type := 
-	{{forall (apply_late_policyres: Grades_u), (apply_late_policy_rel (⌊ late_days -⌋) (⌊ g -⌋) apply_late_policyres) -> (apply_late_policyres = (⌊ g -⌋))}}. 
+	{{exists (apply_late_policyres: Grades_u), (apply_late_policy_rel (⌊ late_days -⌋) (⌊ g -⌋) apply_late_policyres) /\ (apply_late_policyres = (⌊ g -⌋))}}. 
 #[global] Hint Unfold no_penalty_for_mostly_on_time_spec : lia_unfold.
 Theorem no_penalty_for_mostly_on_time (late_days: {late_days: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ late_days -⌋) 9 true}}): no_penalty_for_mostly_on_time_spec late_days g h. 
 Proof. 
@@ -4755,7 +4755,7 @@ Proof.
 	buildPackG next_weekday next_weekday_rel next_weekday__next_weekday_rel next_weekday_rel_funct. 
 Defined.
 Definition test_next_weekday_spec: Type := 
-	{{forall (next_weekdayres: Day_u), (next_weekday_rel Saturday_u next_weekdayres) -> (forall (next_weekday_res_2: Day_u), (next_weekday_rel next_weekdayres next_weekday_res_2) -> (next_weekday_res_2 = Tuesday_u))}}. 
+	{{exists (next_weekdayres: Day_u), (next_weekday_rel Saturday_u next_weekdayres) /\ (exists (next_weekday_res_2: Day_u), (next_weekday_rel next_weekdayres next_weekday_res_2) /\ (next_weekday_res_2 = Tuesday_u))}}. 
 #[global] Hint Unfold test_next_weekday_spec : lia_unfold.
 Theorem test_next_weekday: test_next_weekday_spec. 
 Proof. 
@@ -5169,7 +5169,7 @@ Proof.
 	buildPackG letter_comparison letter_comparison_rel letter_comparison__letter_comparison_rel letter_comparison_rel_funct. 
 Defined.
 Definition letter_comparison_eq_spec (l: Letter): Type := 
-	{{forall (letter_comparisonres: Comparison_u), (letter_comparison_rel (⌊ l -⌋) (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Eq_u)}}. 
+	{{exists (letter_comparisonres: Comparison_u), (letter_comparison_rel (⌊ l -⌋) (⌊ l -⌋) letter_comparisonres) /\ (letter_comparisonres = Eq_u)}}. 
 #[global] Hint Unfold letter_comparison_eq_spec : lia_unfold.
 Theorem letter_comparison_eq (l: Letter): letter_comparison_eq_spec l. 
 Proof. 
@@ -5191,10 +5191,10 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Definition lower_letter_lowers_spec (l: Letter) (p: {{forall (letter_comparisonres: Comparison_u), (letter_comparison_rel F_u (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Lt_u)}}): Type := 
-	{{forall (lower_letterres: Letter_u), (lower_letter_rel (⌊ l -⌋) lower_letterres) -> (forall (letter_comparisonres: Comparison_u), (letter_comparison_rel lower_letterres (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Lt_u))}}. 
+Definition lower_letter_lowers_spec (l: Letter) (p: {{exists (letter_comparisonres: Comparison_u), (letter_comparison_rel F_u (⌊ l -⌋) letter_comparisonres) /\ (letter_comparisonres = Lt_u)}}): Type := 
+	{{exists (lower_letterres: Letter_u), (lower_letter_rel (⌊ l -⌋) lower_letterres) /\ (exists (letter_comparisonres: Comparison_u), (letter_comparison_rel lower_letterres (⌊ l -⌋) letter_comparisonres) /\ (letter_comparisonres = Lt_u))}}. 
 #[global] Hint Unfold lower_letter_lowers_spec : lia_unfold.
-Theorem lower_letter_lowers (l: Letter) (p: {{forall (letter_comparisonres: Comparison_u), (letter_comparison_rel F_u (⌊ l -⌋) letter_comparisonres) -> (letter_comparisonres = Lt_u)}}): lower_letter_lowers_spec l p. 
+Theorem lower_letter_lowers (l: Letter) (p: {{exists (letter_comparisonres: Comparison_u), (letter_comparison_rel F_u (⌊ l -⌋) letter_comparisonres) /\ (letter_comparisonres = Lt_u)}}): lower_letter_lowers_spec l p. 
 Proof. 
 	destruct l as [l l_p]. 
 	destruct p as [p p_p]. 

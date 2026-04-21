@@ -244,7 +244,7 @@ Proof.
 	buildPackG lowerLetter lowerLetter_rel lowerLetter__lowerLetter_rel lowerLetter_rel_funct. 
 Defined.
 Definition lowerLetterFIsF_spec: Type := 
-	{{forall (lowerLetterres: Letter_u), (lowerLetter_rel F_u lowerLetterres) -> (lowerLetterres = F_u)}}. 
+	{{exists (lowerLetterres: Letter_u), (lowerLetter_rel F_u lowerLetterres) /\ (lowerLetterres = F_u)}}. 
 #[global] Hint Unfold lowerLetterFIsF_spec : lia_unfold.
 Theorem lowerLetterFIsF: lowerLetterFIsF_spec. 
 Proof. 
@@ -564,7 +564,7 @@ Proof.
 	buildPackG applyLatePolicy applyLatePolicy_rel applyLatePolicy__applyLatePolicy_rel applyLatePolicy_rel_funct. 
 Defined.
 Definition lowerGradeFMinus_spec: Type := 
-	{{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u F_u Minus_u) lowerGraderes) -> (lowerGraderes == (Grade_u F_u Minus_u))}}. 
+	{{exists (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u F_u Minus_u) lowerGraderes) /\ (lowerGraderes == (Grade_u F_u Minus_u))}}. 
 #[global] Hint Unfold lowerGradeFMinus_spec : lia_unfold.
 Theorem lowerGradeFMinus: lowerGradeFMinus_spec. 
 Proof. 
@@ -572,7 +572,7 @@ Proof.
 	solver. 
 Qed. 
 Definition lowerGradeThrice_spec: Type := 
-	{{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u B_u Minus_u) lowerGraderes) -> (forall (lowerGrade_res_2: Grades_u), (lowerGrade_rel lowerGraderes lowerGrade_res_2) -> (forall (lowerGrade_res_3: Grades_u), (lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3) -> (lowerGrade_res_3 == (Grade_u C_u Minus_u))))}}. 
+	{{exists (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u B_u Minus_u) lowerGraderes) /\ (exists (lowerGrade_res_2: Grades_u), (lowerGrade_rel lowerGraderes lowerGrade_res_2) /\ (exists (lowerGrade_res_3: Grades_u), (lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3) /\ (lowerGrade_res_3 == (Grade_u C_u Minus_u))))}}. 
 #[global] Hint Unfold lowerGradeThrice_spec : lia_unfold.
 Theorem lowerGradeThrice: lowerGradeThrice_spec. 
 Proof. 
@@ -580,7 +580,7 @@ Proof.
 	solver. 
 Qed. 
 Definition lowerGradeTwice_spec: Type := 
-	{{forall (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u B_u Minus_u) lowerGraderes) -> (forall (lowerGrade_res_2: Grades_u), (lowerGrade_rel lowerGraderes lowerGrade_res_2) -> (lowerGrade_res_2 == (Grade_u C_u Natural_u)))}}. 
+	{{exists (lowerGraderes: Grades_u), (lowerGrade_rel (Grade_u B_u Minus_u) lowerGraderes) /\ (exists (lowerGrade_res_2: Grades_u), (lowerGrade_rel lowerGraderes lowerGrade_res_2) /\ (lowerGrade_res_2 == (Grade_u C_u Natural_u)))}}. 
 #[global] Hint Unfold lowerGradeTwice_spec : lia_unfold.
 Theorem lowerGradeTwice: lowerGradeTwice_spec. 
 Proof. 
@@ -588,7 +588,7 @@ Proof.
 	solver. 
 Qed. 
 Definition noPenaltyForMostlyOnTime_spec (lateDays: {lateDays: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ lateDays -⌋) 9 true}}): Type := 
-	{{forall (applyLatePolicyres: Grades_u), (applyLatePolicy_rel (⌊ lateDays -⌋) (⌊ g -⌋) applyLatePolicyres) -> (applyLatePolicyres = (⌊ g -⌋))}}. 
+	{{exists (applyLatePolicyres: Grades_u), (applyLatePolicy_rel (⌊ lateDays -⌋) (⌊ g -⌋) applyLatePolicyres) /\ (applyLatePolicyres = (⌊ g -⌋))}}. 
 #[global] Hint Unfold noPenaltyForMostlyOnTime_spec : lia_unfold.
 Theorem noPenaltyForMostlyOnTime (lateDays: {lateDays: Z | True}) (g: Grades) (h: {{ltbZ_rel (⌊ lateDays -⌋) 9 true}}): noPenaltyForMostlyOnTime_spec lateDays g h. 
 Proof. 
@@ -1007,7 +1007,7 @@ Proof.
 	buildPackG letterComparison letterComparison_rel letterComparison__letterComparison_rel letterComparison_rel_funct. 
 Defined.
 Definition letterComparisonEq_spec (l: Letter): Type := 
-	{{forall (letterComparisonres: Comparison_u), (letterComparison_rel (⌊ l -⌋) (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Eq_u)}}. 
+	{{exists (letterComparisonres: Comparison_u), (letterComparison_rel (⌊ l -⌋) (⌊ l -⌋) letterComparisonres) /\ (letterComparisonres = Eq_u)}}. 
 #[global] Hint Unfold letterComparisonEq_spec : lia_unfold.
 Theorem letterComparisonEq (l: Letter): letterComparisonEq_spec l. 
 Proof. 
@@ -1029,10 +1029,10 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 Qed. 
-Definition lowerLetterLowers_spec (l: Letter) (p: {{forall (letterComparisonres: Comparison_u), (letterComparison_rel F_u (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Lt_u)}}): Type := 
-	{{forall (lowerLetterres: Letter_u), (lowerLetter_rel (⌊ l -⌋) lowerLetterres) -> (forall (letterComparisonres: Comparison_u), (letterComparison_rel lowerLetterres (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Lt_u))}}. 
+Definition lowerLetterLowers_spec (l: Letter) (p: {{exists (letterComparisonres: Comparison_u), (letterComparison_rel F_u (⌊ l -⌋) letterComparisonres) /\ (letterComparisonres = Lt_u)}}): Type := 
+	{{exists (lowerLetterres: Letter_u), (lowerLetter_rel (⌊ l -⌋) lowerLetterres) /\ (exists (letterComparisonres: Comparison_u), (letterComparison_rel lowerLetterres (⌊ l -⌋) letterComparisonres) /\ (letterComparisonres = Lt_u))}}. 
 #[global] Hint Unfold lowerLetterLowers_spec : lia_unfold.
-Theorem lowerLetterLowers (l: Letter) (p: {{forall (letterComparisonres: Comparison_u), (letterComparison_rel F_u (⌊ l -⌋) letterComparisonres) -> (letterComparisonres = Lt_u)}}): lowerLetterLowers_spec l p. 
+Theorem lowerLetterLowers (l: Letter) (p: {{exists (letterComparisonres: Comparison_u), (letterComparison_rel F_u (⌊ l -⌋) letterComparisonres) /\ (letterComparisonres = Lt_u)}}): lowerLetterLowers_spec l p. 
 Proof. 
 	destruct l as [l l_p]. 
 	destruct p as [p p_p]. 

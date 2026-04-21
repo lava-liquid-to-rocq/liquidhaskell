@@ -155,7 +155,7 @@ Proof.
 	buildPackG add add_rel add__add_rel add_rel_funct. 
 Defined.
 Definition add'_spec (m: Nats) (n: Nats): Type := 
-	{v: Nats_u | (Nats_wf v) /\ (forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (add_res_2: Nats_u), (add_rel addres Zero_u add_res_2) -> (add_res_2 == v)))}. 
+	{v: Nats_u | (Nats_wf v) /\ (exists (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) /\ (exists (add_res_2: Nats_u), (add_rel addres Zero_u add_res_2) /\ (add_res_2 == v)))}. 
 #[global] Hint Unfold add'_spec : lia_unfold.
 Definition add' (m: Nats) (n: Nats): add'_spec m n. 
 Proof. 
@@ -171,7 +171,7 @@ Proof.
 	solver. 
 Defined. 
 Definition add''_spec (m: Nats) (n: Nats): Type := 
-	{v: Nats_u | (Nats_wf v) /\ (forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (addres == v))}. 
+	{v: Nats_u | (Nats_wf v) /\ (exists (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) /\ (addres == v))}. 
 #[global] Hint Unfold add''_spec : lia_unfold.
 Definition add'' (m: Nats) (n: Nats): add''_spec m n. 
 Proof. 
@@ -184,7 +184,7 @@ Proof.
 	solver. 
 Defined. 
 Definition add_assoc_spec (m: Nats) (n: Nats) (o: Nats): Type := 
-	{{forall (addres: Nats_u), (add_rel (⌊ n -⌋) (⌊ o -⌋) addres) -> (forall (add_res_2: Nats_u), (add_rel (⌊ m -⌋) addres add_res_2) -> (forall (add_res_3: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) add_res_3) -> (forall (add_res_4: Nats_u), (add_rel add_res_3 (⌊ o -⌋) add_res_4) -> (add_res_2 == add_res_4))))}}. 
+	{{exists (addres: Nats_u), (add_rel (⌊ n -⌋) (⌊ o -⌋) addres) /\ (exists (add_res_2: Nats_u), (add_rel (⌊ m -⌋) addres add_res_2) /\ (exists (add_res_3: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) add_res_3) /\ (exists (add_res_4: Nats_u), (add_rel add_res_3 (⌊ o -⌋) add_res_4) /\ (add_res_2 == add_res_4))))}}. 
 #[global] Hint Unfold add_assoc_spec : lia_unfold.
 Theorem add_assoc (m: Nats) (n: Nats) (o: Nats): add_assoc_spec m n o. 
 Proof. 
@@ -205,7 +205,7 @@ Proof.
 		solver.  
 Qed. 
 Definition add_suc_r_spec (m: Nats) (n: Nats): Type := 
-	{{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (add_res_2: Nats_u), (add_rel (⌊ m -⌋) (Suc_u (⌊ n -⌋)) add_res_2) -> ((Suc_u addres) == add_res_2))}}. 
+	{{exists (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) /\ (exists (add_res_2: Nats_u), (add_rel (⌊ m -⌋) (Suc_u (⌊ n -⌋)) add_res_2) /\ ((Suc_u addres) == add_res_2))}}. 
 #[global] Hint Unfold add_suc_r_spec : lia_unfold.
 Theorem add_suc_r (m: Nats) (n: Nats): add_suc_r_spec m n. 
 Proof. 
@@ -224,7 +224,7 @@ Proof.
 		solver.  
 Qed. 
 Definition add_zero_l_spec (n: Nats): Type := 
-	{{forall (addres: Nats_u), (add_rel Zero_u (⌊ n -⌋) addres) -> (addres = (⌊ n -⌋))}}. 
+	{{exists (addres: Nats_u), (add_rel Zero_u (⌊ n -⌋) addres) /\ (addres = (⌊ n -⌋))}}. 
 #[global] Hint Unfold add_zero_l_spec : lia_unfold.
 Theorem add_zero_l (n: Nats): add_zero_l_spec n. 
 Proof. 
@@ -239,7 +239,7 @@ Proof.
 		solver.  
 Qed. 
 Definition add_zero_l_test_spec: Type := 
-	{{forall (addres: Nats_u), (add_rel Zero_u (Suc_u (Suc_u Zero_u)) addres) -> (addres == (Suc_u (Suc_u Zero_u)))}}. 
+	{{exists (addres: Nats_u), (add_rel Zero_u (Suc_u (Suc_u Zero_u)) addres) /\ (addres == (Suc_u (Suc_u Zero_u)))}}. 
 #[global] Hint Unfold add_zero_l_test_spec : lia_unfold.
 Theorem add_zero_l_test: add_zero_l_test_spec. 
 Proof. 
@@ -253,7 +253,7 @@ Proof.
 	solver. 
 Qed. 
 Definition add_zero_r_spec (n: Nats): Type := 
-	{{forall (addres: Nats_u), (add_rel (⌊ n -⌋) Zero_u addres) -> (addres = (⌊ n -⌋))}}. 
+	{{exists (addres: Nats_u), (add_rel (⌊ n -⌋) Zero_u addres) /\ (addres = (⌊ n -⌋))}}. 
 #[global] Hint Unfold add_zero_r_spec : lia_unfold.
 Theorem add_zero_r (n: Nats): add_zero_r_spec n. 
 Proof. 
@@ -694,7 +694,7 @@ Proof.
 	buildPackG PeanoNats__sub PeanoNats__sub_rel PeanoNats__sub__PeanoNats__sub_rel PeanoNats__sub_rel_funct. 
 Defined.
 Definition add_sub_spec (m: Nats) (n: Nats): Type := 
-	{{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (PeanoNats__subres: Nats_u), (PeanoNats__sub_rel addres (⌊ n -⌋) PeanoNats__subres) -> (PeanoNats__subres = (⌊ m -⌋)))}}. 
+	{{exists (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) /\ (exists (PeanoNats__subres: Nats_u), (PeanoNats__sub_rel addres (⌊ n -⌋) PeanoNats__subres) /\ (PeanoNats__subres = (⌊ m -⌋)))}}. 
 #[global] Hint Unfold add_sub_spec : lia_unfold.
 Theorem add_sub (m: Nats) (n: Nats): add_sub_spec m n. 
 Proof. 
@@ -706,8 +706,8 @@ Proof.
 		induction n as [(*Suc*) n IH_n | (*Zero*) ]. 
 		  -- intros . 
 			pose proof (IH_n (ltac: (try clear IH_n; 
-	solver))) as H_61903511. 
-			simpl in H_61903511. 
+	solver))) as H_10940881. 
+			simpl in H_10940881. 
 			refine (subsumptionCast _ _ 
 		(add_suc_r 
 		(subsumptionCast Nats_u (fun (m: Nats_u) => ((Nats_wf m) /\ True)) 
@@ -724,8 +724,8 @@ Proof.
 		induction n as [(*Suc*) n IH_n | (*Zero*) ]. 
 		  -- intros . 
 			pose proof (IH_n (ltac: (try clear IH_n; 
-	solver))) as H_38815771. 
-			simpl in H_38815771. 
+	solver))) as H_20387318. 
+			simpl in H_20387318. 
 			refine (subsumptionCast _ _ 
 		(add_suc_r 
 		(subsumptionCast Nats_u (fun (m: Nats_u) => ((Nats_wf m) /\ True)) Zero (ltac: (solver))) 
@@ -839,7 +839,7 @@ Proof.
 	buildPackG mult mult_rel mult__mult_rel mult_rel_funct. 
 Defined.
 Definition add_dist_rmult_spec (m: Nats) (n: Nats) (o: Nats): Type := 
-	{{forall (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) -> (forall (multres: Nats_u), (mult_rel addres (⌊ o -⌋) multres) -> (forall (mult_res_2: Nats_u), (mult_rel (⌊ n -⌋) (⌊ o -⌋) mult_res_2) -> (forall (mult_res_3: Nats_u), (mult_rel (⌊ m -⌋) (⌊ o -⌋) mult_res_3) -> (forall (add_res_2: Nats_u), (add_rel mult_res_3 mult_res_2 add_res_2) -> (multres == add_res_2)))))}}. 
+	{{exists (addres: Nats_u), (add_rel (⌊ m -⌋) (⌊ n -⌋) addres) /\ (exists (multres: Nats_u), (mult_rel addres (⌊ o -⌋) multres) /\ (exists (mult_res_2: Nats_u), (mult_rel (⌊ n -⌋) (⌊ o -⌋) mult_res_2) /\ (exists (mult_res_3: Nats_u), (mult_rel (⌊ m -⌋) (⌊ o -⌋) mult_res_3) /\ (exists (add_res_2: Nats_u), (add_rel mult_res_3 mult_res_2 add_res_2) /\ (multres == add_res_2)))))}}. 
 #[global] Hint Unfold add_dist_rmult_spec : lia_unfold.
 Theorem add_dist_rmult (m: Nats) (n: Nats) (o: Nats): add_dist_rmult_spec m n o. 
 Proof. 
@@ -858,8 +858,8 @@ Proof.
 		(subsumptionCast Nats_u (fun (o: Nats_u) => ((Nats_wf o) /\ True)) 
 		(mult 
 		(exist (fun (m: Nats_u) => ((Nats_wf m) /\ True)) n (ltac: (solver))) 
-		(exist (fun (n: Nats_u) => ((Nats_wf n) /\ True)) o (ltac: (solver)))) (ltac: (solver)))) as H_77751195. 
-		simpl in H_77751195. 
+		(exist (fun (n: Nats_u) => ((Nats_wf n) /\ True)) o (ltac: (solver)))) (ltac: (solver)))) as H_61130524. 
+		simpl in H_61130524. 
 		refine (subsumptionCast _ _ 
 		(IH_m (ltac: (try clear IH_m; 
 	solver)) n (ltac: (try clear IH_m; 
@@ -941,7 +941,7 @@ Proof.
 Qed. 
 #[global] Hint Resolve one_rel_mk : f_rel_funct_db.
 Definition sub_self_spec (m: Nats) (n: Nats): Type := 
-	{{forall (eqNres: bool), (eqN_rel (⌊ m -⌋) (⌊ n -⌋) eqNres) -> (forall (PeanoNats__subres: Nats_u), (PeanoNats__sub_rel (⌊ m -⌋) (⌊ n -⌋) PeanoNats__subres) -> ((is_true eqNres) -> (PeanoNats__subres = Zero_u)))}}. 
+	{{exists (eqNres: bool), (eqN_rel (⌊ m -⌋) (⌊ n -⌋) eqNres) /\ (exists (PeanoNats__subres: Nats_u), (PeanoNats__sub_rel (⌊ m -⌋) (⌊ n -⌋) PeanoNats__subres) /\ ((is_true eqNres) -> (PeanoNats__subres = Zero_u)))}}. 
 #[global] Hint Unfold sub_self_spec : lia_unfold.
 Theorem sub_self (m: Nats) (n: Nats): sub_self_spec m n. 
 Proof. 
