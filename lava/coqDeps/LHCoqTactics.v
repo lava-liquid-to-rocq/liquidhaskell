@@ -810,6 +810,11 @@ Ltac specialize_hyp h :=
       let v := fresh "v_" in
       let vdef := fresh "v_def_" in
       destruct h as [v [vdef ?]]
+    | exists (w:?T), (?f_rel_ap w) => 
+      neq_fail T Prop; isRelAppl f_rel_ap;
+      let v := fresh "v_" in
+      let vdef := fresh "v_def_" in
+      destruct h as [v vdef]
     | forall (w:?T), (?f_rel_ap w) -> _ => 
       neq_fail T Prop;
       (* idtac "found hypothesis to potentially specialize " h " with variable " w " of type " T; *)
@@ -1090,20 +1095,58 @@ Ltac assert_wit v pred wit_name := (* idtac "assert_wit" v pred wit_name; *)
           (unfold pred; simpl; try first [clear pred | subst pred]; first [quick_wff_wit | quick_simpl; unify_vars; try (specialize_hyps; try unify_vars); try quicksolve; (*print_proof_state;*) timeout 10 unshelve eauto 50 with solver_db])
   end)); subst pred; simpl in wit_name.
 
+Ltac assert_ho_relAp frel uargs vRes :=
+  match goal with
+  | [f_frel : (forall (args : ArgList ?argTps) (v: ?T), ⌊ ?f args -⌋ = v <->
+  frel (prArgList args ?uargTps _) v) |- _] => 
+    let z := fresh "z" in
+    refine (let z: projectsArgListT argTps uargTps := ltac:(quicksolve) in _);
+    let args := fresh "args" in
+    let args_def := fresh "args_def" in
+    unshelve refine (let args : {args:ArgList argTps | prArgList args uargTps z = uargs} := 
+      ltac:(subst z; synthesize_args) in _); simpl in args; subst z;
+    destruct args as [args args_def];
+    pose (exist _ (⌊ f args -⌋) eq_refl) as vRes;
+    let res_def := fresh "res_def" in
+    destruct vRes as [vRes res_def];
+    rewrite (f_frel args) in res_def;
+    match type of res_def with
+    | frel ?tm vRes => 
+      match type of args_def with
+      | ?tm2 = _ => 
+        replace tm with tm2 in res_def by solve_pi_unif_subgoal
+      end
+    end;
+    try rewrite args_def in res_def; try clear args_def args;
+    idtac "Proven new relation about local function and asserted it as " vRes
+  end.
+
+
 (* takes a function f and an unrefined value v, constructs an appropriate refinement t (with witness wit_name) of v and poses f t as Res *)
 Tactic Notation "mk_ref_arg" constr(f) constr(v) ident(wit_name) ident(Res) := 
   (* idtac "mk_ref_arg" f v wit_name Res; *)
-  let dom_ref := fresh "dom_ref" in
-  get_dom_ref f dom_ref;
-  (* idtac "get_dom_ref" f dom_ref "returned"; *)
+  match v with
+  | _ ::U nilU => fail "higher order case in mk_ref_arg"
+  | _ => 
+    let dom_ref := fresh "dom_ref" in
+    get_dom_ref f dom_ref;
+    (* idtac "get_dom_ref" f dom_ref "returned"; *)
 
-  assert_wit v dom_ref wit_name;
-  (* idtac "assert_wit" v dom_ref wit_name "returned"; *)
-  pose (Res := (f (exist _ v wit_name))); try subst wit_name (*; simpl_proj*).
+    assert_wit v dom_ref wit_name;
+    (* idtac "assert_wit" v dom_ref wit_name "returned"; *)
+    pose (Res := (f (exist _ v wit_name))); try subst wit_name (*; simpl_proj*)
+  end.
 
 Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
   match ts with
   | _nil => return Res f
+  | ?uargs _::_ _nil => match uargs with
+    | _ ::U _ => idtac
+    end;
+    match goal with
+    | [f_frel: forall (args: ArgList ?argTps) (v: ?T), ⌊ f args -⌋ = v <-> ?frel _ v |- _] =>
+      assert_ho_relAp frel uargs Res
+    end
   | ?t _::_ ?tl => 
     let temp_ := fresh "temp_" in
     let wff_lem := fresh "wit_" in
@@ -1144,10 +1187,20 @@ Tactic Notation "recreate_var" constr(relApp) ident(vRes) :=
     let temp := fresh "temp" in
     let v := fresh "v_" in 
     let v_def := fresh "v_def_" in
-    assert (exists v, relApp v) as temp by (solve [try timeout 2 repeat nonbranching_destruct; now unshelve (eexists _; rconstructor)]);
+    assert (exists v, relApp v) as temp by (solve [
+      now unshelve (eexists _; rconstructor)
+    | timeout 10 repeat nonbranching_destruct; 
+      now unshelve (eexists _; rconstructor)
+    ]);
     destruct temp as [vRes v_def]
   | _ ?v => isVar v; match goal with
     | [def: ⌊ ?tm -⌋ = v |- _] => pose (exist _ v ⌈ tm ⌉) as vRes
+    end
+  | ?frel ?uargs =>
+    match type of frel with
+    | forall (_:UArgList ?uargTps) (_:?T), Prop =>
+      let fAppl_res := fresh "fAppl_res" in
+      assert_ho_relAp frel uargs fAppl_res
     end
   | _ =>
     let fAppl_res := fresh "fAppl_res" in
@@ -1180,6 +1233,24 @@ Ltac instExistGoal :=
     let v := fresh "v_" in 
     recreate_var relAp v;
     exists v; try assumption
+  | |- exists (w:_), ?relAp w => isRelAppl relAp;
+    (* inversion_precheck_tm relAp;*)
+    now unshelve (eexists _;
+    econstructor; 
+    try match goal with
+    | [h: ?relAp ?v |- ?relAp ?v] => exact h
+    end;
+    try assumption; cleanup_pack_stuff; simpl;
+    match goal with
+    | |- ?frelAp _ => isRelAppl frelAp;
+      let v_ := fresh "v_" in
+      recreate_var frelAp v_;
+      solve [unshelve eassumption]
+    end)
+  | |- ?frel ?uargs _ => localIsRel frel;
+    let fAppl_res := fresh "fAppl_res" in
+    assert_ho_relAp frel uargs fAppl_res;
+    apply fAppl_res
   end.
 
 (* create variables to instantiate hypothesis *)
@@ -1189,30 +1260,8 @@ Ltac instantiate_hyp :=
   | [ih: forall (z: Z), addZ_rel ?s ?t z -> _ |- _] => simpl_specialize ih (s + t)
   | [ih: forall (z: Z), subZ_rel ?s ?t z -> _ |- _] => simpl_specialize ih (s - t)
   | [h: forall (w:?T), ?frel ?uargs w -> ?rtp |- _] => 
-    match goal with
-    | [f_frel : (forall (args : ArgList ?argTps) (v: T), ⌊ ?f args -⌋ = v <->
-    frel (prArgList args ?uargTps _) v) |- _] => 
-      let z := fresh "z" in
-      refine (let z: projectsArgListT argTps uargTps := ltac:(quicksolve) in _);
-      let args := fresh "args" in
-      let args_def := fresh "args_def" in
-      unshelve refine (let args : {args:ArgList argTps | prArgList args uargTps z = uargs} := 
-        ltac:(subst z; synthesize_args) in _); simpl in args; subst z;
-      destruct args as [args args_def];
-      let vRes := fresh "vRes" in
-      pose (exist _ (⌊ f args -⌋) eq_refl) as vRes;
-      let res_def := fresh "res_def" in
-      destruct vRes as [vRes res_def];
-      rewrite (f_frel args) in res_def;
-      match type of res_def with
-      | frel ?tm vRes => 
-        match type of args_def with
-        | ?tm2 = _ => 
-          replace tm with tm2 in res_def by solve_pi_unif_subgoal
-        end
-      end;
-      try rewrite args_def in res_def; try clear args_def args
-    end
+    let vRes := fresh "vRes" in
+    assert_ho_relAp frel uargs vRes
   | [ih: forall (w:?T), ?f_rel_ap w -> ?rtp |- _] => 
     isRelAppl f_rel_ap; 
     tryif (match goal with

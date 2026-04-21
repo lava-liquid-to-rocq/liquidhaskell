@@ -1101,10 +1101,10 @@ Proof.
 	induction l as [(*App2*) ds_d2zp l IH_l | (*Emp2*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ (IH_l (ltac: (try clear IH_l; 
-	solver))) _); 
-		solver.  
+	solver))) _).
+		solver.
 	  - intros . 
-		refine (exist _ unit _); 
+		refine (exist _ unit _).
 		solver.  
 Qed. 
 Definition length_unzip_2_spec (l: L2): Type := 
@@ -1226,7 +1226,58 @@ Proof.
 	induction l as [(*App*) x xs IH_xs | (*Emp*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ (IH_xs (ltac: (try clear IH_xs; 
-	solver)) f) _); 
+	solver)) f) _).
+    cleanup.
+    
+    match type of frel with
+    | forall (_:UArgList ?uargTps) (_:?T), Prop =>
+      match goal with
+      | [f_frel: forall (args: ArgList ?argTps) (v: T), ⌊ ?f args -⌋ = v <-> frel _ v |- _] =>
+        let fAppl_res := fresh "fAppl_res" in
+        assert_ho_relAp frel (x ::U nilU) fAppl_res
+      end
+    end.
+    recreate_var (frel (x ::U nilU)) Res.
+    assert_ho_relAp frel (x ::U nilU) Res.
+    match goal with
+  | [f_frel : (forall (args : ArgList ?argTps) (v: ?T), ⌊ ?f args -⌋ = v <->
+  frel (prArgList args ?uargTps _) v) |- _] => 
+    let z := fresh "z" in
+    refine (let z: projectsArgListT argTps uargTps := ltac:(quicksolve) in _);
+    let args := fresh "args" in
+    let args_def := fresh "args_def" in
+    unshelve refine (let args : {args:ArgList argTps | prArgList args uargTps z = x ::U nilU} := 
+      ltac:(subst z; synthesize_args) in _); simpl in args; subst z;
+    destruct args as [args args_def];
+    let vRes := fresh "vRes" in
+    pose (exist _ (⌊ f args -⌋) eq_refl) as vRes;
+    let res_def := fresh "res_def" in
+    destruct vRes as [vRes res_def];
+    rewrite (f_frel args) in res_def;
+    match type of res_def with
+    | frel ?tm vRes => 
+      match type of args_def with
+      | ?tm2 = _ => 
+        replace tm with tm2 in res_def by solve_pi_unif_subgoal
+      end
+    end;
+    try rewrite args_def in res_def; try clear args_def args
+  end.
+
+    match goal with
+    | |- ?frel ?uargs _ => isRelAppl frel;
+      let v_ := fresh "v_" in
+      recreate_var (frel uargs) v_
+      (*mkRefAppl f0 uargs v_*)
+    end.
+    recreate_refined_term (frel x ::U nilU) Res.
+    cleanup. simpl.
+    cleanup_pack_stuff. simpl.
+    cleanup.
+unfold rel_u. simpl.
+    
+unshelve solver.
+    recreate_var (map_rel {| rel_u := frel; funct_u := funct |} (App_u x xs)) Res.
 		solver.  
 	  - intros . 
 		refine (exist _ unit _); 
