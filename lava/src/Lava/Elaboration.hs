@@ -192,7 +192,7 @@ wfDecls γ (Data tc constrs : decls) = do
       return (insertTC (tc, γtc') γi, (ci, tpi') : dcs)
     checkFOandTC :: RefType -> Either TypeError ()
     checkFOandTC tp =
-      let (args, (_, tc', _)) = second fromRefType $ arrs tp
+      let (args, (_, tc', _)) = arrs tp
        in if any ((\case RefType {} -> False; _ -> True) . snd) args
             then Left . WfErr $ "The constructor type" <+> pPrint tp <+> "is higher-order, which is forbidden"
             else when (tc' /= TC tc) . Left . WfErr $ "The constructor type" <+> pPrint tp <+> "must return a refinement of" <+> text tc
@@ -200,7 +200,7 @@ wfDecls γ (Data tc constrs : decls) = do
 wfDecls γ (Definition f tpf e isRefl : decls) = do
   tpf' <- wfRefType γ tpf
   let γf = insertRecVar (f, tpf') γ
-  let (args, ret) = arrs tpf'
+  let (args, ret) = second mkRefType $ arrs tpf'
   let γfargs = insertLocalVars args γf
   let initBrPat = map (\(x, tpx) -> Param x (arity tpx)) args
   e' <- checkExpr γfargs initBrPat (removeRedundantMatches e) ret
@@ -332,7 +332,7 @@ checkExpr γ _ (Reft r) tp = Reft <$> checkReft γ r tp
 checkExpr γ state (Let x (Just tpx) ex e) tp = do
   _ <- wfRefType γ tp -- check that tp does not depend on x
   tpx' <- wfRefType γ tpx
-  let (args, ret) = arrs tpx'
+  let (args, ret) = second mkRefType $ arrs tpx'
   let γx = insertLocalVars args γ
   ex' <- checkExpr γx state ex ret
   let γ' = insertLocalVar (x, tpx') γ
@@ -385,7 +385,7 @@ checkExpr γ state e0@(Case r branches _) tp = do
       tpc <- lookupDC c γ
       -- Replace the binders in tpc by the names of the match in ys
       let tpcRenamed = renameParams (map fst ys) tpc
-          (argsc, (_, tc, _)) = second fromRefType $ arrs tpcRenamed
+          (argsc, (_, tc, _)) = arrs tpcRenamed
           -- Variables of ys that are of type tc and can thus be used for induction
           potentialInductives = concatMap (\case (xi, RefType _ tc' _) | tc' == tc && isJust matchedParamAndPos -> [xi]; _ -> []) argsc
           -- We look for applications where one of the potentialInductives can be
@@ -430,6 +430,8 @@ checkExpr γ state e0@(Case r branches _) tp = do
               (tp'', indVars2) = instRecRefType (delete x inds) tp'
            in (ArrType x tpx' tp'', indVars1 `Set.union` indVars2)
 
+        -- NOTE: we should be able to check that the recursive call is supported: for
+        -- this, the arguments at the Destructed positions must be equal to what is in the IH
         instRecReft :: [Id] -> Reft -> (Reft, Set Id)
         instRecReft inds tm = case tm of
           (Var {}; StringLit _; IntLit _; FloatLit _; DC _) -> (tm, Set.empty)
@@ -498,7 +500,7 @@ checkExpr γ state e0@(Case r branches _) tp = do
     instantiateAllIndVars :: ((Id, [(Id, Bool)]), Maybe Expr) -> Either TypeError ((Id, [(Id, Bool)]), Maybe Expr)
     instantiateAllIndVars ((c, ys), e) = do
       tpc <- lookupDC c γ
-      let (argsc, (_, tc, _)) = second fromRefType $ arrs tpc
+      let (argsc, (_, tc, _)) = arrs tpc
           inductives = map (\case (_, RefType _ tc' _) -> tc' == tc; (_, ArrType {}) -> False) argsc
           ys' = zip (map fst ys) inductives
       return ((c, ys'), e)

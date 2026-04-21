@@ -164,7 +164,7 @@ wfDecl tc alts =
     mkBranch :: (Id, RefType) -> ([(Id, [Id])], CoqTerm)
     mkBranch (c, tp) = ([(unrefinedConstrName c, map fst args)], mkAnd (retRefT : map argProp args))
       where
-        (args, (vv, _, retRef)) = second fromRefType . arrs . removeFOArgProjs $ harmonizeBinderNames tp
+        (args, (vv, _, retRef)) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
         -- Proposition for the refinement of the return type, with C x1 … xn in the refinement
         retRefT = utrReftProp (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef)
         -- Proposition for each argument
@@ -209,10 +209,9 @@ mkPseudoConstr tc (c, tp) =
     Coq.Definition c argsT retT bodyConstr Transparent
   ]
   where
-    (args, ret) = arrs tp
-    (x, _, retRef) = fromRefType ret
+    (args, ret@(x, _, retRef)) = arrs tp
     argsT = map ((,False) . second trRefType) args
-    retT = trRefType ret
+    retT = trRefType (mkRefType ret)
     -- C proj(x1) … proj(xn) (in LH), that translates to C_u proj1_sig(x1) … proj1_sig(x_n)
     unrefCrApp = foldl LH.App (DC c) (map mkProj $ tpArgsArLoc tp)
     bodyLem = ProofBody [Custom "repeat first [split; solver]"]
@@ -323,8 +322,8 @@ mkFuncData name tpf body =
       injArgs = map injArg args
     }
   where
-    (args, ret) = arrs tpf
-    (retName, _, _) = fromRefType ret
+    (args, ret0@(retName, _, _)) = arrs tpf
+    ret = mkRefType ret0
     projArg (x, ArrType {}) = Project (Coq.Var x)
     projArg (x, _) = Coq.Var x
     injArg (x, ArrType {}) = Coq.Var x

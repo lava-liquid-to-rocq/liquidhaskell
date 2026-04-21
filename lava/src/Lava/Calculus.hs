@@ -187,12 +187,11 @@ mkProj (Inj r _) = r
 mkProj (Sub r _ _) = mkProj r
 mkProj r = Proj r
 
--- ** Destructions
+-- | Make a refinement type
+mkRefType :: (Id, BaseType, Reft) -> RefType
+mkRefType (x, a, r) = RefType x a r
 
--- | Extracts the elements out of a RefType constructor and raises an error for another type
-fromRefType :: RefType -> (Id, BaseType, Reft)
-fromRefType (RefType x tp r) = (x, tp, r)
-fromRefType _ = error "RefType expected"
+-- ** Destructions
 
 -- | Extracts the elements out of an ArrType and raises an error for another type
 fromArrType :: RefType -> (Id, RefType, RefType)
@@ -211,8 +210,8 @@ defaultRef :: BaseType -> RefType
 defaultRef tp = RefType "VV" tp ttTm
 
 -- | arrs(R) := (x_i:R_i)_{i ≤ n} -> R' where n is maximal
-arrs :: RefType -> ([(Id, RefType)], RefType)
-arrs tp@(RefType {}) = ([], tp)
+arrs :: RefType -> ([(Id, RefType)], (Id, BaseType, Reft))
+arrs (RefType x a r) = ([], (x, a, r))
 arrs (ArrType x tpx tp) = ((x, tpx) :) `first` arrs tp
 
 -- | tpArgs(x_i:R_i|r_i)_{i ≤ n} -> R) = [x_i]_{i ≤ n}
@@ -580,9 +579,8 @@ instance Pretty Expr where
       ppPat (c, ys) = text c <+> hsep (map (text . fst) ys)
 
 instance Pretty Reft where
-  pPrintPrec _ _ (Var x ar loc) = text x <> char '/' <> parens (pPrint loc)
   -- pPrintPrec _ _ (Var x ar loc) = text x <> char '/' <> parens (integer ar <> comma <> pPrint loc)
-  -- pPrintPrec _ _ (Var x _ _) = text x
+  pPrintPrec _ _ (Var x _ _) = text x
   pPrintPrec _ _ (StringLit s) = quotes $ text s
   pPrintPrec _ _ (IntLit i) = integer i
   pPrintPrec _ _ (FloatLit f) = double f

@@ -1,6 +1,3 @@
-Fix induction: in the call to the IH we must remove all the arguments tht are at the position of the parameters that have been destructed *at the creation* of the IH
-  -> add file in ICFP repo to describe how we translate recursive calls and matches
-
 Change return type of arrs to ([RefType], (Id, BaseType, Reft))
 
 Software foundations: fix generation of hints

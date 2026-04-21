@@ -69,7 +69,7 @@ utrDC c = unrefinedConstrName c
 utrRefType :: LH.RefType -> RocqType
 utrRefType (RefType _ tp _) = trBaseType tp
 utrRefType tp@(ArrType {}) =
-  let (argsUT, retUT) = bimap (map (utrRefType . snd)) utrRefType $ arrs tp
+  let (argsUT, retUT) = bimap (map (utrRefType . snd)) (utrRefType . mkRefType) $ arrs tp
    in UPack (UArgListT argsUT) retUT
 
 -- | Translation of refinement types at top-level (with arrows)
@@ -239,7 +239,7 @@ trRefType tp@(ArrType {}) =
        tpx = cleanupSubst substs tpx_
        rx = subst substs rx_ -}
     (args, ret) = arrs tp
-    (x, tpx, rx) = fromSubset $ trRefType ret
+    (x, tpx, rx) = fromSubset . trRefType $ mkRefType ret
     argsT = map (second trRefType) args
     argTps = ArgListT argsT
     uargTps = UArgListT $ map (utrRefType . snd) args
@@ -261,7 +261,7 @@ trRefTypeTop (ArrType x tpx tp) = Coq.FAType (x, trRefType tpx) (trRefTypeTop tp
 trRefTypeSplit :: LH.RefType -> ([(Id, RocqType)], RocqType)
 trRefTypeSplit tp =
   let (args, ret) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
-   in (concatMap (splitIfFO . second trRefType) args, trRefType ret)
+   in (concatMap (splitIfFO . second trRefType) args, trRefType $ mkRefType ret)
   where
     splitIfFO (x, Subset _ tpx p) = [(x, tpx), (subsetWitnessNm x, Prop p)]
     splitIfFO argT = [argT]
