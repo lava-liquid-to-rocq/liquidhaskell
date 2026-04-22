@@ -1201,7 +1201,61 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
   | ?t _::_ ?tl => 
     let temp_ := fresh "temp_" in
     let wff_lem := fresh "wit_" in
-    mk_ref_arg f t wff_lem temp_;
+    first [
+      mk_ref_arg f t wff_lem temp_
+    | let dom_ref := fresh "dom_ref" in
+      get_dom_ref f dom_ref;
+      let claim := fresh "claim" in
+      let claimRefl := fresh "claimRefl" in
+      pose (dom_ref t) as claim;
+      assRefl claim as claimRefl; 
+      unfold dom_ref in claimRefl; simpl in claimRefl; 
+      match type of claimRefl with
+      | ?tp = _ => clear claimRefl; 
+        match tp with
+        | (?wf ?x /\ ?p) /\ ?q =>
+          let t_wit := fresh "t_wit" in 
+          first [
+            assert_wit x (fun x => wf x /\ p /\ q) t_wit
+          | match goal with
+            | [h: ?relAp x |- _] => 
+              isRelAppl relAp; 
+              (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
+              let g_ts := fresh "g_ts" in
+              get_f_ts relAp g_ts; 
+              let gAppl := fresh "gAppl" in
+              let tempEq := fresh "tempEq" in
+              assRefl g_ts as tempEq;
+              match type of tempEq with
+              | (?g, ?ts) = _ => clear tempEq;
+                mkRefAppl g ts gAppl
+              end;
+              let gAppl_wit := fresh "gAppl_wit" in
+              pose proof ⌈ gAppl ⌉ as gAppl_wit;
+              assert tp as t_wit by (split_hyps; unify_vars; quicksolve)
+            end
+          ]
+        end
+        | ?tp' => match goal with
+          | [h: ?relAp t |- _] => 
+            isRelAppl relAp; 
+            (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
+            let g_ts := fresh "g_ts" in
+            get_f_ts relAp g_ts; 
+            let gAppl := fresh "gAppl" in
+            let tempEq := fresh "tempEq" in
+            assRefl g_ts as tempEq;
+            match type of tempEq with
+            | (?g, ?ts) = _ => clear tempEq;
+              mkRefAppl g ts gAppl
+            end;
+            let gAppl_wit := fresh "gAppl_wit" in
+            pose proof ⌈ gAppl ⌉ as gAppl_wit
+          | _ => idtac (* "Let's just hope we can prove the refinement anyways" *)
+          end;
+          assert tp' as t_wit by (split_hyps; unify_vars; quicksolve)
+      end
+    ];
     (* idtac "mk_ref_arg returned"; *)
     let temp_2 := fresh "temp_2" in
     assRefl temp_ as temp_2;
