@@ -349,9 +349,7 @@ trRecCall indVar state args =
 mkMatching :: (Maybe Expr -> [Tactic]) -> Reft -> [((Id, [(Id, Bool)]), Maybe Expr)] -> Maybe [Id] -> Tactic
 -- mkMatching _ tm alts genVars | traceFunc "mkMatching" [pPrint tm, pPrint alts, pPrint genVars] = undefined
 mkMatching trans tm alts genVars =
-  case genVars of
-    Just genVars' -> Induction (mkProject $ trReft tm) (map trAlt alts) genVars'
-    Nothing -> Coq.Destruct (mkProject $ trReft tm) (map trAlt alts)
+  Coq.Destruct (mkProject $ trReft tm) (map trAlt alts) genVars
   where
     -- Translation of the branches using the parametrized function
     trAlt ((c, ys), e) = (c, (ysDesPat ys e, trans e))
