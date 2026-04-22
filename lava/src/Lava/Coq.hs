@@ -641,7 +641,7 @@ instance Pretty CoqTerm where
     maybeParens (p > 0) $ "if" <+> pPrint r <+> "then" <+> pPrint s <+> "else" <+> pPrint t
   pPrintPrec _ p (Let x tp s t) =
     maybeParens (p > 0) $ sep [
-      "let" <+> maybe (text x) (\tp' -> pPrintArg ((x, tp'), False)) tp <+> ":=",
+      "let" <+> maybe (text x) (\tp' -> text x <> colon <+> pPrint tp') tp <+> ":=",
       pPrint s <+> "in", pPrint t]
   pPrintPrec _ _ (InlineInstance fields) =
     sep ["{|", sep . punctuate semi $ map (\(field, val) -> text field <+> ":=" <+> pPrint val) fields, "|}"]
