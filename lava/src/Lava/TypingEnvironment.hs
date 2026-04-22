@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 -- | ILH typing contexts
 module Lava.TypingEnvironment where
 
@@ -6,18 +8,19 @@ import qualified Data.Map.Strict as Map
 import Data.Set (fromList)
 import Lava.Calculus
 import Lava.Names (Id, freshVar)
+import Text.PrettyPrint.HughesPJClass
 
 data TypeError
-  = WfErr String
-  | CheckingErr String
-  | SynErr String
-  | SubstErr String
-  | SubtypingErr String
-  | LookupErr String
-  | SmpTpErr String
+  = WfErr Doc
+  | CheckingErr Doc
+  | SynErr Doc
+  | SubstErr Doc
+  | SubtypingErr Doc
+  | LookupErr Doc
+  | SmpTpErr Doc
 
-instance Show TypeError where
-  show te = case te of
+instance Pretty TypeError where
+  pPrint te = case te of
     WfErr err -> aux "Well-formedness" err
     CheckingErr err -> aux "Type checking" err
     SynErr err -> aux "Type synthesis" err
@@ -26,8 +29,9 @@ instance Show TypeError where
     LookupErr err -> aux "Environment lookup" err
     SmpTpErr err -> aux "Simple type checking" err
     where
-      aux kind err = "—— " ++ kind ++ " failed with error: " ++ err ++ " ——"
+      aux kind err = "——" <+> kind <+> "failed with error:" <+> err <+> "——"
 
+-- For recursive variables, the inductive variable and state are not used
 data Image
   = ΓVar Localization RefType
   | ΓTC [(Id, RefType)]
@@ -72,7 +76,7 @@ changeRecToGlobal :: Id -> TypEnv -> Either TypeError TypEnv
 changeRecToGlobal f γ =
   case Map.lookup f γ of
     Just (ΓVar (Recursive {}) tp) -> return $ Map.adjust (const $ ΓVar Global tp) f γ
-    _ -> Left . LookupErr $ "Variable " ++ f ++ " is not recursive in the environment."
+    _ -> Left . LookupErr $ "Variable" <+> text f <+> "is not recursive in the environment"
 
 adjust :: (Image -> Image) -> Id -> TypEnv -> TypEnv
 adjust = Map.adjust
@@ -89,19 +93,19 @@ lookupVar :: Id -> TypEnv -> Either TypeError (Localization, RefType)
 lookupVar x γ =
   case Map.lookup x γ of
     Just (ΓVar loc tp) -> return (loc, tp)
-    _ -> Left . LookupErr $ "Variable " ++ show x ++ " not bound in context"
+    _ -> Left . LookupErr $ "Variable" <+> text x <+> "not bound in context"
 
 lookupTC :: Id -> TypEnv -> Either TypeError [(Id, RefType)]
 lookupTC x γ =
   case Map.lookup x γ of
     Just (ΓTC tpTC) -> return tpTC
-    _ -> Left . LookupErr $ "Type " ++ show x ++ " not bound in context"
+    _ -> Left . LookupErr $ "Type" <+> text x <+> "not bound in context"
 
 lookupDC :: Id -> TypEnv -> Either TypeError RefType
 lookupDC x γ =
   case Map.foldr findTypes [] γ of
     [tp] -> return tp -- Data constructor identifiers must be unique across type constructors
-    _ -> Left . LookupErr $ "Constructor " ++ show x ++ " not bound in context"
+    _ -> Left . LookupErr $ "Constructor" <+> text x <+> "not bound in context"
   where
     findTypes :: Image -> [RefType] -> [RefType]
     findTypes (ΓTC alts) acc =

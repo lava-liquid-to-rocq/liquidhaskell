@@ -165,7 +165,7 @@ wfDecl tc alts =
     mkBranch :: (Id, RefType) -> ([(Id, [Id])], CoqTerm)
     mkBranch (c, tp) = ([(unrefinedConstrName c, map fst args)], mkAnd (retRefT : map argProp args))
       where
-        (args, (vv, _, retRef)) = second fromRefType . arrs . removeFOArgProjs $ harmonizeBinderNames tp
+        (args, (vv, _, retRef)) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
         -- Proposition for the refinement of the return type, with C x1 … xn in the refinement
         retRefT = utrReftProp (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef)
         -- Proposition for each argument
@@ -210,10 +210,9 @@ mkPseudoConstr tc (c, tp) =
     Coq.Definition c argsT retT bodyConstr Transparent
   ]
   where
-    (args, ret) = arrs tp
-    (x, _, retRef) = fromRefType ret
+    (args, ret@(x, _, retRef)) = arrs tp
     argsT = map ((,False) . second trRefType) args
-    retT = trRefType ret
+    retT = trRefType (mkRefType ret)
     -- C proj(x1) … proj(xn) (in LH), that translates to C_u proj1_sig(x1) … proj1_sig(x_n)
     unrefCrApp = foldl LH.App (DC c) (map mkProj $ tpArgsArLoc tp)
     bodyLem = ProofBody [Custom "repeat first [split; solver]"]
@@ -324,8 +323,8 @@ mkFuncData name tpf body =
       injArgs = map injArg args
     }
   where
-    (args, ret) = arrs tpf
-    (retName, _, _) = fromRefType ret
+    (args, ret0@(retName, _, _)) = arrs tpf
+    ret = mkRefType ret0
     projArg (x, ArrType {}) = Project (Coq.Var x)
     projArg (x, _) = Coq.Var x
     injArg (x, ArrType {}) = Coq.Var x
@@ -344,7 +343,7 @@ traceDC s tc dc = trace ("Defining " ++ s ++ "(" ++ tc ++ "." ++ dc ++ ")") Fals
 
 -- | Translation of a definition `f` to the refined definition `f` (defined with tactics)
 trDefRefDef :: FuncData -> Coq.Decl
-trDefRefDef f | traceF "trDefRefDef" f = undefined
+-- trDefRefDef f | traceF "trDefRefDef" f = undefined
 trDefRefDef f =
   -- FIX: for a constant, the type for the pack is wrong (see PeanoNats.one_pack)
   Coq.Definition (name f) (map (,False) (argsT f)) (retT f) (ProofBody tacs) Transparent
@@ -721,10 +720,11 @@ relMkLemma f = [refRelMkLem, AddHint ResolveHint (relDefMkLemName $ name f) Grap
 packInstance :: FuncData -> [Coq.Decl]
 -- packInstance f | traceF "packInstance" f = undefined
 packInstance f =
-  [TacInstance (packInstanceName $ name f) (trRefType $ tpf f) def | firstOrder]
+  [TacInstance (packInstanceName $ name f) (trRefType $ tpf f) def | firstOrder, arrowType]
   where
     def = Custom $ unwords ["buildPackG", name f, relDefName $ name f, relDefThmName $ name f, funcHoodLemName $ name f]
     firstOrder = all (\case (_, RefType {}) -> True; (_, ArrType {}) -> False) (args f)
+    arrowType = case tpf f of ArrType {} -> True; RefType {} -> False
 
 -- ** Utility functions
 
@@ -740,19 +740,21 @@ mkIndSkel (Case r alts genVars) specIHs =
 mkIndSkel (LH.Let _ _ _ e) specIHs = mkIndSkel e specIHs
 mkIndSkel (Reft r) specIhs =
   mkConcat $
-    if specIhs then [] else Custom "fix_notations" : [poseIHCall call | call <- ihCalls] ++ [Try $ Clear indhyp | indhyp <- allIHs]
+    if specIhs
+      then Custom "fix_notations" : [poseIHCall call | call <- ihCalls] ++ [Try $ Clear indhyp | indhyp <- allIHs]
+      else []
   where
     -- translation of recursive calls
-    ihCalls = map (\(indVar, pats, args) -> trRecCall indVar pats args) $ findRecCalls r
+    ihCalls = map (\(indVar, state, args) -> trRecCall indVar state args) $ findRecCalls r
     -- all induction hypotheses used
     allIHs = map (\(indVar, _, _) -> ihName indVar) $ findRecCalls r
     poseIHCall ihCall = ProofPose ("IH_" ++ hashName ihCall) ihCall
 
-    findRecCalls :: Reft -> [(Id, BranchPattern, [Reft])]
-    findRecCalls (LH.Var _ _ (Recursive indVar pats)) = [(indVar, pats, [])]
+    findRecCalls :: Reft -> [(Id, [DesState], [Reft])]
+    findRecCalls (LH.Var _ _ (Recursive indVar state)) = [(indVar, state, [])]
     findRecCalls r'@(LH.App {}) =
       case apps r' of
-        (LH.Var _ _ (Recursive indVar pats), args) -> [(indVar, pats, args)]
+        (LH.Var _ _ (Recursive indVar state), args) -> [(indVar, state, args)]
         _ -> []
     findRecCalls (LH.Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = []
     findRecCalls (LH.Neg r') = findRecCalls r'

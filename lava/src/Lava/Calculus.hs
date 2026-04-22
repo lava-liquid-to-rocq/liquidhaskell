@@ -71,7 +71,9 @@ data Expr
   | -- | Pattern matching (includes conditionals), with Maybe for optional branches.
     --   The boolean in the list of parameters is true if the parameter is inductive
     --   and we are destructing one of the parameters of the function
-    Case Reft [((Id, [(Id, Bool)]), Maybe Expr)] [Id]
+    --   The last element indicates if the case must be translated to
+    --   destruct (Nothing) or induction, in which case we have the list of variables to generalize
+    Case Reft [((Id, [(Id, Bool)]), Maybe Expr)] (Maybe [Id])
   deriving (Data, Show)
 
 -- | Simple LH terms including formulas.
@@ -106,13 +108,11 @@ data Reft
 -- (this is used to clean up unused IHs) and the current branch pattern
 --
 -- loc ::= L | G | Y (x, σ)
-data Localization = Local | Global | Recursive Id BranchPattern deriving (Data, Eq, Show)
+data Localization = Local | Global | Recursive Id [DesState] deriving (Data, Eq, Show)
 
--- | Branch pattern: patterns of the current branch obtained
--- by destructing the parameters of the function.
--- This is an additional parameter of many of the typing functions, and is
--- necessary for the translation of case and recursive applications with tactics
-type BranchPattern = [Reft]
+-- | State of the parameters: either intact (with name and arity) or destructed
+-- This state is used to elaborate pattern matching and recursive variables, and to translate recursive calls
+data DesState = Param Id Integer | Destructed deriving (Data, Eq, Show)
 
 -- | Builtin binary operators (@op@)
 data Bop
@@ -189,12 +189,11 @@ mkProj (Inj r _) = r
 mkProj (Sub r _ _) = mkProj r
 mkProj r = Proj r
 
--- ** Destructions
+-- | Make a refinement type
+mkRefType :: (Id, BaseType, Reft) -> RefType
+mkRefType (x, a, r) = RefType x a r
 
--- | Extracts the elements out of a RefType constructor and raises an error for another type
-fromRefType :: RefType -> (Id, BaseType, Reft)
-fromRefType (RefType x tp r) = (x, tp, r)
-fromRefType _ = error "RefType expected"
+-- ** Destructions
 
 -- | Extracts the elements out of an ArrType and raises an error for another type
 fromArrType :: RefType -> (Id, RefType, RefType)
@@ -213,8 +212,8 @@ defaultRef :: BaseType -> RefType
 defaultRef tp = RefType "VV" tp ttTm
 
 -- | arrs(R) := (x_i:R_i)_{i ≤ n} -> R' where n is maximal
-arrs :: RefType -> ([(Id, RefType)], RefType)
-arrs tp@(RefType {}) = ([], tp)
+arrs :: RefType -> ([(Id, RefType)], (Id, BaseType, Reft))
+arrs (RefType x a r) = ([], (x, a, r))
 arrs (ArrType x tpx tp) = ((x, tpx) :) `first` arrs tp
 
 -- | tpArgs(x_i:R_i|r_i)_{i ≤ n} -> R) = [x_i]_{i ≤ n}
@@ -576,9 +575,10 @@ instance Pretty Expr where
       ppTp = case tpx of
         Nothing -> text x
         Just tp -> parens (text x <> colon <+> pPrint tp)
-  pPrint (Case r alts _) =
-    vcat $ ("case" <+> pPrint r <+> "of") : map ppAlt alts
+  pPrint (Case r alts genVars) =
+    vcat $ (des <+> pPrint r <+> "of") : map ppAlt alts
     where
+      des = case genVars of Nothing -> "destruct"; Just _ -> "induct"
       ppAlt (pat, e) = sep [char '|' <+> ppPat pat <+> "->", nest identNb $ maybe "undefined" pPrint e]
       ppPat (c, ys) = text c <+> hsep (map (text . fst) ys)
 

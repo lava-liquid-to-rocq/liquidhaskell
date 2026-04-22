@@ -456,7 +456,7 @@ transCaseExpr = recurse []
           Calc.Let x tpx def' tm -> Calc.Let x tpx (transBranchE def') (transBranchE tm)
           _ -> e
         caseOrInduct :: Id -> [Branch] -> Calc.Expr
-        caseOrInduct x brs = Calc.Case (Calc.mkVar x) brs []
+        caseOrInduct x brs = Calc.Case (Calc.mkVar x) brs Nothing
     -- anyIsRec = if isRec || any (maybe False isRecursive . brBody) branches then Calc.Induct [] else Calc.Destruct
 
     -- \| Remove cases from nested matches whose patterns contradict the current branch's pattern in an ambient match

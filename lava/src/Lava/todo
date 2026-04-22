@@ -1,8 +1,8 @@
-Fix induction: in the call to the IH we must remove all the arguments tht are at the position of the parameters that have been destructed *at the creation* of the IH
-
 Change return type of arrs to ([RefType], (Id, BaseType, Reft))
 
 Software foundations: fix generation of hints
+
+Use type of constructor in case?
 
 - fix translated outputs
 

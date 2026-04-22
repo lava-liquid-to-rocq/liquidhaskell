@@ -258,9 +258,8 @@ data Tactic
   = Easy
   | Oracle
   | -- In the branches, the Id is the name of the constructor in the branch (useful for reordering in the order needed by Coq)
-    Destruct {destrExpr :: CoqTerm, destrBranches :: [(Id, (CoqDestrPat, [Tactic]))]}
-  | -- Like in LH, Induction contains the generalized varibles
-    Induction {indTerm :: CoqTerm, indBranches :: [(Id, (CoqDestrPat, [Tactic]))], indGenVars :: [Id]}
+    -- Like in LH, if destrGenVars is Just, we have an induction
+    Destruct {destrExpr :: CoqTerm, destrBranches :: [(Id, (CoqDestrPat, [Tactic]))], destrGenVars :: Maybe [Id]}
   | Exact CoqTerm
   | Admit [Id]
   | Pose Id CoqTerm
@@ -642,7 +641,7 @@ instance Pretty CoqTerm where
     maybeParens (p > 0) $ "if" <+> pPrint r <+> "then" <+> pPrint s <+> "else" <+> pPrint t
   pPrintPrec _ p (Let x tp s t) =
     maybeParens (p > 0) $ sep [
-      "let" <+> maybe (text x) (\tp' -> pPrintArg ((x, tp'), False)) tp <+> ":=",
+      "let" <+> maybe (text x) (\tp' -> text x <> colon <+> pPrint tp') tp <+> ":=",
       pPrint s <+> "in", pPrint t]
   pPrintPrec _ _ (InlineInstance fields) =
     sep ["{|", sep . punctuate semi $ map (\(field, val) -> text field <+> ":=" <+> pPrint val) fields, "|}"]
@@ -662,7 +661,7 @@ instance Show Binop where
   show (Binop Neq kind) = case kind of
     PropBop -> "≠"
     UnrefBop -> "/=?" -- there is no infix notation in Coq for bool-valued equality on Z, so we define one
-    RefBop -> "/=?"
+    RefBop -> "/=Z"
   show (Binop Leq kind) = case kind of
     PropBop -> "<="
     UnrefBop -> "<=?"
@@ -760,8 +759,7 @@ instance Pretty Tactic where
   pPrintPrec _ p (Admit hints) = dotted p $
     around (hsep (punctuate comma (map text hints))) <+> "admit"
     where around hs = if null hints then hs else rocqComment ("hints:" <+> hs)
-  pPrintPrec l p (Destruct tm branches) = pPrintPrecMatch l p tm branches Nothing
-  pPrintPrec l p (Induction tm branches genVars) = pPrintPrecMatch l p tm branches (Just genVars)
+  pPrintPrec l p (Destruct tm branches genVars) = pPrintPrecMatch l p tm branches genVars
   pPrintPrec l p (Exact t) = case t of
     SubCast _ _ (Exist _ tm (CoqProofTerm prf)) (ProofHole _) | prf == "eq_refl" || prf == "I" ->
       refineOracle (Exist TermHole tm (TermWitness TermHole))
@@ -803,22 +801,22 @@ instance Pretty Tactic where
     sep $ dotted p ("assert" <+> pPrintArg ((x, tp), False)) : [braces (pPrintPrec l nodotPrec (Concat tacs)) | not $ null tacs]
 
 -- | Pretty prints destruct or induct.
--- The last argument is Just genVars for induct (with genVars possibly empty)
 pPrintPrecMatch :: PrettyLevel -> Rational -> CoqTerm -> [(Id, (CoqDestrPat, [Tactic]))] -> Maybe [Id] -> Doc
-pPrintPrecMatch l p tm branches ind =
+pPrintPrecMatch l p tm branches genVars =
   let matchTac =
-        if isNothing ind || all (\(_, (pat, tacs)) -> pat == ConjDestrPat [] && null tacs) branches
+        if isNothing genVars || all (\(_, (pat, tacs)) -> pat == ConjDestrPat [] && null tacs) branches
         then "destruct" else "induction"
       -- destruct or induct
       header0 = matchTac <+> pPrint tm <+> "as" <+> pPrint (DisjDestrPat $ map fst branchesSorted)
       -- generalize dependent genVars
-      gendeps genVars =
-        sep . punctuate semi $ map (\x -> "try revert" <+> text (subsetWitnessNm x) <> semi <+> "generalize dependent" <+> text x) genVars
+      gendeps vars =
+        sep . punctuate semi $ map (\x -> "try revert" <+> text (subsetWitnessNm x) <> semi <+> "generalize dependent" <+> text x) vars
       -- destruct/induct, induct with generalized variables, or destruct with eqn:E
       -- In the last case, we update the precedence to print the branches with a concatenation
-      (header, p') = case (ind, tm) of
-        ((Just [], _); (Nothing, Var _)) -> (header0, p)
-        (Just genVars, _) -> (sep $ punctuate semi [gendeps genVars, header0, "intros"], p)
+      -- We take max p concatPrec because if p = nodotPrec, we are in nested concat branches
+      (header, p') = case (genVars, tm) of
+        ((Just [], _); (Nothing, Var _)) -> (header0, max p concatPrec)
+        (Just vars, _) -> (sep $ punctuate semi [gendeps vars, header0, "intros"], max p concatPrec)
         (Nothing, _) -> (sep ["let E := fresh \"E\" in", header0 <+> "eqn:E"], concatPrec)
    in dotted p' header $$ printTacBranches p'
   where
@@ -831,7 +829,7 @@ pPrintPrecMatch l p tm branches ind =
       then dotted p (brackets . sep . punctuate " |" $ map (\(_, tacs) -> pPrintPrec l nodotPrec (mkConcat tacs)) branchesSorted)
       else vcat $ map (\(_, tacs) -> rocqBullet p' <+> sep (map (pPrintPrec l (p' + 1)) tacs)) branchesSorted
 
--- | comparison operator to alphabetically order branches of Induction/Destruct
+-- | comparison operator to alphabetically order branches of Destruct
 ordFunc :: (Id, (CoqDestrPat, [Tactic])) -> (Id, (CoqDestrPat, [Tactic])) -> Ordering
 ordFunc ("true", _) ("false", _) = LT
 ordFunc ("false", _) ("true", _) = GT
@@ -843,8 +841,7 @@ admitted = any containsAdmit
     containsAdmit tac = case tac of
       Admit {} -> True
       Try t -> containsAdmit t
-      Destruct _ cases -> admitted $ concatMap (snd . snd) cases
-      Induction _ cases _ -> admitted $ concatMap (snd . snd) cases
+      Destruct _ cases _ -> admitted $ concatMap (snd . snd) cases
       Assert _ _ t -> containsAdmit t
       Concat ts -> admitted ts
       Branches ts -> admitted ts

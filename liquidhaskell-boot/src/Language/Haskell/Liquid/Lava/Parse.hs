@@ -24,6 +24,7 @@ import Control.Monad (filterM)
 import Data.Bifunctor (first)
 import Data.List (sortOn)
 import Data.Set (fromList)
+import Data.Tuple.Extra (snd3)
 import GHC.Types.Var (Var, varName)
 import qualified Language.Fixpoint.Types as F (Located (..))
 import Language.Haskell.Liquid.Lava.CoreToLH (Def (..))
@@ -72,7 +73,7 @@ parsePData modId (PData cs typConstrs) =
     typeNames = map (\(LhLib.TyConP _ con _ _ _ _ _) -> SLH.showppStripped modId con) typConstrs
     -- find the translated branches corresponding to typeName
     getConstrs :: Id -> [(Id, Calc.RefType)]
-    getConstrs typeName = filter (isConstrOf typeName . Calc.argTp . snd . Calc.arrs . snd) constrs
+    getConstrs typeName = filter (isConstrOf typeName . snd3 . snd . Calc.arrs . snd) constrs
     isConstrOf typeName (Calc.TC n) = n == typeName
     isConstrOf _ (Calc.Builtin _) = False
     -- Assemble typeName and the corresponding translated branches
@@ -99,7 +100,7 @@ getImportFiles examplesFolder potentialImports =
   map (getImportFile examplesFolder) <$> filterImports examplesFolder potentialImports
 
 isLemma :: Calc.RefType -> Bool
-isLemma = (== "()") . typeName . Calc.argTp . snd . Calc.arrs
+isLemma = (== "()") . typeName . snd3 . snd . Calc.arrs
   where
     typeName :: Calc.BaseType -> String
     typeName (Calc.Builtin c) = show c
@@ -126,11 +127,10 @@ parseDef (Def dname _ _ _, Nothing, _) = error $ "Top-level definition or lemma 
 signatureToArgsRet :: Calc.RefType -> ([Calc.RefType], Calc.RefType)
 signatureToArgsRet sig = (args, ret)
   where
-    (sigArgs, sRes) = Calc.arrs sig
+    (sigArgs, (v0, sResTp, sResReft)) = Calc.arrs sig
     names = map fst sigArgs
-    v0 = Calc.argName sRes
     v = freshVar v0 (fromList names)
-    ret = Calc.subst (Calc.mkVar v) v0 . Calc.subst (Calc.mkVar v) (Calc.argName sRes) $ sRes
+    ret = Calc.RefType v sResTp $ Calc.subst (Calc.mkVar v) v0 sResReft
     args = map renameArg sigArgs
     renameArg (n, Calc.RefType x tp reft) = Calc.RefType m tp (Calc.subst (Calc.mkVar m) x reft)
       where

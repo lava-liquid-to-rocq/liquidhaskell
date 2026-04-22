@@ -132,7 +132,7 @@ translateFile writeFlag sinfo arg = do
 
   -- Elaborate of the Calculus declarations before translation
   case elaborate calcSource of
-    Left err -> print err >> return []
+    Left err -> putStrLn (PP.prettyShow err) >> return []
     Right calcSourceElaborated -> do
       putStrLn "––Typechecking and elaboration OK––"
       when writeFlag $ do
