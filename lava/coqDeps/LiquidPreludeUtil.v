@@ -95,9 +95,9 @@ Ltac lia_preprocessor := repeat_or_fail (progress (
 Ltac preprocessor_ b :=
   let inv := fresh "inverted" in
   pose _nil as inv;
-  concat_either (progress cleanup_after_hints_ b) (lia_preprocessor);
+  concat_either (timeout 300 progress cleanup_after_hints_ b) (lia_preprocessor);
   try (inversion_specialization inv);
-  repeat (concat_either (progress cleanup_after_hints) (lia_preprocessor)).
+  repeat (concat_either (timeout 300 progress cleanup_after_hints) (lia_preprocessor)).
 
 Ltac preprocessor := preprocessor_ True.
 
@@ -116,9 +116,9 @@ Ltac solver := repeat first [
   | oracle
   (* | preprocessor_ False; 
     first [lia | finish | preprocessor; first [lia | finish] ] *)
-  | repeat unshelve cleanup_hints; 
+  | fail (* repeat unshelve cleanup_hints; 
     preprocessor; 
-    first [lia | oracle | shelve]
+    first [lia | oracle | shelve] *)
   ].
 *)
 Ltac solver_loop :=
@@ -126,7 +126,7 @@ Ltac solver_loop :=
     concat_either (quicksolve) (
       progress concat_either (
         simpl in *; (*try timeout 2 repeat nonbranching_destruct;*)
-        timeout 1200 cleanup_after_hints) (
+        timeout 600 cleanup_after_hints) (
         lia_preprocessor
         (*concat_either (lia_preprocessor) (split_hyps)*)
       )
@@ -135,7 +135,7 @@ Ltac solver_loop :=
 
 Ltac solver := simpl in *; solve [
     solver_loop; progress saturate_context; solver_loop
-    | idtac ""; idtac "Falling back to saturating_solver"; saturating_solver].
+    | idtac ""; idtac "Falling back to saturating_solver"; fail (*saturating_solver *)].
 #[global] Hint Extern 20 () => solver : solver_db. 
 
 Ltac unsaturating_solver := first [
