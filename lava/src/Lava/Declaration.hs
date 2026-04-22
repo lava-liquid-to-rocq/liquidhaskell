@@ -739,7 +739,9 @@ mkIndSkel (Case r alts genVars) specIHs =
 mkIndSkel (LH.Let _ _ _ e) specIHs = mkIndSkel e specIHs
 mkIndSkel (Reft r) specIhs =
   mkConcat $
-    if specIhs then [] else Custom "fix_notations" : [poseIHCall call | call <- ihCalls] ++ [Try $ Clear indhyp | indhyp <- allIHs]
+    if specIhs
+      then Custom "fix_notations" : [poseIHCall call | call <- ihCalls] ++ [Try $ Clear indhyp | indhyp <- allIHs]
+      else []
   where
     -- translation of recursive calls
     ihCalls = map (\(indVar, state, args) -> trRecCall indVar state args) $ findRecCalls r

@@ -21,7 +21,7 @@ import Data.List (isSuffixOf, sortBy, stripPrefix, unsnoc)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (isNothing)
 -- import Debug.Trace (trace)
-import Lava.Calculus (appPrec, arrPrec, traceFunc)
+import Lava.Calculus (appPrec, arrPrec)
 import Lava.Names
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
