@@ -1206,8 +1206,6 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
     let temp_ := fresh "res_" in
     let wff_lem := fresh "wit_" in
     first [
-      mk_ref_arg f t wff_lem temp_
-    | 
       let t_wit := fresh "t_wit" in 
       let dom_ref := fresh "dom_ref" in
       get_dom_ref f dom_ref;
@@ -1217,8 +1215,36 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
       assRefl claim as claimRefl; 
       unfold dom_ref in claimRefl; simpl in claimRefl; 
       match type of claimRefl with
-      | ?tp = _ => clear claimRefl; 
+      | ?tp = _ => clear claimRefl; idtac "claim we need to prove in order to synthesize refined version of argument: " tp;
         match tp with
+        | _ => 
+          match goal with
+          | [h: ?relAp t |- _] => 
+            isRelAppl relAp; 
+            (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
+            let g_ts := fresh "g_ts" in
+            get_f_ts relAp g_ts; 
+            let gAppl := fresh "gAppl" in
+            let tempEq := fresh "tempEq" in
+            let gAppl_wit := fresh "gAppl_wit" in
+            let rw := fresh "rw" in
+            assRefl g_ts as tempEq;
+            match type of tempEq with
+            | (?g, ?ts) = _ => clear tempEq;
+              mkRefAppl g ts gAppl;
+              pose proof ⌈ gAppl ⌉ as gAppl_wit;
+              assert (⌊ gAppl -⌋ = t) as rw by ( 
+                let temp := fresh "temp" in
+                lookupRwLem g temp;
+                simpl in temp;
+                apply temp; assumption)
+            end;
+            rewrite rw in gAppl_wit;
+            let witTp := type of gAppl_wit in
+            idtac witTp;
+            assert tp as t_wit by (try apply gAppl_wit; 
+              quick_simpl; try split_hyps; try unify_vars; quicksolve)
+          end
         | (?wf ?x /\ ?p) /\ ?q =>
           first [
             assert_wit x (fun x => wf x /\ p /\ q) t_wit
@@ -1247,36 +1273,13 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
               assert tp as t_wit by (quick_simpl; try split_hyps; try unify_vars; quicksolve)
             end
           ]
+        | _ => 
+          tryif (assert tp as t_wit by (quick_simpl; try split_hyps; try unify_vars; quicksolve)) then
+            idtac else fail "No known way to prove the refinement of " tp
         end
-        | ?tp' => match goal with
-          | [h: ?relAp t |- _] => 
-            isRelAppl relAp; 
-            (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
-            let g_ts := fresh "g_ts" in
-            get_f_ts relAp g_ts; 
-            let gAppl := fresh "gAppl" in
-            let tempEq := fresh "tempEq" in
-            let gAppl_wit := fresh "gAppl_wit" in
-            let rw := fresh "rw" in
-            assRefl g_ts as tempEq;
-            match type of tempEq with
-            | (?g, ?ts) = _ => clear tempEq;
-              mkRefAppl g ts gAppl;
-              pose proof ⌈ gAppl ⌉ as gAppl_wit;
-              assert (⌊ gAppl -⌋ = t) as rw by ( 
-                let temp := fresh "temp" in
-                lookupRwLem g temp;
-                simpl in temp;
-                apply temp; assumption)
-            end;
-            rewrite rw in gAppl_wit;
-            let witTp := type of gAppl_wit in
-            idtac witTp
-          | _ => idtac "No obvious way to prove the refinement of " tp' (* "Let's just hope we can prove the refinement anyways" *)
-          end;
-          assert tp' as t_wit by (quick_simpl; try split_hyps; try unify_vars; quicksolve)
       end;
       pose (f (exist dom_ref t t_wit)) as temp_
+    | mk_ref_arg f t wff_lem temp_
     ];
     (* idtac "mk_ref_arg returned"; *)
     let temp_2 := fresh "temp_2" in
