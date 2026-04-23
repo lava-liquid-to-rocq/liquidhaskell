@@ -39,8 +39,8 @@ out/Benchmark/PLE/MonoidMaybe.v
 #
 #
 out/Benchmark/RBinsToBins.v
-out/Benchmark/PeanoNats.v
 # out/Benchmark/Half.v
+out/Benchmark/PeanoNats.v
 out/Benchmark/PLE/Append.v
 out/Benchmark/SoftwareFoundations.v
 out/Benchmark/Overview.v

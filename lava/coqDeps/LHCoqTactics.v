@@ -1203,13 +1203,13 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
       end
     end
   | ?t _::_ ?tl => 
-    let temp_ := fresh "res_" in
+    let f_t__res_ := fresh "f_t__res_" in
     let wff_lem := fresh "wit_" in
 
     match t with
-    | ⌊ ?tm -⌋ => pose tm as temp_
+    | ⌊ ?tm -⌋ => pose (f tm) as f_t__res_
     | packPr_proj ?pack => (* idtac "pack argument case in mkRefAppl: " pack; *)
-      pose (f pack) as temp_
+      pose (f pack) as f_t__res_
     | _ => 
       let t_wit := fresh "t_wit" in 
       (* prevent nameclashes with witnesses from recursive calls that use fresh to figure out a name *)
@@ -1233,28 +1233,29 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
             (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
             let g_ts := fresh "g_ts" in
             get_f_ts relAp g_ts; 
-            let gAppl := fresh "gAppl" in
             let tempEq := fresh "tempEq" in
-            let gAppl_wit := fresh "gAppl_wit" in
-            let rw := fresh "rw" in
             assRefl g_ts as tempEq;
             match type of tempEq with
             | (?g, ?ts) = _ => clear tempEq;
+              tryif (_contains t ts) then fail else idtac;
+              let gAppl := fresh "gAppl" in
               mkRefAppl g ts gAppl;
               (* idtac "Generated refined term " gAppl " for argument " t ".";*)
+              let gAppl_wit := fresh "gAppl_wit" in
               pose proof ⌈ gAppl ⌉ as gAppl_wit;
+              let rw := fresh "rw" in
               assert (⌊ gAppl -⌋ = t) as rw by ( 
                 let temp := fresh "temp" in
                 lookupRwLem g temp;
                 simpl in temp;
-                apply temp; assumption)
-            end;
-            rewrite rw in gAppl_wit;
-            (* let witTp := type of gAppl_wit in
-            idtac "witTp: " witTp ", tp: " tp; *)
-            clear t_wit;
-            assert tp as t_wit by (try apply gAppl_wit; 
-              quick_simpl; try split_hyps; try unify_vars; quicksolve)
+                apply temp; assumption);
+              rewrite rw in gAppl_wit;
+              (* let witTp := type of gAppl_wit in
+              idtac "witTp: " witTp ", tp: " tp; *)
+              clear t_wit;
+              assert tp as t_wit by (try apply gAppl_wit; 
+                quick_simpl; try split_hyps; try unify_vars; quicksolve)
+            end
           end
         | (?wf ?x /\ ?p) /\ ?q =>
           first [
@@ -1264,16 +1265,17 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
               (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
               let g_ts := fresh "g_ts" in
               get_f_ts relAp g_ts; 
-              let gAppl := fresh "gAppl" in
               let tempEq := fresh "tempEq" in
               assRefl g_ts as tempEq;
               match type of tempEq with
               | (?g, ?ts) = _ => clear tempEq;
+                tryif (_contains x ts) then fail else idtac;
+                let gAppl := fresh "gAppl" in
                 mkRefAppl g ts gAppl;
                 (*idtac "Generated refined term " gAppl " for axiomatized subterm " x " of argument " t ".";*)
                 let gAppl_wit := fresh "gAppl_wit" in
-                let rw := fresh "rw" in
                 pose proof ⌈ gAppl ⌉ as gAppl_wit;
+                let rw := fresh "rw" in
                 assert (⌊ gAppl -⌋ = x) as rw by ( 
                   let temp := fresh "temp" in
                   lookupRwLem g temp;
@@ -1292,12 +1294,12 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
         end
       end;
       idtac "Created witness " t_wit " for argument " t " of graph relation for " f;
-      pose (f (exist dom_ref t t_wit)) as temp_
+      pose (f (exist dom_ref t t_wit)) as f_t__res_
     end;
 
     (* idtac "mk_ref_arg returned"; *)
     let temp_2 := fresh "temp_2" in
-    assRefl temp_ as temp_2;
+    assRefl f_t__res_ as temp_2;
     match type of temp_2 with
     | ?fapp = _ => clear temp_2;
       (* idtac "Recursing in mkRefAppl with function " fapp " and arguments " tl;*)
@@ -1421,15 +1423,8 @@ Ltac simplInstExistGoal :=
     recreate_var relAp v;
     exists v; try first [
       assumption
-    | let resRefl := fresh "resRefl" in
-      assRefl v as resRefl;
-      match type of resRefl with
-      | ?res = _ => clear resRefl;
-        match goal with
-        | [res_def: ?relAp res |- _] => isRelAppl relAp;
-          try non_branching_inversion res_def
-        end
-      end]
+    | idtac "Couldn't discharge defining constraint of formerly existentially quantified variable " v "!";
+      try easy ]
   | |- exists (w:_), ?relAp w => isRelAppl relAp;
     (* inversion_precheck_tm relAp;*)
     now unshelve (eexists _;
@@ -2058,6 +2053,14 @@ Ltac lia_preprocessor_step := match goal with
         end;
         idtac "Unified variables " u " and " v " using inversion to prove their equality."
     end
+    | |- exists v, ?relAp v => isRelAppl relAp; isVar v;
+      idtac "Final desperate attempt to solve existential using eexists and oracle to solve subgoals";
+      first [
+        instExistGoal
+      | solve [unshelve (eexists _;
+        econstructor; try match goal with
+        | [h: ?tp _ |- ?tp _] => apply h
+        end; timeout 30 unshelve oracle)]]
   end.
 
 Ltac eager_oracle :=

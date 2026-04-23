@@ -941,7 +941,9 @@ Proof.
 Qed. 
 #[global] Hint Resolve one_rel_mk : f_rel_funct_db.
 Definition sub_self_spec (m: Nats) (n: Nats): Type := 
-	{{exists (eqNres: bool), (eqN_rel (⌊ m -⌋) (⌊ n -⌋) eqNres) /\ (exists (PeanoNats__subres: Nats_u), (PeanoNats__sub_rel (⌊ m -⌋) (⌊ n -⌋) PeanoNats__subres) /\ ((is_true eqNres) -> (PeanoNats__subres = Zero_u)))}}. 
+	{{exists (eqNres: bool), (eqN_rel (⌊ m -⌋) (⌊ n -⌋) eqNres) /\ (is_true eqNres ->
+    (exists (PeanoNats__subres: Nats_u), (PeanoNats__sub_rel (⌊ m -⌋) (⌊ n -⌋) PeanoNats__subres) 
+      /\ ((PeanoNats__subres = Zero_u))))}}. 
 #[global] Hint Unfold sub_self_spec : lia_unfold.
 Theorem sub_self (m: Nats) (n: Nats): sub_self_spec m n. 
 Proof. 
@@ -959,10 +961,10 @@ Proof.
 			solver.  
 		  -- intros . 
 			refine (exist _ unit _); 
-			solver.   
+			solver. 
 	  - intros . 
-		refine (exist _ unit _); 
-		solver.  
+		  refine (exist _ unit _);
+		  solver. 
 Qed. 
 Definition two_spec: Type := 
 	Nats. 

@@ -445,6 +445,7 @@ Ltac shape_based := match goal with
         assert (c -> False) as temp by (intro; repeat shape_based; fast_done); right |
         assert (d -> False) as temp by (intro; repeat shape_based; fast_done); left];
       clear temp
+  (*| |- exists v, ?relAp v => solve [unshelve (eexists _; econstructor; assumption)]*)
   | |- _ => intro
   end.
 

@@ -170,3 +170,15 @@ Notation " ↼ tm" := (injref tm (ltac:(solver))) (at level 1).
 Ltac f__f_rel_mk := unfold proj; unfold refinement_proj; 
   (*unfold packProj; unfold packPr; *)
   first [ intros; now autorewrite with f_rel_funct_db | solver].
+
+Ltac preInstExist :=
+  simpl in *;
+  quick_simpl;
+  repeat progress autounfold with lia_unfold in *;
+  simpl_proj; 
+  try cleanup_pack_stuff; try unpack_all; try cleanup_pack_stuff;
+  try remove_refined;
+  quick_simpl; 
+  repeat unfold rel_u in *;
+  simpl_proj; 
+  try unify_vars.

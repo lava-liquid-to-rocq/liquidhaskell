@@ -1337,15 +1337,15 @@ Definition allzero_spec (lq_tmp0: Nibble): Type :=
 Definition allzero (lq_tmp0: Nibble): allzero_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
-	induction lq_tmp0 as [(*Bits*) ds_d5TQ ds_d5TR ds_d5TS ds_d5TT]. 
+	induction lq_tmp0 as [(*Bits*) ds_d5wi ds_d5wj ds_d5wk ds_d5wl]. 
 	  - intros . 
-		induction ds_d5TQ as [(*B0*)  | (*B1*) ]. 
+		induction ds_d5wi as [(*B0*)  | (*B1*) ]. 
 		  -- intros . 
-			induction ds_d5TR as [(*B0*)  | (*B1*) ]. 
+			induction ds_d5wj as [(*B0*)  | (*B1*) ]. 
 			  --- intros . 
-				induction ds_d5TS as [(*B0*)  | (*B1*) ]. 
+				induction ds_d5wk as [(*B0*)  | (*B1*) ]. 
 				  ---- intros . 
-					induction ds_d5TT as [(*B0*)  | (*B1*) ]. 
+					induction ds_d5wl as [(*B0*)  | (*B1*) ]. 
 					  ----- intros . 
 						refine (subsumptionCast _ _ SFTrue _); 
 						solver.  
@@ -2007,7 +2007,7 @@ Proof.
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d5Tn IH_ds_d5Tn]. 
+	induction n as [(*O*)  | (*S*) ds_d5vP IH_ds_d5vP]. 
 	  - intros . 
 		refine (subsumptionCast _ _ O _); 
 		solver.  
@@ -2016,19 +2016,19 @@ Proof.
 		  -- intros . 
 			refine (subsumptionCast _ _ 
 		(S 
-		(exist (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) ds_d5Tn (ltac: (solver)))) _); 
+		(exist (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) ds_d5vP (ltac: (solver)))) _); 
 			solver.  
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(IH_ds_d5Tn (ltac: (try clear IH_ds_d5Tn; 
-	solver)) m' (ltac: (try clear IH_ds_d5Tn; 
+		(IH_ds_d5vP (ltac: (try clear IH_ds_d5vP; 
+	solver)) m' (ltac: (try clear IH_ds_d5vP; 
 	solver))) _); 
 			solver.   
 Defined. 
 Inductive minus_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) := 
 	 | minus_O: (forall m , minus_rel O_u m O_u)
-	 | minus_S_O: (forall ds_d5Tn , minus_rel (S_u ds_d5Tn) O_u (S_u ds_d5Tn))
-	 | minus_S_S: (forall ds_d5Tn m' , forall (minusres: MyNat_u), (minus_rel ds_d5Tn m' minusres) -> (minus_rel (S_u ds_d5Tn) (S_u m') minusres)). 
+	 | minus_S_O: (forall ds_d5vP , minus_rel (S_u ds_d5vP) O_u (S_u ds_d5vP))
+	 | minus_S_S: (forall ds_d5vP m' , forall (minusres: MyNat_u), (minus_rel ds_d5vP m' minusres) -> (minus_rel (S_u ds_d5vP) (S_u m') minusres)). 
 #[global] Hint Constructors minus_rel : core_hint_db.
 #[global] Instance minus_lookup_rel : dictionary rel minus := { 
 	lookup' := minus_rel
@@ -2039,7 +2039,7 @@ Inductive minus_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) :=
 Theorem minus_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: minus_rel n m VV) (K: minus_rel n m VV') , VV = VV'). 
 Proof. 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d5Tn IH_ds_d5Tn]; 
+	induction n as [(*O*)  | (*S*) ds_d5vP IH_ds_d5vP]; 
 	intros ; 
 	[| 
 	induction m as [(*O*)  | (*S*) m' IH_m']; 
@@ -2052,12 +2052,12 @@ Proof.
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite minus_O_lem : f_rel_back.
-Theorem minus_S_O_lem (ds_d5Tn: _): (minus_rel (S_u ds_d5Tn) O_u (S_u ds_d5Tn)) <-> True. 
+Theorem minus_S_O_lem (ds_d5vP: _): (minus_rel (S_u ds_d5vP) O_u (S_u ds_d5vP)) <-> True. 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite minus_S_O_lem : f_rel_back.
-Theorem minus_S_S_lem (ds_d5Tn: _) (m': _) (minusres: MyNat_u) (h_43612209: minus_rel ds_d5Tn m' minusres): (minus_rel (S_u ds_d5Tn) (S_u m') minusres) <-> True. 
+Theorem minus_S_S_lem (ds_d5vP: _) (m': _) (minusres: MyNat_u) (h_43612209: minus_rel ds_d5vP m' minusres): (minus_rel (S_u ds_d5vP) (S_u m') minusres) <-> True. 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
@@ -2067,18 +2067,18 @@ Proof.
 	Opaque minus.
 	existence_lemma_pre minus; 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d5Tn IH_ds_d5Tn]; 
+	induction n as [(*O*)  | (*S*) ds_d5vP IH_ds_d5vP]; 
 	intros ; 
 	[fix_notations| 
 	induction m as [(*O*)  | (*S*) m' IH_m']; 
 	intros ; 
 	[fix_notations; 
-	try clear IH_ds_d5Tn| 
+	try clear IH_ds_d5vP| 
 	fix_notations; 
-	pose proof (IH_ds_d5Tn (ltac: (try clear IH_ds_d5Tn; 
-	solver)) m' (ltac: (try clear IH_ds_d5Tn; 
-	solver))) as IH_72709590; 
-	try clear IH_ds_d5Tn; 
+	pose proof (IH_ds_d5vP (ltac: (try clear IH_ds_d5vP; 
+	solver)) m' (ltac: (try clear IH_ds_d5vP; 
+	solver))) as IH_56864764; 
+	try clear IH_ds_d5vP; 
 	try clear IH_m']]; 
 	simpl in *. 
 	Transparent minus.
@@ -2141,12 +2141,12 @@ Definition minustwo_spec (lq_tmp0: MyNat): Type :=
 Definition minustwo (lq_tmp0: MyNat): minustwo_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
-	induction lq_tmp0 as [(*O*)  | (*S*) ds_d5TN IH_ds_d5TN]. 
+	induction lq_tmp0 as [(*O*)  | (*S*) ds_d5wf IH_ds_d5wf]. 
 	  - intros . 
 		refine (subsumptionCast _ _ O _); 
 		solver.  
 	  - intros . 
-		induction ds_d5TN as [(*O*)  | (*S*) n' IH_n']. 
+		induction ds_d5wf as [(*O*)  | (*S*) n' IH_n']. 
 		  -- intros . 
 			refine (subsumptionCast _ _ O _); 
 			solver.  
@@ -2634,112 +2634,7 @@ Proof.
 	simpl in H_36979607. 
 	refine (subsumptionCast _ _ 
 		(mult_n_O 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)))) _).
-  simpl in *.
-  unfold mult_n_O_spec in *. unfold mult_n_0_m_0_spec in *.
-  simpl in *.
-  repeat unshelve cleanup_hints.
-  quick_simpl;
-  repeat progress autounfold with lia_unfold in *;
-  simpl_proj;
-  try cleanup_pack_stuff. try unpack_all. try cleanup_pack_stuff.
-  try remove_refined. 
-
-  repeat unfold rel_u in *;
-  simpl_proj; (* repeat progress autounfold with lia_unfold in *; repeat progress autorewrite with lia_rewrites in *; *)
-  try unify_vars.
-  instExistGoal.
-  instExistGoal.
-  instExistGoal.
-  instExistGoal.
-
-  (* mkRefAppl mult (p _::_ O_u _::_ _nil) gAppl. *)
-  let temp_ := fresh "res_" in
-  let wff_lem := fresh "wit_" in
-
-  let t_wit := fresh "t_wit" in 
-  (* prevent nameclashes with witnesses from recursive calls that use fresh to figure out a name *)
-  pose I as t_wit;
-  let dom_ref := fresh "dom_ref" in
-  get_dom_ref mult dom_ref;
-  let claim := fresh "claim" in
-  let claimRefl := fresh "claimRefl" in
-  pose (dom_ref v_) as claim;
-  assRefl claim as claimRefl; 
-  unfold dom_ref in claimRefl; simpl in claimRefl. clear claimRefl.
-  (*idtac "claim we need to prove in order to synthesize refined version of argument: " tp;*)
-
-  let t_wit_g := fresh "t_wit" in 
-  assert (MyNat_wf p /\ True) as t_wit_g by (quick_simpl; try split_hyps; try unify_vars; quicksolve);
-  idtac "Created witness " t_wit_g " for argument p of graph relation for mult.";
-  pose (mult (exist dom_ref p t_wit_g)) as temp_.
-  let temp_2 := fresh "temp_2" in
-    assRefl temp_ as temp_2;
-    match type of temp_2 with
-    | ?fapp = _ => clear temp_2;
-      (* idtac "Recursing in mkRefAppl with function " fapp " and arguments " tl;*)
-      mkRefAppl fapp (O_u _::_ _nil) Res
-    end.
-  (*mkRefAppl mult (p _::_ O_u _::_ _nil) gAppl.*)
-
-  (* try (match goal with
-      | [h: ?relAp v_ |- _] => 
-        isRelAppl relAp; 
-        (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
-        let g_ts := fresh "g_ts" in
-        get_f_ts relAp g_ts; 
-        let gAppl := fresh "gAppl" in
-        let tempEq := fresh "tempEq" in
-        let gAppl_wit := fresh "gAppl_wit" in
-        let rw := fresh "rw" in
-        assRefl g_ts as tempEq;
-        match type of tempEq with
-        | (?g, ?ts) = _ => clear tempEq;
-          mkRefAppl g ts gAppl;
-          idtac "Generated refined term " gAppl " for argument " t ".";
-          pose proof ⌈ gAppl ⌉ as gAppl_wit;
-          assert (⌊ gAppl -⌋ = t) as rw by ( 
-            let temp := fresh "temp" in
-            lookupRwLem g temp;
-            simpl in temp;
-            apply temp; assumption)
-        end;
-        rewrite rw in gAppl_wit;
-        let witTp := type of gAppl_wit in
-        idtac "witTp: " witTp ", tp: (MyNat_wf v_ /\ True)";
-        clear t_wit;
-        assert tp as t_wit by (try apply gAppl_wit; 
-          quick_simpl; try split_hyps; try unify_vars; quicksolve)
-      end).
-  idtac "Created witness " t_wit " for argument " v_ " of graph relation for " f;
-  pose (mult (exist dom_ref v_ t_wit)) as temp_. *)
-
-  mkRefAppl plus (v_ _::_ O_u _::_ _nil) res.
-  match goal with
-  | |- exists (w:_), ?relAp w => isRelAppl relAp;
-    let v := fresh "v_" in 
-    recreate_var relAp v;
-    exists v; try assumption
-  end.
-  instExistGoal.
-  match goal with
-  
-  | [h: exists v, ?relAp v /\ _ |- exists (w:_), ?relAp w] => isRelAppl relAp;
-    let v := fresh "v_" in 
-    let v_def := fresh "v_def_" in 
-    destruct h as [v [v_def ?]];
-    exists v; apply v_def
-  end.
-  instExistGoal.
-  instExistGoal.
-; repeat instExistGoal)
-    (specialize_hyps; try unify_vars));
-  try timeout 1 simpl_loop.
-  try quick_simple_cleanup_steps.
-  try initial_simple_cleanup_steps.
-  cleanup.
-  cleanup_after_hints.
-instExistGoal. 
+		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)))) _); 
 	solver. 
 Qed. 
 Definition mult_n_Sm_spec (n: MyNat) (m: MyNat): Type := 
@@ -2809,7 +2704,7 @@ Definition plus_1_neq_0_spec (n: MyNat): Type :=
 Theorem plus_1_neq_0 (n: MyNat): plus_1_neq_0_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
-	induction n as [(*O*)  | (*S*) ds_d5T8 IH_ds_d5T8]. 
+	induction n as [(*O*)  | (*S*) ds_d5vA IH_ds_d5vA]. 
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
@@ -5562,12 +5457,12 @@ Definition isred_spec (c: Color): Type :=
 Definition isred (c: Color): isred_spec c. 
 Proof. 
 	destruct c as [c c_p]. 
-	induction c as [(*Black*)  | (*Primary*) ds_d5TZ | (*White*) ]. 
+	induction c as [(*Black*)  | (*Primary*) ds_d5wr | (*White*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ SFFalse _); 
 		solver.  
 	  - intros . 
-		induction ds_d5TZ as [(*Blue*)  | (*Green*)  | (*Red*) ]. 
+		induction ds_d5wr as [(*Blue*)  | (*Green*)  | (*Red*) ]. 
 		  -- intros . 
 			refine (subsumptionCast _ _ SFFalse _); 
 			solver.  
