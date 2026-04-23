@@ -1203,11 +1203,13 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
       end
     end
   | ?t _::_ ?tl => 
-    let temp_ := fresh "temp_" in
+    let temp_ := fresh "res_" in
     let wff_lem := fresh "wit_" in
     first [
       mk_ref_arg f t wff_lem temp_
-    | let dom_ref := fresh "dom_ref" in
+    | 
+      let t_wit := fresh "t_wit" in 
+      let dom_ref := fresh "dom_ref" in
       get_dom_ref f dom_ref;
       let claim := fresh "claim" in
       let claimRefl := fresh "claimRefl" in
@@ -1218,7 +1220,6 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
       | ?tp = _ => clear claimRefl; 
         match tp with
         | (?wf ?x /\ ?p) /\ ?q =>
-          let t_wit := fresh "t_wit" in 
           first [
             assert_wit x (fun x => wf x /\ p /\ q) t_wit
           | match goal with
@@ -1274,7 +1275,8 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
           | _ => idtac "No obvious way to prove the refinement of " tp' (* "Let's just hope we can prove the refinement anyways" *)
           end;
           assert tp' as t_wit by (quick_simpl; try split_hyps; try unify_vars; quicksolve)
-      end
+      end;
+      pose (f (exist dom_ref t t_wit)) as temp_
     ];
     (* idtac "mk_ref_arg returned"; *)
     let temp_2 := fresh "temp_2" in

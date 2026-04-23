@@ -3907,8 +3907,8 @@ Definition test_factorial1_spec: Type :=
 #[global] Hint Unfold test_factorial1_spec : lia_unfold.
 Theorem test_factorial1: test_factorial1_spec. 
 Proof. 
-	refine (exist _ unit _).
-  solver. 
+	refine (exist _ unit _); 
+	solver. 
 Qed. 
 Definition test_mult1_spec: Type := 
 	{{exists (multres: MyNat_u), (mult_rel (⌊ three -⌋) (⌊ three -⌋) multres) /\ (multres = (⌊ nine -⌋))}}. 
