@@ -1189,6 +1189,16 @@ Tactic Notation "mk_ref_arg" constr(f) constr(v) ident(wit_name) ident(Res) :=
     pose (Res := (f (exist _ v wit_name))); try subst wit_name (*; simpl_proj*)
   end.
 
+Ltac refTmToRef f rtm utm resWit :=
+  pose proof ⌈ rtm ⌉ as resWit;
+  let rw := fresh "rw" in
+  assert (⌊ rtm -⌋ = utm) as rw by ( 
+    let temp := fresh "temp" in
+    lookupRwLem f temp;
+    simpl in temp;
+    apply temp; assumption);
+  rewrite rw in resWit.
+
 Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
   match ts with
   | _nil => return Res f
@@ -1289,7 +1299,72 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
           ]
         | _ => 
           clear t_wit;
-          tryif (assert tp as t_wit by (quick_simpl; try split_hyps; try unify_vars; quicksolve)) then
+          tryif (assert tp as t_wit by (
+            quick_simpl; try split_hyps; try unify_vars; 
+            first [quicksolve | 
+            
+            match goal with
+            | |- exists (w:_), ?relAp w /\ _ => isRelAppl relAp;
+              let v := fresh "v_" in 
+              let f_ts := fresh "Res" in
+              get_f_ts relAp f_ts; 
+
+              (* idtac "calling mkRefAppl_res" f_res tail_res fAppl_res; try mkRefAppl_res f_res tail_res fAppl_res; *)
+              let temp3 := fresh "temp3" in
+              assRefl f_ts as temp3;
+              match type of temp3 with
+              | (?f, ?ts) = _ => (* idtac "f:=" f;*) clear temp3; mkRefAppl f ts v
+              end; try clear f_ts;
+              exists v; split; [assumption|]
+            end; 
+            quick_simpl; try first [ lia | timeout 5 quicksolve];
+            repeat match goal with
+            | |- ?f ?s ?t => isVar s; idtac s; try subst s
+            | |- ?f ?s ?t => isVar t; idtac t; try subst t
+            end;
+            simpl in *;
+            try timeout 10 quicksolve;
+            repeat nonbranching_invert_axiomatizations;
+            autorewrite with lia_rewrites;
+            (let res := fresh "res" in
+            match goal with
+            | [h: ?relAp ?v |- ?f ?s ?t] => eq_fail v s isRelAppl relAp;
+              let f_ts := fresh "Res" in
+              get_f_ts relAp f_ts; 
+
+              (* idtac "calling mkRefAppl_res" f_res tail_res fAppl_res; try mkRefAppl_res f_res tail_res fAppl_res; *)
+              let temp3 := fresh "temp3" in
+              assRefl f_ts as temp3;
+              match type of temp3 with
+              | (?f, ?ts) = _ => (* idtac "f:=" f;*) clear temp3; mkRefAppl f ts res
+              end; try clear f_ts;
+              let res_wit := fresh "res_wit" in
+              pose proof ⌈ res ⌉ as res_wit;
+              let rw := fresh "rw" in
+              assert (⌊ res -⌋ = v) as rw by (try subst res; now autorewrite with f_rel_funct_db);
+              rewrite rw in res_wit
+            | [h: ?relAp ?v |- ?f ?s ?t] => eq_fail v t; isRelAppl relAp; idtac v;
+              let f_ts := fresh "Res" in
+              get_f_ts relAp f_ts; 
+
+              (* idtac "calling mkRefAppl_res" f_res tail_res fAppl_res; try mkRefAppl_res f_res tail_res fAppl_res; *)
+              let temp3 := fresh "temp3" in
+              assRefl f_ts as temp3;
+              match type of temp3 with
+              | (?f, ?ts) = _ => idtac "f:=" f "ts:=" ts; clear temp3; mkRefAppl f ts res
+              end; try clear f_ts;
+              let res_wit := fresh "res_wit" in
+              pose proof ⌈ res ⌉ as res_wit;
+              let rw := fresh "rw" in
+              assert (⌊ res -⌋ = v) as rw by (try subst res; now autorewrite with f_rel_funct_db);
+              try rewrite rw in res_wit
+            end
+            );
+            repeat nonbranching_invert_axiomatizations;
+            autorewrite with lia_rewrites;
+            quicksolve
+
+            ])) then
             idtac else fail "No known way to prove the refinement of " tp
         end
       end;
@@ -1452,6 +1527,8 @@ Ltac simplInstExistGoal :=
       let res_def := fresh "res_def" in
     assert_ho_relAp frel uargs;
     solve [unshelve eassumption]
+  (*| |- exists v, ?relAp v /\ ?tm == v => exists tm
+  | |- exists v, ?relAp v /\ v == ?tm => exists tm*)
   end.
 
 Ltac instExistGoal :=
