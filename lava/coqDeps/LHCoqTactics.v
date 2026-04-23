@@ -711,6 +711,10 @@ Ltac simplify_hyp :=
           assert (v <> w) as temp by (intros; discriminate);
           clear temp
         ]; 
+        tryif (match goal with
+        | [k: v = w |- _] => idtac
+        end) then fail else idtac;
+        neq_fail v w;
         let H := fresh "eq" in
         assert (v = w) as H by (unshelve eauto with f_rel_funct_db);
         try solve [discriminate H]; try solve [now injection H]
@@ -1106,7 +1110,7 @@ Ltac assert_wit v pred wit_name := (* idtac "assert_wit" v pred wit_name; *)
                       let x_wit := fresh "x_wit_" in
                       get_dom_ref g gdomRef;
                       assert_wit x gdomRef x_wit;
-                      try assert tp as arg_wit_name by (split_hyps; unify_vars; quicksolve)
+                      assert tp as arg_wit_name by (try split_hyps; try unify_vars; quicksolve)
                     end
                   end
                 ]
@@ -1128,7 +1132,7 @@ Ltac assert_wit v pred wit_name := (* idtac "assert_wit" v pred wit_name; *)
       idtac fApplTp;
       (* try axProjTm fApplTp;*)
       (* tryif destruct fApp as [_ appl_wit] then idtac else idtac "failed to extract the refinement witness from " fApp; *)
-      try assert (pred v) as wit_name by (unfold pred; simpl; try 
+      assert (pred v) as wit_name by (unfold pred; simpl; try 
         first [clear pred | subst pred]; first [exact appl_wit; clear appl_wit | quick_wff_wit | quick_simpl; split_hyps; unify_vars; try (specialize_hyps; try unify_vars); try quicksolve; (*print_proof_state;*) timeout 10 (unshelve eauto 50 with solver_db)])
     end
 
@@ -1228,11 +1232,18 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
               assRefl g_ts as tempEq;
               match type of tempEq with
               | (?g, ?ts) = _ => clear tempEq;
-                mkRefAppl g ts gAppl
+                mkRefAppl g ts gAppl;
+                let gAppl_wit := fresh "gAppl_wit" in
+                let rw := fresh "rw" in
+                pose proof ⌈ gAppl ⌉ as gAppl_wit;
+                assert (⌊ gAppl -⌋ = x) as rw by ( 
+                  let temp := fresh "temp" in
+                  lookupRwLem g temp;
+                  simpl in temp;
+                  apply temp; assumption);
+                rewrite rw in gAppl_wit
               end;
-              let gAppl_wit := fresh "gAppl_wit" in
-              pose proof ⌈ gAppl ⌉ as gAppl_wit;
-              assert tp as t_wit by (split_hyps; unify_vars; quicksolve)
+              assert tp as t_wit by (quick_simpl; try split_hyps; try unify_vars; quicksolve)
             end
           ]
         end
@@ -1244,16 +1255,25 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
             get_f_ts relAp g_ts; 
             let gAppl := fresh "gAppl" in
             let tempEq := fresh "tempEq" in
+            let gAppl_wit := fresh "gAppl_wit" in
+            let rw := fresh "rw" in
             assRefl g_ts as tempEq;
             match type of tempEq with
             | (?g, ?ts) = _ => clear tempEq;
-              mkRefAppl g ts gAppl
+              mkRefAppl g ts gAppl;
+              pose proof ⌈ gAppl ⌉ as gAppl_wit;
+              assert (⌊ gAppl -⌋ = t) as rw by ( 
+                let temp := fresh "temp" in
+                lookupRwLem g temp;
+                simpl in temp;
+                apply temp; assumption)
             end;
-            let gAppl_wit := fresh "gAppl_wit" in
-            pose proof ⌈ gAppl ⌉ as gAppl_wit
-          | _ => idtac (* "Let's just hope we can prove the refinement anyways" *)
+            rewrite rw in gAppl_wit;
+            let witTp := type of gAppl_wit in
+            idtac witTp
+          | _ => idtac "No obvious way to prove the refinement of " tp' (* "Let's just hope we can prove the refinement anyways" *)
           end;
-          assert tp' as t_wit by (split_hyps; unify_vars; quicksolve)
+          assert tp' as t_wit by (quick_simpl; try split_hyps; try unify_vars; quicksolve)
       end
     ];
     (* idtac "mk_ref_arg returned"; *)
@@ -1385,7 +1405,17 @@ Ltac instExistGoal :=
   | |- exists (w:_), ?relAp w => isRelAppl relAp;
     let v := fresh "v_" in 
     recreate_var relAp v;
-    exists v; try assumption
+    exists v; try first [
+      assumption
+    | let resRefl := fresh "resRefl" in
+      assRefl v as resRefl;
+      match type of resRefl with
+      | ?res = _ => clear resRefl;
+        match goal with
+        | [res_def: ?relAp res |- _] => isRelAppl relAp;
+          try non_branching_inversion res_def
+        end
+      end]
   | |- exists (w:_), ?relAp w => isRelAppl relAp;
     (* inversion_precheck_tm relAp;*)
     now unshelve (eexists _;

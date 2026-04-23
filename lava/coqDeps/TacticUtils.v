@@ -329,9 +329,27 @@ Ltac isConstrAppl t :=
   | ?cApp _ => assert (forall x y, x <> y -> cApp x <> cApp y) as temp by (intros; injection; assumption)
   end; clear temp.
 
+(*Ltac isApplP fApplV pred :=
+  let fAppl := fresh "fAppl" in
+  pose fApplV as fAppl; try unfold fApplV in fAppl;
+  try unfold rel_u in fAppl;
+  let fApplRefl := fresh "fApplRefl" in
+  assRefl fAppl as fApplRefl;
+  match type of fApplRefl with
+  | ?fApp = _ => clear fApplRefl; 
+    let fAppD := fresh "fAppD" in
+    destrApp fApp fAppD;
+    let fAppRefl := fresh "fAppRefl" in
+    assRefl fAppD as fAppRefl;
+    match type of fAppRefl with
+    | ((?f_rel _::_ _nil) _::_ _) = _ => clear fAppRefl; pred f_rel
+    end
+  end.*)
+
 Ltac isRelAppl fApplV :=
   let fAppl := fresh "fAppl" in
   pose fApplV as fAppl; try unfold fApplV in fAppl;
+  try unfold rel_u in fAppl;
   let fApplRefl := fresh "fApplRefl" in
   assRefl fAppl as fApplRefl;
   match type of fApplRefl with
