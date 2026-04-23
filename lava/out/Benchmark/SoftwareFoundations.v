@@ -2634,7 +2634,112 @@ Proof.
 	simpl in H_36979607. 
 	refine (subsumptionCast _ _ 
 		(mult_n_O 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)))) _); 
+		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)))) _).
+  simpl in *.
+  unfold mult_n_O_spec in *. unfold mult_n_0_m_0_spec in *.
+  simpl in *.
+  repeat unshelve cleanup_hints.
+  quick_simpl;
+  repeat progress autounfold with lia_unfold in *;
+  simpl_proj;
+  try cleanup_pack_stuff. try unpack_all. try cleanup_pack_stuff.
+  try remove_refined. 
+
+  repeat unfold rel_u in *;
+  simpl_proj; (* repeat progress autounfold with lia_unfold in *; repeat progress autorewrite with lia_rewrites in *; *)
+  try unify_vars.
+  instExistGoal.
+  instExistGoal.
+  instExistGoal.
+  instExistGoal.
+
+  (* mkRefAppl mult (p _::_ O_u _::_ _nil) gAppl. *)
+  let temp_ := fresh "res_" in
+  let wff_lem := fresh "wit_" in
+
+  let t_wit := fresh "t_wit" in 
+  (* prevent nameclashes with witnesses from recursive calls that use fresh to figure out a name *)
+  pose I as t_wit;
+  let dom_ref := fresh "dom_ref" in
+  get_dom_ref mult dom_ref;
+  let claim := fresh "claim" in
+  let claimRefl := fresh "claimRefl" in
+  pose (dom_ref v_) as claim;
+  assRefl claim as claimRefl; 
+  unfold dom_ref in claimRefl; simpl in claimRefl. clear claimRefl.
+  (*idtac "claim we need to prove in order to synthesize refined version of argument: " tp;*)
+
+  let t_wit_g := fresh "t_wit" in 
+  assert (MyNat_wf p /\ True) as t_wit_g by (quick_simpl; try split_hyps; try unify_vars; quicksolve);
+  idtac "Created witness " t_wit_g " for argument p of graph relation for mult.";
+  pose (mult (exist dom_ref p t_wit_g)) as temp_.
+  let temp_2 := fresh "temp_2" in
+    assRefl temp_ as temp_2;
+    match type of temp_2 with
+    | ?fapp = _ => clear temp_2;
+      (* idtac "Recursing in mkRefAppl with function " fapp " and arguments " tl;*)
+      mkRefAppl fapp (O_u _::_ _nil) Res
+    end.
+  (*mkRefAppl mult (p _::_ O_u _::_ _nil) gAppl.*)
+
+  (* try (match goal with
+      | [h: ?relAp v_ |- _] => 
+        isRelAppl relAp; 
+        (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
+        let g_ts := fresh "g_ts" in
+        get_f_ts relAp g_ts; 
+        let gAppl := fresh "gAppl" in
+        let tempEq := fresh "tempEq" in
+        let gAppl_wit := fresh "gAppl_wit" in
+        let rw := fresh "rw" in
+        assRefl g_ts as tempEq;
+        match type of tempEq with
+        | (?g, ?ts) = _ => clear tempEq;
+          mkRefAppl g ts gAppl;
+          idtac "Generated refined term " gAppl " for argument " t ".";
+          pose proof ⌈ gAppl ⌉ as gAppl_wit;
+          assert (⌊ gAppl -⌋ = t) as rw by ( 
+            let temp := fresh "temp" in
+            lookupRwLem g temp;
+            simpl in temp;
+            apply temp; assumption)
+        end;
+        rewrite rw in gAppl_wit;
+        let witTp := type of gAppl_wit in
+        idtac "witTp: " witTp ", tp: (MyNat_wf v_ /\ True)";
+        clear t_wit;
+        assert tp as t_wit by (try apply gAppl_wit; 
+          quick_simpl; try split_hyps; try unify_vars; quicksolve)
+      end).
+  idtac "Created witness " t_wit " for argument " v_ " of graph relation for " f;
+  pose (mult (exist dom_ref v_ t_wit)) as temp_. *)
+
+  mkRefAppl plus (v_ _::_ O_u _::_ _nil) res.
+  match goal with
+  | |- exists (w:_), ?relAp w => isRelAppl relAp;
+    let v := fresh "v_" in 
+    recreate_var relAp v;
+    exists v; try assumption
+  end.
+  instExistGoal.
+  match goal with
+  
+  | [h: exists v, ?relAp v /\ _ |- exists (w:_), ?relAp w] => isRelAppl relAp;
+    let v := fresh "v_" in 
+    let v_def := fresh "v_def_" in 
+    destruct h as [v [v_def ?]];
+    exists v; apply v_def
+  end.
+  instExistGoal.
+  instExistGoal.
+; repeat instExistGoal)
+    (specialize_hyps; try unify_vars));
+  try timeout 1 simpl_loop.
+  try quick_simple_cleanup_steps.
+  try initial_simple_cleanup_steps.
+  cleanup.
+  cleanup_after_hints.
+instExistGoal. 
 	solver. 
 Qed. 
 Definition mult_n_Sm_spec (n: MyNat) (m: MyNat): Type := 

@@ -1205,8 +1205,15 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
   | ?t _::_ ?tl => 
     let temp_ := fresh "res_" in
     let wff_lem := fresh "wit_" in
-    first [
+
+    match t with
+    | ⌊ ?tm -⌋ => pose tm as temp_
+    | packPr_proj ?pack => (* idtac "pack argument case in mkRefAppl: " pack; *)
+      pose (f pack) as temp_
+    | _ => 
       let t_wit := fresh "t_wit" in 
+      (* prevent nameclashes with witnesses from recursive calls that use fresh to figure out a name *)
+      pose I as t_wit;
       let dom_ref := fresh "dom_ref" in
       get_dom_ref f dom_ref;
       let claim := fresh "claim" in
@@ -1218,10 +1225,10 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
       | ?tp = _ => clear claimRefl; 
         (*idtac "claim we need to prove in order to synthesize refined version of argument: " tp;*)
         match tp with
-        | _ => assert tp as t_wit by (assumption)
+        | _ => clear t_wit; assert tp as t_wit by (assumption)
         | _ => 
           match goal with
-          | [h: ?relAp t |- _] => 
+          | [h: ?relAp t |- _] => isVar t;
             isRelAppl relAp; 
             (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
             let g_ts := fresh "g_ts" in
@@ -1234,6 +1241,7 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
             match type of tempEq with
             | (?g, ?ts) = _ => clear tempEq;
               mkRefAppl g ts gAppl;
+              (* idtac "Generated refined term " gAppl " for argument " t ".";*)
               pose proof ⌈ gAppl ⌉ as gAppl_wit;
               assert (⌊ gAppl -⌋ = t) as rw by ( 
                 let temp := fresh "temp" in
@@ -1242,8 +1250,9 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
                 apply temp; assumption)
             end;
             rewrite rw in gAppl_wit;
-            let witTp := type of gAppl_wit in
-            idtac witTp;
+            (* let witTp := type of gAppl_wit in
+            idtac "witTp: " witTp ", tp: " tp; *)
+            clear t_wit;
             assert tp as t_wit by (try apply gAppl_wit; 
               quick_simpl; try split_hyps; try unify_vars; quicksolve)
           end
@@ -1261,6 +1270,7 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
               match type of tempEq with
               | (?g, ?ts) = _ => clear tempEq;
                 mkRefAppl g ts gAppl;
+                (*idtac "Generated refined term " gAppl " for axiomatized subterm " x " of argument " t ".";*)
                 let gAppl_wit := fresh "gAppl_wit" in
                 let rw := fresh "rw" in
                 pose proof ⌈ gAppl ⌉ as gAppl_wit;
@@ -1271,21 +1281,27 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
                   apply temp; assumption);
                 rewrite rw in gAppl_wit
               end;
+              clear t_wit;
               assert tp as t_wit by (quick_simpl; try split_hyps; try unify_vars; quicksolve)
             end
           ]
         | _ => 
+          clear t_wit;
           tryif (assert tp as t_wit by (quick_simpl; try split_hyps; try unify_vars; quicksolve)) then
             idtac else fail "No known way to prove the refinement of " tp
         end
       end;
+      idtac "Created witness " t_wit " for argument " t " of graph relation for " f;
       pose (f (exist dom_ref t t_wit)) as temp_
-    ];
+    end;
+
     (* idtac "mk_ref_arg returned"; *)
     let temp_2 := fresh "temp_2" in
     assRefl temp_ as temp_2;
     match type of temp_2 with
-    | ?fapp = _ => mkRefAppl fapp tl Res; clear temp_2
+    | ?fapp = _ => clear temp_2;
+      (* idtac "Recursing in mkRefAppl with function " fapp " and arguments " tl;*)
+      mkRefAppl fapp tl Res
     end
   end.
 
@@ -1368,8 +1384,7 @@ Tactic Notation "recreate_var" constr(relApp) ident(vRes) :=
     end
   end.
 
-(* dealing with existentials in the goal, w/o recreating a refined term *)
-Ltac simpleInstExistGoal := 
+Ltac simplInstExistGoal :=
   match goal with
   | [vdef: ?relAp ?V |- exists (w:_), ?relAp w /\ _] => isRelAppl relAp;
     exists V; split; [apply vdef|]
@@ -1377,6 +1392,16 @@ Ltac simpleInstExistGoal :=
     exists v; apply vdef
   | [vdef: ?relAp ?v |- exists (w:_), ?relAp w /\ _] => isRelAppl relAp;
     exists v; split; [apply vdef|]
+  | [h: exists v, ?relAp v |- exists (w:_), ?relAp w] => isRelAppl relAp;
+    let v := fresh "v_" in 
+    let v_def := fresh "v_def_" in 
+    destruct h as [v v_def];
+    exists v; apply v_def
+  | [h: exists v, ?relAp v /\ _ |- exists (w:_), ?relAp w] => isRelAppl relAp;
+    let v := fresh "v_" in 
+    let v_def := fresh "v_def_" in 
+    destruct h as [v [v_def ?]];
+    exists v; apply v_def
   | |- exists (w:_), ?relAp w /\ _ => isRelAppl relAp;
     tryif (match goal with
     | [h: exists (w:_), relAp w |- _] => idtac
@@ -1391,22 +1416,6 @@ Ltac simpleInstExistGoal :=
   	timeout 1 solve [
       now unshelve (eexists _; rconstructor)
     ]
-  (* in case we need to destruct an argument in order to instantiate this *)
-  | [t: ?Tp |- exists v, ?rel ?t v] => isRelAppl rel;
-    timeout 3 now unshelve (destruct t; simpleInstExistGoal)
-  | [t: ?Tp |- exists v, ?rel ?t _ v] => isRelAppl rel;
-    timeout 3 now unshelve (destruct t; simpleInstExistGoal)
-  | [t: ?Tp |- exists v, ?rel ?t _ _ v] => isRelAppl rel;
-    timeout 2 now unshelve (destruct t; simpleInstExistGoal)
-  | [t: ?Tp |- exists v, ?rel ?t _ _ _ v] => isRelAppl rel;
-    timeout 11 now unshelve (destruct t; simpleInstExistGoal)
-  | [t: ?Tp |- exists v, ?rel ?t _ _ _ _ v] => isRelAppl rel;
-    timeout 1 now unshelve (destruct t; simpleInstExistGoal)
-  end.
-
-Ltac instExistGoal :=
-  match goal with
-  | _ => simpleInstExistGoal
   | |- exists (w:_), ?relAp w => isRelAppl relAp;
     let v := fresh "v_" in 
     recreate_var relAp v;
@@ -1448,6 +1457,30 @@ Ltac instExistGoal :=
       let res_def := fresh "res_def" in
     assert_ho_relAp frel uargs;
     solve [unshelve eassumption]
+  end.
+
+Ltac instExistGoal :=
+  match goal with
+  | |- _ => simplInstExistGoal
+  (* in case we need to destruct an argument in order to instantiate this *)
+  | [t: ?Tp |- exists v, ?relAp v] => isRelAppl relAp;
+    tryif (match Tp with
+    | _ => let knd := type of Tp in
+      eq_fail knd Prop
+    end) then fail else idtac;
+    now unshelve (
+      match relAp with
+      | ?rel ?t v => idtac "Destructing " t " to simplify producing result term for " v;
+        destruct t; timeout 3 simplInstExistGoal
+      | ?rel ?t _ v => idtac "Destructing " t " to simplify producing result term for " v;
+        destruct t; timeout 3 simplInstExistGoal
+      | ?rel ?t _ _ v => idtac "Destructing " t " to simplify producing result term for " v;
+        destruct t; timeout 3 simplInstExistGoal
+      | ?rel ?t _ _ _ v => idtac "Destructing " t " to simplify producing result term for " v;
+        destruct t; timeout 3 simplInstExistGoal
+      | ?rel ?t _ _ _ _ v => idtac "Destructing " t " to simplify producing result term for " v;
+        destruct t; timeout 3 simplInstExistGoal
+      end)
   end.
 
 (* create variables to instantiate hypothesis *)
