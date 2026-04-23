@@ -26,8 +26,8 @@ coqDeps/LiquidPreludeUtil.v
 # manual/Benchmark/SFGradeExample0.v
 # manual/Benchmark/SFGradeExample.v
 
-out/Benchmark/PLE/Append.v
 out/Benchmark/PLE/Lists.v
+out/Benchmark/PLE/Append.v
 out/Benchmark/PLE/Compose.v
 out/Benchmark/PLE/Lambdas.v
 out/Benchmark/PLE/FoldrUniversal.v

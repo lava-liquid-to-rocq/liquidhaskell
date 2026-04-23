@@ -1215,8 +1215,10 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
       assRefl claim as claimRefl; 
       unfold dom_ref in claimRefl; simpl in claimRefl; 
       match type of claimRefl with
-      | ?tp = _ => clear claimRefl; idtac "claim we need to prove in order to synthesize refined version of argument: " tp;
+      | ?tp = _ => clear claimRefl; 
+        (*idtac "claim we need to prove in order to synthesize refined version of argument: " tp;*)
         match tp with
+        | _ => assert tp as t_wit by (assumption)
         | _ => 
           match goal with
           | [h: ?relAp t |- _] => 
@@ -1247,8 +1249,7 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
           end
         | (?wf ?x /\ ?p) /\ ?q =>
           first [
-            assert_wit x (fun x => wf x /\ p /\ q) t_wit
-          | match goal with
+            match goal with
             | [h: ?relAp x |- _] => 
               isRelAppl relAp; 
               (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
@@ -1279,7 +1280,6 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
         end
       end;
       pose (f (exist dom_ref t t_wit)) as temp_
-    | mk_ref_arg f t wff_lem temp_
     ];
     (* idtac "mk_ref_arg returned"; *)
     let temp_2 := fresh "temp_2" in
@@ -1653,7 +1653,7 @@ Ltac quick_simple_cleanup_steps :=
   repeat unfold rel_u in *;
   simpl_proj; (* repeat progress autounfold with lia_unfold in *; repeat progress autorewrite with lia_rewrites in *; *)
   concat_either (unify_vars) (
-    concat_either (instExistGoal)
+    concat_either (instExistGoal; repeat instExistGoal)
     (specialize_hyps; try unify_vars));
   try timeout 1 simpl_loop.
 
@@ -1702,7 +1702,7 @@ Ltac initial_cleanup_recurse :=
   quick_simpl;
   concat_either 
     (initial_simple_cleanup_steps)
-    (unshelve inversion_cleanup). (* TODO: move the unshelve into whatever tactic actually populates the shelf *)
+    (repeat instExistGoal; unshelve inversion_cleanup). (* TODO: move the unshelve into whatever tactic actually populates the shelf *)
 
 Ltac cleanup_recurse := 
   quick_simpl;

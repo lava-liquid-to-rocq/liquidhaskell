@@ -126,7 +126,7 @@ Ltac solver_loop :=
     concat_either (quicksolve) (
       progress concat_either (
         simpl in *; (*try timeout 2 repeat nonbranching_destruct;*)
-        timeout 600 cleanup_after_hints) (
+        timeout 1200 cleanup_after_hints) (
         lia_preprocessor
         (*concat_either (lia_preprocessor) (split_hyps)*)
       )
