@@ -1868,6 +1868,11 @@ Ltac oracle_ := first [
   | quicksolve 
   | try cleanup_after_hints; try quicksolve; split_hyps; try progress (cleanup_after_hints; split_hyps); try cleanup; finish ].
 
+Ltac strong_oracle := timeout 600 first [ 
+  quick_wff_wit
+  | quicksolve 
+  | try cleanup_after_hints_ True; try quicksolve; split_hyps; try progress (cleanup_after_hints_ True; split_hyps); try cleanup; finish ].
+
 Ltac oracle := timeout 150 oracle_.
 
 Ltac deadBranch := intros; exfalso; oracle.
@@ -2137,7 +2142,7 @@ Ltac lia_preprocessor_step := match goal with
       | solve [unshelve (eexists _;
         econstructor; try match goal with
         | [h: ?tp _ |- ?tp _] => apply h
-        end; timeout 30 unshelve oracle)]]
+        end; unshelve strong_oracle)]]
   end.
 
 Ltac eager_oracle :=

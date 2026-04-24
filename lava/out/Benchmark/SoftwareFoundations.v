@@ -1337,15 +1337,15 @@ Definition allzero_spec (lq_tmp0: Nibble): Type :=
 Definition allzero (lq_tmp0: Nibble): allzero_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
-	induction lq_tmp0 as [(*Bits*) ds_d5wi ds_d5wj ds_d5wk ds_d5wl]. 
+	induction lq_tmp0 as [(*Bits*) ds_d5s5 ds_d5s6 ds_d5s7 ds_d5s8]. 
 	  - intros . 
-		induction ds_d5wi as [(*B0*)  | (*B1*) ]. 
+		induction ds_d5s5 as [(*B0*)  | (*B1*) ]. 
 		  -- intros . 
-			induction ds_d5wj as [(*B0*)  | (*B1*) ]. 
+			induction ds_d5s6 as [(*B0*)  | (*B1*) ]. 
 			  --- intros . 
-				induction ds_d5wk as [(*B0*)  | (*B1*) ]. 
+				induction ds_d5s7 as [(*B0*)  | (*B1*) ]. 
 				  ---- intros . 
-					induction ds_d5wl as [(*B0*)  | (*B1*) ]. 
+					induction ds_d5s8 as [(*B0*)  | (*B1*) ]. 
 					  ----- intros . 
 						refine (subsumptionCast _ _ SFTrue _); 
 						solver.  
@@ -2007,7 +2007,7 @@ Proof.
 	destruct n as [n n_p]. 
 	destruct m as [m m_p]. 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d5vP IH_ds_d5vP]. 
+	induction n as [(*O*)  | (*S*) ds_d5rC IH_ds_d5rC]. 
 	  - intros . 
 		refine (subsumptionCast _ _ O _); 
 		solver.  
@@ -2016,19 +2016,19 @@ Proof.
 		  -- intros . 
 			refine (subsumptionCast _ _ 
 		(S 
-		(exist (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) ds_d5vP (ltac: (solver)))) _); 
+		(exist (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) ds_d5rC (ltac: (solver)))) _); 
 			solver.  
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(IH_ds_d5vP (ltac: (try clear IH_ds_d5vP; 
-	solver)) m' (ltac: (try clear IH_ds_d5vP; 
+		(IH_ds_d5rC (ltac: (try clear IH_ds_d5rC; 
+	solver)) m' (ltac: (try clear IH_ds_d5rC; 
 	solver))) _); 
 			solver.   
 Defined. 
 Inductive minus_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) := 
 	 | minus_O: (forall m , minus_rel O_u m O_u)
-	 | minus_S_O: (forall ds_d5vP , minus_rel (S_u ds_d5vP) O_u (S_u ds_d5vP))
-	 | minus_S_S: (forall ds_d5vP m' , forall (minusres: MyNat_u), (minus_rel ds_d5vP m' minusres) -> (minus_rel (S_u ds_d5vP) (S_u m') minusres)). 
+	 | minus_S_O: (forall ds_d5rC , minus_rel (S_u ds_d5rC) O_u (S_u ds_d5rC))
+	 | minus_S_S: (forall ds_d5rC m' , forall (minusres: MyNat_u), (minus_rel ds_d5rC m' minusres) -> (minus_rel (S_u ds_d5rC) (S_u m') minusres)). 
 #[global] Hint Constructors minus_rel : core_hint_db.
 #[global] Instance minus_lookup_rel : dictionary rel minus := { 
 	lookup' := minus_rel
@@ -2039,7 +2039,7 @@ Inductive minus_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) :=
 Theorem minus_rel_funct [n: MyNat_u] [m: MyNat_u]: (forall (VV: MyNat_u) (VV': MyNat_u) (H: minus_rel n m VV) (K: minus_rel n m VV') , VV = VV'). 
 Proof. 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d5vP IH_ds_d5vP]; 
+	induction n as [(*O*)  | (*S*) ds_d5rC IH_ds_d5rC]; 
 	intros ; 
 	[| 
 	induction m as [(*O*)  | (*S*) m' IH_m']; 
@@ -2052,12 +2052,12 @@ Proof.
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite minus_O_lem : f_rel_back.
-Theorem minus_S_O_lem (ds_d5vP: _): (minus_rel (S_u ds_d5vP) O_u (S_u ds_d5vP)) <-> True. 
+Theorem minus_S_O_lem (ds_d5rC: _): (minus_rel (S_u ds_d5rC) O_u (S_u ds_d5rC)) <-> True. 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
 #[global] Hint Rewrite minus_S_O_lem : f_rel_back.
-Theorem minus_S_S_lem (ds_d5vP: _) (m': _) (minusres: MyNat_u) (h_43612209: minus_rel ds_d5vP m' minusres): (minus_rel (S_u ds_d5vP) (S_u m') minusres) <-> True. 
+Theorem minus_S_S_lem (ds_d5rC: _) (m': _) (minusres: MyNat_u) (h_43612209: minus_rel ds_d5rC m' minusres): (minus_rel (S_u ds_d5rC) (S_u m') minusres) <-> True. 
 Proof. 
 	rel_back' ( _nil). 
 Qed. 
@@ -2067,18 +2067,18 @@ Proof.
 	Opaque minus.
 	existence_lemma_pre minus; 
 	try revert m_p; generalize dependent m; 
-	induction n as [(*O*)  | (*S*) ds_d5vP IH_ds_d5vP]; 
+	induction n as [(*O*)  | (*S*) ds_d5rC IH_ds_d5rC]; 
 	intros ; 
 	[fix_notations| 
 	induction m as [(*O*)  | (*S*) m' IH_m']; 
 	intros ; 
 	[fix_notations; 
-	try clear IH_ds_d5vP| 
+	try clear IH_ds_d5rC| 
 	fix_notations; 
-	pose proof (IH_ds_d5vP (ltac: (try clear IH_ds_d5vP; 
-	solver)) m' (ltac: (try clear IH_ds_d5vP; 
-	solver))) as IH_56864764; 
-	try clear IH_ds_d5vP; 
+	pose proof (IH_ds_d5rC (ltac: (try clear IH_ds_d5rC; 
+	solver)) m' (ltac: (try clear IH_ds_d5rC; 
+	solver))) as IH_86026138; 
+	try clear IH_ds_d5rC; 
 	try clear IH_m']]; 
 	simpl in *. 
 	Transparent minus.
@@ -2141,12 +2141,12 @@ Definition minustwo_spec (lq_tmp0: MyNat): Type :=
 Definition minustwo (lq_tmp0: MyNat): minustwo_spec lq_tmp0. 
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
-	induction lq_tmp0 as [(*O*)  | (*S*) ds_d5wf IH_ds_d5wf]. 
+	induction lq_tmp0 as [(*O*)  | (*S*) ds_d5s2 IH_ds_d5s2]. 
 	  - intros . 
 		refine (subsumptionCast _ _ O _); 
 		solver.  
 	  - intros . 
-		induction ds_d5wf as [(*O*)  | (*S*) n' IH_n']. 
+		induction ds_d5s2 as [(*O*)  | (*S*) n' IH_n']. 
 		  -- intros . 
 			refine (subsumptionCast _ _ O _); 
 			solver.  
@@ -2704,7 +2704,7 @@ Definition plus_1_neq_0_spec (n: MyNat): Type :=
 Theorem plus_1_neq_0 (n: MyNat): plus_1_neq_0_spec n. 
 Proof. 
 	destruct n as [n n_p]. 
-	induction n as [(*O*)  | (*S*) ds_d5vA IH_ds_d5vA]. 
+	induction n as [(*O*)  | (*S*) ds_d5rn IH_ds_d5rn]. 
 	  - intros . 
 		refine (exist _ unit _); 
 		solver.  
@@ -5457,12 +5457,12 @@ Definition isred_spec (c: Color): Type :=
 Definition isred (c: Color): isred_spec c. 
 Proof. 
 	destruct c as [c c_p]. 
-	induction c as [(*Black*)  | (*Primary*) ds_d5wr | (*White*) ]. 
+	induction c as [(*Black*)  | (*Primary*) ds_d5se | (*White*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ SFFalse _); 
 		solver.  
 	  - intros . 
-		induction ds_d5wr as [(*Blue*)  | (*Green*)  | (*Red*) ]. 
+		induction ds_d5se as [(*Blue*)  | (*Green*)  | (*Red*) ]. 
 		  -- intros . 
 			refine (subsumptionCast _ _ SFFalse _); 
 			solver.  
