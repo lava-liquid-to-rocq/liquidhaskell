@@ -1527,8 +1527,8 @@ Ltac simplInstExistGoal :=
       let res_def := fresh "res_def" in
     assert_ho_relAp frel uargs;
     solve [unshelve eassumption]
-  (*| |- exists v, ?relAp v /\ ?tm == v => exists tm
-  | |- exists v, ?relAp v /\ v == ?tm => exists tm*)
+  | |- exists v, ?relAp v /\ ?tm == v => exists tm
+  | |- exists v, ?relAp v /\ v == ?tm => exists tm
   end.
 
 Ltac instExistGoal :=
