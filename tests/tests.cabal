@@ -2738,6 +2738,9 @@ executable import-lava
     other-modules:
                     , Todo.RBins
                     , Todo.RBinsToBins
+                    , Todo.SoftwareFoundationsBasics
+                    , Todo.SoftwareFoundationsInduction
+                    , Todo.SoftwareFoundationsLists
     build-depends:    base
                     , liquid-prelude
                     -- , containers
