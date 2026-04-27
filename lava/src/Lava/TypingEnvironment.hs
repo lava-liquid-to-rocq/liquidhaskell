@@ -19,6 +19,19 @@ data TypeError
   | LookupErr Doc
   | SmpTpErr Doc
 
+mapTypeErrorDoc :: (Doc -> Doc) -> TypeError -> TypeError
+mapTypeErrorDoc f (WfErr err) = WfErr (f err)
+mapTypeErrorDoc f (CheckingErr err) = CheckingErr (f err)
+mapTypeErrorDoc f (SynErr err) = SynErr (f err)
+mapTypeErrorDoc f (SubstErr err) = SubstErr (f err)
+mapTypeErrorDoc f (SubtypingErr err) = SubtypingErr (f err)
+mapTypeErrorDoc f (LookupErr err) = LookupErr (f err)
+mapTypeErrorDoc f (SmpTpErr err) = SmpTpErr (f err)
+
+annotateErr :: Id -> TypeError -> TypeError
+annotateErr i =
+  mapTypeErrorDoc (\err -> parens ("In" <+> text i) <+> err)
+
 instance Pretty TypeError where
   pPrint te = case te of
     WfErr err -> aux "Well-formedness" err

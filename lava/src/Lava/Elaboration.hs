@@ -183,7 +183,7 @@ wfDecls γ (Data tc constrs : decls) = do
     trivializeRefs (RefType x tp _) = RefType x tp ttTm
     trivializeRefs (ArrType x tpx tp) = ArrType x (trivializeRefs tpx) (trivializeRefs tp)
     checkBranch :: (TypEnv, [(Id, RefType)]) -> (Id, RefType) -> Either TypeError (TypEnv, [(Id, RefType)])
-    checkBranch (γi, dcs) (ci, tpi) = do
+    checkBranch (γi, dcs) (ci, tpi) = first (annotateErr ci) $ do
       checkFOandTC tpi
       tpi' <- wfRefType γi tpi
       -- Replace the trivialized entry for ci with the elaborated one
@@ -198,15 +198,17 @@ wfDecls γ (Data tc constrs : decls) = do
             else when (tc' /= TC tc) . Left . WfErr $ "The constructor type" <+> pPrint tp <+> "must return a refinement of" <+> text tc
 -- (WF-DDef)
 wfDecls γ (Definition f tpf e isRefl : decls) = do
-  tpf' <- wfRefType γ tpf
+  tpf' <- inDecl $ wfRefType γ tpf
   let γf = insertRecVar (f, tpf') γ
   let (args, ret) = second mkRefType $ arrs tpf'
   let γfargs = insertLocalVars args γf
   let initBrPat = map (\(x, tpx) -> Param x (arity tpx)) args
-  e' <- checkExpr γfargs initBrPat (removeRedundantMatches e) ret
-  γf' <- changeRecToGlobal f γf
+  e' <- inDecl $ checkExpr γfargs initBrPat (removeRedundantMatches e) ret
+  γf' <- inDecl $ changeRecToGlobal f γf
   decls' <- wfDecls γf' decls
   return $ Definition f tpf' e' isRefl : decls'
+  where
+    inDecl = first (annotateErr f)
 wfDecls _ [] = return []
 
 -- Returns Just e if the match is done on a data constructor,
