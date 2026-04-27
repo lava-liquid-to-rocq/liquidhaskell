@@ -468,7 +468,7 @@ instance Pretty Decl where
     $$ nest identNb (pPrint tm <> dot)
   pPrint (Load m) =  "Load" <+> text m <> dot
   pPrint (CoqNewType t tp) =
-     hang ("Global Notation" <+> text t <+> ":=") identNb (pPrintRocqType prettyNormal 0 tp False <> dot)
+     hang ("Global Notation" <+> text t <+> ":=") identNb (pPrintRocqType prettyNormal 200 tp False <> dot)
   pPrint (CoqInductive f args ret constrs) =
     hang ("Inductive" <+> text f <+> pPrintArgs (map (,False) args) <> colon) identNb (pPrint ret <+> ":=")
       $$ nest identNb (sep (map (("|" <+>) . pPrint) constrs) <> dot)
@@ -525,7 +525,7 @@ pPrintRocqType _ _ (Subset x tp e) _ =
 pPrintRocqType _ _ tc@(TC tc' []) _ | tc `elem` coqBuiltinInductDataTypes = text tc'
 pPrintRocqType l p (TC typeName tpArgs) b =
   maybeParens (p < appPrec) . hsep $
-  text typeName : map (\tp -> pPrintRocqType l 0 tp b) tpArgs
+  text typeName : map (\tp -> pPrintRocqType l (appPrec - 1) tp b) tpArgs
 pPrintRocqType l p (Arrow tp1 tp2) b =
   maybeParens (p < 99) $
     sep [pPrintRocqType l 200 tp1 b, "→" <+> pPrintRocqType l 200 tp2 b]
@@ -535,12 +535,12 @@ pPrintRocqType l p tp@(FAType {}) _ =
 pPrintRocqType l p (Prop tm) _ = pPrintPrec l p tm
 pPrintRocqType l p (UPack uargTps t) _ =
   maybeParens (p < appPrec) $
-    sep [text upackName, pPrintPrec l 0 uargTps, pPrintPrec l 0 t]
+    sep [text upackName, pPrintPrec l (appPrec - 1) uargTps, pPrintPrec l (appPrec - 1) t]
 pPrintRocqType l p (ArgumentList argTps) _ =
-  maybeParens (p < appPrec) $ "ArgList" <+> pPrintPrec l 0 argTps
+  maybeParens (p < appPrec) $ "ArgList" <+> pPrintPrec l (appPrec - 1) argTps
 pPrintRocqType l p (Pack argTps uargTps z t tm) _ =
   maybeParens (p < appPrec) $
-    sep [text packName, pPrintPrec l 0 argTps, pPrintPrec l 0 uargTps, pPrintPrec l 0 z, pPrintPrec l 0 t, pPrintPrec l 0 tm]
+    sep [text packName, pPrintPrec l (appPrec - 1) argTps, pPrintPrec l (appPrec - 1) uargTps, pPrintPrec l (appPrec - 1) z, pPrintPrec l (appPrec - 1) t, pPrintPrec l (appPrec - 1) tm]
 pPrintRocqType _ _ Hole _ = char '_'
 
 -- TODO: we probably want to use Maybe instead of using '_'
@@ -563,7 +563,7 @@ instance Pretty BaseSort where
 -- We inline the precedence levels given by that `Print Grammar constr.`
 instance Pretty CoqTerm where
   pPrintPrec l p (IsTrue tm) =
-    maybeParens (p < appPrec) $ "is_true" <+> pPrintPrec l 0 tm
+    maybeParens (p < appPrec) $ "is_true" <+> pPrintPrec l (appPrec - 1) tm
   pPrintPrec l p tm@(Forall {}) =
     let (vars, tm') = concatForalls tm
      in pPrintForall l p vars tm'
@@ -584,18 +584,22 @@ instance Pretty CoqTerm where
   pPrintPrec _ _ (Cr s) = text s
   pPrintPrec _ _ (Var x) = text x
   pPrintPrec l p (Bop bop s t) =
-    maybeParens (p < prec) $
-      sep [pPrintPrec l prec s, text sym <+> pPrintPrec l prec' t]
-    where
-      (sym, prec) = bopSymPrec bop
-      -- FIX: defined as right associative in Rocq, but still needs brackets I don't know why
-      prec' = case bop of Binop ConsUT _ -> 0; _ -> prec
+    case bopSymPrec bop of
+    (sym, Just prec) ->
+      maybeParens (p < prec) $
+        sep [pPrintPrec l (prec - 1) s, text sym <+> pPrintPrec l prec' t]
+      where
+        -- FIX: defined as right associative in Rocq, but still needs brackets I don't know why
+        prec' = case bop of Binop ConsUT _ -> 0; _ -> prec - 1
+    (sym, Nothing) ->
+      maybeParens (p < appPrec) $
+        sep [text sym, pPrintPrec l (appPrec - 1) s, pPrintPrec l (appPrec - 1) t]
   pPrintPrec _ _ (StringLiteral s) = pPrint s
   pPrintPrec _ _ (IntLiteral n) = integer n
   pPrintPrec _ _ (FloatLiteral f) = double f
   pPrintPrec l p (App f ts) =
     maybeParens (p < appPrec)
-      $ sep (pPrintPrec l 0 f : map (pPrintPrec l 0) ts)
+      $ sep (pPrintPrec l appPrec f : map (pPrintPrec l (appPrec - 1)) ts)
   pPrintPrec _ p tm@(Lambda {}) =
     let (args, tm') = concatLambdas tm
      in maybeParens (p < 10) $ sep ["λ" <+> pPrintArgs (map (,False) args) <> comma, pPrint tm']
@@ -604,15 +608,15 @@ instance Pretty CoqTerm where
   pPrintPrec l p (SubCast to from t z) =
     maybeParens (p < appPrec) $ case (to, from) of
        (Hole, _) ->
-         sep ["subsumptionCast", char '_', char '_', pPrintPrec l 0 t, pPrintPrec l 0 z]
+         sep ["subsumptionCast", char '_', char '_', pPrintPrec l (appPrec - 1) t, pPrintPrec l (appPrec - 1) z]
        (Subset n b need, Subset _ a _) | a == b ->
-         sep ["subsumptionCast", pPrintPrec l 0 a, pPrintPrec l 0 (Lambda n a need), pPrintPrec l 0 t, pPrintPrec l 0 z]
-       _ -> sep ["subCast", pPrintPrec l 0 from, pPrintPrec l 0 to, pPrintPrec l 0 t, pPrintPrec l 0 z]
+         sep ["subsumptionCast", pPrintPrec l (appPrec - 1) a, pPrintPrec l (appPrec - 1) (Lambda n a need), pPrintPrec l (appPrec - 1) t, pPrintPrec l (appPrec - 1) z]
+       _ -> sep ["subCast", pPrintPrec l (appPrec - 1) from, pPrintPrec l (appPrec - 1) to, pPrintPrec l (appPrec - 1) t, pPrintPrec l (appPrec - 1) z]
   pPrintPrec l p (Exist _ t (CoqProofTerm "I")) =
     maybeParens (p < 1) $ char '#' <+> pPrintPrec l 0 t
   pPrintPrec l p (Exist tp t z) =
     maybeParens (p < appPrec) $
-      "exist" <+> pPrintPrec l 0 tp <+> pPrintPrec l 0 t <+> pPrintPrec l 0 z
+      "exist" <+> pPrintPrec l (appPrec - 1) tp <+> pPrintPrec l (appPrec - 1) t <+> pPrintPrec l (appPrec - 1) z
   pPrintPrec _ p (Match ts _ cases) =
     maybeParens (p < appPrec) . sep $
       "match" <+> maybeParens (length ts > 1) (hsep $ punctuate comma (map pPrint ts)) <+> "with" :
@@ -639,72 +643,75 @@ instance Pretty CoqTerm where
 instance Show Binop where
   show = fst . bopSymPrec
 
-bopSymPrec :: Binop -> (String, Rational)
-bopSymPrec (Binop RocqEq _) = ("=", 70)
+-- | For a given operator, returns its symbol or name
+-- For a symbol, also returns its precedence
+-- (for a name, we will use the precedence of application)
+bopSymPrec :: Binop -> (String, Maybe Rational)
+bopSymPrec (Binop RocqEq _) = ("=", Just 70)
 bopSymPrec (Binop Eq kind) = case kind of
-  PropOp -> ("==", 70)
-  UnrefOp -> ("eqb", 70)
-  RefOp -> ("==?", 70)
+  PropOp -> ("==", Just 70)
+  UnrefOp -> ("==?", Just 70)
+  RefOp -> ("==?", Just 70)
 bopSymPrec (Binop Neq kind) = case kind of
-  PropOp -> ("≠", 70)
-  UnrefOp -> ("/=?", 70)
-  RefOp -> ("/=Z", 70)
+  PropOp -> ("≠", Just 70)
+  UnrefOp -> ("/=?", Just 70)
+  RefOp -> ("/=Z", Just 70)
 bopSymPrec (Binop Leq kind) = case kind of
-  PropOp -> ("<=", 70)
-  UnrefOp -> ("<=?", 70)
-  RefOp -> ("<=Z", 70)
+  PropOp -> ("<=", Just 70)
+  UnrefOp -> ("<=?", Just 70)
+  RefOp -> ("<=Z", Just 70)
 bopSymPrec (Binop Geq kind) = case kind of
-  PropOp -> (">=", 70)
-  UnrefOp -> (">=?", 70)
-  RefOp -> (">=Z", 70)
+  PropOp -> (">=", Just 70)
+  UnrefOp -> (">=?", Just 70)
+  RefOp -> (">=Z", Just 70)
 bopSymPrec (Binop Lt kind) = case kind of
-  PropOp -> ("<", 70)
-  UnrefOp -> ("<?", 70)
-  RefOp -> ("<Z", 70)
+  PropOp -> ("<", Just 70)
+  UnrefOp -> ("<?", Just 70)
+  RefOp -> ("<Z", Just 70)
 bopSymPrec (Binop Gt kind) = case kind of
-  PropOp -> (">", 70)
-  UnrefOp -> (">?", 70)
-  RefOp -> (">Z", 70)
+  PropOp -> (">", Just 70)
+  UnrefOp -> (">?", Just 70)
+  RefOp -> (">Z", Just 70)
 bopSymPrec (Binop And kind) = case kind of
-  PropOp -> ("∧", 80)
-  UnrefOp -> ("&&", 40)
+  PropOp -> ("∧", Just 80)
+  UnrefOp -> ("&&", Just 40)
   RefOp -> undefined
 bopSymPrec (Binop Or kind) = case kind of
-  PropOp -> ("∨", 85)
-  UnrefOp -> ("||", 50)
+  PropOp -> ("∨", Just 85)
+  UnrefOp -> ("||", Just 50)
   RefOp -> undefined
 bopSymPrec (Binop Impl kind) = case kind of
-  PropOp -> ("→", 99)
-  UnrefOp -> ("implb", 99)
+  PropOp -> ("→", Just 99)
+  UnrefOp -> ("implb", Nothing)
   RefOp -> undefined
 bopSymPrec (Binop Equiv kind) = case kind of
-  PropOp -> ("↔", 95)
+  PropOp -> ("↔", Just 95)
   UnrefOp -> undefined
   RefOp -> undefined
 bopSymPrec (Binop Plus kind) = case kind of
   PropOp -> undefined
-  UnrefOp -> ("+", 50)
-  RefOp -> ("+Z", 50)
+  UnrefOp -> ("+", Just 50)
+  RefOp -> ("+Z", Just 50)
 bopSymPrec (Binop Minus kind) = case kind of
   PropOp -> undefined
-  UnrefOp -> ("-", 50)
-  RefOp -> ("-Z", 50)
+  UnrefOp -> ("-", Just 50)
+  RefOp -> ("-Z", Just 50)
 bopSymPrec (Binop Times kind) = case kind of
   PropOp -> undefined
-  UnrefOp -> ("*", 40)
-  RefOp -> ("*Z", 40)
+  UnrefOp -> ("*", Just 40)
+  RefOp -> ("*Z", Just 40)
 bopSymPrec (Binop Div kind) = case kind of
   PropOp -> undefined
-  UnrefOp -> ("/", 40)
-  RefOp -> ("/Z", 40)
+  UnrefOp -> ("/", Just 40)
+  RefOp -> ("/Z", Just 40)
 bopSymPrec (Binop Mod kind) = case kind of
   PropOp -> undefined
-  UnrefOp -> ("mod", 40)
-  RefOp -> ("modZ", 40)
-bopSymPrec (Binop ConsRT _) = ("::RT", 60)
-bopSymPrec (Binop ConsUT _) = ("::UT", 60)
-bopSymPrec (Binop ConsR _) = ("::R", 60)
-bopSymPrec (Binop ConsU _) = ("::U", 60)
+  UnrefOp -> ("mod", Just 40)
+  RefOp -> ("modZ", Just 40)
+bopSymPrec (Binop ConsRT _) = ("::RT", Just 60)
+bopSymPrec (Binop ConsUT _) = ("::UT", Just 60)
+bopSymPrec (Binop ConsR _) = ("::R", Just 60)
+bopSymPrec (Binop ConsU _) = ("::U", Just 60)
 
 instance Pretty ProofTerm where
   pPrintPrec _ _ (CoqProofTerm s) = text s
@@ -751,9 +758,9 @@ instance Pretty Tactic where
     SubCast _ _ (Exist _ tm (CoqProofTerm prf)) (ProofHole _) | prf == "eq_refl" || prf == "I" ->
       refineOracle (Exist TermHole tm (TermWitness TermHole))
     SubCast _ have tm (ProofHole _) -> refineOracle (SubCast Hole have tm (TermWitness TermHole))
-    SubCast _ have tm prf -> dotted p $ "exact" <+> pPrintPrec l 0 (SubCast Hole have tm prf)
-    _ -> dotted p $ "refine" <+> pPrintPrec l 0 t
-    where refineOracle x = sep ["refine" <+> pPrintPrec l 0 x <> semi, pPrintPrec l p Oracle]
+    SubCast _ have tm prf -> dotted p $ "exact" <+> pPrintPrec l (appPrec - 1) (SubCast Hole have tm prf)
+    _ -> dotted p $ "refine" <+> pPrintPrec l (appPrec - 1) t
+    where refineOracle x = sep ["refine" <+> pPrintPrec l (appPrec - 1) x <> semi, pPrintPrec l p Oracle]
   pPrintPrec l p (Concat tacs) =
     case unsnoc tacs of
       Nothing -> empty
@@ -764,20 +771,20 @@ instance Pretty Tactic where
   pPrintPrec _ p (Custom str) = dotted p $ text str
   pPrintPrec _ p Exfalso = dotted p "exfalso"
   pPrintPrec l p (Try t) = "try" <+> pPrintPrec l p t
-  pPrintPrec l p (Refine t) = dotted p $ "refine" <+> pPrintPrec l 0 t
+  pPrintPrec l p (Refine t) = dotted p $ "refine" <+> pPrintPrec l (appPrec - 1) t
   pPrintPrec _ p (DestructSubsetTerm tm destrPat) =
     dotted p $ "destruct" <+> pPrint tm <+> "as" <+> pPrint destrPat
   pPrintPrec _ p (DestructConj h h1 h2) =
     dotted p $ "destruct" <+> text h <+> "as" <+> brackets (text h1 <+> text h2)
   pPrintPrec l p (Rewrite dir tm hyp) =
-    dotted p $ "rewrite" <+> maybe empty pPrint dir <+> pPrintPrec l 0 tm
+    dotted p $ "rewrite" <+> maybe empty pPrint dir <+> pPrintPrec l (appPrec - 1) tm
     <+> maybe empty ((<+>) "in" . text) hyp
   pPrintPrec l p (Pose abbr tm) =
-    dotted p $ "pose" <+> pPrintPrec l 0 tm <+> "as" <+> text abbr
+    dotted p $ "pose" <+> pPrintPrec l (appPrec - 1) tm <+> "as" <+> text abbr
   pPrintPrec l p (ProofPose abbr tm) =
-    dotted p $ "pose proof" <+> pPrintPrec l 0 tm <+> "as" <+> text abbr
+    dotted p $ "pose proof" <+> pPrintPrec l (appPrec - 1) tm <+> "as" <+> text abbr
   pPrintPrec l p (Assert n claim prf) =
-    dotted p $ "assert" <+> parens (pPrintArg ((n, claim), False)) <+> "by" <+> pPrintPrec l 0 prf
+    dotted p $ "assert" <+> parens (pPrintArg ((n, claim), False)) <+> "by" <+> pPrintPrec l (appPrec - 1) prf
   pPrintPrec _ p (Intros pats) =
     dotted p $ "intros" <+> sep (map pPrint pats)
   pPrintPrec _ p (GeneralizeDependent xs) =
@@ -785,7 +792,8 @@ instance Pretty Tactic where
   pPrintPrec _ p (Clear hyp) =
     dotted p $ "clear" <+> text hyp
   pPrintPrec l p (AssertTacs x tp tacs) =
-    sep $ dotted p ("assert" <+> pPrintArg ((x, tp), False)) : [braces (pPrintPrec l nodotPrec (Concat tacs)) | not $ null tacs]
+    sep $ dotted p ("assert" <+> pPrintArg ((x, tp), False))
+      : [lbrace <+> pPrintPrec l dotPrec (mkConcat tacs) <+> rbrace | not $ null tacs]
 
 -- | Pretty prints destruct or induct.
 pPrintPrecMatch :: PrettyLevel -> Rational -> CoqTerm -> [(Id, (CoqDestrPat, [Tactic]))] -> Maybe [Id] -> Doc
@@ -794,7 +802,7 @@ pPrintPrecMatch l p tm branches genVars =
         if isNothing genVars || all (\(_, (pat, tacs)) -> pat == ConjDestrPat [] && null tacs) branches
         then "destruct" else "induction"
       -- destruct or induct
-      header0 = matchTac <+> pPrint tm <+> "as" <+> pPrint (DisjDestrPat $ map fst branchesSorted)
+      header0 = matchTac <+> pPrintPrec l (appPrec - 1) tm <+> "as" <+> pPrint (DisjDestrPat $ map fst branchesSorted)
       -- generalize dependent genVars
       gendeps vars =
         sep . punctuate semi $ map (\x -> "try revert" <+> text (subsetWitnessNm x) <> semi <+> "generalize dependent" <+> text x) vars
@@ -802,12 +810,14 @@ pPrintPrecMatch l p tm branches genVars =
       -- In the last case, we update the precedence to print the branches with a concatenation
       -- We take max p concatPrec because if p = nodotPrec, we are in nested concat branches
       (header, p') = case (genVars, tm) of
-        ((Just [], _); (Nothing, Var _)) -> (header0, max p concatPrec)
+        ((Just [], _); (Nothing, Var _)) ->
+          (header0, if nullBranches then p else max p concatPrec)
         (Just vars, _) -> (sep $ punctuate semi [gendeps vars, header0, "intros"], max p concatPrec)
         (Nothing, _) -> (sep ["let E := fresh \"E\" in", header0 <+> "eqn:E"], concatPrec)
    in dotted p' header $$ printTacBranches p'
   where
-    nullBranches = all (null . snd . snd) branches
+    nullBranches = all (nullBranch . snd . snd) branches
+    nullBranch = \case ([Concat []]; []) -> True; _ -> False
     branchesSorted = map snd $ sortBy ordFunc branches
     -- The branches of an induct/destruct in a Concat are shown with [branch1 | … | branchn],
     -- and otherwise as - branch1. - … - branchn (with the correct bullet)

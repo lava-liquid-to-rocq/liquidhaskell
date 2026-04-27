@@ -211,16 +211,15 @@ wfDecls γ (Definition f tpf e isRefl : decls) = do
     inDecl = first (annotateErr f)
 wfDecls _ [] = return []
 
--- Returns Just e if the match is done on a data constructor,
--- where e is the branch of that constructor with the bound variables substituted correctly
--- We do this first because having redundant matches interacts badly with induction
+-- Remove matches on a constructor and inline let x := tm in if tm then … else …
+-- We do this first because having redundant matches of the first kind interacts badly with induction
 removeRedundantMatches :: Expr -> Expr
 removeRedundantMatches e@(Case r branches genVars) =
   case apps r of
     (DC c, argsc) ->
       let br = filter ((==) c . fst . fst) branches
        in case br of
-            -- same remark as below: should be Nothing instead of "undefined"
+            -- TODO: We should use Maybe in the translation from Core rather than "undefined"
             (_, Just (Reft (Var "undefined" _ _))) : _ -> e
             ((_, ys), Just ebr) : _ -> removeRedundantMatches $ substs (zip argsc (map fst ys)) ebr
             _ -> recurse
@@ -228,6 +227,13 @@ removeRedundantMatches e@(Case r branches genVars) =
   where
     recurse = Case r (map (second $ fmap removeRedundantMatches) branches) genVars
 removeRedundantMatches (Reft r) = Reft r
+removeRedundantMatches (Let x _ (Reft tm) (Case (Var x' _ _) branches genVars))
+  | x == x' && all xNotInBranch branches =
+      removeRedundantMatches (Case tm branches genVars)
+  where
+    xNotInBranch (_, Nothing) = True
+    xNotInBranch ((_, ys), Just e) =
+      x `elem` map fst ys || not (x `Set.member` freeVars e)
 removeRedundantMatches (Let x tpx ex e) =
   Let x tpx (removeRedundantMatches ex) (removeRedundantMatches e)
 
@@ -379,10 +385,9 @@ checkExpr γ state e0@(Case r branches _) tp = do
     -- Returns the elaborated branch and a boolean to indicate if a subterm uses
     -- an induction hypothesis one of the introduced variables
     checkBranch :: ((Id, [(Id, Bool)]), Maybe Expr) -> Either TypeError (((Id, [(Id, Bool)]), Maybe Expr), Set Id)
-    checkBranch (c, Nothing) = return ((c, Nothing), Set.empty)
-    -- TODO: we should not use a variable name to translate from Core, we should
-    -- not have this case
+    -- TODO: we should not use a variable name to translate from Core, we should not have this case
     checkBranch (c, Just (Reft (Var "undefined" _ _))) = return ((c, Nothing), Set.empty)
+    checkBranch (c, Nothing) = return ((c, Nothing), Set.empty)
     checkBranch ((c, ys), Just e) = do
       tpc <- lookupDC c γ
       -- Replace the binders in tpc by the names of the match in ys
