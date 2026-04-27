@@ -146,6 +146,11 @@ isSubtype (ArrType _ tp11 tp12) (ArrType _ tp21 tp22) =
   isSubtype tp21 tp11 && isSubtype tp12 tp22
 isSubtype _ _ = False
 
+-- | Check if the type is a unit proof type {{P}}, i.e. its base type is unitTp.
+isUnitRefType :: RefType -> Bool
+isUnitRefType (RefType _ a _) = a == unitTp
+isUnitRefType _ = False
+
 -- * Well-formedness of types
 
 wfRefType :: TypEnv -> RefType -> Either TypeError RefType
@@ -312,13 +317,17 @@ synReft γ r@(Pop pop r1 r2) = do
   (tp1, r1') <- synReft γ r1
   case tp1 of
     ArrType {} -> Left . SynErr $ "Proof combinators on higher-order values is not defined, in the type synthesis of" <+> pPrint r
-    RefType x a reft1 -> do
-      let xvar = Var x 0 Local
-          reft2 = Bop And reft1 (Bop (popToBop pop) xvar (mkProj r1'))
-      r2' <- checkReft γ r2 (RefType x a reft2)
-      let reft3' = Bop And reft1 (Bop Eq xvar (mkProj r2'))
-          reft3 = case pop of PEq -> Bop And reft3' (Bop Eq xvar (mkProj r1')); _ -> reft3'
-      return (RefType x a reft3, Pop pop r1' r2')
+    RefType x a reft1
+      | isUnitRefType tp1 -> do
+          (tp2, r2') <- synReft γ r2
+          return (tp2, Pop pop r1' r2')
+      | otherwise -> do
+          let xvar = Var x 0 Local
+              reft2 = Bop And reft1 (Bop (popToBop pop) xvar (mkProj r1'))
+          r2' <- checkReft γ r2 (RefType x a reft2)
+          let reft3' = Bop And reft1 (Bop Eq xvar (mkProj r2'))
+              reft3 = case pop of PEq -> Bop And reft3' (Bop Eq xvar (mkProj r1')); _ -> reft3'
+          return (RefType x a reft3, Pop pop r1' r2')
 synReft _ (Sub {}) = error "Constructor Sub found before elaboration"
 synReft _ (Inj {}) = error "Constructor Inj found before elaboration"
 synReft _ (Proj {}) = error "Constructor Proj found before elaboration"

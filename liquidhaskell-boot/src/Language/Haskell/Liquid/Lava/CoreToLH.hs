@@ -148,6 +148,13 @@ unReft :: Calc.Expr -> Maybe Calc.Reft
 unReft (Calc.Reft tm) = Just tm
 unReft _ = Nothing
 
+-- | Cast an equational chain/value expression into an explicit Unit proof witness.
+-- Models `tm *** QED` as `unit ? (tm proves True)`.
+-- TODO partial
+asProofExpr :: Calc.Expr -> Calc.Expr
+asProofExpr (Calc.Reft tm) = Calc.Reft (Calc.QMark Calc.unitTm tm Calc.ttTm)
+asProofExpr tm = error $ "Expected simple term for proof cast but found " ++ show tm
+
 -- | The head of a flattened Core application.
 data AppHead
   = -- | a classified variable
@@ -179,7 +186,7 @@ transFlattenedApp (ExprHead g) args = case traverse unReft (g : args) of
 transFlattenedApp (VarHead HNot) [Calc.Reft tm] = Calc.Reft $ Calc.Neg tm
 transFlattenedApp (VarHead HEqChain) [_, fstTerm, Calc.Reft lstTerm] = transEqns (parseExpr fstTerm) lstTerm
 transFlattenedApp (VarHead HCast) [_, eqChain, qed]
-  | qed == Calc.Reft (Calc.DC "QED") = case parseExpr eqChain of
+  | qed == Calc.Reft (Calc.DC "QED") = asProofExpr $ case parseExpr eqChain of
       Eqn firstTerm lastTerm -> transEqns firstTerm lastTerm
       _ -> eqChain
 transFlattenedApp (VarHead HQmark) (_ : _ : firstArg : secondArg : _)

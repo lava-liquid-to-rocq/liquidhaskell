@@ -2703,7 +2703,9 @@ executable benchmark-lava
                     , Benchmark.RBinsToBins
                     -- Seems ok
                     , Benchmark.SafeIndexing
-                    -- , Benchmark.SoftwareFoundations -- Discuss identity_fn_applied_twice
+                    -- Discuss identity_fn_applied_twice
+                    , Benchmark.SoftwareFoundations
+
     build-depends:    base
                     , liquid-prelude
                     -- , containers
