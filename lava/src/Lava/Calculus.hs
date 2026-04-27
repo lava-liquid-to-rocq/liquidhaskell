@@ -448,7 +448,7 @@ instance HasVars RefType where
     ArrType y tpy tp'
       | y `Set.member` freeVars r && x `Set.member` freeVars tp' ->
           let z = freshVar y (freeVars r `Set.union` freeVars tp)
-           in ArrType y (subst r x tpy) (subst r x $ rename z y tp')
+           in ArrType z (subst r x tpy) (subst r x $ rename z y tp')
     ArrType y tpy tp' -> ArrType y (subst r x tpy) (subst r x tp')
 
 instance (HasVars a) => HasVars [a] where
