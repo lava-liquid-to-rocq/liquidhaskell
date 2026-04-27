@@ -795,7 +795,7 @@ instance Pretty Tactic where
     sep $ dotted p ("assert" <+> pPrintArg ((x, tp), False))
       : [lbrace <+> pPrintPrec l dotPrec (mkConcat tacs) <+> rbrace | not $ null tacs]
 
--- | Pretty prints destruct or induct.
+-- | Pretty prints destruct or induct
 pPrintPrecMatch :: PrettyLevel -> Rational -> CoqTerm -> [(Id, (CoqDestrPat, [Tactic]))] -> Maybe [Id] -> Doc
 pPrintPrecMatch l p tm branches genVars =
   let matchTac =
@@ -810,11 +810,11 @@ pPrintPrecMatch l p tm branches genVars =
       -- In the last case, we update the precedence to print the branches with a concatenation
       -- We take max p concatPrec because if p = nodotPrec, we are in nested concat branches
       (header, p') = case (genVars, tm) of
-        ((Just [], _); (Nothing, Var _)) ->
-          (header0, if nullBranches then p else max p concatPrec)
+        ((Just [], _); (Nothing, Var _)) -> (header0, max p concatPrec)
         (Just vars, _) -> (sep $ punctuate semi [gendeps vars, header0, "intros"], max p concatPrec)
         (Nothing, _) -> (sep ["let E := fresh \"E\" in", header0 <+> "eqn:E"], concatPrec)
-   in dotted p' header $$ printTacBranches p'
+   in if nullBranches then dotted p header
+      else dotted p' header $$ printTacBranches p'
   where
     nullBranches = all (nullBranch . snd . snd) branches
     nullBranch = \case ([Concat []]; []) -> True; _ -> False
@@ -822,7 +822,7 @@ pPrintPrecMatch l p tm branches genVars =
     -- The branches of an induct/destruct in a Concat are shown with [branch1 | … | branchn],
     -- and otherwise as - branch1. - … - branchn (with the correct bullet)
     printTacBranches p' =
-      if p' == concatPrec && not nullBranches
+      if p' == concatPrec
       then dotted p (brackets . sep . punctuate " |" $ map (\(_, tacs) -> pPrintPrec l nodotPrec (mkConcat tacs)) branchesSorted)
       else vcat $ map (\(_, tacs) -> rocqBullet p' <+> sep (map (pPrintPrec l (p' + 1)) tacs)) branchesSorted
 

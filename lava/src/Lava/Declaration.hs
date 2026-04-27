@@ -1,6 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OrPatterns #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TupleSections #-}
 
 -- | This module contains the functions for the translation of declarations
@@ -9,6 +10,7 @@ module Lava.Declaration where
 import Data.Bifunctor (bimap, first, second)
 import Data.Either (isLeft)
 import Data.List (groupBy, union, (\\))
+import qualified Data.List.NonEmpty as NE (group, head)
 import Data.Maybe (isNothing)
 import qualified Data.Set as Set
 import Debug.Trace (trace)
@@ -549,9 +551,9 @@ inversionLemma :: Id -> ([(Id, Reft)], [([(Reft, Reft)], Reft)]) -> [Coq.Decl]
 inversionLemma f (σxs, paths) =
   [ Coq.Definition
       f_lem
-      []
-      (Coq.Prop . mkForallXs (argsVars ++ [res]) $ Coq.Bop (Binop Equiv PropOp) relApp guardDisjunction)
-      (ProofBody [Custom $ "rel_back' (" ++ tacArg ++ ")"])
+      (map ((,False) . (,Hole)) $ argsVars ++ [res])
+      (Coq.Prop $ Coq.Bop (Binop Equiv PropOp) relApp guardDisjunction)
+      (ProofBody [Custom . render $ "rel_back'" <+> tacArg])
       Opaque,
     AddHint RewriteHint f_lem GraphRelBackDB
   ]
@@ -566,8 +568,11 @@ inversionLemma f (σxs, paths) =
     guardDisjunction = mkOr $ map (\(σp, rf) -> trPathGuard f (σxs, σp, rf) [] (Just res)) paths
     -- argument of the tactic: the translation of the terms destructed in the guards
     tacArg =
-      let withPatterns = concatMap fst paths
-       in unwords (map ((++ " _::_") . prettyShow . utrReftProp . fst) withPatterns) ++ " _nil"
+      let withPatterns = {- map NE.head . NE.group $ -} concatMap fst paths
+       in maybeParens
+            (not $ null withPatterns)
+            $ hsep (map ((<+> "_::_") . parens . pPrint . utrReft . fst) withPatterns)
+              <+> "_nil"
 
 -- | Name of the inversion lemma constructed from the patterns of the arguments in a path.
 -- This function is similar to `Declaration.namePath`
