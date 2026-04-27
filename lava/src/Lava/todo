@@ -1,5 +1,7 @@
 Change return type of arrs to ([RefType], (Id, BaseType, Reft))
 
+Explicit substitution of matches for types in elaboration?
+
 Software foundations: fix generation of hints
 
 Use type of constructor in case?

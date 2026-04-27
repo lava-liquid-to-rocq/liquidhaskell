@@ -146,6 +146,11 @@ isSubtype (ArrType _ tp11 tp12) (ArrType _ tp21 tp22) =
   isSubtype tp21 tp11 && isSubtype tp12 tp22
 isSubtype _ _ = False
 
+-- | Check if the type is a unit proof type {{P}}, i.e. its base type is unitTp.
+isUnitRefType :: RefType -> Bool
+isUnitRefType (RefType _ a _) = a == unitTp
+isUnitRefType _ = False
+
 -- * Well-formedness of types
 
 wfRefType :: TypEnv -> RefType -> Either TypeError RefType
@@ -183,7 +188,7 @@ wfDecls γ (Data tc constrs : decls) = do
     trivializeRefs (RefType x tp _) = RefType x tp ttTm
     trivializeRefs (ArrType x tpx tp) = ArrType x (trivializeRefs tpx) (trivializeRefs tp)
     checkBranch :: (TypEnv, [(Id, RefType)]) -> (Id, RefType) -> Either TypeError (TypEnv, [(Id, RefType)])
-    checkBranch (γi, dcs) (ci, tpi) = do
+    checkBranch (γi, dcs) (ci, tpi) = first (annotateErr ci) $ do
       checkFOandTC tpi
       tpi' <- wfRefType γi tpi
       -- Replace the trivialized entry for ci with the elaborated one
@@ -198,15 +203,17 @@ wfDecls γ (Data tc constrs : decls) = do
             else when (tc' /= TC tc) . Left . WfErr $ "The constructor type" <+> pPrint tp <+> "must return a refinement of" <+> text tc
 -- (WF-DDef)
 wfDecls γ (Definition f tpf e isRefl : decls) = do
-  tpf' <- wfRefType γ tpf
+  tpf' <- inDecl $ wfRefType γ tpf
   let γf = insertRecVar (f, tpf') γ
   let (args, ret) = second mkRefType $ arrs tpf'
   let γfargs = insertLocalVars args γf
   let initBrPat = map (\(x, tpx) -> Param x (arity tpx)) args
-  e' <- checkExpr γfargs initBrPat (removeRedundantMatches e) ret
-  γf' <- changeRecToGlobal f γf
+  e' <- inDecl $ checkExpr γfargs initBrPat (removeRedundantMatches e) ret
+  γf' <- inDecl $ changeRecToGlobal f γf
   decls' <- wfDecls γf' decls
   return $ Definition f tpf' e' isRefl : decls'
+  where
+    inDecl = first (annotateErr f)
 -- doesn't exist in the paper, could be called WF-DImp
 wfDecls γ (Import modName decls : rest) = do
   -- Trust imported declarations and insert their types into the environment.
@@ -224,16 +231,15 @@ wfDecls γ (Import modName decls : rest) = do
       populateFromImport (populateFromImport env innerDecls) ds
 wfDecls _ [] = return []
 
--- Returns Just e if the match is done on a data constructor,
--- where e is the branch of that constructor with the bound variables substituted correctly
--- We do this first because having redundant matches interacts badly with induction
+-- Remove matches on a constructor and inline let x := tm in if tm then … else …
+-- We do this first because having redundant matches of the first kind interacts badly with induction
 removeRedundantMatches :: Expr -> Expr
 removeRedundantMatches e@(Case r branches genVars) =
   case apps r of
     (DC c, argsc) ->
       let br = filter ((==) c . fst . fst) branches
        in case br of
-            -- same remark as below: should be Nothing instead of "undefined"
+            -- TODO: We should use Maybe in the translation from Core rather than "undefined"
             (_, Just (Reft (Var "undefined" _ _))) : _ -> e
             ((_, ys), Just ebr) : _ -> removeRedundantMatches $ substs (zip argsc (map fst ys)) ebr
             _ -> recurse
@@ -241,6 +247,13 @@ removeRedundantMatches e@(Case r branches genVars) =
   where
     recurse = Case r (map (second $ fmap removeRedundantMatches) branches) genVars
 removeRedundantMatches (Reft r) = Reft r
+removeRedundantMatches (Let x _ (Reft tm) (Case (Var x' _ _) branches genVars))
+  | x == x' && all xNotInBranch branches =
+      removeRedundantMatches (Case tm branches genVars)
+  where
+    xNotInBranch (_, Nothing) = True
+    xNotInBranch ((_, ys), Just e) =
+      x `elem` map fst ys || not (x `Set.member` freeVars e)
 removeRedundantMatches (Let x tpx ex e) =
   Let x tpx (removeRedundantMatches ex) (removeRedundantMatches e)
 
@@ -319,13 +332,17 @@ synReft γ r@(Pop pop r1 r2) = do
   (tp1, r1') <- synReft γ r1
   case tp1 of
     ArrType {} -> Left . SynErr $ "Proof combinators on higher-order values is not defined, in the type synthesis of" <+> pPrint r
-    RefType x a reft1 -> do
-      let xvar = Var x 0 Local
-          reft2 = Bop And reft1 (Bop (popToBop pop) xvar (mkProj r1'))
-      r2' <- checkReft γ r2 (RefType x a reft2)
-      let reft3' = Bop And reft1 (Bop Eq xvar (mkProj r2'))
-          reft3 = case pop of PEq -> Bop And reft3' (Bop Eq xvar (mkProj r1')); _ -> reft3'
-      return (RefType x a reft3, Pop pop r1' r2')
+    RefType x a reft1
+      | isUnitRefType tp1 -> do
+          (tp2, r2') <- synReft γ r2
+          return (tp2, Pop pop r1' r2')
+      | otherwise -> do
+          let xvar = Var x 0 Local
+              reft2 = Bop And reft1 (Bop (popToBop pop) xvar (mkProj r1'))
+          r2' <- checkReft γ r2 (RefType x a reft2)
+          let reft3' = Bop And reft1 (Bop Eq xvar (mkProj r2'))
+              reft3 = case pop of PEq -> Bop And reft3' (Bop Eq xvar (mkProj r1')); _ -> reft3'
+          return (RefType x a reft3, Pop pop r1' r2')
 synReft _ (Sub {}) = error "Constructor Sub found before elaboration"
 synReft _ (Inj {}) = error "Constructor Inj found before elaboration"
 synReft _ (Proj {}) = error "Constructor Proj found before elaboration"
@@ -392,10 +409,9 @@ checkExpr γ state e0@(Case r branches _) tp = do
     -- Returns the elaborated branch and a boolean to indicate if a subterm uses
     -- an induction hypothesis one of the introduced variables
     checkBranch :: ((Id, [(Id, Bool)]), Maybe Expr) -> Either TypeError (((Id, [(Id, Bool)]), Maybe Expr), Set Id)
-    checkBranch (c, Nothing) = return ((c, Nothing), Set.empty)
-    -- TODO: we should not use a variable name to translate from Core, we should
-    -- not have this case
+    -- TODO: we should not use a variable name to translate from Core, we should not have this case
     checkBranch (c, Just (Reft (Var "undefined" _ _))) = return ((c, Nothing), Set.empty)
+    checkBranch (c, Nothing) = return ((c, Nothing), Set.empty)
     checkBranch ((c, ys), Just e) = do
       tpc <- lookupDC c γ
       -- Replace the binders in tpc by the names of the match in ys

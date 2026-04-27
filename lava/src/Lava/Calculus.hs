@@ -502,6 +502,8 @@ identNb = 2
 
 -- ** Precedence levels
 
+-- TODO: harmonize with Rocq for simplicity
+
 arrPrec :: Rational
 arrPrec = 0
 

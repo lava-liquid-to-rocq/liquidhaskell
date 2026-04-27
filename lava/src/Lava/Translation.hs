@@ -94,8 +94,8 @@ utrReft r0 = case r0 of
   LH.FloatLit d -> Coq.FloatLiteral d
   LH.DC c -> Coq.Cr $ utrDC c
   LH.App r1 r2 -> Coq.App (utrReft r1) [utrReft r2]
-  LH.Neg r -> Coq.Neg UnrefBop $ utrReft r
-  LH.Bop op r1 r2 -> Coq.Bop (Binop (trBop op) UnrefBop) (utrReft r1) (utrReft r2)
+  LH.Neg r -> Coq.Neg UnrefOp $ utrReft r
+  LH.Bop op r1 r2 -> Coq.Bop (Binop (trBop op) UnrefOp) (utrReft r1) (utrReft r2)
   LH.QMark r _ _ -> utrReft r
   LH.Pop _ _ r -> utrReft r
   LH.Sub r _ _ -> utrReft r
@@ -196,7 +196,7 @@ hypsRV rv graphRel = \p -> foldr hyp p rv
         link (Coq.App hdT (map utrReft args ++ [Coq.Var z])) p
       where
         (quantifier, link) =
-          if graphRel then (Forall, Coq.Bop (Binop Coq.Impl PropBop)) else (Exists, Coq.Bop (Binop Coq.And PropBop))
+          if graphRel then (Forall, Coq.Bop (Binop Coq.Impl PropOp)) else (Exists, Coq.Bop (Binop Coq.And PropOp))
         (hd, args) = apps app
         hdT = case hd of
           -- f -> f_rel for global FO/HO variables (includes operators in `operatorsWithGraph`)
@@ -231,7 +231,7 @@ trRefType (RefType x tp r) =
     rT = case tp of
       (LH.Builtin {}) -> utrReftProp r
       _ | tp `elem` builtinTCs -> utrReftProp r
-      (LH.TC tc) -> Coq.Bop (Binop Coq.And PropBop) (Coq.App (Def $ wfTCName tc) [Coq.Var x]) (utrReftProp r)
+      (LH.TC tc) -> Coq.Bop (Binop Coq.And PropOp) (Coq.App (Def $ wfTCName tc) [Coq.Var x]) (utrReftProp r)
 trRefType tp@(ArrType {}) =
   Pack argTps uargTps (argListCorPrf argTps uargTps) tpx p_
   where
@@ -277,12 +277,12 @@ trReft (LH.StringLit s) = Coq.StringLiteral s
 trReft (LH.IntLit n) = Coq.IntLiteral n
 trReft (LH.FloatLit d) = Coq.FloatLiteral d
 trReft (LH.DC c) = Cr (trDC c)
-trReft (LH.Neg tm) = Coq.Neg RefBop $ trReft tm
-trReft (LH.Bop op tm1 tm2) = Coq.Bop (Binop (trBop op) RefBop) (trReft tm1) (trReft tm2)
+trReft (LH.Neg tm) = Coq.Neg RefOp $ trReft tm
+trReft (LH.Bop op tm1 tm2) = Coq.Bop (Binop (trBop op) RefOp) (trReft tm1) (trReft tm2)
 trReft (LH.QMark tm hint prop) =
   Coq.Let "_" (Just . Prop $ utrReftProp prop) (Proj2sig $ trReft hint) (trReft tm)
 trReft (LH.Pop pop tm1 tm2) =
-  let popProp = Just . Prop $ Coq.Bop (Binop (trBop $ popToBop pop) PropBop) (mkProject $ trReft tm1) (mkProject $ trReft tm2)
+  let popProp = Just . Prop $ Coq.Bop (Binop (trBop $ popToBop pop) PropOp) (mkProject $ trReft tm1) (mkProject $ trReft tm2)
    in Coq.Let "_" popProp (PrfTerm Hole $ ProofHole Nothing) (trReft tm2)
 trReft (LH.Sub tm from to) = Coq.SubCast (trRefType to) (trRefType from) (trReft tm) (Coq.ProofHole Nothing)
 trReft (LH.Inj tm tp) = mkExist (trRefType tp) (trReft tm)
