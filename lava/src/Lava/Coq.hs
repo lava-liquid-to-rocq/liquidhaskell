@@ -574,10 +574,12 @@ instance Pretty CoqTerm where
     pPrintPrec l p . IsTrue $ Bop (Binop Neq UnrefOp) s t
   pPrintPrec l p (Neg _ (Neg _ tm)) = pPrintPrec l p tm
   pPrintPrec l p (Neg opKind tm) =
-    maybeParens (p < prec) $ sym <+> pPrintPrec l prec tm
+    case opKind of
+      PropOp -> maybeParens (p < 75) $ "¬" <+> pPrintPrec l 75 tm
+      UnrefOp -> res "negb"
+      RefOp -> res "negBool"
     where
-      (sym, prec) =
-        case opKind of PropOp -> ("¬", 75); UnrefOp -> ("negb", 200); RefOp -> ("negBool", 200)
+      res sym = maybeParens (p < appPrec) $ sym <+> pPrintPrec l (appPrec - 1) tm
   pPrintPrec _ _ (PropLit b) = pPrint b
   pPrintPrec _ _ (Def s) = text s
   pPrintPrec _ _ (Abbr s) = text s
@@ -613,7 +615,7 @@ instance Pretty CoqTerm where
          sep ["subsumptionCast", pPrintPrec l (appPrec - 1) a, pPrintPrec l (appPrec - 1) (Lambda n a need), pPrintPrec l (appPrec - 1) t, pPrintPrec l (appPrec - 1) z]
        _ -> sep ["subCast", pPrintPrec l (appPrec - 1) from, pPrintPrec l (appPrec - 1) to, pPrintPrec l (appPrec - 1) t, pPrintPrec l (appPrec - 1) z]
   pPrintPrec l p (Exist _ t (CoqProofTerm "I")) =
-    maybeParens (p < 1) $ char '#' <+> pPrintPrec l 0 t
+    maybeParens (p < appPrec) $ char '#' <+> pPrintPrec l (appPrec - 1) t
   pPrintPrec l p (Exist tp t z) =
     maybeParens (p < appPrec) $
       "exist" <+> pPrintPrec l (appPrec - 1) tp <+> pPrintPrec l (appPrec - 1) t <+> pPrintPrec l (appPrec - 1) z
