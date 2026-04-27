@@ -137,6 +137,9 @@ extractApps r0 = go [] r0
       -- top-level constant
       LH.Var _ 0 Global -> updateEnv env r
       (LH.Var {}; StringLit {}; FloatLit {}; IntLit {}; DC {}) -> (env, r)
+      -- Inside Proj, we have a refined term, translated as refined and for
+      -- which we must therefore not extract projections
+      Proj {} -> (env, r)
       LH.Neg r' -> second LH.Neg $ go env r'
       LH.Bop bop r1 r2 ->
         let (env1, r1') = go env r1
@@ -160,12 +163,11 @@ extractApps r0 = go [] r0
           extractApp = uncurry updateEnv extractInAppArgs
           -- apply the function on a list of arguments
           seqNames arg (curEnv, curArgs) = second (: curArgs) $ go curEnv arg
-      -- We do not extract applications of the subterms we will erase in QMark and Pop
+      -- We do not care about extracting applications of the subterms we will erase in QMark and Pop
       QMark r' rh rp -> second (\r'' -> QMark r'' rh rp) $ go env r'
       Pop pop r1 r2 -> second (Pop pop r1) $ go env r2
       Inj r' tp -> second (`Inj` tp) $ go env r'
       Sub r' from to -> second (\r'' -> Sub r'' from to) $ go env r'
-      Proj r' -> second Proj $ go env r'
       where
         -- If r is in env, returns its associated variable,
         -- otherwise creates a fresh variable, update env and returns the variable
