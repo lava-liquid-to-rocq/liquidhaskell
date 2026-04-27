@@ -45,7 +45,7 @@ mkForallXs xs cqtm = Forall (map (,Hole) xs) cqtm
 -- | Wrapper for Exists, defined as id for empty argument list
 mkExists :: [(Id, RocqType)] -> CoqTerm -> CoqTerm
 mkExists [] r = r
-mkExists ((_, Prop prp@(Bop (Binop Eq PropBop) _ trueOrFalse)) : tl) r | trueOrFalse `elem` [btrue, bfalse] = mkAnd [prp, mkExists tl r]
+mkExists ((_, Prop prp@(Bop (Binop Eq PropOp) _ trueOrFalse)) : tl) r | trueOrFalse `elem` [btrue, bfalse] = mkAnd [prp, mkExists tl r]
 mkExists (hd : tl) r = case mkExists tl r of
   Exists args r' -> Exists (hd : args) r'
   res -> Exists [hd] res
@@ -60,13 +60,13 @@ mkArrowT args ret = foldr Arrow ret args
 
 -- | Wrapper for And, defined as TT for empty conjuncts list
 mkAnd :: [CoqTerm] -> CoqTerm
-mkAnd args = if null args' then PropLit True else foldl1 (Bop (Binop And PropBop)) args'
+mkAnd args = if null args' then PropLit True else foldl1 (Bop (Binop And PropOp)) args'
   where
     args' = filter (/= PropLit True) args
 
 -- | Wrapper for Or, defined as FF for empty conjuncts list
 mkOr :: [CoqTerm] -> CoqTerm
-mkOr args = if null args' then PropLit False else foldl1 (Bop (Binop Or PropBop)) args'
+mkOr args = if null args' then PropLit False else foldl1 (Bop (Binop Or PropOp)) args'
   where
     args' = filter (/= PropLit False) args
 
@@ -82,19 +82,19 @@ mkIsTrue tm = case tm of
   _ | tm == btrue -> PropLit True
   _ | tm == bfalse -> PropLit False
   Neg _ (Neg _ b) -> mkIsTrue b
-  Neg _ (Bop (Binop zrel UnrefBop) r1 r2)
+  Neg _ (Bop (Binop zrel UnrefOp) r1 r2)
     | zrel `elem` [Lt, Leq, Geq, Gt] ->
         mkZrel zrel r1 r2 bfalse
-  Neg _ b -> Neg PropBop (mkIsTrue b)
-  Bop (Binop zrel UnrefBop) r1 r2
+  Neg _ b -> Neg PropOp (mkIsTrue b)
+  Bop (Binop zrel UnrefOp) r1 r2
     | zrel `elem` [Lt, Leq, Geq, Gt] ->
         mkZrel zrel r1 r2 btrue
-  Bop (Binop bop UnrefBop) r1 r2
+  Bop (Binop bop UnrefOp) r1 r2
     | bop `elem` [Eq, Neq] ->
-        Bop (Binop bop PropBop) r1 r2
-  Bop (Binop bop UnrefBop) r1 r2
+        Bop (Binop bop PropOp) r1 r2
+  Bop (Binop bop UnrefOp) r1 r2
     | bop `elem` [And, Or, Impl, Equiv] ->
-        Bop (Binop bop PropBop) (mkIsTrue r1) (mkIsTrue r2)
+        Bop (Binop bop PropOp) (mkIsTrue r1) (mkIsTrue r2)
   _ -> IsTrue tm
   where
     mkZrel zrel r1 r2 res = App zrel_rel [r1, r2, res]
