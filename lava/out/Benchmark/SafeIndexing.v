@@ -157,12 +157,10 @@ Proof.
 	induction xs as [(*Cons*) x xs IH_xs | (*Nil*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(Cons 
-		(exist (fun (n: Z) => (ltbZ_rel 5 n true)) x (ltac: (solver))) 
-		(subsumptionCast IList_u (fun (l: IList_u) => ((IList_wf l) /\ True)) 
+		(let arg_24495496 := exist (fun (n: Z) => (ltbZ_rel 5 n true)) x (ltac: (solver)) in (let arg_46568342 := (subsumptionCast IList_u (fun (l: IList_u) => ((IList_wf l) /\ True)) 
 		(IH_xs (ltac: (try clear IH_xs; 
 	solver)) ys (ltac: (try clear IH_xs; 
-	solver))) (ltac: (solver)))) _); 
+	solver))) (ltac: (solver))) in (Cons arg_24495496 arg_46568342))) _); 
 		solver.  
 	  - intros . 
 		refine (exist _ ys _); 
@@ -371,20 +369,11 @@ Proof.
 	try revert i_p; generalize dependent i; try revert xs_p; generalize dependent xs; 
 	induction ys as [(*Cons*) y ys IH_ys | (*Nil*) ]. 
 	  - intros . 
-		pose proof (thm1 
-		(subsumptionCast IList_u (fun (xs: IList_u) => ((IList_wf xs) /\ True)) 
-		(append 
-		(exist (fun (xs: IList_u) => ((IList_wf xs) /\ True)) ys (ltac: (solver))) 
-		(exist (fun (ys: IList_u) => ((IList_wf ys) /\ True)) xs (ltac: (solver)))) (ltac: (solver))) 
-		(exist (fun (x: Z) => (ltbZ_rel 5 x true)) y (ltac: (solver))) 
-		(subsumptionCast Z 
-		(fun (i: Z) => (exists (llenres: Z), (llen_rel 
-		(⌊ append 
-		(exist (fun (xs: IList_u) => ((IList_wf xs) /\ True)) ys (ltac: (solver))) 
-		(exist (fun (ys: IList_u) => ((IList_wf ys) /\ True)) xs (ltac: (solver))) -⌋) llenres) /\ ((0 <= i) /\ (i < llenres)))) 
+		pose proof (let arg_69510308 := (subsumptionCast IList_u (fun (xs: IList_u) => ((IList_wf xs) /\ True)) 
+		(let arg_68139545 := exist (fun (xs: IList_u) => ((IList_wf xs) /\ True)) ys (ltac: (solver)) in (let arg_39329588 := exist (fun (ys: IList_u) => ((IList_wf ys) /\ True)) xs (ltac: (solver)) in (append arg_68139545 arg_39329588))) (ltac: (solver))) in (let arg_48678380 := exist (fun (x: Z) => (ltbZ_rel 5 x true)) y (ltac: (solver)) in (let arg_59153908 := (subsumptionCast Z 
+		(fun (i: Z) => (exists (llenres: Z), (llen_rel (⌊ arg_69510308 -⌋) llenres) /\ ((0 <= i) /\ (i < llenres)))) 
 		((exist (fun (x_1: Z) => True) i (ltac: (solver))) +Z (subsumptionCast Z (fun (x_2: Z) => True) 
-		(llen 
-		(exist (fun (l: IList_u) => ((IList_wf l) /\ True)) ys (ltac: (solver)))) (ltac: (solver)))) (ltac: (solver)))) as H_46661263. 
+		(let arg_68139545 := exist (fun (l: IList_u) => ((IList_wf l) /\ True)) ys (ltac: (solver)) in (llen arg_68139545)) (ltac: (solver)))) (ltac: (solver))) in (thm1 arg_69510308 arg_48678380 arg_59153908)))) as H_46661263. 
 		simpl in H_46661263. 
 		refine (subsumptionCast _ _ 
 		(IH_ys (ltac: (try clear IH_ys; 

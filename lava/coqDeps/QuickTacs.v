@@ -447,6 +447,8 @@ Ltac shape_based := match goal with
       clear temp
   (*| |- exists v, ?relAp v => solve [unshelve (eexists _; econstructor; assumption)]*)
   | |- exists v, ?relAp v /\ v = ?t => exists t; split; [|reflexivity]
+  | [h: (exists v, _) /\ ?t |- _] => destruct h as [? ?]
+  | [h: ?s /\ (exists v, _) |- _] => destruct h as [? ?]
   | |- _ => intro
   end.
 
@@ -724,8 +726,20 @@ Ltac quick_cleanup := simpl_ref_constr;
   try (lia_simpl; simpl_proj).
 Ltac quick_simpl := quick_cleanup;  repeat shape_based.
 
+Ltac cleanup_hints' := match goal with
+  | [hint: {_: Unit | ?r} |- _ ] => destruct hint as [_ hint]
+  (*| [h: exists v, _ |- _] => destruct h as [? ?]*)
+  | [hint: {x: ?A | ?r} |- _ ] => 
+    let hint_r := fresh "hint_r" in
+    destruct hint as [hint hint_r]
+  | [ h: ?s == ?t |- _] => idtac h; rewrite <- generic_equalb_eq in h
+  end.
+
 Ltac cleanup_hints := match goal with
   | [hint: {_: Unit | ?r} |- _ ] => destruct hint as [_ hint]
+  | [h: (exists v, _) /\ ?t |- _] => destruct h as [? ?]
+  | [h: ?s /\ (exists v, _) |- _] => destruct h as [? ?]
+  (*| [h: exists v, _ |- _] => destruct h as [? ?]*)
   | [hint: {x: ?A | ?r} |- _ ] => 
     let hint_r := fresh "hint_r" in
     destruct hint as [hint hint_r]

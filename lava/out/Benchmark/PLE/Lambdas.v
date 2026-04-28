@@ -15,7 +15,7 @@ Proof.
 	solver). 
 	unshelve refine (let f : ltac:(buildPackG_spec f_48681711) := (ltac:(fun_to_pack f_48681711)) in _). 
 	refine (subsumptionCast _ _ 
-		((getPackF f) (exist (fun (y: Z) => True) x (ltac: (solver)))) _); 
+		(let arg_91127321 := exist (fun (y: Z) => True) x (ltac: (solver)) in ((getPackF f) arg_91127321)) _); 
 	solver. 
 Defined. 
 Definition appId_spec (x: {x: Z | True}): Type := 
@@ -30,6 +30,6 @@ Proof.
 	solver). 
 	unshelve refine (let f : ltac:(buildPackG_spec f_73066757) := (ltac:(fun_to_pack f_73066757)) in _). 
 	refine (subsumptionCast _ _ 
-		((getPackF f) (exist (fun (y: Z) => True) x (ltac: (solver)))) _); 
+		(let arg_91127321 := exist (fun (y: Z) => True) x (ltac: (solver)) in ((getPackF f) arg_91127321)) _); 
 	solver. 
 Defined. 

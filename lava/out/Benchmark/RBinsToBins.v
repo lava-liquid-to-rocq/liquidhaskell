@@ -137,15 +137,13 @@ Proof.
 	induction b as [(*RB0*) n IH_n | (*RB1*) n IH_n | (*RZ*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(B0 
-		(subsumptionCast Bin_u (fun (n: Bin_u) => ((Bin_wf n) /\ True)) (IH_n (ltac: (try clear IH_n; 
-	solver))) (ltac: (solver)))) _); 
+		(let arg_52571464 := (subsumptionCast Bin_u (fun (n: Bin_u) => ((Bin_wf n) /\ True)) (IH_n (ltac: (try clear IH_n; 
+	solver))) (ltac: (solver))) in (B0 arg_52571464)) _); 
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(B1 
-		(subsumptionCast Bin_u (fun (n: Bin_u) => ((Bin_wf n) /\ True)) (IH_n (ltac: (try clear IH_n; 
-	solver))) (ltac: (solver)))) _); 
+		(let arg_52571464 := (subsumptionCast Bin_u (fun (n: Bin_u) => ((Bin_wf n) /\ True)) (IH_n (ltac: (try clear IH_n; 
+	solver))) (ltac: (solver))) in (B1 arg_52571464)) _); 
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ RBinsToBins__Z _); 

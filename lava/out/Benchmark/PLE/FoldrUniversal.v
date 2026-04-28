@@ -59,10 +59,8 @@ Definition compose (lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq
 Proof. 
 	destruct lq_tmp6 as [lq_tmp6 lq_tmp6_p]. 
 	refine (subsumptionCast _ _ 
-		((getPackF lq_tmp0) 
-		(subsumptionCast Z (fun (lq_tmp1: Z) => True) 
-		((getPackF lq_tmp3) 
-		(exist (fun (lq_tmp4: L_u) => ((L_wf lq_tmp4) /\ True)) lq_tmp6 (ltac: (solver)))) (ltac: (solver)))) _); 
+		(let arg_83069919 := (subsumptionCast Z (fun (lq_tmp1: Z) => True) 
+		(let arg_81117920 := exist (fun (lq_tmp4: L_u) => ((L_wf lq_tmp4) /\ True)) lq_tmp6 (ltac: (solver)) in ((getPackF lq_tmp3) arg_81117920)) (ltac: (solver))) in ((getPackF lq_tmp0) arg_83069919)) _); 
 	solver. 
 Defined. 
 Inductive compose_rel : ((@uPack (Z ::UT nilUT) Z) -> ((@uPack (L_u ::UT nilUT) Z) -> (L_u -> (Z -> Prop)))) := 
@@ -137,11 +135,10 @@ Proof.
 	induction lq_tmp5 as [(*C*) x xs IH_xs | (*Emp*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		((getPackF lq_tmp0) (exist (fun (lq_tmp1: Z) => True) x (ltac: (solver))) 
-		(subsumptionCast Z (fun (lq_tmp2: Z) => True) 
+		(let arg_91127321 := exist (fun (lq_tmp1: Z) => True) x (ltac: (solver)) in (let arg_42647660 := (subsumptionCast Z (fun (lq_tmp2: Z) => True) 
 		(IH_xs (ltac: (try clear IH_xs; 
 	solver)) lq_tmp0 lq_tmp4 (ltac: (try clear IH_xs; 
-	solver))) (ltac: (solver)))) _); 
+	solver))) (ltac: (solver))) in ((getPackF lq_tmp0) arg_91127321 arg_42647660))) _); 
 		solver.  
 	  - intros . 
 		refine (exist _ lq_tmp4 _); 
@@ -244,8 +241,7 @@ Proof.
 	solver)) step) as H_42980961. 
 		simpl in H_42980961. 
 		refine (subsumptionCast _ _ 
-		(step (exist (fun (x: Z) => True) x (ltac: (solver))) 
-		(exist (fun (xs: L_u) => ((L_wf xs) /\ True)) xs (ltac: (solver)))) _); 
+		(let arg_91127321 := exist (fun (x: Z) => True) x (ltac: (solver)) in (let arg_66628065 := exist (fun (xs: L_u) => ((L_wf xs) /\ True)) xs (ltac: (solver)) in (step arg_91127321 arg_66628065))) _); 
 		solver.  
 	  - intros . 
 		refine (exist _ unit _); 

@@ -49,7 +49,7 @@ Proof.
 	induction vx as [(*Val*) x]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		((getPackF f) (exist (fun (x: Z) => True) x (ltac: (solver)))) _); 
+		(let arg_91127321 := exist (fun (x: Z) => True) x (ltac: (solver)) in ((getPackF f) arg_91127321)) _); 
 		solver.  
 Defined. 
 Inductive compose_rel : (Identity_u -> ((@uPack (Z ::UT nilUT) Identity_u) -> (Identity_u -> Prop))) := 
@@ -124,7 +124,8 @@ Definition retrn_spec (v: {v: Z | True}): Type :=
 Definition retrn (v: {v: Z | True}): retrn_spec v. 
 Proof. 
 	destruct v as [v v_p]. 
-	refine (subsumptionCast _ _ (Val (exist (fun (n: Z) => True) v (ltac: (solver)))) _); 
+	refine (subsumptionCast _ _ 
+		(let arg_89662092 := exist (fun (n: Z) => True) v (ltac: (solver)) in (Val arg_89662092)) _); 
 	solver. 
 Defined. 
 Inductive retrn_rel : (Z -> (Identity_u -> Prop)) := 

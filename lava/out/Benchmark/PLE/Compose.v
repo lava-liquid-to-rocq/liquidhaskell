@@ -18,9 +18,8 @@ Definition compose (lq_tmp0: (@Pack ({lq_tmp1: Z | True} ::RT (fun (lq_tmp1: {lq
 Proof. 
 	destruct lq_tmp6 as [lq_tmp6 lq_tmp6_p]. 
 	refine (subsumptionCast _ _ 
-		((getPackF lq_tmp0) 
-		(subsumptionCast Z (fun (lq_tmp1: Z) => True) 
-		((getPackF lq_tmp3) (exist (fun (lq_tmp4: Z) => True) lq_tmp6 (ltac: (solver)))) (ltac: (solver)))) _); 
+		(let arg_85033698 := (subsumptionCast Z (fun (lq_tmp1: Z) => True) 
+		(let arg_59507651 := exist (fun (lq_tmp4: Z) => True) lq_tmp6 (ltac: (solver)) in ((getPackF lq_tmp3) arg_59507651)) (ltac: (solver))) in ((getPackF lq_tmp0) arg_85033698)) _); 
 	solver. 
 Defined. 
 Inductive compose_rel : ((@uPack (Z ::UT nilUT) Z) -> ((@uPack (Z ::UT nilUT) Z) -> (Z -> (Z -> Prop)))) := 

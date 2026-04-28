@@ -63,10 +63,9 @@ Proof.
 	induction lq_tmp0 as [(*C*) x xs IH_xs | (*Emp*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(C (exist (fun (VV: Z) => True) x (ltac: (solver))) 
-		(IH_xs (ltac: (try clear IH_xs; 
+		(let arg_91127321 := exist (fun (VV: Z) => True) x (ltac: (solver)) in (let arg_63046731 := IH_xs (ltac: (try clear IH_xs; 
 	solver)) lq_tmp1 (ltac: (try clear IH_xs; 
-	solver)))) _); 
+	solver)) in (C arg_91127321 arg_63046731))) _); 
 		solver.  
 	  - intros . 
 		refine (exist _ lq_tmp1 _); 
@@ -165,11 +164,9 @@ Proof.
 	induction lq_tmp0 as [(*C*) x xs IH_xs | (*Emp*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(append 
-		(subsumptionCast L_u (fun (lq_tmp0: L_u) => ((L_wf lq_tmp0) /\ True)) 
-		((getPackF lq_tmp1) (exist (fun (lq_tmp2: Z) => True) x (ltac: (solver)))) (ltac: (solver))) 
-		(subsumptionCast L_u (fun (lq_tmp1: L_u) => ((L_wf lq_tmp1) /\ True)) (IH_xs (ltac: (try clear IH_xs; 
-	solver)) lq_tmp1) (ltac: (solver)))) _); 
+		(let arg_57406743 := (subsumptionCast L_u (fun (lq_tmp0: L_u) => ((L_wf lq_tmp0) /\ True)) 
+		(let arg_91127321 := exist (fun (lq_tmp2: Z) => True) x (ltac: (solver)) in ((getPackF lq_tmp1) arg_91127321)) (ltac: (solver))) in (let arg_72941671 := (subsumptionCast L_u (fun (lq_tmp1: L_u) => ((L_wf lq_tmp1) /\ True)) (IH_xs (ltac: (try clear IH_xs; 
+	solver)) lq_tmp1) (ltac: (solver))) in (append arg_57406743 arg_72941671))) _); 
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ Emp _); 
@@ -273,8 +270,7 @@ Definition retrn (lq_tmp0: {lq_tmp0: Z | True}): retrn_spec lq_tmp0.
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	refine (subsumptionCast _ _ 
-		(C (exist (fun (VV: Z) => True) lq_tmp0 (ltac: (solver))) 
-		(subsumptionCast L_u (fun (VV: L_u) => ((L_wf VV) /\ True)) Emp (ltac: (solver)))) _); 
+		(let arg_35505345 := exist (fun (VV: Z) => True) lq_tmp0 (ltac: (solver)) in (let arg_29496352 := (subsumptionCast L_u (fun (VV: L_u) => ((L_wf VV) /\ True)) Emp (ltac: (solver))) in (C arg_35505345 arg_29496352))) _); 
 	solver. 
 Defined. 
 Inductive retrn_rel : (Z -> (L_u -> Prop)) := 
@@ -348,9 +344,8 @@ Theorem left_identity (x: {x: Z | True}) (f: (@Pack ({lq_tmp0: Z | True} ::RT (f
 Proof. 
 	destruct x as [x x_p]. 
 	refine (subsumptionCast _ _ 
-		(prop_append_neutral 
-		(subsumptionCast L_u (fun (xs: L_u) => ((L_wf xs) /\ True)) 
-		((getPackF f) (exist (fun (lq_tmp0: Z) => True) x (ltac: (solver)))) (ltac: (solver)))) _); 
+		(let arg_21124666 := (subsumptionCast L_u (fun (xs: L_u) => ((L_wf xs) /\ True)) 
+		(let arg_91127321 := exist (fun (lq_tmp0: Z) => True) x (ltac: (solver)) in ((getPackF f) arg_91127321)) (ltac: (solver))) in (prop_append_neutral arg_21124666)) _); 
 	solver. 
 Qed. 
 Definition right_identity_spec (x: L): Type := 

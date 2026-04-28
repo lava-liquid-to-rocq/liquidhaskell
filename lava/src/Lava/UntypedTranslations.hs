@@ -60,7 +60,7 @@ utrSmpTermGenericAux γ (φ, r_core) isUnrefined = {-traceFuncRet ["utrSmpTermGe
 
     lookupRelTp f = {- traceFuncRet ["lookupRelTp" ,f] $ -} Map.lookup (relDefName f) relMap
     lookupRel f = case lookupRelTp f of
-      Just _ -> {- Coq.Def $ -} relDefName f
+      Just _ -> relDefName f
       Nothing -> show $ (if isUnrefined then upackGetRel else packGetRel) (Coq.Def f)
 
     -- An environment containing the translations of the applications to refinements

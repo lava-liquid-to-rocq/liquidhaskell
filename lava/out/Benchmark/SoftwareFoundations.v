@@ -376,14 +376,11 @@ Proof.
 	pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_39899679. 
 	simpl in H_39899679. 
 	fix_notations. 
-	pose proof (h 
-		(exist (fun (x: SFBool_u) => ((SFBool_wf x) /\ True)) b (ltac: (solver)))) as H_42296745. 
-	assert (H_42296745': exists (fres: _), ((getPackRel f) b fres) /\ (True /\ (fres == b))) by solver. 
-	simpl in H_42296745'. 
-	pose proof (h 
-		(subsumptionCast SFBool_u (fun (x: SFBool_u) => ((SFBool_wf x) /\ True)) 
-		((getPackF f) 
-		(exist (fun (lq_tmp0: SFBool_u) => ((SFBool_wf lq_tmp0) /\ True)) b (ltac: (solver)))) (ltac: (solver)))) as H_49965291; 
+	pose proof (let arg_33548177 := exist (fun (x: SFBool_u) => ((SFBool_wf x) /\ True)) b (ltac: (solver)) in (h arg_33548177)) as H_83878296. 
+	assert (H_83878296': exists (fres: _), ((getPackRel f) b fres) /\ (True /\ (fres == b))) by solver. 
+	simpl in H_83878296'. 
+	pose proof (let arg_43000868 := (subsumptionCast SFBool_u (fun (x: SFBool_u) => ((SFBool_wf x) /\ True)) 
+		(let arg_33548177 := exist (fun (lq_tmp0: SFBool_u) => ((SFBool_wf lq_tmp0) /\ True)) b (ltac: (solver)) in ((getPackF f) arg_33548177)) (ltac: (solver))) in (h arg_43000868)) as H_59958143; 
 	refine (exist _ unit _); 
 	solver. 
 Qed. 
@@ -1050,19 +1047,16 @@ Proof.
 	induction m as [(*Bin0*) m' IH_m' | (*Bin1*) m' IH_m' | (*SoftwareFoundations__Z*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(Bin1 
-		(exist (fun (n: SFBin_u) => ((SFBin_wf n) /\ True)) m' (ltac: (solver)))) _); 
+		(let arg_41140929 := exist (fun (n: SFBin_u) => ((SFBin_wf n) /\ True)) m' (ltac: (solver)) in (Bin1 arg_41140929)) _); 
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(Bin0 
-		(subsumptionCast SFBin_u (fun (n: SFBin_u) => ((SFBin_wf n) /\ True)) (IH_m' (ltac: (try clear IH_m'; 
-	solver))) (ltac: (solver)))) _); 
+		(let arg_40715420 := (subsumptionCast SFBin_u (fun (n: SFBin_u) => ((SFBin_wf n) /\ True)) (IH_m' (ltac: (try clear IH_m'; 
+	solver))) (ltac: (solver))) in (Bin0 arg_40715420)) _); 
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(Bin1 
-		(subsumptionCast SFBin_u (fun (n: SFBin_u) => ((SFBin_wf n) /\ True)) SoftwareFoundations__Z (ltac: (solver)))) _); 
+		(let arg_59598569 := (subsumptionCast SFBin_u (fun (n: SFBin_u) => ((SFBin_wf n) /\ True)) SoftwareFoundations__Z (ltac: (solver))) in (Bin1 arg_59598569)) _); 
 		solver.  
 Defined. 
 Inductive incr_rel : (SFBin_u -> (SFBin_u -> Prop)) := 
@@ -1458,9 +1452,7 @@ Proof.
 	induction p as [(*Pair*) x y]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(Pair 
-		(exist (fun (n1: MyNat_u) => ((MyNat_wf n1) /\ True)) y (ltac: (solver))) 
-		(exist (fun (n2: MyNat_u) => ((MyNat_wf n2) /\ True)) x (ltac: (solver)))) _); 
+		(let arg_75513285 := exist (fun (n1: MyNat_u) => ((MyNat_wf n1) /\ True)) y (ltac: (solver)) in (let arg_74736703 := exist (fun (n2: MyNat_u) => ((MyNat_wf n2) /\ True)) x (ltac: (solver)) in (Pair arg_75513285 arg_74736703))) _); 
 		solver.  
 Defined. 
 Inductive swap_pair_rel : (Natprod_u -> (Natprod_u -> Prop)) := 
@@ -2015,8 +2007,7 @@ Proof.
 		induction m as [(*O*)  | (*S*) m' IH_m']. 
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(S 
-		(exist (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) ds_d5rC (ltac: (solver)))) _); 
+		(let arg_21819431 := exist (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) ds_d5rC (ltac: (solver)) in (S arg_21819431)) _); 
 			solver.  
 		  -- intros . 
 			refine (subsumptionCast _ _ 
@@ -2160,8 +2151,7 @@ Definition one_spec: Type :=
 Definition one: one_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
-		(S 
-		(subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) O (ltac: (solver)))) _); 
+		(let arg_56259504 := (subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) O (ltac: (solver))) in (S arg_56259504)) _); 
 	solver. 
 Defined. 
 Inductive one_rel : (MyNat_u -> Prop) := 
@@ -2238,10 +2228,9 @@ Proof.
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(S 
-		(IH_n' (ltac: (try clear IH_n'; 
+		(let arg_18143414 := IH_n' (ltac: (try clear IH_n'; 
 	solver)) m (ltac: (try clear IH_n'; 
-	solver)))) _); 
+	solver)) in (S arg_18143414)) _); 
 		solver.  
 Defined. 
 Inductive plus_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) := 
@@ -2394,12 +2383,10 @@ Proof.
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(plus 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) m (ltac: (solver))) 
-		(subsumptionCast MyNat_u (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) 
+		(let arg_77195591 := exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) m (ltac: (solver)) in (let arg_18143414 := (subsumptionCast MyNat_u (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) 
 		(IH_n' (ltac: (try clear IH_n'; 
 	solver)) m (ltac: (try clear IH_n'; 
-	solver))) (ltac: (solver)))) _); 
+	solver))) (ltac: (solver))) in (plus arg_77195591 arg_18143414))) _); 
 		solver.  
 Defined. 
 Inductive mult_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) := 
@@ -2492,17 +2479,13 @@ Proof.
 	induction lq_tmp0 as [(*O*)  | (*S*) n' IH_n']. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(S 
-		(subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) O (ltac: (solver)))) _); 
+		(let arg_56259504 := (subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) O (ltac: (solver))) in (S arg_56259504)) _); 
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(mult 
-		(subsumptionCast MyNat_u (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) 
-		(S 
-		(exist (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) n' (ltac: (solver)))) (ltac: (solver))) 
-		(subsumptionCast MyNat_u (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) (IH_n' (ltac: (try clear IH_n'; 
-	solver))) (ltac: (solver)))) _); 
+		(let arg_29921238 := (subsumptionCast MyNat_u (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) 
+		(let arg_65192983 := exist (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) n' (ltac: (solver)) in (S arg_65192983)) (ltac: (solver))) in (let arg_87935079 := (subsumptionCast MyNat_u (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) (IH_n' (ltac: (try clear IH_n'; 
+	solver))) (ltac: (solver))) in (mult arg_29921238 arg_87935079))) _); 
 		solver.  
 Defined. 
 Inductive factorial_rel : (MyNat_u -> (MyNat_u -> Prop)) := 
@@ -2629,12 +2612,10 @@ Theorem mult_n_0_m_0 (p: MyNat) (q: MyNat): mult_n_0_m_0_spec p q.
 Proof. 
 	destruct p as [p p_p]. 
 	destruct q as [q q_p]. 
-	pose proof (mult_n_O 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) q (ltac: (solver)))) as H_36979607. 
+	pose proof (let arg_11113533 := exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) q (ltac: (solver)) in (mult_n_O arg_11113533)) as H_36979607. 
 	simpl in H_36979607. 
 	refine (subsumptionCast _ _ 
-		(mult_n_O 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)))) _); 
+		(let arg_69223176 := exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)) in (mult_n_O arg_69223176)) _); 
 	solver. 
 Qed. 
 Definition mult_n_Sm_spec (n: MyNat) (m: MyNat): Type := 
@@ -2650,23 +2631,12 @@ Proof.
 		refine (exist _ unit _); 
 		solver.  
 	  - intros . 
-		pose proof (add_assoc 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) m (ltac: (solver))) 
-		(subsumptionCast MyNat_u (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) 
-		(mult 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) n' (ltac: (solver))) 
-		(exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) m (ltac: (solver)))) (ltac: (solver))) 
-		(exist (fun (p: MyNat_u) => ((MyNat_wf p) /\ True)) n' (ltac: (solver)))) as H_73795767. 
+		pose proof (let arg_77195591 := exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) m (ltac: (solver)) in (let arg_36994326 := (subsumptionCast MyNat_u (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) 
+		(let arg_65192983 := exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) n' (ltac: (solver)) in (let arg_77195591 := exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) m (ltac: (solver)) in (mult arg_65192983 arg_77195591))) (ltac: (solver))) in (let arg_65192983 := exist (fun (p: MyNat_u) => ((MyNat_wf p) /\ True)) n' (ltac: (solver)) in (add_assoc arg_77195591 arg_36994326 arg_65192983)))) as H_73795767. 
 		simpl in H_73795767. 
-		pose proof (add_succ_r 
-		(subsumptionCast MyNat_u (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) 
-		(plus 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) m (ltac: (solver))) 
-		(subsumptionCast MyNat_u (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) 
-		(mult 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) n' (ltac: (solver))) 
-		(exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) m (ltac: (solver)))) (ltac: (solver)))) (ltac: (solver))) 
-		(exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) n' (ltac: (solver)))) as H_74791164. 
+		pose proof (let arg_19003952 := (subsumptionCast MyNat_u (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) 
+		(let arg_77195591 := exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) m (ltac: (solver)) in (let arg_36994326 := (subsumptionCast MyNat_u (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) 
+		(let arg_65192983 := exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) n' (ltac: (solver)) in (let arg_77195591 := exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) m (ltac: (solver)) in (mult arg_65192983 arg_77195591))) (ltac: (solver))) in (plus arg_77195591 arg_36994326))) (ltac: (solver))) in (let arg_65192983 := exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) n' (ltac: (solver)) in (add_succ_r arg_19003952 arg_65192983))) as H_74791164. 
 		simpl in H_74791164. 
 		refine (subsumptionCast _ _ 
 		(IH_n' (ltac: (try clear IH_n'; 
@@ -2680,13 +2650,10 @@ Definition mult_n_1_spec (p: MyNat): Type :=
 Theorem mult_n_1 (p: MyNat): mult_n_1_spec p. 
 Proof. 
 	destruct p as [p p_p]. 
-	pose proof (mult_n_O 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)))) as H_81569173. 
+	pose proof (let arg_69223176 := exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)) in (mult_n_O arg_69223176)) as H_81569173. 
 	simpl in H_81569173. 
 	refine (subsumptionCast _ _ 
-		(mult_n_Sm 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver))) 
-		(subsumptionCast MyNat_u (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) O (ltac: (solver)))) _); 
+		(let arg_69223176 := exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) p (ltac: (solver)) in (let arg_56259504 := (subsumptionCast MyNat_u (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) O (ltac: (solver))) in (mult_n_Sm arg_69223176 arg_56259504))) _); 
 	solver. 
 Qed. 
 Definition plus_1_1_spec (n: MyNat): Type := 
@@ -2775,8 +2742,7 @@ Proof.
 	induction n as [(*O*)  | (*S*) n' IH_n']. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(add_0_r 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) m (ltac: (solver)))) _); 
+		(let arg_77195591 := exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) m (ltac: (solver)) in (add_0_r arg_77195591)) _); 
 		solver.  
 	  - intros . 
 		pose proof (IH_n' (ltac: (try clear IH_n'; 
@@ -2784,9 +2750,7 @@ Proof.
 	solver))) as H_76826501. 
 		simpl in H_76826501. 
 		refine (subsumptionCast _ _ 
-		(plus_n_Sm 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) m (ltac: (solver))) 
-		(exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) n' (ltac: (solver)))) _); 
+		(let arg_77195591 := exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) m (ltac: (solver)) in (let arg_65192983 := exist (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) n' (ltac: (solver)) in (plus_n_Sm arg_77195591 arg_65192983))) _); 
 		solver.  
 Qed. 
 Definition pred_spec (lq_tmp0: MyNat): Type := 
@@ -2890,17 +2854,14 @@ Proof.
 	induction power as [(*O*)  | (*S*) p IH_p]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(S 
-		(subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) O (ltac: (solver)))) _); 
+		(let arg_56259504 := (subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) O (ltac: (solver))) in (S arg_56259504)) _); 
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(mult 
-		(exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) base (ltac: (solver))) 
-		(subsumptionCast MyNat_u (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) 
+		(let arg_62886128 := exist (fun (n: MyNat_u) => ((MyNat_wf n) /\ True)) base (ltac: (solver)) in (let arg_37549769 := (subsumptionCast MyNat_u (fun (m: MyNat_u) => ((MyNat_wf m) /\ True)) 
 		(IH_p (ltac: (try clear IH_p; 
 	solver)) base (ltac: (try clear IH_p; 
-	solver))) (ltac: (solver)))) _); 
+	solver))) (ltac: (solver))) in (mult arg_62886128 arg_37549769))) _); 
 		solver.  
 Defined. 
 Inductive sf_exp_rel : (MyNat_u -> (MyNat_u -> (MyNat_u -> Prop))) := 
@@ -3090,8 +3051,7 @@ Definition two_spec: Type :=
 Definition two: two_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
-		(S 
-		(subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) one (ltac: (solver)))) _); 
+		(let arg_83960373 := (subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) one (ltac: (solver))) in (S arg_83960373)) _); 
 	solver. 
 Defined. 
 Inductive two_rel : (MyNat_u -> Prop) := 
@@ -3176,8 +3136,7 @@ Definition three_spec: Type :=
 Definition three: three_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
-		(S 
-		(subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) two (ltac: (solver)))) _); 
+		(let arg_22409403 := (subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) two (ltac: (solver))) in (S arg_22409403)) _); 
 	solver. 
 Defined. 
 Inductive three_rel : (MyNat_u -> Prop) := 
@@ -3246,8 +3205,7 @@ Definition four_spec: Type :=
 Definition four: four_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
-		(S 
-		(subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) three (ltac: (solver)))) _); 
+		(let arg_21348721 := (subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) three (ltac: (solver))) in (S arg_21348721)) _); 
 	solver. 
 Defined. 
 Inductive four_rel : (MyNat_u -> Prop) := 
@@ -3316,8 +3274,7 @@ Definition five_spec: Type :=
 Definition five: five_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
-		(S 
-		(subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) four (ltac: (solver)))) _); 
+		(let arg_23117931 := (subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) four (ltac: (solver))) in (S arg_23117931)) _); 
 	solver. 
 Defined. 
 Inductive five_rel : (MyNat_u -> Prop) := 
@@ -3386,8 +3343,7 @@ Definition six_spec: Type :=
 Definition six: six_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
-		(S 
-		(subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) five (ltac: (solver)))) _); 
+		(let arg_84560897 := (subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) five (ltac: (solver))) in (S arg_84560897)) _); 
 	solver. 
 Defined. 
 Inductive six_rel : (MyNat_u -> Prop) := 
@@ -3456,8 +3412,7 @@ Definition seven_spec: Type :=
 Definition seven: seven_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
-		(S 
-		(subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) six (ltac: (solver)))) _); 
+		(let arg_57401914 := (subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) six (ltac: (solver))) in (S arg_57401914)) _); 
 	solver. 
 Defined. 
 Inductive seven_rel : (MyNat_u -> Prop) := 
@@ -3526,8 +3481,7 @@ Definition eight_spec: Type :=
 Definition eight: eight_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
-		(S 
-		(subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) seven (ltac: (solver)))) _); 
+		(let arg_13899574 := (subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) seven (ltac: (solver))) in (S arg_13899574)) _); 
 	solver. 
 Defined. 
 Inductive eight_rel : (MyNat_u -> Prop) := 
@@ -3596,8 +3550,7 @@ Definition nine_spec: Type :=
 Definition nine: nine_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
-		(S 
-		(subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) eight (ltac: (solver)))) _); 
+		(let arg_79430390 := (subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) eight (ltac: (solver))) in (S arg_79430390)) _); 
 	solver. 
 Defined. 
 Inductive nine_rel : (MyNat_u -> Prop) := 
@@ -3666,8 +3619,7 @@ Definition ten_spec: Type :=
 Definition ten: ten_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
-		(S 
-		(subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) nine (ltac: (solver)))) _); 
+		(let arg_22030841 := (subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) nine (ltac: (solver))) in (S arg_22030841)) _); 
 	solver. 
 Defined. 
 Inductive ten_rel : (MyNat_u -> Prop) := 
@@ -3736,8 +3688,7 @@ Definition eleven_spec: Type :=
 Definition eleven: eleven_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
-		(S 
-		(subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) ten (ltac: (solver)))) _); 
+		(let arg_63048433 := (subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) ten (ltac: (solver))) in (S arg_63048433)) _); 
 	solver. 
 Defined. 
 Inductive eleven_rel : (MyNat_u -> Prop) := 
@@ -3806,8 +3757,7 @@ Definition twelve_spec: Type :=
 Definition twelve: twelve_spec. 
 Proof. 
 	refine (subsumptionCast _ _ 
-		(S 
-		(subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) eleven (ltac: (solver)))) _); 
+		(let arg_75142205 := (subsumptionCast MyNat_u (fun (VV: MyNat_u) => ((MyNat_wf VV) /\ True)) eleven (ltac: (solver))) in (S arg_75142205)) _); 
 	solver. 
 Defined. 
 Inductive twelve_rel : (MyNat_u -> Prop) := 
@@ -4231,46 +4181,31 @@ Proof.
 			induction l as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]. 
 			  --- intros . 
 				refine (subsumptionCast _ _ 
-		(Grade 
-		(lower_letter 
-		(subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) A (ltac: (solver)))) 
-		(subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver)))) _); 
+		(let arg_40855541 := let arg_66428653 := (subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) A (ltac: (solver))) in (lower_letter arg_66428653) in (let arg_90158697 := (subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver))) in (Grade arg_40855541 arg_90158697))) _); 
 				solver.  
 			  --- intros . 
 				refine (subsumptionCast _ _ 
-		(Grade 
-		(lower_letter 
-		(subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) B (ltac: (solver)))) 
-		(subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver)))) _); 
+		(let arg_12898285 := let arg_56813757 := (subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) B (ltac: (solver))) in (lower_letter arg_56813757) in (let arg_90158697 := (subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver))) in (Grade arg_12898285 arg_90158697))) _); 
 				solver.  
 			  --- intros . 
 				refine (subsumptionCast _ _ 
-		(Grade 
-		(lower_letter 
-		(subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) C (ltac: (solver)))) 
-		(subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver)))) _); 
+		(let arg_18020987 := let arg_21893190 := (subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) C (ltac: (solver))) in (lower_letter arg_21893190) in (let arg_90158697 := (subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver))) in (Grade arg_18020987 arg_90158697))) _); 
 				solver.  
 			  --- intros . 
 				refine (subsumptionCast _ _ 
-		(Grade 
-		(lower_letter 
-		(subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) D (ltac: (solver)))) 
-		(subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver)))) _); 
+		(let arg_53850332 := let arg_36099936 := (subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) D (ltac: (solver))) in (lower_letter arg_36099936) in (let arg_90158697 := (subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver))) in (Grade arg_53850332 arg_90158697))) _); 
 				solver.  
 			  --- intros . 
-				refine (subsumptionCast _ _ (Grade F Minus) _); 
+				refine (subsumptionCast _ _ 
+		(let arg_76893236 := F in (let arg_68491551 := Minus in (Grade arg_76893236 arg_68491551))) _); 
 				solver.   
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(Grade 
-		(exist (fun (VV: Letter_u) => ((Letter_wf VV) /\ True)) l (ltac: (solver))) 
-		(subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Minus (ltac: (solver)))) _); 
+		(let arg_42529302 := exist (fun (VV: Letter_u) => ((Letter_wf VV) /\ True)) l (ltac: (solver)) in (let arg_68491551 := (subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Minus (ltac: (solver))) in (Grade arg_42529302 arg_68491551))) _); 
 			solver.  
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(Grade 
-		(exist (fun (VV: Letter_u) => ((Letter_wf VV) /\ True)) l (ltac: (solver))) 
-		(subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Natural (ltac: (solver)))) _); 
+		(let arg_42529302 := exist (fun (VV: Letter_u) => ((Letter_wf VV) /\ True)) l (ltac: (solver)) in (let arg_35989353 := (subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Natural (ltac: (solver))) in (Grade arg_42529302 arg_35989353))) _); 
 			solver.   
 Defined. 
 Inductive lower_grade_rel : (Grades_u -> (Grades_u -> Prop)) := 
@@ -4404,21 +4339,15 @@ Proof.
 	destruct (late_days <? 9) as [ | ] eqn:E; [refine (exist _ g _); 
 	solver | let E := fresh "E" in 
 	destruct (late_days <? 17) as [ | ] eqn:E; [refine (subsumptionCast _ _ 
-		(lower_grade 
-		(exist (fun (g: Grades_u) => ((Grades_wf g) /\ True)) g (ltac: (solver)))) _); 
+		(let arg_53522021 := exist (fun (g: Grades_u) => ((Grades_wf g) /\ True)) g (ltac: (solver)) in (lower_grade arg_53522021)) _); 
 	solver | let E := fresh "E" in 
 	destruct (late_days <? 21) as [ | ] eqn:E; [refine (subsumptionCast _ _ 
-		(lower_grade 
-		(subsumptionCast Grades_u (fun (g: Grades_u) => ((Grades_wf g) /\ True)) 
-		(lower_grade 
-		(exist (fun (g: Grades_u) => ((Grades_wf g) /\ True)) g (ltac: (solver)))) (ltac: (solver)))) _); 
+		(let arg_41430377 := (subsumptionCast Grades_u (fun (g: Grades_u) => ((Grades_wf g) /\ True)) 
+		(let arg_53522021 := exist (fun (g: Grades_u) => ((Grades_wf g) /\ True)) g (ltac: (solver)) in (lower_grade arg_53522021)) (ltac: (solver))) in (lower_grade arg_41430377)) _); 
 	solver | refine (subsumptionCast _ _ 
-		(lower_grade 
-		(subsumptionCast Grades_u (fun (g: Grades_u) => ((Grades_wf g) /\ True)) 
-		(lower_grade 
-		(subsumptionCast Grades_u (fun (g: Grades_u) => ((Grades_wf g) /\ True)) 
-		(lower_grade 
-		(exist (fun (g: Grades_u) => ((Grades_wf g) /\ True)) g (ltac: (solver)))) (ltac: (solver)))) (ltac: (solver)))) _); 
+		(let arg_68330987 := (subsumptionCast Grades_u (fun (g: Grades_u) => ((Grades_wf g) /\ True)) 
+		(let arg_41430377 := (subsumptionCast Grades_u (fun (g: Grades_u) => ((Grades_wf g) /\ True)) 
+		(let arg_53522021 := exist (fun (g: Grades_u) => ((Grades_wf g) /\ True)) g (ltac: (solver)) in (lower_grade arg_53522021)) (ltac: (solver))) in (lower_grade arg_41430377)) (ltac: (solver))) in (lower_grade arg_68330987)) _); 
 	solver]]]. 
 Defined. 
 Inductive apply_late_policy_rel : (Z -> (Grades_u -> (Grades_u -> Prop))) := 

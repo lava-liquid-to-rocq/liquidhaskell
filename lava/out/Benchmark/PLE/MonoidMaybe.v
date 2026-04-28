@@ -57,7 +57,8 @@ Proof.
 	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
 	induction lq_tmp0 as [(*Just*) x | (*Nothing*) ]. 
 	  - intros . 
-		refine (subsumptionCast _ _ (Just (exist (fun (VV: Z) => True) x (ltac: (solver)))) _); 
+		refine (subsumptionCast _ _ 
+		(let arg_91127321 := exist (fun (VV: Z) => True) x (ltac: (solver)) in (Just arg_91127321)) _); 
 		solver.  
 	  - intros . 
 		refine (exist _ lq_tmp1 _); 

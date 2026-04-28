@@ -10,7 +10,7 @@ Proof.
 	destruct x as [x x_p]. 
 	destruct y as [y y_p]. 
 	refine (subsumptionCast _ _ 
-		((getPackF f) (exist (fun (lq_tmp0: Z) => True) y (ltac: (solver))) (exist (fun (lq_tmp1: Z) => True) x (ltac: (solver)))) _); 
+		(let arg_60397660 := exist (fun (lq_tmp0: Z) => True) y (ltac: (solver)) in (let arg_91127321 := exist (fun (lq_tmp1: Z) => True) x (ltac: (solver)) in ((getPackF f) arg_60397660 arg_91127321))) _); 
 	solver. 
 Defined. 
 Inductive flip_rel : ((@uPack (Z ::UT (Z ::UT nilUT)) Z) -> (Z -> (Z -> (Z -> Prop)))) := 
@@ -338,9 +338,8 @@ Proof.
 	induction l as [(*App2*) ds_d2zN xs IH_xs | (*Emp2*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(Suc 
-		(subsumptionCast Nats_u (fun (n: Nats_u) => ((Nats_wf n) /\ True)) (IH_xs (ltac: (try clear IH_xs; 
-	solver))) (ltac: (solver)))) _); 
+		(let arg_55394889 := (subsumptionCast Nats_u (fun (n: Nats_u) => ((Nats_wf n) /\ True)) (IH_xs (ltac: (try clear IH_xs; 
+	solver))) (ltac: (solver))) in (Suc arg_55394889)) _); 
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ Zero _); 
@@ -525,17 +524,11 @@ Proof.
 			destruct (⌊ IH_l (ltac: (try clear IH_l; 
 	solver)) -⌋) as [xs ys] eqn:E; [intros ; 
 			refine (subsumptionCast _ _ 
-		(MkPairL 
-		(App (exist (fun (VV: Z) => True) x (ltac: (solver))) 
-		(exist (fun (VV: L_u) => ((L_wf VV) /\ True)) xs (ltac: (solver)))) 
-		(App (exist (fun (VV: Z) => True) y (ltac: (solver))) 
-		(exist (fun (VV: L_u) => ((L_wf VV) /\ True)) ys (ltac: (solver))))) _); 
+		(let arg_55400981 := let arg_91127321 := exist (fun (VV: Z) => True) x (ltac: (solver)) in (let arg_66628065 := exist (fun (VV: L_u) => ((L_wf VV) /\ True)) xs (ltac: (solver)) in (App arg_91127321 arg_66628065)) in (let arg_71573574 := let arg_60397660 := exist (fun (VV: Z) => True) y (ltac: (solver)) in (let arg_75329732 := exist (fun (VV: L_u) => ((L_wf VV) /\ True)) ys (ltac: (solver)) in (App arg_60397660 arg_75329732)) in (MkPairL arg_55400981 arg_71573574))) _); 
 			solver].   
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(MkPairL 
-		(subsumptionCast L_u (fun (VV: L_u) => ((L_wf VV) /\ True)) Emp (ltac: (solver))) 
-		(subsumptionCast L_u (fun (VV: L_u) => ((L_wf VV) /\ True)) Emp (ltac: (solver)))) _); 
+		(let arg_29496352 := (subsumptionCast L_u (fun (VV: L_u) => ((L_wf VV) /\ True)) Emp (ltac: (solver))) in (let arg_29496352 := (subsumptionCast L_u (fun (VV: L_u) => ((L_wf VV) /\ True)) Emp (ltac: (solver))) in (MkPairL arg_29496352 arg_29496352))) _); 
 		solver.  
 Defined. 
 Definition app_inj_spec (x: {x: Z | True}) (y: {y: Z | True}) (xs: L) (ys: L) (p: {{(App_u (⌊ x -⌋) (⌊ xs -⌋)) == (App_u (⌊ y -⌋) (⌊ ys -⌋))}}): Type := 
@@ -562,10 +555,9 @@ Proof.
 	induction lq_tmp0 as [(*App*) x xs IH_xs | (*Emp*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(App (exist (fun (VV: Z) => True) x (ltac: (solver))) 
-		(IH_xs (ltac: (try clear IH_xs; 
+		(let arg_91127321 := exist (fun (VV: Z) => True) x (ltac: (solver)) in (let arg_63046731 := IH_xs (ltac: (try clear IH_xs; 
 	solver)) lq_tmp1 (ltac: (try clear IH_xs; 
-	solver)))) _); 
+	solver)) in (App arg_91127321 arg_63046731))) _); 
 		solver.  
 	  - intros . 
 		refine (exist _ lq_tmp1 _); 
@@ -708,11 +700,9 @@ Proof.
 	induction lq_tmp3 as [(*App*) x xs IH_xs | (*Emp*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(append 
-		(subsumptionCast L_u (fun (lq_tmp0: L_u) => ((L_wf lq_tmp0) /\ True)) 
-		((getPackF lq_tmp0) (exist (fun (lq_tmp1: Z) => True) x (ltac: (solver)))) (ltac: (solver))) 
-		(subsumptionCast L_u (fun (lq_tmp1: L_u) => ((L_wf lq_tmp1) /\ True)) (IH_xs (ltac: (try clear IH_xs; 
-	solver)) lq_tmp0) (ltac: (solver)))) _); 
+		(let arg_85860711 := (subsumptionCast L_u (fun (lq_tmp0: L_u) => ((L_wf lq_tmp0) /\ True)) 
+		(let arg_91127321 := exist (fun (lq_tmp1: Z) => True) x (ltac: (solver)) in ((getPackF lq_tmp0) arg_91127321)) (ltac: (solver))) in (let arg_35317719 := (subsumptionCast L_u (fun (lq_tmp1: L_u) => ((L_wf lq_tmp1) /\ True)) (IH_xs (ltac: (try clear IH_xs; 
+	solver)) lq_tmp0) (ltac: (solver))) in (append arg_85860711 arg_35317719))) _); 
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ Emp _); 
@@ -806,8 +796,8 @@ Proof.
 		induction ds_d2zy as [(*MkPair*) x ds_d2zz]. 
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(App (exist (fun (VV: Z) => True) x (ltac: (solver))) (IH_l (ltac: (try clear IH_l; 
-	solver)))) _); 
+		(let arg_91127321 := exist (fun (VV: Z) => True) x (ltac: (solver)) in (let arg_12179161 := IH_l (ltac: (try clear IH_l; 
+	solver)) in (App arg_91127321 arg_12179161))) _); 
 			solver.   
 	  - intros . 
 		refine (subsumptionCast _ _ Emp _); 
@@ -907,8 +897,8 @@ Proof.
 		induction ds_d2zt as [(*MkPair*) ds_d2zu y]. 
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(App (exist (fun (VV: Z) => True) y (ltac: (solver))) (IH_l (ltac: (try clear IH_l; 
-	solver)))) _); 
+		(let arg_60397660 := exist (fun (VV: Z) => True) y (ltac: (solver)) in (let arg_12179161 := IH_l (ltac: (try clear IH_l; 
+	solver)) in (App arg_60397660 arg_12179161))) _); 
 			solver.   
 	  - intros . 
 		refine (subsumptionCast _ _ Emp _); 
@@ -1006,9 +996,8 @@ Proof.
 	induction l as [(*App*) ds_d2zQ xs IH_xs | (*Emp*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(Suc 
-		(subsumptionCast Nats_u (fun (n: Nats_u) => ((Nats_wf n) /\ True)) (IH_xs (ltac: (try clear IH_xs; 
-	solver))) (ltac: (solver)))) _); 
+		(let arg_55394889 := (subsumptionCast Nats_u (fun (n: Nats_u) => ((Nats_wf n) /\ True)) (IH_xs (ltac: (try clear IH_xs; 
+	solver))) (ltac: (solver))) in (Suc arg_55394889)) _); 
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ Zero _); 
@@ -1132,9 +1121,8 @@ Proof.
 	induction lq_tmp3 as [(*App*) x xs IH_xs | (*Emp*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(App 
-		((getPackF lq_tmp0) (exist (fun (lq_tmp1: Z) => True) x (ltac: (solver)))) (IH_xs (ltac: (try clear IH_xs; 
-	solver)) lq_tmp0)) _); 
+		(let arg_85860711 := let arg_91127321 := exist (fun (lq_tmp1: Z) => True) x (ltac: (solver)) in ((getPackF lq_tmp0) arg_91127321) in (let arg_35317719 := IH_xs (ltac: (try clear IH_xs; 
+	solver)) lq_tmp0 in (App arg_85860711 arg_35317719))) _); 
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ Emp _); 
@@ -1241,12 +1229,9 @@ Proof.
 	induction l as [(*App*) x xs IH_xs | (*Emp*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(append 
-		(subsumptionCast L_u (fun (lq_tmp0: L_u) => ((L_wf lq_tmp0) /\ True)) (IH_xs (ltac: (try clear IH_xs; 
-	solver))) (ltac: (solver))) 
-		(subsumptionCast L_u (fun (lq_tmp1: L_u) => ((L_wf lq_tmp1) /\ True)) 
-		(App (exist (fun (VV: Z) => True) x (ltac: (solver))) 
-		(subsumptionCast L_u (fun (VV: L_u) => ((L_wf VV) /\ True)) Emp (ltac: (solver)))) (ltac: (solver)))) _); 
+		(let arg_55394889 := (subsumptionCast L_u (fun (lq_tmp0: L_u) => ((L_wf lq_tmp0) /\ True)) (IH_xs (ltac: (try clear IH_xs; 
+	solver))) (ltac: (solver))) in (let arg_48424048 := (subsumptionCast L_u (fun (lq_tmp1: L_u) => ((L_wf lq_tmp1) /\ True)) 
+		(let arg_91127321 := exist (fun (VV: Z) => True) x (ltac: (solver)) in (let arg_29496352 := (subsumptionCast L_u (fun (VV: L_u) => ((L_wf VV) /\ True)) Emp (ltac: (solver))) in (App arg_91127321 arg_29496352))) (ltac: (solver))) in (append arg_55394889 arg_48424048))) _); 
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ Emp _); 
@@ -1341,16 +1326,9 @@ Proof.
 	induction l as [(*App*) x xs IH_xs | (*Emp*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(append_nonempty_ys 
-		(subsumptionCast L_u (fun (xs: L_u) => ((L_wf xs) /\ True)) 
-		(reverse 
-		(exist (fun (l: L_u) => ((L_wf l) /\ True)) xs (ltac: (solver)))) (ltac: (solver))) 
-		(subsumptionCast L_u (fun (ys: L_u) => ((L_wf ys) /\ True)) 
-		(App (exist (fun (VV: Z) => True) x (ltac: (solver))) 
-		(subsumptionCast L_u (fun (VV: L_u) => ((L_wf VV) /\ True)) Emp (ltac: (solver)))) (ltac: (solver))) 
-		(exist (fun (p: Unit) => (exists (appendres: L_u), (append_rel 
-		(⌊ reverse 
-		(exist (fun (l: L_u) => ((L_wf l) /\ True)) xs (ltac: (solver))) -⌋) (App_u x Emp_u) appendres) /\ (appendres = Emp_u))) p (ltac: (solver)))) _); 
+		(let arg_71149473 := (subsumptionCast L_u (fun (xs: L_u) => ((L_wf xs) /\ True)) 
+		(let arg_66628065 := exist (fun (l: L_u) => ((L_wf l) /\ True)) xs (ltac: (solver)) in (reverse arg_66628065)) (ltac: (solver))) in (let arg_48424048 := (subsumptionCast L_u (fun (ys: L_u) => ((L_wf ys) /\ True)) 
+		(let arg_91127321 := exist (fun (VV: Z) => True) x (ltac: (solver)) in (let arg_29496352 := (subsumptionCast L_u (fun (VV: L_u) => ((L_wf VV) /\ True)) Emp (ltac: (solver))) in (App arg_91127321 arg_29496352))) (ltac: (solver))) in (let arg_60067338 := exist (fun (p: Unit) => (exists (appendres: L_u), (append_rel (⌊ arg_71149473 -⌋) (⌊ arg_48424048 -⌋) appendres) /\ (appendres = Emp_u))) p (ltac: (solver)) in (append_nonempty_ys arg_71149473 arg_48424048 arg_60067338)))) _); 
 		solver.  
 	  - intros . 
 		refine (exist _ unit _); 
@@ -1369,10 +1347,9 @@ Proof.
 		induction l as [(*App*) x xs IH_xs | (*Emp*) ]. 
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(App (exist (fun (VV: Z) => True) x (ltac: (solver))) 
-		(IH_n (ltac: (try clear IH_n; 
+		(let arg_91127321 := exist (fun (VV: Z) => True) x (ltac: (solver)) in (let arg_20771368 := IH_n (ltac: (try clear IH_n; 
 	solver)) xs (ltac: (try clear IH_n; 
-	solver)))) _); 
+	solver)) in (App arg_91127321 arg_20771368))) _); 
 			solver.  
 		  -- intros . 
 			refine (subsumptionCast _ _ Emp _); 
@@ -1519,11 +1496,9 @@ Proof.
 		induction lq_tmp1 as [(*App*) y ys IH_ys | (*Emp*) ]. 
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(App2 
-		(MkPair (exist (fun (VV: Z) => True) x (ltac: (solver))) (exist (fun (VV: Z) => True) y (ltac: (solver)))) 
-		(IH_xs (ltac: (try clear IH_xs; 
+		(let arg_63728205 := let arg_91127321 := exist (fun (VV: Z) => True) x (ltac: (solver)) in (let arg_60397660 := exist (fun (VV: Z) => True) y (ltac: (solver)) in (MkPair arg_91127321 arg_60397660)) in (let arg_46568342 := IH_xs (ltac: (try clear IH_xs; 
 	solver)) ys (ltac: (try clear IH_xs; 
-	solver)))) _); 
+	solver)) in (App2 arg_63728205 arg_46568342))) _); 
 			solver.  
 		  -- intros . 
 			refine (subsumptionCast _ _ Emp2 _); 
@@ -1732,11 +1707,9 @@ Proof.
 		induction m as [(*App*) y ys IH_ys | (*Emp*) ]. 
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(App 
-		((getPackF f) (exist (fun (lq_tmp0: Z) => True) x (ltac: (solver))) (exist (fun (lq_tmp1: Z) => True) y (ltac: (solver)))) 
-		(IH_xs (ltac: (try clear IH_xs; 
+		(let arg_68864219 := let arg_91127321 := exist (fun (lq_tmp0: Z) => True) x (ltac: (solver)) in (let arg_60397660 := exist (fun (lq_tmp1: Z) => True) y (ltac: (solver)) in ((getPackF f) arg_91127321 arg_60397660)) in (let arg_57799329 := IH_xs (ltac: (try clear IH_xs; 
 	solver)) f ys (ltac: (try clear IH_xs; 
-	solver)))) _); 
+	solver)) in (App arg_68864219 arg_57799329))) _); 
 			solver.  
 		  -- intros . 
 			refine (subsumptionCast _ _ Emp _); 
@@ -1858,18 +1831,18 @@ Proof.
 			solver.   
 	  - intros . 
 		fix_notations. 
-		pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_37341435. 
-		assert (H_37341435': exists (lengthres: Nats_u), (length_rel m lengthres) /\ (exists (takeres: L_u), (take_rel lengthres Emp_u takeres) /\ (exists (zipres: L2_u), (zip_rel takeres Emp_u zipres) /\ (exists (length_res_2: Nats_u), (length_rel Emp_u length_res_2) /\ (exists (take_res_2: L_u), (take_rel length_res_2 m take_res_2) /\ (exists (zip_res_2: L2_u), (zip_rel takeres take_res_2 zip_res_2) /\ (True /\ (zipres == zip_res_2)))))))) by solver. 
-		simpl in H_37341435'. 
+		pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_66167771. 
+		assert (H_66167771': exists (lengthres: Nats_u), (length_rel m lengthres) /\ (exists (takeres: L_u), (take_rel lengthres Emp_u takeres) /\ (exists (zipres: L2_u), (zip_rel takeres Emp_u zipres) /\ (exists (length_res_2: Nats_u), (length_rel Emp_u length_res_2) /\ (exists (take_res_2: L_u), (take_rel length_res_2 m take_res_2) /\ (exists (zip_res_2: L2_u), (zip_rel takeres take_res_2 zip_res_2) /\ (True /\ (zipres == zip_res_2)))))))) by solver. 
+		simpl in H_66167771'. 
 		fix_notations. 
-		pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_54170553. 
-		assert (H_54170553': exists (zipres: L2_u), (zip_rel Emp_u Emp_u zipres) /\ (exists (lengthres: Nats_u), (length_rel m lengthres) /\ (exists (takeres: L_u), (take_rel lengthres Emp_u takeres) /\ (exists (zip_res_2: L2_u), (zip_rel takeres Emp_u zip_res_2) /\ (True /\ (zipres == zip_res_2)))))) by solver. 
-		simpl in H_54170553'. 
+		pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_66622360. 
+		assert (H_66622360': exists (zipres: L2_u), (zip_rel Emp_u Emp_u zipres) /\ (exists (lengthres: Nats_u), (length_rel m lengthres) /\ (exists (takeres: L_u), (take_rel lengthres Emp_u takeres) /\ (exists (zip_res_2: L2_u), (zip_rel takeres Emp_u zip_res_2) /\ (True /\ (zipres == zip_res_2)))))) by solver. 
+		simpl in H_66622360'. 
 		fix_notations. 
-		pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_67642907. 
-		assert (H_67642907': exists (zipres: L2_u), (zip_rel Emp_u m zipres) /\ (exists (zip_res_2: L2_u), (zip_rel Emp_u Emp_u zip_res_2) /\ (True /\ (zipres == zip_res_2)))) by solver. 
-		simpl in H_67642907'. 
-		pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_54982670; 
+		pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_75283737. 
+		assert (H_75283737': exists (zipres: L2_u), (zip_rel Emp_u m zipres) /\ (exists (zip_res_2: L2_u), (zip_rel Emp_u Emp_u zip_res_2) /\ (True /\ (zipres == zip_res_2)))) by solver. 
+		simpl in H_75283737'. 
+		pose proof (exist (fun (x: Unit) => True) unit (ltac: (solver))) as H_27408453; 
 		refine (exist _ unit _); 
 		solver.  
 Qed. 

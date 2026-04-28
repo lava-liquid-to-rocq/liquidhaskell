@@ -1199,6 +1199,8 @@ Ltac refTmToRef f rtm utm resWit :=
     apply temp; assumption);
   rewrite rw in resWit.
 
+Ltac solving_tac := quick_simpl; try split_hyps; try unify_vars; quicksolve.
+
 Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
   match ts with
   | _nil => return Res f
@@ -1235,7 +1237,7 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
       | ?tp = _ => clear claimRefl; 
         (*idtac "claim we need to prove in order to synthesize refined version of argument: " tp;*)
         match tp with
-        | _ => clear t_wit; assert tp as t_wit by (assumption)
+        | _ => clear t_wit; assert tp as t_wit by (easy)
         | _ => 
           match goal with
           | [h: ?relAp t |- _] => isVar t;
@@ -1264,7 +1266,7 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
               idtac "witTp: " witTp ", tp: " tp; *)
               clear t_wit;
               assert tp as t_wit by (try apply gAppl_wit; 
-                quick_simpl; try split_hyps; try unify_vars; quicksolve)
+                solving_tac)
             end
           end
         | (?wf ?x /\ ?p) /\ ?q =>
@@ -1294,7 +1296,7 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
                 rewrite rw in gAppl_wit
               end;
               clear t_wit;
-              assert tp as t_wit by (quick_simpl; try split_hyps; try unify_vars; quicksolve)
+              assert tp as t_wit by solving_tac
             end
           ]
         | _ => 
@@ -1368,7 +1370,7 @@ Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
             idtac else fail "No known way to prove the refinement of " tp
         end
       end;
-      idtac "Created witness " t_wit " for argument " t " of graph relation for " f;
+      (* idtac "Created witness " t_wit " for argument " t " of graph relation for " f;*)
       pose (f (exist dom_ref t t_wit)) as f_t__res_
     end;
 
@@ -1406,16 +1408,6 @@ Ltac nonbranching_destruct :=
 
 Tactic Notation "recreate_var" constr(relApp) ident(vRes) := 
   match relApp with
-  (*| _ => isRelAppl relApp;
-    let temp := fresh "temp" in
-    let v := fresh "v_" in 
-    let v_def := fresh "v_def_" in
-    assert (exists v, relApp v) as temp by (time (timeout 60 solve [
-      now unshelve (eexists _; rconstructor)
-    | timeout 12 repeat nonbranching_destruct; 
-      now unshelve (eexists _; rconstructor)
-    ]));
-    destruct temp as [vRes v_def]*)
   | _ ?v => isVar v; match goal with
     | [def: ⌊ ?tm -⌋ = v |- _] => pose (exist _ v ⌈ tm ⌉) as vRes
     end
@@ -1430,7 +1422,7 @@ Tactic Notation "recreate_var" constr(relApp) ident(vRes) :=
     let fAppl_res := fresh "fAppl_res" in
     recreate_refined_term relApp fAppl_res;
     (* simpl_proj; *) simpl in fAppl_res;
-    (* idtac "Sucessfully generated refined result term in recreate_var"; *)
+    idtac "Sucessfully generated refined result term in recreate_var"; 
     
     let Res := fresh "fAppl_Res" in
     let v := fresh "fAppl_v" in
@@ -1652,6 +1644,18 @@ Ltac instantiate_goal :=
       ?frel (prArgList args ?uargTps _) v) |- exists (w:?tp), ?frel ?uargs w /\ ?p] => 
        refine (instantiate_frel_res (fun w => p) f_frel _ _);
        [try synthesize_args|intros ? ?]
+    | [ h: ?relAp ?w |- ?rel ?s ?t] => isRelAppl relAp;
+      tryif (eq_fail s w) then idtac else eq_fail t w; idtac w;
+      let v' := fresh "v'" in
+      recreate_var relAp v'; subst v';
+      match goal with
+      | [def_rw: ⌊ ?Res -⌋ = ?v |- _] => match goal with
+        | [k: relAp v |- _] => 
+          assert (v = w) as -> by (now unify_vars);
+          rewrite <- def_rw
+        end
+      end;
+      timeout 30 quicksolve
     | _ => fail "Goal doesn't contain existentially quantified variables we can instantiate"
   end.
 
@@ -1758,7 +1762,7 @@ Ltac quick_simple_cleanup_steps :=
   repeat unfold rel_u in *;
   simpl_proj; (* repeat progress autounfold with lia_unfold in *; repeat progress autorewrite with lia_rewrites in *; *)
   concat_either (unify_vars) (
-    concat_either (instExistGoal; repeat instExistGoal)
+    concat_either (timeout 60 instExistGoal; repeat timeout 30 instExistGoal)
     (specialize_hyps; try unify_vars));
   try timeout 1 simpl_loop.
 
@@ -1799,7 +1803,7 @@ Ltac inversion_cleanup :=
       (concat_either (unshelve constructor; timeout 3 quicksolve) 
         (concat_either (progress (autorewrite with f_rel_back; autorewrite with int_rel_back)) 
           (* forwards reasoning in goal *)
-          (concat_either (instExistGoal) (instantiate_goals)));
+          (concat_either (timeout 60 instExistGoal) (instantiate_goals)));
        try quick_simple_cleanup_steps
       )); try simple_cleanup_steps.
 
@@ -1807,7 +1811,7 @@ Ltac initial_cleanup_recurse :=
   quick_simpl;
   concat_either 
     (initial_simple_cleanup_steps)
-    (repeat instExistGoal; unshelve inversion_cleanup). (* TODO: move the unshelve into whatever tactic actually populates the shelf *)
+    ((*repeat instExistGoal;*) unshelve inversion_cleanup). (* TODO: move the unshelve into whatever tactic actually populates the shelf *)
 
 Ltac cleanup_recurse := 
   quick_simpl;
@@ -1878,6 +1882,175 @@ Ltac oracle := timeout 150 oracle_.
 Ltac deadBranch := intros; exfalso; oracle.
 
 Ltac default_tactic := try program_simpl; oracle.
+
+Ltac strong_mkRefAppl f ts Res := idtac "strong_mkRefAppl" f ts Res; 
+  match ts with
+  | _nil => return Res f
+  | ?uargs _::_ _nil => match uargs with
+    | _ ::U _ => idtac
+    end;
+    match goal with
+    | [f_frel: forall (args: ArgList ?argTps) (v: ?T), ⌊ f args -⌋ = v <-> ?frel _ v |- _] =>
+      assert_ho_relAp frel uargs;
+      match goal with
+      | [vRes_def: frel uargs ?vRes |- _] => return Res vRes
+      end
+    end
+  | ?t _::_ ?tl => 
+    let f_t__res_ := fresh "f_t__res_" in
+    let wff_lem := fresh "wit_" in
+
+    match t with
+    | ⌊ ?tm -⌋ => pose (f tm) as f_t__res_
+    | packPr_proj ?pack => (* idtac "pack argument case in mkRefAppl: " pack; *)
+      pose (f pack) as f_t__res_
+    | _ => 
+      let t_wit := fresh "t_wit" in 
+      (* prevent nameclashes with witnesses from recursive calls that use fresh to figure out a name *)
+      pose I as t_wit;
+      let dom_ref := fresh "dom_ref" in
+      get_dom_ref f dom_ref;
+      let claim := fresh "claim" in
+      let claimRefl := fresh "claimRefl" in
+      pose (dom_ref t) as claim;
+      assRefl claim as claimRefl; 
+      unfold dom_ref in claimRefl; simpl in claimRefl; 
+      match type of claimRefl with
+      | ?tp = _ => clear claimRefl; 
+        idtac "claim we need to prove in order to synthesize refined version of argument: " tp;
+        match tp with
+        | _ => clear t_wit; assert tp as t_wit by (assumption)
+        | _ => 
+          match goal with
+          | [h: ?relAp t |- _] => isVar t;
+            isRelAppl relAp; 
+            (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
+            let g_ts := fresh "g_ts" in
+            get_f_ts relAp g_ts; 
+            let tempEq := fresh "tempEq" in
+            assRefl g_ts as tempEq;
+            match type of tempEq with
+            | (?g, ?ts) = _ => clear tempEq;
+              tryif (_contains t ts) then fail else idtac;
+              let gAppl := fresh "gAppl" in
+              strong_mkRefAppl g ts gAppl;
+              idtac "Generated refined term " gAppl " for argument " t ".";
+              let gAppl_wit := fresh "gAppl_wit" in
+              pose proof ⌈ gAppl ⌉ as gAppl_wit;
+              let rw := fresh "rw" in
+              assert (⌊ gAppl -⌋ = t) as rw by ( 
+                let temp := fresh "temp" in
+                lookupRwLem g temp;
+                simpl in temp;
+                apply temp; assumption);
+              rewrite rw in gAppl_wit;
+              let witTp := type of gAppl_wit in
+              idtac "witTp: " witTp ", tp: " tp; 
+              clear t_wit;
+              assert tp as t_wit by (try apply gAppl_wit; 
+                strong_oracle)
+            end
+          end
+        | (?wf ?x /\ ?p) /\ ?q =>
+          first [
+            match goal with
+            | [h: ?relAp x |- _] => 
+              isRelAppl relAp; 
+              (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
+              let g_ts := fresh "g_ts" in
+              get_f_ts relAp g_ts; 
+              let tempEq := fresh "tempEq" in
+              assRefl g_ts as tempEq;
+              match type of tempEq with
+              | (?g, ?ts) = _ => clear tempEq;
+                tryif (_contains x ts) then fail else idtac;
+                let gAppl := fresh "gAppl" in
+                strong_mkRefAppl g ts gAppl;
+                idtac "Generated refined term " gAppl " for axiomatized subterm " x " of argument " t ".";
+                let gAppl_wit := fresh "gAppl_wit" in
+                pose proof ⌈ gAppl ⌉ as gAppl_wit;
+                let rw := fresh "rw" in
+                assert (⌊ gAppl -⌋ = x) as rw by ( 
+                  let temp := fresh "temp" in
+                  lookupRwLem g temp;
+                  simpl in temp;
+                  apply temp; assumption);
+                rewrite rw in gAppl_wit
+              end;
+              clear t_wit;
+              assert tp as t_wit by strong_oracle
+            end
+          ]
+        | _ => 
+          clear t_wit;
+          tryif (assert tp as t_wit by strong_oracle) then
+            idtac else fail "Unable to prove the refinement of " tp " using tactic strong_oracle."
+        end
+      end;
+      idtac "Created witness " t_wit " for argument " t " of graph relation for " f;
+      pose (f (exist dom_ref t t_wit)) as f_t__res_
+    end;
+
+    (* idtac "mk_ref_arg returned"; *)
+    let temp_2 := fresh "temp_2" in
+    assRefl f_t__res_ as temp_2;
+    match type of temp_2 with
+    | ?fapp = _ => clear temp_2;
+      (* idtac "Recursing in mkRefAppl with function " fapp " and arguments " tl;*)
+      strong_mkRefAppl fapp tl Res
+    end
+  end.
+
+Tactic Notation "strong_recreate_refined_term" constr(relApp) ident(fAppl_res) := 
+  let f_ts := fresh "Res" in
+  get_f_ts relApp f_ts; 
+
+  (* idtac "calling mkRefAppl_res" f_res tail_res fAppl_res; try mkRefAppl_res f_res tail_res fAppl_res; *)
+  let temp3 := fresh "temp3" in
+  assRefl f_ts as temp3;
+  match type of temp3 with
+  | (?f, ?ts) = _ => (* idtac "f:=" f;*) clear temp3; strong_mkRefAppl f ts fAppl_res
+  end; 
+  try clear f_ts.
+
+Tactic Notation "strong_recreate_var" constr(relApp) ident(vRes) := 
+  match relApp with
+  | _ ?v => isVar v; match goal with
+    | [def: ⌊ ?tm -⌋ = v |- _] => pose (exist _ v ⌈ tm ⌉) as vRes
+    end
+  | ?frel ?uargs =>
+    match type of frel with
+    | forall (_:UArgList ?uargTps) (_:?T), Prop =>
+      let fAppl_res := fresh "fAppl_res" in
+      let res_def := fresh "res_def" in
+      assert_ho_relAp frel uargs
+    end
+  | _ =>
+    let fAppl_res := fresh "fAppl_res" in
+    strong_recreate_refined_term relApp fAppl_res;
+    (* simpl_proj; *) simpl in fAppl_res;
+    idtac "Sucessfully generated refined result term in strong_recreate_var"; 
+    
+    let Res := fresh "fAppl_Res" in
+    let v := fresh "fAppl_v" in
+    let v_p := fresh "fAppl_p" in
+    pose (⌊ fAppl_res -⌋) as Res; 
+    axiomatize_term fAppl_res as v v_p; subst Res; 
+    (* idtac "Sucessfully axiomatized projection of refined result term in strong_recreate_var";*)
+    try rewrite v_p in *; 
+    let pTp := type of v_p in
+    match pTp with
+    | ?relAp v => isRelAppl relAp
+    | _ => tryif (applyRwLem v_p) then idtac else 
+      (fail (* "Failed to rewrite " v_p ": " pTp " from an equality into the application of the graph relation. "*))
+    end;
+    match type of v_p with
+    | ?relAp ?w => simpl_proj; 
+      pose w as vRes; 
+      idtac "Sucessfully recreated axiomatized unrefined variable by recreating and axiomatizing refined term ";
+      try clear fAppl_res
+    end
+  end.
 
 (** Advanced tactics for the more structural parts of the translation **)
 
@@ -2135,10 +2308,16 @@ Ltac lia_preprocessor_step := match goal with
         end;
         idtac "Unified variables " u " and " v " using inversion to prove their equality."
     end
-    | |- exists v, ?relAp v => isRelAppl relAp; isVar v;
-      idtac "Final desperate attempt to solve existential using eexists and oracle to solve subgoals";
+    | |- exists v, ?relAp v => isRelAppl relAp; 
+      idtac "Final desperate attempt to solve existential using strong_oracle to solve subgoals";
       first [
-        instExistGoal
+        timeout 10 instExistGoal
+      | let v := fresh "v_" in 
+        strong_recreate_var relAp v;
+        exists v; try first [
+          assumption
+        | idtac "Couldn't discharge defining constraint of formerly existentially quantified variable " v "!";
+          try easy ]
       | solve [unshelve (eexists _;
         econstructor; try match goal with
         | [h: ?tp _ |- ?tp _] => apply h
@@ -2262,22 +2441,7 @@ Ltac f__f_rel_ih :=
 
 Ltac existence_lemma_pre f :=
   idtac "Starting proof of existence lemma for the reflected function " f ". ";
-  repeat cleanup_hints.
-
-Ltac existence_lemma_quicksolve f := 
-  intros; try unpack_all;
-  try timeout 3 quicksolve; (* try quicksolve; *)
-
-  (* unfold definition in goal *)
-  (* cbn; *) first [ timeout 4 cbn | unfold f; (*unfold subsumptionCast in *;*) repeat progress autorewrite with fix_notation_hints];
-  repeat axiomatize_ho_term;
-  repeat progress (simpl_proj; apply_ifs); try timeout 4 quicksolve.
-  
-
-Ltac existence_lemma_induction f indVars conds :=
-  existence_lemma_pre f; 
-  multivariable_induction indVars conds _nil; 
-  existence_lemma_quicksolve f.
+  repeat cleanup_hints. 
 
 Ltac eager_instantiate_goal :=
   match goal with
@@ -2385,28 +2549,41 @@ Ltac fill_ih_holes :=
     try rewrite <- f__f_rel1; try reflexivity
   end.
 
-Ltac f_rel_finish :=
-  repeat autounfold with get_rel_db in *;
-  tryif fill_ih_holes then idtac else (idtac "Failure to find hypothesis that exactly matches goal."; match goal with
-  | [ih: ?rel ?x _ _ |- ?rel ?x _ _] => idtac "The hypothesis that roughly matches the goal " ih
-  | [ih: ?rel _ ?y _ |- ?rel _ ?y _] => idtac "The hypothesis that roughly matches the goal " ih
-  | _ => print_proof_state; fail
-  end
-  );
-  (* unify the goal with an appropriate IH, apply the IH, then solve the proof obligations generated during unification using PI *)
-  try f__f_rel_ih; try finish; try cleanup; try finish.
-
 Ltac pack_goal_rewriting := 
   match goal with
   | [f_frel: forall (args: ArgList ?argTps) (v:?resTp), ⌊ ?f args -⌋ = v <->
     ?frel (prArgList args _ _) v |- ?frel _ ⌊ ?f ?args' -⌋ ] => 
     rewrite <- (f_frel args' ⌊ f args' -⌋); try reflexivity
+  | [f_frel: forall (args: ArgList ?argTps) (v:?resTp), ⌊ ?f args -⌋ = v <->
+    ?frel (prArgList args _ _) v |- ?frel _ ⌊ (getPackF ?fpack) ?args' -⌋ ] => 
+    unfold getPackF; unfold getFun; pack_goal_rewriting
+  | [f_frel: forall (args: ArgList ?argTps) (v:?resTp), ⌊ ?f args -⌋ = v <->
+    ?frel (prArgList args _ _) v |- ?frel _ ?res ] => 
+    unfold res; pack_goal_rewriting
+  | [f_frel: forall (args: ArgList ?argTps) (v:?resTp), ⌊ ?f args -⌋ = v <->
+    ?frel (prArgList args _ _) v |- ⌊ packPr_proj ?fpack _⌋ _ _ ] => idtac f_frel;
+    let tmp := fresh "tmp" in
+    set (⌊ packPr_proj fpack _⌋) as tmp;
+    simpl in tmp;
+    subst tmp;
+    try pack_goal_rewriting
   end.
 
 Ltac goal_rewriting :=
   try unfold rel_u;
   repeat destruct_disjs; repeat progress autorewrite with int_rel_back;
   try pack_goal_rewriting.
+
+
+Ltac existence_lemma_quicksolve f := 
+  intros; try unpack_all;
+  try timeout 3 quicksolve; (* try quicksolve; *)
+
+  (* unfold definition in goal *)
+  (* cbn; *) first [ timeout 4 cbn | unfold f; (*unfold subsumptionCast in *;*) repeat (progress timeout 2 autorewrite with fix_notation_hints)];
+  repeat axiomatize_ho_term;
+  first [timeout 2 simpl in * | simpl_proj]; 
+  repeat progress (apply_ifs; try simpl_proj); try timeout 4 quicksolve.
 
 Ltac f__f_rel_ex_body :=
   autounfold with lia_unfold in *;
@@ -2437,14 +2614,14 @@ Ltac f__f_rel_ex_body :=
   (* repeat concat_either (instantiate_hyp) (specialize_hyps); *)
 
   (* solve/delay these variables *)
-  repeat first [instantiate_goal | eager_instantiate_goal];
+  repeat first [instantiate_goal | eager_instantiate_goal | repeat timeout 60 instExistGoal];
 
   (* try repeating those backwards reasoning steps *)
   repeat (
     goal_rewriting;
     progress autorewrite with f_rel_back; repeat shape_based;
     try split_hyps; try invert_all_axiomatizations;
-    repeat first [instantiate_goal | eager_instantiate_goal];
+    repeat first [instantiate_goal | eager_instantiate_goal | repeat timeout 60 instExistGoal];
     autounfold with get_rel_db in *
   );
 
@@ -2458,6 +2635,23 @@ Ltac f__f_rel_ex_body :=
   simpl_proj; autounfold with lia_unfold in *; simpl_proj; (* cleanup integer arithmetic stuff *)
   repeat autounfold with get_rel_db in *;
   try pack_goal_rewriting.
+
+Ltac f_rel_finish :=
+  repeat autounfold with get_rel_db in *;
+  tryif fill_ih_holes then idtac else (idtac "Failure to find hypothesis that exactly matches goal."; match goal with
+  | [ih: ?rel ?x _ _ |- ?rel ?x _ _] => idtac "The hypothesis that roughly matches the goal " ih
+  | [ih: ?rel _ ?y _ |- ?rel _ ?y _] => idtac "The hypothesis that roughly matches the goal " ih
+  | _ => print_proof_state; fail
+  end
+  );
+  (* unify the goal with an appropriate IH, apply the IH, then solve the proof obligations generated during unification using PI *)
+  try f__f_rel_ih; try finish; try cleanup; try finish.
+
+
+Ltac existence_lemma_induction f indVars conds :=
+  existence_lemma_pre f; 
+  multivariable_induction indVars conds _nil; 
+  existence_lemma_quicksolve f.
 
 (* tactic to prove the existence lemma *)
 Ltac f__f_rel_ex' indVars conds recCalls :=

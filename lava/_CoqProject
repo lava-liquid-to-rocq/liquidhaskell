@@ -26,6 +26,7 @@ coqDeps/LiquidPreludeUtil.v
 # manual/Benchmark/SFGradeExample0.v
 # manual/Benchmark/SFGradeExample.v
 
+out/Benchmark/Overview.v
 out/Benchmark/PLE/Lists.v
 out/Benchmark/PLE/Compose.v
 out/Benchmark/PLE/Lambdas.v
@@ -43,7 +44,6 @@ out/Benchmark/RBinsToBins.v
 out/Benchmark/PeanoNats.v
 out/Benchmark/PLE/Append.v
 out/Benchmark/SoftwareFoundations.v
-out/Benchmark/Overview.v
 
 #out/TranslationTests/FunctorId.v
 #out/TranslationTests/FunctorMaybe.v

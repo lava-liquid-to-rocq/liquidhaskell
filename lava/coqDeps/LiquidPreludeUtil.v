@@ -173,6 +173,7 @@ Ltac f__f_rel_mk := unfold proj; unfold refinement_proj;
 
 Ltac preInstExist :=
   simpl in *;
+  cleanup_hints;
   quick_simpl;
   repeat progress autounfold with lia_unfold in *;
   simpl_proj; 

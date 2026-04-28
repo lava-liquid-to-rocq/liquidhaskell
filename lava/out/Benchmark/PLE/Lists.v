@@ -63,10 +63,9 @@ Proof.
 	induction lq_tmp0 as [(*C*) x xs IH_xs | (*Emp*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		(C (exist (fun (VV: Z) => True) x (ltac: (solver))) 
-		(IH_xs (ltac: (try clear IH_xs; 
+		(let arg_91127321 := exist (fun (VV: Z) => True) x (ltac: (solver)) in (let arg_63046731 := IH_xs (ltac: (try clear IH_xs; 
 	solver)) lq_tmp1 (ltac: (try clear IH_xs; 
-	solver)))) _); 
+	solver)) in (C arg_91127321 arg_63046731))) _); 
 		solver.  
 	  - intros . 
 		refine (exist _ lq_tmp1 _); 

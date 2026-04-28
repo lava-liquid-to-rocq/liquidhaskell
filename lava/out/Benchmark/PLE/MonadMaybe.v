@@ -57,7 +57,7 @@ Proof.
 	induction lq_tmp0 as [(*Just*) m | (*Nothing*) ]. 
 	  - intros . 
 		refine (subsumptionCast _ _ 
-		((getPackF lq_tmp1) (exist (fun (lq_tmp2: Z) => True) m (ltac: (solver)))) _); 
+		(let arg_34347147 := exist (fun (lq_tmp2: Z) => True) m (ltac: (solver)) in ((getPackF lq_tmp1) arg_34347147)) _); 
 		solver.  
 	  - intros . 
 		refine (subsumptionCast _ _ Nothing _); 
@@ -143,7 +143,7 @@ Definition retrn (lq_tmp0: {lq_tmp0: Z | True}): retrn_spec lq_tmp0.
 Proof. 
 	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
 	refine (subsumptionCast _ _ 
-		(Just (exist (fun (VV: Z) => True) lq_tmp0 (ltac: (solver)))) _); 
+		(let arg_35505345 := exist (fun (VV: Z) => True) lq_tmp0 (ltac: (solver)) in (Just arg_35505345)) _); 
 	solver. 
 Defined. 
 Inductive retrn_rel : (Z -> (MaybeInt_u -> Prop)) := 

@@ -16,7 +16,7 @@ import Lava.CoqUtil (assertFresh, assertFreshName, funcHoodLemName, relDefBranch
 import Lava.CoqSyntaxUtil (mkArrowT, matchFunctionType, matchImplFunctionType, mkFuncType, packGetF)
 import Data.Bifunctor (bimap, first, second)
 import Data.Either.Extra (maybeToEither)
-import Data.List (uncons, (\\), union)
+import Data.List (uncons, (\\), union, nub)
 import Data.List.Tools (dropUntil)
 import qualified Data.Map as Map
 import Data.Tuple.Extra (uncurry3)
@@ -393,7 +393,7 @@ synSmpTerm γ r (f, mCtx@(fCtx, matchVars)) = {- traceFuncRet ["synSmpTerm", sho
 
     -- figure out the Coq substitutions required
 
-    (cqSubsts, cqSubstTps) <- substCqArgs cqArgs cqtms'
+    {-(cqSubsts, cqSubstTps) <- substCqArgs cqArgs cqtms'
     let
       substitute :: Suable a Coq.CoqTerm => a -> a
       substitute = subst cqSubsts
@@ -401,7 +401,22 @@ synSmpTerm γ r (f, mCtx@(fCtx, matchVars)) = {- traceFuncRet ["synSmpTerm", sho
     -- Apply the substitutions to the Coq types and terms and insert the required casts
       sbstArgs = map (\(_, rt) -> substitute rt) args
       cqtms = zipWith3 (\tm need have -> Coq.SubCast need have tm $ Coq.ProofHole Nothing) cqtms' sbstArgs cqSubstTps
-      cqtmTps = zip cqtms cqTps
+      cqtmTps = zip cqtms cqTps-}
+    (cqSubsts_, cqSubstTps) <- substCqArgs cqArgs cqtms'
+    let 
+      getArgName tm = "arg_" ++ hashName tm
+      argNames = map getArgName cqtms'
+      cqSubsts = zipWith (\(xi, _) tm -> (xi, Coq.Var $ getArgName tm)) cqArgs cqtms'
+      substitute = subst cqSubsts
+      substitute_ = subst cqSubsts_
+      sbstArgTps = map (\(_, rt) -> substitute rt) args
+      sbstArgs = map (\(_, rt) -> substitute_ rt) args
+      cqtms = zipWith3 (\tm need have -> Coq.SubCast need have tm $ Coq.ProofHole Nothing) cqtms' sbstArgTps cqSubstTps
+      cqtms_ = zipWith3 (\tm need have -> Coq.SubCast need have tm $ Coq.ProofHole Nothing) cqtms' sbstArgs cqSubstTps
+      cqtmTps = zip cqtms_ cqTps
+      letBinds bdy = foldr (\(argi, tm) bdy -> Coq.Let argi tm bdy) bdy $ zip argNames cqtms
+      argVars = map Coq.Var argNames 
+
 
     -- Apply the successive substitutions in the refinements, to compute the return type
     (substs, _) <- substArgs (take (length rs) tpArgs) rs -- ^ only take first (length rs) many tpArgs for the case of partial applications
@@ -434,7 +449,7 @@ synSmpTerm γ r (f, mCtx@(fCtx, matchVars)) = {- traceFuncRet ["synSmpTerm", sho
           _ -> [projectTm arg, oracle]
     return {- . traceFuncRet ["synSmpTerm", "...", showP r, show (f, mCtx), "\nwith rs:", show rs, "\nsbstArgs:", show sbstArgs, "\nrRts:", show rRts, "\nret:", showP ret, "\nreturnTp:", showP returnTp, "\nindVars:", show indVars, "\nmainInductVariableO", showP mainInductVariableO, "\nremainingRs:", show remainingRs, "\nnonInductiveArgs:", show nonInductiveArgs, "\nargsWithOracle:", show argsWithOracle] -} $
       if f /= g -- the call is not recursive
-        then (returnTp, Coq.App cqtm cqtms)
+        then (returnTp, letBinds $ Coq.App cqtm argVars)
         else (returnTp, Coq.App (Coq.Var ihHyp) argsWithOracle)
   App {} -> error "App not starting with Id"
   -- (Bop)
@@ -680,8 +695,9 @@ transReflDefinition γ f arrTp e tacs = do
           Coq.Induction (Coq.Var y) brs -> Induct y (map (\(c, (pats, ts)) -> ((c, pats), indBranches (ihs ++ getIHs pats) ts)) brs) False
           Coq.Destruct condT cases -> Cond condT $ map (\(c,(pat,caseExpr)) -> (c,pat,indBranches ihs caseExpr)) cases
           -- Coq.Destruct condT [("true", (Coq.ConjDestrPat [], thenET)), ("false", (Coq.ConjDestrPat [], elseET))] -> Cond condT (indBranches ihs thenET) (indBranches ihs elseET)
-          _ -> Finish (concatMap getIHAppls ihs) ihs where
-            getIHAppls ih = fromMaybe [] $ find (not . null)
+
+          _ -> {- traceFuncRet ["extractInds",  show tac, show ihs] $ -}  Finish (concatMap getIHAppls ihs) ihs where
+            getIHAppls ih = nub $ fromMaybe [] $ find (not . null)
               [[(ih, wit:ts) | Coq.App (Coq.Var ih') (wit:ts) <- findSubterm (AppPat (TermPat $ Coq.Var ih) (replicate n AnyPat), True) tac, ih' == ih] |  n <- [8, 7..1]]
 
         filterMatchTacs [] = []

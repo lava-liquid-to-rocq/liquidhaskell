@@ -301,46 +301,31 @@ Proof.
 			induction l as [(*A*)  | (*B*)  | (*C*)  | (*D*)  | (*F*) ]. 
 			  --- intros . 
 				refine (subsumptionCast _ _ 
-		(Grade 
-		(lowerLetter 
-		(subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) A (ltac: (solver)))) 
-		(subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver)))) _); 
+		(let arg_50695232 := let arg_66428653 := (subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) A (ltac: (solver))) in (lowerLetter arg_66428653) in (let arg_90158697 := (subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver))) in (Grade arg_50695232 arg_90158697))) _); 
 				solver.  
 			  --- intros . 
 				refine (subsumptionCast _ _ 
-		(Grade 
-		(lowerLetter 
-		(subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) B (ltac: (solver)))) 
-		(subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver)))) _); 
+		(let arg_69646574 := let arg_56813757 := (subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) B (ltac: (solver))) in (lowerLetter arg_56813757) in (let arg_90158697 := (subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver))) in (Grade arg_69646574 arg_90158697))) _); 
 				solver.  
 			  --- intros . 
 				refine (subsumptionCast _ _ 
-		(Grade 
-		(lowerLetter 
-		(subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) C (ltac: (solver)))) 
-		(subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver)))) _); 
+		(let arg_27953981 := let arg_21893190 := (subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) C (ltac: (solver))) in (lowerLetter arg_21893190) in (let arg_90158697 := (subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver))) in (Grade arg_27953981 arg_90158697))) _); 
 				solver.  
 			  --- intros . 
 				refine (subsumptionCast _ _ 
-		(Grade 
-		(lowerLetter 
-		(subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) D (ltac: (solver)))) 
-		(subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver)))) _); 
+		(let arg_78918718 := let arg_36099936 := (subsumptionCast Letter_u (fun (l: Letter_u) => ((Letter_wf l) /\ True)) D (ltac: (solver))) in (lowerLetter arg_36099936) in (let arg_90158697 := (subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Plus (ltac: (solver))) in (Grade arg_78918718 arg_90158697))) _); 
 				solver.  
 			  --- intros . 
-				refine (subsumptionCast _ _ (Grade F Minus) _); 
+				refine (subsumptionCast _ _ 
+		(let arg_76893236 := F in (let arg_68491551 := Minus in (Grade arg_76893236 arg_68491551))) _); 
 				solver.   
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(Grade 
-		(exist (fun (VV: Letter_u) => ((Letter_wf VV) /\ True)) l (ltac: (solver))) 
-		(subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Minus (ltac: (solver)))) _); 
+		(let arg_42529302 := exist (fun (VV: Letter_u) => ((Letter_wf VV) /\ True)) l (ltac: (solver)) in (let arg_68491551 := (subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Minus (ltac: (solver))) in (Grade arg_42529302 arg_68491551))) _); 
 			solver.  
 		  -- intros . 
 			refine (subsumptionCast _ _ 
-		(Grade 
-		(exist (fun (VV: Letter_u) => ((Letter_wf VV) /\ True)) l (ltac: (solver))) 
-		(subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Natural (ltac: (solver)))) _); 
+		(let arg_42529302 := exist (fun (VV: Letter_u) => ((Letter_wf VV) /\ True)) l (ltac: (solver)) in (let arg_35989353 := (subsumptionCast Modifier_u (fun (VV: Modifier_u) => ((Modifier_wf VV) /\ True)) Natural (ltac: (solver))) in (Grade arg_42529302 arg_35989353))) _); 
 			solver.   
 Defined. 
 Inductive lowerGrade_rel : (Grades_u -> (Grades_u -> Prop)) := 
@@ -474,21 +459,15 @@ Proof.
 	destruct (lateDays <? 9) as [ | ] eqn:E; [refine (exist _ g _); 
 	solver | let E := fresh "E" in 
 	destruct (lateDays <? 17) as [ | ] eqn:E; [refine (subsumptionCast _ _ 
-		(lowerGrade 
-		(exist (fun (g: Grades_u) => ((Grades_wf g) /\ True)) g (ltac: (solver)))) _); 
+		(let arg_53522021 := exist (fun (g: Grades_u) => ((Grades_wf g) /\ True)) g (ltac: (solver)) in (lowerGrade arg_53522021)) _); 
 	solver | let E := fresh "E" in 
 	destruct (lateDays <? 21) as [ | ] eqn:E; [refine (subsumptionCast _ _ 
-		(lowerGrade 
-		(subsumptionCast Grades_u (fun (g: Grades_u) => ((Grades_wf g) /\ True)) 
-		(lowerGrade 
-		(exist (fun (g: Grades_u) => ((Grades_wf g) /\ True)) g (ltac: (solver)))) (ltac: (solver)))) _); 
+		(let arg_55479652 := (subsumptionCast Grades_u (fun (g: Grades_u) => ((Grades_wf g) /\ True)) 
+		(let arg_53522021 := exist (fun (g: Grades_u) => ((Grades_wf g) /\ True)) g (ltac: (solver)) in (lowerGrade arg_53522021)) (ltac: (solver))) in (lowerGrade arg_55479652)) _); 
 	solver | refine (subsumptionCast _ _ 
-		(lowerGrade 
-		(subsumptionCast Grades_u (fun (g: Grades_u) => ((Grades_wf g) /\ True)) 
-		(lowerGrade 
-		(subsumptionCast Grades_u (fun (g: Grades_u) => ((Grades_wf g) /\ True)) 
-		(lowerGrade 
-		(exist (fun (g: Grades_u) => ((Grades_wf g) /\ True)) g (ltac: (solver)))) (ltac: (solver)))) (ltac: (solver)))) _); 
+		(let arg_12000031 := (subsumptionCast Grades_u (fun (g: Grades_u) => ((Grades_wf g) /\ True)) 
+		(let arg_55479652 := (subsumptionCast Grades_u (fun (g: Grades_u) => ((Grades_wf g) /\ True)) 
+		(let arg_53522021 := exist (fun (g: Grades_u) => ((Grades_wf g) /\ True)) g (ltac: (solver)) in (lowerGrade arg_53522021)) (ltac: (solver))) in (lowerGrade arg_55479652)) (ltac: (solver))) in (lowerGrade arg_12000031)) _); 
 	solver]]]. 
 Defined. 
 Inductive applyLatePolicy_rel : (Z -> (Grades_u -> (Grades_u -> Prop))) := 

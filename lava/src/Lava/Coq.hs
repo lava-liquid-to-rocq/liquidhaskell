@@ -920,8 +920,11 @@ instance AppSuable CoqTerm CoqTerm where
         func r = Match (map (replaceSubterm pat r) ts) idO (mapSnd (replaceSubterm pat r) cases)
     Ite r s t -> recurseFindAndRepl3 pat Ite r s t
     Let y _ _ | isSubsId (Var y) -> error $ "nameclash between supposedly free variable in substitution and new variable name in pattern: " ++ showSubst
-    -- \| if we have a substitution of a variable shadowed by the let ignore the entire body of the let
-    Let y s t -> recurseFindAndRepl pat (\u -> Let y u t) s
+    {--- \| if we have a substitution of a variable shadowed by the let ignore the entire body of the let
+    Let y s t -> recurseFindAndRepl pat (\u -> Let y u t) s -}
+    Let y s t -> {- trace (unwords ["findAndReplace", show pat, show tm]) $ -} resRec matches func where
+      matches = findSubterm pat s ++ findSubterm pat (sub y s t)
+      func r = Let y (replaceSubterm pat r s) (replaceSubterm pat r t)
     PrfTerm r z -> recurseFindAndRepl2 pat PrfTerm r z
     IsTrue b -> recurseFindAndRepl pat IsTrue b
     Forall args _ | capturedIn args -> unchanged
