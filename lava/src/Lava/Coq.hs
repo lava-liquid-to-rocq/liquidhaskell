@@ -419,7 +419,7 @@ identNb = 2
 
 pPrintArg :: (Pretty a) => ((Id, a), Bool) -> Doc
 pPrintArg ((x, tp), isImplicit) =
-  let delim = if isImplicit then brackets else parens
+  let delim = if isImplicit then braces else parens
    in if pPrint tp == "_"
      then maybeBrackets isImplicit (text x)
      else delim (text x <+> colon <+> pPrint tp)

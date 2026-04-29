@@ -706,7 +706,7 @@ relMkLemma f = [refRelMkLem, AddHint ResolveHint (relDefMkLemName $ name f) Grap
     relApp = Coq.App (Def . relDefName $ name f) (vars ++ [Coq.Var $ retName f])
     vars = map (\case (x, ArrType {}) -> Coq.App (Def projPackName) [Coq.Var x]; (x, _) -> Coq.Var x) (args f)
     subCast = SubCast relMkRet (Subset (retName f) Hole TermHole) (mkApp (Def $ name f) (injArgs f)) (TermWitness TermHole)
-    -- All arguments to the function are implicit, except for witnesses x_p
+    -- All first-order arguments to the function are implicit, except for witnesses x_p
     mkOnlyWitnessesExplicit ((x, utp) : (xp, p) : argsT)
       | xp == subsetWitnessNm x =
           ((x, utp), True) : ((xp, p), False) : mkOnlyWitnessesExplicit argsT
