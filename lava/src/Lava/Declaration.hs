@@ -378,7 +378,7 @@ defGraphRelAndHints f =
       let pathConstrs = snd . mapAccumL mkUniqueNames Map.empty $ map pathConstr (paths f)
        in CoqInductive (relDefName $ name f) [] (utrRefTypeTopProp $ tpf f) pathConstrs
     pathConstr path@(σxs, guards, _) =
-      Coq.Constr (pathConstrName (name f) (map snd σxs ++ map snd guards)) (trPathToConstr (name f) (map snd $ argsUT f) path)
+      Coq.Constr (pathConstrName (name f) (map snd σxs ++ map snd guards) "Constr") (trPathToConstr (name f) (map snd $ argsUT f) path)
     -- Make names of the constructors unique: there can be redundancy when there are additional guards
     -- This could be factorized inside pathConstrName if we need it in another function
     mkUniqueNames :: Map.Map Id Int -> CoqConstr -> (Map.Map Id Int, CoqConstr)
@@ -492,9 +492,12 @@ trPathGuard f (σxs, (r, rp) : σp', rf) hs relRes =
 
 -- | From a function name `f` and a list of patterns `pats`,
 -- returns a name for the constructor for f wrt pats
-pathConstrName :: Id -> [Reft] -> Id
-pathConstrName f pats =
-  render . fst $ aux (DC f, pats)
+-- The third argument is an additional string to add to the result if we end up
+-- with just the name of the function
+pathConstrName :: Id -> [Reft] -> String -> Id
+pathConstrName f pats additional =
+  let res = render . fst $ aux (DC f, pats)
+   in if res == f then f ++ "_" ++ additional else res
   where
     -- We return an int indicating how many _ we must insert
     aux :: (Reft, [Reft]) -> (Doc, Int)
@@ -564,10 +567,7 @@ inversionLemma f (σxs, guards) =
     AddHint RewriteHint f_lem GraphRelBackDB
   ]
   where
-    f_lem =
-      relBranchLemName $
-        let f_lem0 = pathConstrName f (map snd σxs)
-         in if f_lem0 == f then f ++ "_inv" else f_lem0
+    f_lem = relBranchLemName $ pathConstrName f (map snd σxs) "inv"
     -- Variable introduced by destructing the arguments
     argsVars = Set.toList $ LH.freeVars (map snd σxs)
     -- Fresh variable for the result of relApp
