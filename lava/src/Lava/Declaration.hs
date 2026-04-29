@@ -9,8 +9,8 @@ module Lava.Declaration where
 
 import Data.Bifunctor (bimap, first, second)
 import Data.Either (isLeft)
-import Data.List (groupBy, union, (\\))
-import qualified Data.List.NonEmpty as NE (group, head)
+import Data.List (groupBy, mapAccumL, union, (\\))
+import qualified Data.Map as Map
 import Data.Maybe (isNothing)
 import qualified Data.Set as Set
 import Debug.Trace (trace)
@@ -20,7 +20,7 @@ import Lava.CoqSyntaxUtil
 import Lava.Names
 import Lava.Translation
 import Lava.TypingEnvironment as TypEnv
-import Text.PrettyPrint
+import Text.PrettyPrint as PP
 import Text.PrettyPrint.HughesPJClass hiding (first)
 
 -- | Main function for the translation of declarations
@@ -375,10 +375,17 @@ defGraphRelAndHints f =
   where
     trDefGraphRel :: Coq.Decl
     trDefGraphRel =
-      -- trace (render $ text "trDefGraphRel" <+> text "paths :=" <+> pPrint (paths f)) $
-      CoqInductive (relDefName $ name f) [] (utrRefTypeTopProp $ tpf f) (map pathConstr (paths f))
-    -- TODO: check that the constructor names are not already used
-    pathConstr path = Coq.Constr (namePath (name f) path False) (trPathToConstr (name f) path)
+      let pathConstrs = snd . mapAccumL mkUniqueNames Map.empty $ map pathConstr (paths f)
+       in CoqInductive (relDefName $ name f) [] (utrRefTypeTopProp $ tpf f) pathConstrs
+    pathConstr path@(σxs, guards, _) =
+      Coq.Constr (pathConstrName (name f) (map snd σxs ++ map snd guards)) (trPathToConstr (name f) path)
+    -- Make names of the constructors unique: there can be redundancy when there are additional guards
+    -- This could be factorized inside pathConstrName if we need it in another function
+    mkUniqueNames :: Map.Map Id Int -> CoqConstr -> (Map.Map Id Int, CoqConstr)
+    mkUniqueNames usedNames (Coq.Constr f_p tp) =
+      case Map.lookup f_p usedNames of
+        Nothing -> (Map.insert f_p 1 usedNames, Coq.Constr f_p tp)
+        Just nbOfUses -> (Map.adjust (+ 1) f_p usedNames, Coq.Constr (f_p ++ "_" ++ show nbOfUses) tp)
 
 -- | Represents one path for a function.
 -- The first element contains a map from arguments to their patterns,
@@ -479,27 +486,22 @@ trPathGuard f (σxs, (r, rp) : σp', rf) hs relRes =
       recCall = trPathGuard f (σxs, σp', rf) (hs ++ currentHyps) relRes
    in hypsRV currentHyps (isNothing relRes) . foralls $ Coq.Bop (Binop Coq.Impl PropOp) equality recCall
 
--- | Create a name for a constructor based on the patterns of the parameters (`pats`).
--- The flag takeVars indicates if we want the variables alone between the constructors.
--- It is used with True to create names of IH and with False to create names for the relation and inversion lemmas.
-namePath :: Id -> FunctionPath -> Bool -> Id
-namePath f (pats, guards, _) takeVars = foldl (++) base namesPats
+-- | From a function name `f` and a list of patterns `pats`,
+-- returns a name for the constructor for f wrt pats
+pathConstrName :: Id -> [Reft] -> Id
+pathConstrName f pats =
+  render . fst $ aux (DC f, pats)
   where
-    namesPats = map (getConstructor . apps) (map snd pats ++ map snd guards)
-    -- TODO: deal with nested constructors (as in invLemName)
-    getConstructor (LH.Var x _ _, _) = if takeVars then "_" ++ x else ""
-    getConstructor (LH.DC c, _) = "_" ++ c
-    getConstructor r = error . render $ text "Unexpected refinement " <+> pPrint r <+> text " in Declaration.namePath for " <+> pPrint f
-    base = if all null namesPats then relDefBranchName f else f
-
-{- invLemName :: Id -> [(Id, Reft)] -> Id
-invLemName f pats =
-  if all (\case (_, LH.Var {}) -> True; _ -> False) pats
-    then relBranchLemName f
-    else relBranchLemName $ f ++ concatMap ((++) "_" . printConstructors . apps . snd) pats
-  where
-    printConstructors (DC c, args) = c ++ concatMap (printConstructors . apps) args
-    printConstructors _ = "" -}
+    -- We return an int indicating how many _ we must insert
+    aux :: (Reft, [Reft]) -> (Doc, Int)
+    aux (DC c, args) =
+      if all (\case (LH.Var {}) -> True; _ -> False) args
+        then (text c, 0)
+        else
+          let (argsPrint, n) = second (foldr max 0) . unzip $ map (aux . apps) args
+           in (hcat $ punctuate (text $ replicate (n + 1) '_') (text c : argsPrint), n + 1)
+    aux (LH.Var {}, _) = ("x", 0)
+    aux _ = ("", 0)
 
 -- ** Generated lemmas
 
@@ -548,7 +550,7 @@ relConstrLems f = concatMap (inversionLemma $ name f) $ groupPaths (paths f)
 -- | Definition of the inversion lemma and rewrite hint.
 -- The second argument contains all paths that match on the arguments in the same way
 inversionLemma :: Id -> ([(Id, Reft)], [([(Reft, Reft)], Reft)]) -> [Coq.Decl]
-inversionLemma f (σxs, paths) =
+inversionLemma f (σxs, guards) =
   [ Coq.Definition
       f_lem
       (map ((,False) . (,Hole)) $ argsVars ++ [res])
@@ -558,32 +560,21 @@ inversionLemma f (σxs, paths) =
     AddHint RewriteHint f_lem GraphRelBackDB
   ]
   where
-    f_lem = invLemName f σxs
+    f_lem = relBranchLemName $ pathConstrName f (map snd σxs)
     -- Variable introduced by destructing the arguments
     argsVars = Set.toList $ LH.freeVars (map snd σxs)
     -- Fresh variable for the result of relApp
     res = f_lem ++ "_res"
     relApp = Coq.App (Def $ relDefName f) (map (utrReft . snd) σxs ++ [Coq.Var res])
     -- TODO: do we need something else than []?
-    guardDisjunction = mkOr $ map (\(σp, rf) -> trPathGuard f (σxs, σp, rf) [] (Just res)) paths
+    guardDisjunction = mkOr $ map (\(σp, rf) -> trPathGuard f (σxs, σp, rf) [] (Just res)) guards
     -- argument of the tactic: the translation of the terms destructed in the guards
     tacArg =
-      let withPatterns = {- map NE.head . NE.group $ -} concatMap fst paths
+      let withPatterns = {- map NE.head . NE.group $ -} concatMap fst guards
        in maybeParens
             (not $ null withPatterns)
             $ hsep (map ((<+> "_::_") . parens . pPrint . utrReft . fst) withPatterns)
               <+> "_nil"
-
--- | Name of the inversion lemma constructed from the patterns of the arguments in a path.
--- This function is similar to `Declaration.namePath`
-invLemName :: Id -> [(Id, Reft)] -> Id
-invLemName f pats =
-  if all (\case (_, LH.Var {}) -> True; _ -> False) pats
-    then relBranchLemName f
-    else relBranchLemName $ f ++ concatMap ((++) "_" . printConstructors . apps . snd) pats
-  where
-    printConstructors (DC c, args) = c ++ concatMap (printConstructors . apps) args
-    printConstructors _ = ""
 
 -- | Lemma f_rel_ex
 -- > Theorem f_rel_ex [args argsp]: f_rel [args] ⌊ f (exist args argsp) -⌋.

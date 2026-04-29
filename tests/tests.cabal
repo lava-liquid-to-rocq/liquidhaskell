@@ -2669,19 +2669,19 @@ executable benchmark-lava
     ghc-options: -fforce-recomp
     other-modules:
                     -- Benchmark.PLE.Compose -- Fix HO
-                    Benchmark.PLE.Lambdas
+                    -- Benchmark.PLE.Lambdas
           	    -- Seems ok
-                    , Benchmark.PLE.Lists
+                    -- , Benchmark.PLE.Lists
                     -- fix compose
-                    , Benchmark.PLE.MonadId
+                    -- , Benchmark.PLE.MonadId
                     -- fix bind
-                    , Benchmark.PLE.MonadMaybe
+                    -- , Benchmark.PLE.MonadMaybe
           	    -- Seems ok
-                    , Benchmark.PLE.MonoidList
+                    -- , Benchmark.PLE.MonoidList
           	    -- Seems ok
-                    , Benchmark.PLE.MonoidMaybe
+                    -- , Benchmark.PLE.MonoidMaybe
                     -- fix concat
-                    , TranslationTests.Append
+                    -- , TranslationTests.Append
                     -- , TranslationTests.ApplicativeId -- HO constructor
                     -- , TranslationTests.ApplicativeList -- HO constructor
                     -- , TranslationTests.ApplicativeMaybe -- HO constructor
@@ -2690,21 +2690,21 @@ executable benchmark-lava
                     -- , TranslationTests.FunctorList -- Fix HO
                     -- , TranslationTests.FunctorMaybe -- Fix HO
                     -- fix bind
-                    , TranslationTests.MonadList
+                    -- , TranslationTests.MonadList
                     -- Fix lowerGrade_rel (= do TODO in the generation of constructor names)
-                    , Benchmark.GradeExample
+                    Benchmark.GradeExample
           	    -- Seems ok
-                    , Benchmark.Half
+                    -- , Benchmark.Half
                     -- Seems ok
                     , Benchmark.Overview
                     -- Seems ok
-                    , Benchmark.PeanoNats
+                    -- , Benchmark.PeanoNats
                     -- Seems ok
-                    , Benchmark.RBinsToBins
+                    -- , Benchmark.RBinsToBins
                     -- Seems ok
-                    , Benchmark.SafeIndexing
+                    -- , Benchmark.SafeIndexing
                     -- Discuss identity_fn_applied_twice
-                    , Benchmark.SoftwareFoundations
+                    -- , Benchmark.SoftwareFoundations
 
     build-depends:    base
                     , liquid-prelude
