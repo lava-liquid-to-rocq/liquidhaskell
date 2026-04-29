@@ -719,7 +719,7 @@ mkOnlyWitnessesExplicit [] = [] -}
 
 -- ** Pack instances
 
--- Refined pack instance f_pack and f_upack, only created for first-order functions, and not for constants
+-- Refined pack instances f_pack and f_upack, only created for first-order functions, and not for constants
 --
 -- > #[global] Instance f_pack : ….
 -- > Proof. buildPackG f f_rel f__f_rel f_rel_funct. Defined.

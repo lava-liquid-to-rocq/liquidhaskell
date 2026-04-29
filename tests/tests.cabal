@@ -2669,18 +2669,12 @@ executable benchmark-lava
     ghc-options: -fforce-recomp
     other-modules:
                     -- Benchmark.PLE.Compose -- Fix HO
-                    -- Benchmark.PLE.Lambdas
-          	    -- Seems ok
+                    -- , Benchmark.PLE.Lambdas
                     -- , Benchmark.PLE.Lists
-                    -- Seems ok
                     -- , Benchmark.PLE.MonadId
-                    -- fix bind
                     -- , Benchmark.PLE.MonadMaybe
-          	    -- Seems ok
                     -- , Benchmark.PLE.MonoidList
-          	    -- Seems ok
                     -- , Benchmark.PLE.MonoidMaybe
-                    -- fix concat
                     -- , TranslationTests.Append
                     -- , TranslationTests.ApplicativeId -- HO constructor
                     -- , TranslationTests.ApplicativeList -- HO constructor
@@ -2689,21 +2683,13 @@ executable benchmark-lava
                     -- , TranslationTests.FunctorId -- Fix HO
                     -- , TranslationTests.FunctorList -- Fix HO
                     -- , TranslationTests.FunctorMaybe -- Fix HO
-                    -- fix bind
                     -- , TranslationTests.MonadList
-                    -- seems ok
                     -- , Benchmark.GradeExample
-          	    -- Seems ok
                     -- , Benchmark.Half
-                    -- Seems ok
-                    , Benchmark.Overview
-                    -- Seems ok
+                    Benchmark.Overview
                     -- , Benchmark.PeanoNats
-                    -- Seems ok
                     -- , Benchmark.RBinsToBins
-                    -- Seems ok
                     -- , Benchmark.SafeIndexing
-                    -- Seems ok
                     -- , Benchmark.SoftwareFoundations
 
     build-depends:    base
