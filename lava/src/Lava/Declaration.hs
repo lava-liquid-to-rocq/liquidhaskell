@@ -694,7 +694,7 @@ relMkLemma f = [refRelMkLem, AddHint ResolveHint (relDefMkLemName $ name f) Grap
     refRelMkLem =
       Coq.Definition
         (relDefMkLemName $ name f)
-        (mkOnlyWitnessesExplicit . fst . trRefTypeSplit $ tpf f)
+        ({- mkOnlyWitnessesExplicit . -} map (,False) . fst . trRefTypeSplit $ tpf f)
         relMkRet
         ( ProofBody
             [ mkConcat
@@ -706,12 +706,16 @@ relMkLemma f = [refRelMkLem, AddHint ResolveHint (relDefMkLemName $ name f) Grap
     relApp = Coq.App (Def . relDefName $ name f) (vars ++ [Coq.Var $ retName f])
     vars = map (\case (x, ArrType {}) -> Coq.App (Def projPackName) [Coq.Var x]; (x, _) -> Coq.Var x) (args f)
     subCast = SubCast relMkRet (Subset (retName f) Hole TermHole) (mkApp (Def $ name f) (injArgs f)) (TermWitness TermHole)
-    -- All first-order arguments to the function are implicit, except for witnesses x_p
-    mkOnlyWitnessesExplicit ((x, utp) : (xp, p) : argsT)
-      | xp == subsetWitnessNm x =
-          ((x, utp), True) : ((xp, p), False) : mkOnlyWitnessesExplicit argsT
-    mkOnlyWitnessesExplicit ((x, tp) : argsT) = ((x, tp), True) : mkOnlyWitnessesExplicit argsT
-    mkOnlyWitnessesExplicit [] = []
+
+-- NOTE: I removed this because we currently use trailing implicit for all
+-- implicits [], but this does not work if the last argument is higher-order
+-- We'll see if this breaks something
+{- -- All first-order arguments to the function are implicit, except for witnesses x_p
+mkOnlyWitnessesExplicit ((x, utp) : (xp, p) : argsT)
+  | xp == subsetWitnessNm x =
+      ((x, utp), True) : ((xp, p), False) : mkOnlyWitnessesExplicit argsT
+mkOnlyWitnessesExplicit ((x, tp) : argsT) = ((x, tp), True) : mkOnlyWitnessesExplicit argsT
+mkOnlyWitnessesExplicit [] = [] -}
 
 -- ** Pack instance
 
