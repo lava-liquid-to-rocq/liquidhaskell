@@ -9,7 +9,7 @@ module Lava.Declaration where
 
 import Data.Bifunctor (bimap, first, second)
 import Data.Either (isLeft)
-import Data.List (groupBy, mapAccumL, union, (\\))
+import Data.List (groupBy, mapAccumL, nub, union, (\\))
 import qualified Data.Map as Map
 import Data.Maybe (isNothing)
 import qualified Data.Set as Set
@@ -560,7 +560,10 @@ inversionLemma f (σxs, guards) =
     AddHint RewriteHint f_lem GraphRelBackDB
   ]
   where
-    f_lem = relBranchLemName $ pathConstrName f (map snd σxs)
+    f_lem =
+      relBranchLemName $
+        let f_lem0 = pathConstrName f (map snd σxs)
+         in if f_lem0 == f then f ++ "_inv" else f_lem0
     -- Variable introduced by destructing the arguments
     argsVars = Set.toList $ LH.freeVars (map snd σxs)
     -- Fresh variable for the result of relApp
@@ -570,10 +573,10 @@ inversionLemma f (σxs, guards) =
     guardDisjunction = mkOr $ map (\(σp, rf) -> trPathGuard f (σxs, σp, rf) [] (Just res)) guards
     -- argument of the tactic: the translation of the terms destructed in the guards
     tacArg =
-      let withPatterns = {- map NE.head . NE.group $ -} concatMap fst guards
+      let withPatterns = nub . map fst $ concatMap fst guards
        in maybeParens
             (not $ null withPatterns)
-            $ hsep (map ((<+> "_::_") . parens . pPrint . utrReft . fst) withPatterns)
+            $ sep (map ((<+> "_::_") . parens . pPrint . utrReft) withPatterns)
               <+> "_nil"
 
 -- | Lemma f_rel_ex
