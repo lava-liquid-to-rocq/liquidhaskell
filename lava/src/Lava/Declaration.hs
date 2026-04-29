@@ -378,7 +378,7 @@ defGraphRelAndHints f =
       let pathConstrs = snd . mapAccumL mkUniqueNames Map.empty $ map pathConstr (paths f)
        in CoqInductive (relDefName $ name f) [] (utrRefTypeTopProp $ tpf f) pathConstrs
     pathConstr path@(σxs, guards, _) =
-      Coq.Constr (pathConstrName (name f) (map snd σxs ++ map snd guards)) (trPathToConstr (name f) path)
+      Coq.Constr (pathConstrName (name f) (map snd σxs ++ map snd guards)) (trPathToConstr (name f) (map snd $ argsUT f) path)
     -- Make names of the constructors unique: there can be redundancy when there are additional guards
     -- This could be factorized inside pathConstrName if we need it in another function
     mkUniqueNames :: Map.Map Id Int -> CoqConstr -> (Map.Map Id Int, CoqConstr)
@@ -456,12 +456,16 @@ separateBranches σxs σp (Case r branches _) =
 
 -- | Translates a function path into a constructor for f_rel.
 -- Function pathInd (def 3.5) of the paper
-trPathToConstr :: Id -> FunctionPath -> RocqType
-trPathToConstr f p@(σxs, _, _) =
-  Coq.Prop $ mkForallXs argsVars (trPathGuard f p [] Nothing)
+-- Requires the unrefined translation of argument types because Rocq cannot
+-- infer it for higher-order parameters of the function
+trPathToConstr :: Id -> [RocqType] -> FunctionPath -> RocqType
+trPathToConstr f argsUT p@(σxs, _, _) =
+  Coq.Prop $ Forall argsVarsWithTypes (trPathGuard f p [] Nothing)
   where
     -- Variables introduced by destructing the arguments
-    argsVars = Set.toList $ LH.freeVars (map snd σxs) -- Set.\\ Set.fromList (map fst σxs)
+    argsVarsWithTypes = concat $ zipWith patVars σxs argsUT
+    patVars (x, LH.Var x' n Local) tp | x == x' && n > 0 = [(x, tp)]
+    patVars (_, pat) _ = map (,Hole) . Set.toList $ LH.freeVars pat
 
 -- | Auxiliary function for `trPathToConstr` and `inversionLemma`
 -- Builds a Rocq term from the guards of a path and the path result.
