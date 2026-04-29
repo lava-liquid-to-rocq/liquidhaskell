@@ -49,7 +49,7 @@ trDecl (LH.Definition f tpf e isRefl) =
           ++ refRelRwLemma fdata --        f_rel_rw
           ++ refUnrefLemmas fdata --       f__f_rel and f__f_rel'
           ++ relMkLemma fdata --           f_rel_mk
-          ++ packInstance fdata --         f_pack
+          ++ packInstances fdata --        f_pack and f_upack
       else []
   where
     fdata = mkFuncData f tpf e
@@ -717,18 +717,22 @@ mkOnlyWitnessesExplicit ((x, utp) : (xp, p) : argsT)
 mkOnlyWitnessesExplicit ((x, tp) : argsT) = ((x, tp), True) : mkOnlyWitnessesExplicit argsT
 mkOnlyWitnessesExplicit [] = [] -}
 
--- ** Pack instance
+-- ** Pack instances
 
--- Pack instance f_pack, only created for first-order functions
+-- Refined pack instance f_pack and f_upack, only created for first-order functions, and not for constants
 --
 -- > #[global] Instance f_pack : ….
 -- > Proof. buildPackG f f_rel f__f_rel f_rel_funct. Defined.
-packInstance :: FuncData -> [Coq.Decl]
+-- > #[global] Instance f_upack : ….
+-- > Proof. buildUPackG f_rel f_rel_funct. Defined.
+packInstances :: FuncData -> [Coq.Decl]
 -- packInstance f | traceF "packInstance" f = undefined
-packInstance f =
+packInstances f =
   [TacInstance (packInstanceName $ name f) (trRefType $ tpf f) def | firstOrder, arrowType]
+    ++ [TacInstance (upackInstanceName $ name f) (utrRefType $ tpf f) udef | firstOrder, arrowType]
   where
     def = Custom $ unwords ["buildPackG", name f, relDefName $ name f, relDefThmName $ name f, funcHoodLemName $ name f]
+    udef = Custom $ unwords ["buildUPackG", relDefName $ name f, funcHoodLemName $ name f]
     firstOrder = all (\case (_, RefType {}) -> True; (_, ArrType {}) -> False) (args f)
     arrowType = case tpf f of ArrType {} -> True; RefType {} -> False
 

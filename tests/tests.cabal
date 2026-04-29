@@ -2672,8 +2672,8 @@ executable benchmark-lava
                     -- Benchmark.PLE.Lambdas
           	    -- Seems ok
                     -- , Benchmark.PLE.Lists
-                    -- TODO
-                    Benchmark.PLE.MonadId
+                    -- Seems ok
+                    -- , Benchmark.PLE.MonadId
                     -- fix bind
                     -- , Benchmark.PLE.MonadMaybe
           	    -- Seems ok
