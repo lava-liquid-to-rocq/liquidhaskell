@@ -37,9 +37,9 @@ outPostfix Rocq = ".v"
 -- * Rocq
 
 -- | Preamble for the Rocq file
-preamble :: Doc
-preamble =
-  vcat
+preamble :: Bool -> Doc
+preamble equations =
+  vcat $
     [ text "From coqDeps Require Export LiquidPreludeUtil.",
       scope "Z",
       scope "Int",
@@ -47,6 +47,7 @@ preamble =
       -- For debugging
       text "Ltac solver := admit."
     ]
+      ++ [text "From Equations Require Import Equations." | equations]
   where
     scope x = text "Open Scope" <+> text x <> text "_scope."
 
@@ -59,6 +60,8 @@ unrefinedConstrName :: Id -> Id
 unrefinedConstrName name = name ++ "_u"
 wfTCName :: Id -> Id
 wfTCName name = name ++ "_wf"
+eqFunctionName :: Id -> Id
+eqFunctionName name = name ++ "_rec"
 
 {- ORMOLU_DISABLE -}
 packName :: Id

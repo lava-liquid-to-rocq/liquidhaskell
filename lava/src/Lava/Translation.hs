@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OrPatterns #-}
+{-# LANGUAGE TupleSections #-}
 
 {- HLINT ignore "Use section" -}
 
@@ -324,7 +325,26 @@ trExprTacs (Case tm alts genVars) =
       trAltBody (Just e) = trExprTacs e
    in [mkMatching trAltBody tm alts genVars]
 
+-- | Translation of expressions as a proof term (for Equations)
+trExpr :: LH.Expr -> CoqTerm
+trExpr (Reft r) = trReft r
+trExpr (LH.Let x tp ex e) =
+  case tp of
+    Just (ArrType {}) -> Coq.Let x (trRefType <$> tp) (trExpr ex) (trExpr e)
+    Just (RefType {}) -> Coq.LetDes (x, subsetWitnessNm x) (trExpr ex) (trExpr e)
+    Nothing -> error "trExpr: found let-binding without type annotation."
+trExpr (Case tm alts _) =
+  Match [mkProject $ trReft tm] Nothing (map trAlt alts)
+  where
+    trAlt ((c, ys), e) = ([(c, map fst ys)],) $
+      case e of
+        Just e' -> trExpr e'
+        Nothing -> PrfTerm Hole $ ByTac Exfalso
+
 -- ** Utility functions for the refined translation
+
+-- TODO: add the translation of the recursive call for equations
+-- (needs to know if higher-order or not)
 
 -- | Given an inductive variable y, the branch pattern and arguments,
 -- build an application of IHy to the arguments

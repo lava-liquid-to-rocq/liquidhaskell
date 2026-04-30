@@ -11,7 +11,7 @@ import Data.Bifunctor (bimap, first, second)
 import Data.Either (isLeft)
 import Data.List (groupBy, mapAccumL, nub, union, (\\))
 import qualified Data.Map as Map
-import Data.Maybe (isNothing)
+import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Set as Set
 import Debug.Trace (trace)
 import Lava.Calculus as LH
@@ -342,11 +342,10 @@ traceDC s tc dc = trace ("Defining " ++ s ++ "(" ++ tc ++ "." ++ dc ++ ")") Fals
 
 -- ** Refined definition
 
--- | Translation of a definition `f` to the refined definition `f` (defined with tactics)
+-- | Translation of a definition `f` to the refined definition `f` (with tactics)
 trDefRefDef :: FuncData -> Coq.Decl
 -- trDefRefDef f | traceF "trDefRefDef" f = undefined
 trDefRefDef f =
-  -- FIX: for a constant, the type for the pack is wrong (see PeanoNats.one_pack)
   Coq.Definition (name f) (map (,False) (argsT f)) (retT f) (ProofBody tacs) Transparent
   where
     tacs =
@@ -355,6 +354,60 @@ trDefRefDef f =
     -- Filter arguments with a non-arrow refinement type (those that need to be destructed)
     onlyFOArgs :: [(Id, RefType)] -> [(Id, RefType)]
     onlyFOArgs = filter (\case (_, RefType {}) -> True; (_, ArrType {}) -> False)
+
+-- | Translation of a definition `f` to the refined definition `f` (with Equations)
+trDefEquations :: FuncData -> [Coq.Decl]
+-- trDefRefDef f | traceF "trDefRefDef" f = undefined
+trDefEquations f =
+  [ Equations f_rec argsTsplit retTsplit (mkEquationsBranches $ paths f),
+    Coq.Definition (name f) (map (,False) $ argsT f) (retT f) (TermBody defBody) Transparent
+  ]
+  where
+    f_rec = eqFunctionName $ name f
+    (argsTsplit, retTsplit) = trRefTypeSplit $ tpf f
+    -- f_rec ⌊x1⌋ ⌈x1⌉ … ⌊xn⌋ ⌈xn⌉ where
+    -- xi is only projected if it is of a simple refinement type
+    defBody = Coq.App (Coq.Var f_rec) . concatMap splitParameter $ argsT f
+      where
+        -- Split a parameter x into ⌊x⌋ and ⌈x⌉ if x is of a simple refinement type
+        splitParameter :: (Id, RocqType) -> [CoqTerm]
+        splitParameter (x, Coq.Subset {}) = [Project (Coq.Var x), Proj2sig (Coq.Var x)]
+        splitParameter (x, _) = [Coq.Var x]
+
+-- | Translates a list of `FunctionPath` into a list of `EqBranch`
+-- Translates the matches and the path expressions and gathers the guards
+mkEquationsBranches :: [FunctionPath] -> [EqBranch]
+mkEquationsBranches paths = undefined
+  where
+    splittedEqBranches = map splitEqBranch paths
+      where
+        splitEqBranch :: FunctionPath -> FunctionPath
+        splitEqBranch (σxs, guards, tm) = (concatMap splitEqPatterns (zip (map snd σxs) (map snd args)), guards, tm)
+        -- Change `pat` to `pat _` for paramaters of FO type
+        splitEqPatterns :: (CoqTerm, RocqType) -> [CoqTerm]
+        splitEqPatterns (pat, Coq.Subset {}) = [pat, Coq.TermHole]
+        splitEqPatterns (pat, _) = [pat]
+
+-- Formats a list of branches for Equations in a way that is apt for printing:
+-- gather the branches based on the same destruction of the arguments,
+-- and harmonize the additional matches across gathered branches
+-- The result is a list of: argument patterns, additional matched terms,
+-- and the list of patterns and terms for the branch
+formatEqBranches :: [([CoqTerm], [(CoqTerm, CoqTerm)], CoqTerm)] -> [EqBranch]
+formatEqBranches branches = map formatGatheredBranches gatherArgDestructs
+  where
+    gatherArgDestructs :: [([CoqTerm], [([(CoqTerm, CoqTerm)], CoqTerm)])]
+    gatherArgDestructs = map groupMatches $ groupBy (\(tm1, _, _) (tm2, _, _) -> tm1 == tm2) branches
+    groupMatches br@((xs, _, _) : _) = (xs, [(with, tm) | (_, with, tm) <- br])
+    groupMatches [] = ([], [])
+    formatGatheredBranches :: ([CoqTerm], [([(CoqTerm, CoqTerm)], CoqTerm)]) -> ([CoqTerm], [CoqTerm], [([CoqTerm], CoqTerm)])
+    formatGatheredBranches (pats, withs) = (pats, allMatchedTerms, map (first completePatterns) withs)
+      where
+        allMatchedTerms = foldr union [] (map (map fst . fst) withs)
+        -- for each with in with, build the list corresponding to all matched
+        -- terms by putting _ when the match is not involved
+        completePatterns :: [(CoqTerm, CoqTerm)] -> [CoqTerm]
+        completePatterns withPats = map (\match -> fromMaybe TermHole $ lookup match withPats) allMatchedTerms
 
 -- ** Graph relation
 

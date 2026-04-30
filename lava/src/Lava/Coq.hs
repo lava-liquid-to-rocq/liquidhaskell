@@ -59,17 +59,17 @@ data CoqModule = CoqModule Id [Decl] deriving (Eq, Data)
 
 -- | Declarations
 --
--- > d ::= Inductive tc : Set := (| c: A)*
+-- > d ::= AddHint HintKind x HintDatabase.
 -- >     | Opaque x. | Transparent x.
--- >     | AddHint HintKind x HintDatabase.
 -- >     | Load x.
--- >     | Definition f (x: R)* : R. Proof. tac* Defined.
--- >     | Definition f := e.
--- >     | Definition x := tp.
--- >     | Axiom f ((x:tp)|[x:tp])* : tp.
--- >     | idef
--- >     | CoqInductive tc (x:tp)* : k := (| c: ∀(y:tp)*, tp)*.
--- >     | Transparent x. | Opaque x.
+-- >     | Fixpoint f (x: tp)* : tp := e.
+-- >     | Inductive tc : Set := (| c: A)*
+-- >     | Definition f (x: R)* : R (. Proof. tac* Defined. | := e.)
+-- >     | Equations f : tp := (branches)+. where branches := f pat1 … patn with pat
+-- >     | Inductive tc (x:tp)* : tp := (| c: ∀(y:tp)*, tp)*.
+-- >     | Global Notation x := tp.
+-- >     | #[global] Instance x: tp := { field1 := e; …; fieldn = e }.
+-- >     | #[global] Instance x: tp. Proof. tac*. Defined.
 data Decl
   = -- | Add the hint to the specified hint database in Coq
     AddHint HintKind Id HintDatabase
@@ -86,6 +86,8 @@ data Decl
       CoqTerm
   | -- | A Coq definition/theorem
     Definition Id [((Id, RocqType), Bool)] RocqType DefBody Visibility
+  | -- | A (refined) definition using Equations. The patterns in the branches are divided into the parameters and additional matches. We assume solver is used as a default tactic so we don't add a proof
+    Equations Id [(Id, RocqType)] RocqType [EqBranch]
   | -- | An inductively defined Prop, Type or Set (used only internally)
     CoqInductive Id [(Id, RocqType)] RocqType [CoqConstr]
   | -- | A type-level notation (like the refined inductive data types)
@@ -99,6 +101,8 @@ data DefBody
   = ProofBody [Tactic]
   | TermBody CoqTerm
   deriving (Data, Eq, Show)
+
+type EqBranch = ([CoqTerm], [CoqTerm], [([CoqTerm], CoqTerm)])
 
 -- | Data constructors
 --
@@ -176,7 +180,7 @@ mkUArgList (UArgList uargs) = foldl (flip (Bop (Binop ConsU RefOp))) (Def "nilU"
 -- >     | e /\ e | e \/ e | e -> e | e <-> e | not e | True | False | is_true e
 -- >     | x ∈ (Def, Abbr, Var, Cr) | e bop e | "s" (s ∈ String) | I n (n ∈ Z) | F f (f ∈ Float)
 -- >     | e e* | λx:tp.e
--- >     | ⌊e⌋ | subCast R R e p | exist e e p
+-- >     | ⌊e⌋ | ⌈e⌉ | subCast R R e p | exist e e p
 -- >     | match (e,)* with (| c x* => e)* | if e then e else e | let x := e in e
 -- >     | _ | p
 data CoqTerm
@@ -207,6 +211,8 @@ data CoqTerm
   | Match [CoqTerm] (Maybe Id) [([(Id, [Id])], CoqTerm)]
   | Ite CoqTerm CoqTerm CoqTerm
   | Let Id (Maybe RocqType) CoqTerm CoqTerm
+  | -- | let (x, xp') := e in e'
+    LetDes (Id, Id) CoqTerm CoqTerm
   | TermHole
   | PrfTerm RocqType ProofTerm
   | InlineInstance [(Id, CoqTerm)]
@@ -484,6 +490,23 @@ instance Pretty Decl where
   pPrint (TacInstance instName tp tac) =
     sep [hang ("#[global] Instance" <+> text instName <> colon)
       identNb (pPrint tp <> dot), "Proof.", nest identNb (pPrint tac), "Defined."]
+  pPrint (Equations f args ret eqbranches) =
+    hang ("Equations" <+> text f <+> pPrintArgs (map (,False) args) <> colon)
+    identNb (pPrint ret <+> ":=")
+    $$ nest identNb (vcat (
+      punctuate ";\n" (map pPrintEqBranch eqbranches)) <> dot)
+    where
+      pPrintEqBranch :: ([CoqTerm], [CoqTerm], [([CoqTerm], CoqTerm)]) -> Doc
+      pPrintEqBranch (pats, [], [([], tm)]) =
+        hsep (text f : map (pPrintPrec prettyNormal (appPrec - 1)) pats) <+> ":=" <+> pPrint tm
+      pPrintEqBranch (pats, moreMatches, branches) =
+        hsep (text f : map (pPrintPrec prettyNormal (appPrec - 1)) pats)
+        <+> "with" <+> hsep (punctuate ", " (map pPrint moreMatches)) <+> "=> {"
+        $$ nest identNb (vcat (map pPrintWithBranch branches))
+        <+> "}"
+      pPrintWithBranch :: ([CoqTerm], CoqTerm) -> Doc
+      pPrintWithBranch (withPatterns, tm) =
+        "|" <+> hsep (punctuate ", " $ map pPrint withPatterns) <+> "=>" <+> pPrint tm
 
 instance Pretty HintKind where
   pPrint UnfoldHint = "Unfold"
@@ -634,6 +657,9 @@ instance Pretty CoqTerm where
     maybeParens (p < 200) $ sep [
       "let" <+> maybe (text x) (\tp' -> text x <> colon <+> pPrint tp') tp <+> ":=",
       pPrint s <+> "in", pPrint t]
+  pPrintPrec _ p (LetDes (x,xp) s t) =
+    maybeParens (p < 200) $ sep [
+      "let" <+> parens (text x <> colon <+> text xp) <+> ":=", pPrint s <+> "in", pPrint t]
   pPrintPrec _ _ (InlineInstance fields) =
     sep ["{|", sep . punctuate semi $ map (\(field, val) -> text field <+> ":=" <+> pPrint val) fields, "|}"]
   pPrintPrec l p (TypeArg tp) = pPrintPrec l p tp

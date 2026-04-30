@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OrPatterns #-}
 
 -- | This module defines the Dependencies and Binder classes and instances, used
 -- to export a sort function respecting dependencies order
@@ -70,8 +71,9 @@ instance Binder Coq.Decl where
     Coq.Definition f _ _ _ _ -> f
     Coq.CoqInductive tc _ _ _ -> tc
     Coq.CoqNewType t _ -> t
+    Coq.Equations f _ _ -> f
     -- \| load, visibility modifier, hint
-    _ -> ""
+    (Coq.AddHint {}; Coq.ChangeVisibility {}; Coq.Load {}; Coq.Instance {}; Coq.TacInstance {}) -> ""
 
 -- * Topological sort for declarations using 'Dependencies' and 'Binder' instances
 
