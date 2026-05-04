@@ -45,9 +45,10 @@ preamble equations =
       scope "Int",
       text "From Coq Require Import Unicode.Utf8.",
       -- For debugging
-      text "Ltac solver := admit."
+      text "Ltac solver := quicksolve."
     ]
       ++ [text "From Equations Require Import Equations." | equations]
+      ++ [text "#[local] Obligation Tactic := solver." | equations]
   where
     scope x = text "Open Scope" <+> text x <> text "_scope."
 

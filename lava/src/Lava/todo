@@ -1,12 +1,6 @@
-Change return type of arrs to ([RefType], (Id, BaseType, Reft))
-
-Explicit substitution of matches for types in elaboration?
-
-Software foundations: fix generation of hints
+Explicit substitution of matches for types in elaboration? (see for instance append_rec translated with Equations)
 
 Use type of constructor in case?
-
-- fix translated outputs
 
 - bug with lq_tmp0 instead of HO parameter name
 - use Nothing instead of Var "undefined" 0 Local for patErr
@@ -14,5 +8,12 @@ Use type of constructor in case?
 - higher-order constructors (for polymorphism):
   TranslationTests.ApplicativeId, TranslationTests.ApplicativeList,
   TranslationTests.ApplicativeMaybe,
+  -> not mentioned in the paper
 
 - cleanup Rocq grammar
+
+
+For Equations :
+- add missing branches
+- use decidable boolean equality
+- potentially do not translate non recursive function to Equations

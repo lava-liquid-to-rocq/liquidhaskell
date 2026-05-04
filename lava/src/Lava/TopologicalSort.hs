@@ -71,7 +71,7 @@ instance Binder Coq.Decl where
     Coq.Definition f _ _ _ _ -> f
     Coq.CoqInductive tc _ _ _ -> tc
     Coq.CoqNewType t _ -> t
-    Coq.Equations f _ _ -> f
+    Coq.Equations f _ _ _ -> f
     -- \| load, visibility modifier, hint
     (Coq.AddHint {}; Coq.ChangeVisibility {}; Coq.Load {}; Coq.Instance {}; Coq.TacInstance {}) -> ""
 

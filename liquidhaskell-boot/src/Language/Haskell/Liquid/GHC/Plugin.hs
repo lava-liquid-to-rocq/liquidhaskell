@@ -442,7 +442,10 @@ checkLiquidHaskellContext lhContext = do
 
       -- NOTE: Addition for Lava
       when (lava $ lhGlobalCfg lhContext) (
-        liftIO $ runLava (mkSrcInfo lhContext pmrTargetInfo infTypes))
+        liftIO $ runLava (mkSrcInfo lhContext pmrTargetInfo infTypes) False)
+      -- NOTE: Addition for Lava
+      when (lavaEquations $ lhGlobalCfg lhContext) (
+        liftIO $ runLava (mkSrcInfo lhContext pmrTargetInfo infTypes) True)
 
       withPragmas (lhGlobalCfg lhContext) (Ms.pragmas bareSpec) $ \moduleCfg ->  do
         let filters = getFilters moduleCfg

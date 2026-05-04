@@ -106,10 +106,10 @@ mkIsTrue tm = case tm of
           Gt -> "gtbZ_rel"
 
 -- | Wrapper for exist, using the proof term I for a trivial refinement
-mkExist :: RocqType -> CoqTerm -> CoqTerm
-mkExist (Subset x tp r) tm =
-  Exist (Lambda x tp r) tm (if isTrivial r then CoqProofTerm "I" else ProofHole Nothing)
-mkExist tp _ = error . render $ text "Subset type expected to build exist, found" <+> pPrint tp
+mkExist :: Bool -> RocqType -> CoqTerm -> CoqTerm
+mkExist eq (Subset x tp r) tm =
+  Exist (Lambda x tp r) tm (if isTrivial r then CoqProofTerm "I" else if eq then ProofHole else ByTac Oracle)
+mkExist _ tp _ = error . render $ text "Subset type expected to build exist, found" <+> pPrint tp
 
 -- | Create a destruction pattern [x x_p] for the variable x
 mkVarDestrPat :: Id -> CoqDestrPat

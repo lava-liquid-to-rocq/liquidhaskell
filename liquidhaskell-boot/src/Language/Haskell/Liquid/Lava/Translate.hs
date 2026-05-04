@@ -3,7 +3,7 @@
 
 module Language.Haskell.Liquid.Lava.Translate (runLava, SrcInfo (..)) where
 
-import Control.Monad (unless, void, when)
+import Control.Monad (unless, void)
 import Data.Bifunctor (bimap)
 import Data.Char (isSpace)
 import Data.Foldable (traverse_)
@@ -44,13 +44,14 @@ data SrcInfo = SrcInfo
     s_infTypes :: AnnInfo SpecType
   }
 
--- | The main function of the plugin
-runLava :: SrcInfo -> IO ()
-runLava sinfo = do
+-- | The main function of the plugin.
+--   The boolean is True to use Equations
+runLava :: SrcInfo -> Bool -> IO ()
+runLava sinfo equations = do
   let filepath = Specs.giTarget $ Specs.giSrc $ s_targetInfo sinfo
   -- For debugging: no buffer on the output
   hSetBuffering stdout NoBuffering
-  void $ translateFile True sinfo filepath
+  void $ translateFile sinfo filepath equations
 
 -- | parses file into [Calc.Decl]
 parseFile ::
@@ -58,8 +59,10 @@ parseFile ::
   SrcInfo ->
   -- | Complete file name
   String ->
+  -- | Whether to use Equations
+  Bool ->
   IO ([Calc.Decl], ([String], Id, Id))
-parseFile sinfo filename = do
+parseFile sinfo filename equations = do
   -- \| Step 1: Setting up the environment
   workingPath <- getCurrentDirectory
   let moduleId = takeWhile (not . isSpace) $ moduleNameString (s_moduleName sinfo)
@@ -91,7 +94,7 @@ parseFile sinfo filename = do
   putStrLn $ "Input file: " ++ filename
 
   -- Thanks to sinfo, this will also produce declarations from this rather than from the imported modules
-  traverse_ (translateFile False sinfo) importedSourceFiles
+  traverse_ (\f -> translateFile sinfo f equations) importedSourceFiles
 
   let calcSource :: [Calc.Decl]
       calcSource = topologicalSort (dataDecls ++ defDecls)
@@ -102,38 +105,35 @@ parseFile sinfo filename = do
 
   pure (calcSource, (importNames, outputFolder, modulename))
 
--- | Calls translation function on source file and (optionally) writes (intermediate) output files in output folder
+-- | Calls translation function on source file and writes Rocq and ILH files in output folder.
 translateFile ::
-  -- | Whether output files for Calculus and Coq should be generated
-  Bool ->
   -- | All information about the Liquid Haskell file to translate
   SrcInfo ->
   -- | Complete file name
   String ->
+  -- | Whether Equations should be used
+  Bool ->
   IO [Coq.Decl]
-translateFile writeFlag sinfo arg = do
-  (calcSource, (importNames, outputFolder, modulename)) <- parseFile sinfo arg
+translateFile sinfo arg equations = do
+  (calcSource, (importNames, outputFolder, modulename)) <- parseFile sinfo arg equations
 
   let hasImports = not $ null importNames
 
-  when writeFlag $ do
-    createDirectoryIfMissing True outputFolder
-    writeOut outputFolder modulename ILHNoElab PP.empty calcSource
+  createDirectoryIfMissing True outputFolder
+  writeOut outputFolder modulename ILHNoElab PP.empty calcSource
 
   -- Elaborate of the Calculus declarations before translation
   case elaborate calcSource of
     Left err -> putStrLn (PP.prettyShow err) >> return []
     Right calcSourceElaborated -> do
       putStrLn "––Typechecking and elaboration OK––"
-      when writeFlag $ do
-        createDirectoryIfMissing True outputFolder
-        writeOut outputFolder modulename ILH PP.empty calcSourceElaborated
+      createDirectoryIfMissing True outputFolder
+      writeOut outputFolder modulename ILH PP.empty calcSourceElaborated
       -- Translate Calculus declarations to Coq declarations
       let coqImports = map Coq.Load importNames
-          coqResult = coqImports ++ concatMap trDecl calcSourceElaborated
-      when writeFlag $ do
-        let coqPreamble = if hasImports then PP.empty else preamble
-        writeOut outputFolder modulename Rocq coqPreamble coqResult
+          coqResult = coqImports ++ concatMap (trDecl equations) calcSourceElaborated
+      let coqPreamble = if hasImports then PP.empty else preamble equations
+      writeOut outputFolder modulename Rocq coqPreamble coqResult
       pure coqResult
 
 writeOut :: (PP.Pretty a) => FilePath -> String -> OUT -> PP.Doc -> [a] -> IO ()

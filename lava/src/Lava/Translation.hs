@@ -85,31 +85,31 @@ utrRefTypeTopProp (ArrType _ tpx tp) = Coq.Arrow (utrRefType tpx) (utrRefTypeTop
 
 -- | Translation of refinements
 --   Function RtoU (def 3.2) of the paper
-utrReft :: LH.Reft -> Coq.CoqTerm
+utrReft :: Bool -> LH.Reft -> Coq.CoqTerm
 -- utrReft r | traceFunc "utrReft" [pPrint r] = undefined
-utrReft r0 = case r0 of
+utrReft eq r0 = case r0 of
   LH.Var x n Global | n > 0 -> Coq.Var $ upackInstanceName x
   LH.Var x _ _ -> Coq.Var x
   LH.StringLit s -> Coq.StringLiteral s
   LH.IntLit n -> Coq.IntLiteral n
   LH.FloatLit d -> Coq.FloatLiteral d
   LH.DC c -> Coq.Cr $ utrDC c
-  LH.App r1 r2 -> Coq.App (utrReft r1) [utrReft r2]
-  LH.Neg r -> Coq.Neg UnrefOp $ utrReft r
-  LH.Bop op r1 r2 -> Coq.Bop (Binop (trBop op) UnrefOp) (utrReft r1) (utrReft r2)
-  LH.QMark r _ _ -> utrReft r
-  LH.Pop _ _ r -> utrReft r
-  LH.Sub r _ _ -> utrReft r
-  LH.Inj r _ -> utrReft r
-  LH.Proj r -> mkProject $ trReft r
+  LH.App r1 r2 -> Coq.App (utrReft eq r1) [utrReft eq r2]
+  LH.Neg r -> Coq.Neg UnrefOp $ utrReft eq r
+  LH.Bop op r1 r2 -> Coq.Bop (Binop (trBop op) UnrefOp) (utrReft eq r1) (utrReft eq r2)
+  LH.QMark r _ _ -> utrReft eq r
+  LH.Pop _ _ r -> utrReft eq r
+  LH.Sub r _ _ -> utrReft eq r
+  LH.Inj r _ -> utrReft eq r
+  LH.Proj r -> mkProject $ trReft eq r
 
 -- | Translation of refinements to propositions
 --   Function RtoP (def 3.4) of the paper
-utrReftProp :: LH.Reft -> Coq.CoqTerm
+utrReftProp :: Bool -> LH.Reft -> Coq.CoqTerm
 -- utrReftProp r | traceFunc "utrReftProp" [pPrint r] = undefined
-utrReftProp r =
+utrReftProp eq r =
   let (rv, r') = extractApps r
-   in hypsRV rv True (mkIsTrue (utrReft r'))
+   in hypsRV eq rv True (mkIsTrue (utrReft eq r'))
 
 -- ** Utility functions for unrefined translations
 
@@ -187,14 +187,14 @@ extractApps r0 = go [] r0
 -- translates the hypothesis, placing them on top of the second argument
 -- The flag indicates if we want to use foralls and implications or exists with conjunctions.
 -- The first case is for building the graph relation, the second the backward reasoning lemmas
-hypsRV :: [(Reft, Id)] -> Bool -> CoqTerm -> CoqTerm
-hypsRV rv graphRel = \p -> foldr hyp p rv
+hypsRV :: Bool -> [(Reft, Id)] -> Bool -> CoqTerm -> CoqTerm
+hypsRV eq rv graphRel = \p -> foldr hyp p rv
   where
     -- hyp(f r1 … rn, z) p = forall z, (f_rel/get(U)PackRelName f) RtoU(r1) … RtoU(rn) z -> p
     hyp :: (Reft, Id) -> CoqTerm -> CoqTerm
     hyp (app, z) p =
       quantifier [(z, Hole)] $
-        link (Coq.App hdT (map utrReft args ++ [Coq.Var z])) p
+        link (Coq.App hdT (map (utrReft eq) args ++ [Coq.Var z])) p
       where
         (quantifier, link) =
           if graphRel then (Forall, Coq.Bop (Binop Coq.Impl PropOp)) else (Exists, Coq.Bop (Binop Coq.And PropOp))
@@ -224,16 +224,16 @@ trDC c = c
 
 -- | Translation of refinement types
 --   Function TtoR (def 3.6) of the paper
-trRefType :: LH.RefType -> RocqType
+trRefType :: Bool -> LH.RefType -> RocqType
 -- trRefType tp@(RefType {}) | traceFunc "trRefType" [pPrint tp] = undefined
-trRefType (RefType x tp r) =
+trRefType eq (RefType x tp r) =
   Coq.Subset x (trBaseType tp) rT
   where
     rT = case tp of
-      (LH.Builtin {}) -> utrReftProp r
-      _ | tp `elem` builtinTCs -> utrReftProp r
-      (LH.TC tc) -> Coq.Bop (Binop Coq.And PropOp) (Coq.App (Def $ wfTCName tc) [Coq.Var x]) (utrReftProp r)
-trRefType tp@(ArrType {}) =
+      (LH.Builtin {}) -> utrReftProp eq r
+      _ | tp `elem` builtinTCs -> utrReftProp eq r
+      (LH.TC tc) -> Coq.Bop (Binop Coq.And PropOp) (Coq.App (Def $ wfTCName tc) [Coq.Var x]) (utrReftProp eq r)
+trRefType eq tp@(ArrType {}) =
   Pack argTps uargTps (argListCorPrf argTps uargTps) tpx p_
   where
     {- substs = map (\(w, _) -> (removeSuffix "_r" w, projectTm $ Var w)) args_
@@ -242,8 +242,8 @@ trRefType tp@(ArrType {}) =
        tpx = cleanupSubst substs tpx_
        rx = subst substs rx_ -}
     (args, ret) = arrs tp
-    (x, tpx, rx) = fromSubset . trRefType $ mkRefType ret
-    argsT = map (second trRefType) args
+    (x, tpx, rx) = fromSubset . trRefType eq $ mkRefType ret
+    argsT = map (second (trRefType eq)) args
     argTps = ArgListT argsT
     uargTps = UArgListT $ map (utrRefType . snd) args
     p = mkLam argsT (Lambda x tpx rx)
@@ -252,126 +252,137 @@ trRefType tp@(ArrType {}) =
     p_ = Lambda argsNm (ArgumentList argTps) (Lambda v tpx (PrfTerm Hole (ByTac . Custom $ unwords ["flattenP", render $ parens (pPrint p), argsNm, v])))
 
 -- | Translation of refinement types at top-level (with foralls)
-trRefTypeTop :: LH.RefType -> RocqType
-trRefTypeTop tp@(RefType {}) = trRefType tp
-trRefTypeTop (ArrType x tpx tp) = Coq.FAType (x, trRefType tpx) (trRefTypeTop tp)
+trRefTypeTop :: Bool -> LH.RefType -> RocqType
+trRefTypeTop eq tp@(RefType {}) = trRefType eq tp
+trRefTypeTop eq (ArrType x tpx tp) = Coq.FAType (x, trRefType eq tpx) (trRefTypeTop eq tp)
 
 -- | Translation of a refinement type to an arrow where first-order arguments
 -- are splitted over the value and predicate
 --
 -- > trRefTypeSplitFOArgs (x: {x:Int | x > 0}) -> (f: Int -> Int) -> {v: Int | v = proj(f) proj(x))
 -- >   = ([(x: Z) (x_p: geq_rel x 0 true) (f: Pack(Int -> Int))], {v: Z | (getPackRel f) x v})
-trRefTypeSplit :: LH.RefType -> ([(Id, RocqType)], RocqType)
-trRefTypeSplit tp =
+trRefTypeSplit :: Bool -> LH.RefType -> ([(Id, RocqType)], RocqType)
+trRefTypeSplit eq tp =
   let (args, ret) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
-   in (concatMap (splitIfFO . second trRefType) args, trRefType $ mkRefType ret)
+   in (concatMap (splitIfFO . second (trRefType eq)) args, trRefType eq $ mkRefType ret)
   where
     splitIfFO (x, Subset _ tpx p) = [(x, tpx), (subsetWitnessNm x, Prop p)]
     splitIfFO argT = [argT]
 
 -- | Translation of refinements
 --   Function RtoR (def 3.8) of the paper
-trReft :: LH.Reft -> Coq.CoqTerm
-trReft (LH.Var x ar Global) | ar > 0 = Coq.Def $ packInstanceName x
-trReft (LH.Var x _ _) = Coq.Var x
-trReft (LH.StringLit s) = Coq.StringLiteral s
-trReft (LH.IntLit n) = Coq.IntLiteral n
-trReft (LH.FloatLit d) = Coq.FloatLiteral d
-trReft (LH.DC c) = Cr (trDC c)
-trReft (LH.Neg tm) = Coq.Neg RefOp $ trReft tm
-trReft (LH.Bop op tm1 tm2) = Coq.Bop (Binop (trBop op) RefOp) (trReft tm1) (trReft tm2)
-trReft (LH.QMark tm hint prop) =
-  Coq.Let "_" (Just . Prop $ utrReftProp prop) (Proj2sig $ trReft hint) (trReft tm)
-trReft (LH.Pop pop tm1 tm2) =
-  let popProp = Just . Prop $ Coq.Bop (Binop (trBop $ popToBop pop) PropOp) (mkProject $ trReft tm1) (mkProject $ trReft tm2)
-   in Coq.Let "_" popProp (PrfTerm Hole $ ProofHole Nothing) (trReft tm2)
-trReft (LH.Sub tm from to) = Coq.SubCast (trRefType to) (trRefType from) (trReft tm) (Coq.ProofHole Nothing)
-trReft (LH.Inj tm tp) = mkExist (trRefType tp) (trReft tm)
-trReft tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
-trReft tm@(LH.App {}) = case apps tm of
-  (LH.Var _ _ (Recursive indVar state), args) -> trRecCall indVar state args
-  (LH.Var f _ Local, args) -> Coq.App (packGetF (Coq.Var f)) (map trReft args)
-  (LH.Var f _ Global, args) -> Coq.App (Coq.Def f) (map trReft args)
-  (hd, args) -> Coq.App (trReft hd) (map trReft args)
+trReft :: Bool -> LH.Reft -> Coq.CoqTerm
+trReft _ (LH.Var x ar Global) | ar > 0 = Coq.Def $ packInstanceName x
+trReft _ (LH.Var x _ _) = Coq.Var x
+trReft _ (LH.StringLit s) = Coq.StringLiteral s
+trReft _ (LH.IntLit n) = Coq.IntLiteral n
+trReft _ (LH.FloatLit d) = Coq.FloatLiteral d
+trReft _ (LH.DC c) = Cr (trDC c)
+trReft eq (LH.Neg tm) = Coq.Neg RefOp $ trReft eq tm
+trReft eq (LH.Bop op tm1 tm2) = Coq.Bop (Binop (trBop op) RefOp) (trReft eq tm1) (trReft eq tm2)
+trReft eq (LH.QMark tm hint prop) =
+  Coq.Let "_" (Just . Prop $ utrReftProp eq prop) (Proj2sig $ trReft eq hint) (trReft eq tm)
+trReft eq (LH.Pop pop tm1 tm2) =
+  let popProp = Just . Prop $ Coq.Bop (Binop (trBop $ popToBop pop) PropOp) (mkProject $ trReft eq tm1) (mkProject $ trReft eq tm2)
+   in Coq.Let "_" popProp (PrfTerm Hole $ if eq then ProofHole else ByTac Oracle) (trReft eq tm2)
+trReft eq (LH.Sub tm from to) = Coq.SubCast (trRefType eq to) (trRefType eq from) (trReft eq tm) (if eq then ProofHole else ByTac Oracle)
+trReft eq (LH.Inj tm tp) = mkExist eq (trRefType eq tp) (trReft eq tm)
+trReft _ tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
+trReft eq tm@(LH.App {}) = case apps tm of
+  (LH.Var f _ (Recursive indVar state), args) ->
+    trRecCall (if eq then Right f else Left indVar) state args
+  (LH.Var f _ Local, args) -> Coq.App (packGetF (Coq.Var f)) (map (trReft eq) args)
+  (LH.Var f _ Global, args) -> Coq.App (Coq.Def f) (map (trReft eq) args)
+  (hd, args) -> Coq.App (trReft eq hd) (map (trReft eq) args)
 
 -- | Translation of expressions as tactics
 -- Some other cases might be necessary because of branches coming from Core.
 -- Function EtoTac (def 3.7) of the paper
-trExprTacs :: LH.Expr -> [Tactic]
+trExprTacs :: Bool -> LH.Expr -> [Tactic]
 -- trExprTacs e | traceFunc "trExprTacs" [pPrint e] = undefined
-trExprTacs (LH.Reft tm) = [Coq.Exact $ trReft tm]
-trExprTacs (LH.Let _ Nothing _ _) = error "Found let-binding with annotation while translating."
-trExprTacs (LH.Let x (Just tpx@(RefType {})) e1 e2) =
-  [ AssertTacs x' (trRefType tpx) (trExprTacs e1),
+trExprTacs eq (LH.Reft tm) =
+  let refine = Refine $ trReft eq tm
+   in if eq then [mkConcat [refine, Try Oracle]] else [refine]
+trExprTacs _ (LH.Let _ Nothing _ _) = error "Found let-binding with annotation while translating."
+trExprTacs eq (LH.Let x (Just tpx@(RefType {})) e1 e2) =
+  [ AssertTacs x' (trRefType eq tpx) (trExprTacs eq e1),
     DestructConj x' x (subsetWitnessNm x)
   ]
-    ++ trExprTacs e2
+    ++ trExprTacs eq e2
   where
     x' = x ++ "'"
-trExprTacs (LH.Let x (Just tpx@(ArrType {})) e1 e2) =
-  [ AssertTacs x' (trRefTypeTop tpx) (intros : trExprTacs e1),
+trExprTacs eq (LH.Let x (Just tpx@(ArrType {})) e1 e2) =
+  [ AssertTacs x' (trRefTypeTop eq tpx) (intros : trExprTacs eq e1),
     assertF
   ]
-    ++ trExprTacs e2
+    ++ trExprTacs eq e2
   where
     (args, _) = arrs tpx
     intros = Intros $ map (\(xi, _) -> DestrPat $ ConjDestrPat [SingleIdPat xi, SingleIdPat $ subsetWitnessNm xi]) args
-    tpxT = trRefTypeTop tpx
+    tpxT = trRefTypeTop eq tpx
     x' = "f_" ++ hashName tpxT
     assertF = Custom $ "unshelve refine (let " ++ x ++ " : ltac:(buildPackG_spec " ++ x' ++ ") := (ltac:(fun_to_pack " ++ x' ++ ")) in _)"
-trExprTacs (Case tm alts genVars) =
+trExprTacs eq (Case tm alts genVars) =
   let -- translation of an unreachable branch as intros; exfalso; oracle.
-      trAltBody Nothing = [mkConcat [Intros [], Exfalso, Oracle]]
-      trAltBody (Just e) = trExprTacs e
-   in [mkMatching trAltBody tm alts genVars]
+      trAltBody Nothing = [mkConcat $ [Intros [], Exfalso] ++ [Oracle | not eq]]
+      trAltBody (Just e) = trExprTacs eq e
+   in [mkMatching eq trAltBody tm alts genVars]
 
 -- | Translation of expressions as a proof term (for Equations)
-trExpr :: LH.Expr -> CoqTerm
-trExpr (Reft r) = trReft r
-trExpr (LH.Let x tp ex e) =
+trExpr :: Bool -> LH.Expr -> CoqTerm
+trExpr eq (Reft r) = trReft eq r
+trExpr eq (LH.Let x tp ex e) =
   case tp of
-    Just (ArrType {}) -> Coq.Let x (trRefType <$> tp) (trExpr ex) (trExpr e)
-    Just (RefType {}) -> Coq.LetDes (x, subsetWitnessNm x) (trExpr ex) (trExpr e)
+    Just (ArrType {}) -> Coq.Let x (trRefType eq <$> tp) (trExpr eq ex) (trExpr eq e)
+    Just (RefType {}) -> Coq.LetDes (x, subsetWitnessNm x) (trExpr eq ex) (trExpr eq e)
     Nothing -> error "trExpr: found let-binding without type annotation."
-trExpr (Case tm alts _) =
-  Match [mkProject $ trReft tm] Nothing (map trAlt alts)
+trExpr eq (Case tm alts _) =
+  Match [mkProject $ trReft eq tm] Nothing (map trAlt alts)
   where
     trAlt ((c, ys), e) = ([(c, map fst ys)],) $
       case e of
-        Just e' -> trExpr e'
+        Just e' -> trExpr eq e'
         Nothing -> PrfTerm Hole $ ByTac Exfalso
 
 -- ** Utility functions for the refined translation
 
--- TODO: add the translation of the recursive call for equations
--- (needs to know if higher-order or not)
-
 -- | Given an inductive variable y, the branch pattern and arguments,
 -- build an application of IHy to the arguments
-trRecCall :: Id -> [DesState] -> [Reft] -> CoqTerm
+-- The identifier contains the inductive variable if translating with tactics,
+-- and the function name if translating with Equations
+trRecCall :: Either Id Id -> [DesState] -> [Reft] -> CoqTerm
 -- trRecCall indVar pats args | traceFunc "trRecCall" [text indVar, pPrint pats, pPrint args] = undefined
-trRecCall indVar state args =
+trRecCall (Left indVar) state args =
   Coq.App (Coq.Var $ ihName indVar) (oracleTac : concatMap trArg (zip args state))
   where
     -- ltac:(try clear ihHyp; solver)
-    oracleTac = Coq.PrfTerm Coq.Hole $ Coq.ProofHole (Just $ ihName indVar)
+    oracleTac = PrfTerm Hole . ByTac $ Concat [Try (Clear $ ihName indVar), Oracle]
     -- Translation of the arguments:
     -- A higher-order argument is translated directly with RtoR
-    trArg (ri, Param _ n) | n > 0 = [trReft ri]
+    trArg (ri, Param _ n) | n > 0 = [trReft False ri]
     -- a first-order argument must be decomposed either
     -- into its first projection and the witness (for which we use ltac:(oracle))
-    trArg (ri, Param _ _) = [mkProject $ trReft ri, oracleTac]
+    trArg (ri, Param _ _) = [mkProject $ trReft False ri, oracleTac]
     -- or into nothing if it is at the position of a destructed parameter
     trArg (_, Destructed) = []
+trRecCall (Right f) state args =
+  Coq.App (Coq.Var $ eqFunctionName f) (concatMap trArg (zip args state))
+  where
+    -- Translation of the arguments:
+    -- higher-order arguments are kept as is
+    trArg (ri, Param _ n) | n > 0 = [trReft True ri]
+    -- while first-order ones must be decomposed into their first projection and
+    -- a hole for the refinement
+    trArg (ri, _) = [mkProject $ trReft True ri, TermHole]
 
 -- | Translation of a case expression as destruct or as induct
 -- An induct such that none of the introduced IHs are used is transformed to destruct
 -- This function is factorized by the function to apply to the branches,
 -- in particular in the translation of a function we use trExprTacs
-mkMatching :: (Maybe Expr -> [Tactic]) -> Reft -> [((Id, [(Id, Bool)]), Maybe Expr)] -> Maybe [Id] -> Tactic
+mkMatching :: Bool -> (Maybe Expr -> [Tactic]) -> Reft -> [((Id, [(Id, Bool)]), Maybe Expr)] -> Maybe [Id] -> Tactic
 -- mkMatching _ tm alts genVars | traceFunc "mkMatching" [pPrint tm, pPrint alts, pPrint genVars] = undefined
-mkMatching trans tm alts genVars =
-  Coq.Destruct (mkProject $ trReft tm) (map trAlt alts) genVars
+mkMatching eq trans tm alts genVars =
+  Coq.Destruct (mkProject $ trReft eq tm) (map trAlt alts) genVars
   where
     -- Translation of the branches using the parametrized function
     trAlt ((c, ys), e) = (c, (ysDesPat ys e, trans e))

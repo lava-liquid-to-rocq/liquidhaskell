@@ -102,6 +102,7 @@ data DefBody
   | TermBody CoqTerm
   deriving (Data, Eq, Show)
 
+-- | A branch for Equations: argument patterns, guards (without pattern) and list of patterns for the guards with the branch term
 type EqBranch = ([CoqTerm], [CoqTerm], [([CoqTerm], CoqTerm)])
 
 -- | Data constructors
@@ -252,7 +253,7 @@ data BaseBop
 data ProofTerm
   = CoqProofTerm String
   | TermWitness CoqTerm
-  | ProofHole (Maybe Id)
+  | ProofHole
   | ByTac Tactic
   | RefWitness CoqTerm
   deriving (Data, Eq, Show)
@@ -264,7 +265,6 @@ data Tactic
   | -- In the branches, the Id is the name of the constructor in the branch (useful for reordering in the order needed by Coq)
     -- Like in LH, if destrGenVars is Just, we have an induction
     Destruct {destrExpr :: CoqTerm, destrBranches :: [(Id, (CoqDestrPat, [Tactic]))], destrGenVars :: Maybe [Id]}
-  | Exact CoqTerm
   | Admit [Id]
   | Pose Id CoqTerm
   | ProofPose Id CoqTerm
@@ -330,14 +330,14 @@ mkProject tm = Project tm
 -- | Syntactic simplification of SubCast to exist
 simplifySubCast :: CoqTerm -> CoqTerm
 -- TODO: transform into a mkSubCast
-simplifySubCast (SubCast (Subset n b need) _ (Exist _ tm ProofHole {}) (ProofHole idO)) =
-  Exist (Lambda n b need) tm (ProofHole idO)
-simplifySubCast (SubCast (Subset n b need) _ (Exist _ tm CoqProofTerm {}) (ProofHole idO)) =
-  Exist (Lambda n b need) tm (ProofHole idO)
+simplifySubCast (SubCast (Subset n b need) _ (Exist _ tm ProofHole {}) ProofHole) =
+  Exist (Lambda n b need) tm ProofHole
+simplifySubCast (SubCast (Subset n b need) _ (Exist _ tm CoqProofTerm {}) ProofHole) =
+  Exist (Lambda n b need) tm ProofHole
 simplifySubCast (SubCast Hole _ (Exist _ tm CoqProofTerm {}) (TermWitness TermHole)) =
   Exist TermHole tm (TermWitness TermHole)
-simplifySubCast (SubCast Hole _ (Exist _ tm CoqProofTerm {}) (ProofHole idO)) =
-  Exist TermHole tm (ProofHole idO)
+simplifySubCast (SubCast Hole _ (Exist _ tm CoqProofTerm {}) ProofHole) =
+  Exist TermHole tm ProofHole
 simplifySubCast (SubCast Hole _ (Exist _ tm ProofHole {}) (TermWitness TermHole)) =
   Exist TermHole tm (TermWitness TermHole)
 simplifySubCast (SubCast need have t _) | need == have && need /= Hole = t
@@ -493,20 +493,23 @@ instance Pretty Decl where
   pPrint (Equations f args ret eqbranches) =
     hang ("Equations" <+> text f <+> pPrintArgs (map (,False) args) <> colon)
     identNb (pPrint ret <+> ":=")
-    $$ nest identNb (vcat (
-      punctuate ";\n" (map pPrintEqBranch eqbranches)) <> dot)
+    $$ nest identNb (vcat . addDotToLast . punctuate ";" $ map pPrintEqBranch eqbranches)
     where
-      pPrintEqBranch :: ([CoqTerm], [CoqTerm], [([CoqTerm], CoqTerm)]) -> Doc
-      pPrintEqBranch (pats, [], [([], tm)]) =
-        hsep (text f : map (pPrintPrec prettyNormal (appPrec - 1)) pats) <+> ":=" <+> pPrint tm
-      pPrintEqBranch (pats, moreMatches, branches) =
-        hsep (text f : map (pPrintPrec prettyNormal (appPrec - 1)) pats)
-        <+> "with" <+> hsep (punctuate ", " (map pPrint moreMatches)) <+> "=> {"
+      addDotToLast brs =
+        case unsnoc brs of Just (brs', br) -> brs' ++ [br <> dot]; Nothing -> []
+      pPrintEqBranch :: EqBranch -> Doc
+      pPrintEqBranch (pats, [], [([], tm)]) = hang
+        (hsep (text f : map (pPrintPrec prettyNormal (appPrec - 1)) pats) <+> ":=")
+        identNb (pPrint tm)
+      pPrintEqBranch (pats, moreMatches, branches) = hang
+        (hsep (text f : map (pPrintPrec prettyNormal (appPrec - 1)) pats) <+> "with")
+        identNb (hsep (punctuate ", " (map pPrint moreMatches)) <+> "=> {")
         $$ nest identNb (vcat (map pPrintWithBranch branches))
         <+> "}"
       pPrintWithBranch :: ([CoqTerm], CoqTerm) -> Doc
-      pPrintWithBranch (withPatterns, tm) =
-        "|" <+> hsep (punctuate ", " $ map pPrint withPatterns) <+> "=>" <+> pPrint tm
+      pPrintWithBranch (withPatterns, tm) = hang
+        ("|" <+> hsep (punctuate ", " $ map pPrint withPatterns) <+> "=>")
+        (identNb + 2) (pPrint tm)
 
 instance Pretty HintKind where
   pPrint UnfoldHint = "Unfold"
@@ -622,6 +625,7 @@ instance Pretty CoqTerm where
   pPrintPrec _ _ (StringLiteral s) = pPrint s
   pPrintPrec _ _ (IntLiteral n) = integer n
   pPrintPrec _ _ (FloatLiteral f) = double f
+  pPrintPrec l p (App f []) = pPrintPrec l p f
   pPrintPrec l p (App f ts) =
     maybeParens (p < appPrec)
       $ sep (pPrintPrec l appPrec f : map (pPrintPrec l (appPrec - 1)) ts)
@@ -746,8 +750,7 @@ instance Pretty ProofTerm where
   pPrintPrec _ _ (TermWitness tm) | tm == unitTm = char '_'
   pPrintPrec l p (TermWitness t) = pPrintPrec l p t
   pPrintPrec _ _ (RefWitness tm) = char '⌈' <+> pPrint tm <+> char '⌉'
-  pPrintPrec _ _ (ProofHole Nothing) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec Oracle)
-  pPrintPrec _ _ (ProofHole (Just h)) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec (Concat [Try (Clear h), Oracle]))
+  pPrintPrec _ _ ProofHole = "_"
   pPrintPrec _ _ (ByTac tac) = "ltac:" <> parens (pPrintPrec prettyNormal nodotPrec tac)
 
 instance Pretty CoqDestrPat where
@@ -782,13 +785,6 @@ instance Pretty Tactic where
     around (hsep (punctuate comma (map text hints))) <+> "admit"
     where around hs = if null hints then hs else rocqComment ("hints:" <+> hs)
   pPrintPrec l p (Destruct tm branches genVars) = pPrintPrecMatch l p tm branches genVars
-  pPrintPrec l p (Exact t) = case t of
-    SubCast _ _ (Exist _ tm (CoqProofTerm prf)) (ProofHole _) | prf == "eq_refl" || prf == "I" ->
-      refineOracle (Exist TermHole tm (TermWitness TermHole))
-    SubCast _ have tm (ProofHole _) -> refineOracle (SubCast Hole have tm (TermWitness TermHole))
-    SubCast _ have tm prf -> dotted p $ "exact" <+> pPrintPrec l (appPrec - 1) (SubCast Hole have tm prf)
-    _ -> dotted p $ "refine" <+> pPrintPrec l (appPrec - 1) t
-    where refineOracle x = sep ["refine" <+> pPrintPrec l (appPrec - 1) x <> semi, pPrintPrec l p Oracle]
   pPrintPrec l p (Concat tacs) =
     case unsnoc tacs of
       Nothing -> empty

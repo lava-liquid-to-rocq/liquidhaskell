@@ -432,6 +432,10 @@ defConfig = Config {
 
   , lava
     = False &= help "Translate the Liquid Haskell program to Rocq"
+           &= name "lava"
+  , lavaEquations
+    = False &= help "Translate the Liquid Haskell program to Rocq using Equations"
+           &= name "lava-equations"
   } &= program "liquidhaskell"
     &= help    "Refinement Types for Haskell"
     &= summary copyright
