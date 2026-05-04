@@ -25,7 +25,7 @@ instance (Dependencies a) => Dependencies (Maybe a) where
 -- * 'Dependencies' and 'Binder' instances for 'Calc.Decl'
 
 instance Dependencies LH.BaseType where
-  dependsOn (LH.TC typ) name = typ == name
+  dependsOn (LH.TC typ αs) name = typ == name || any (`dependsOn` name) αs
   dependsOn (LH.Builtin _) _ = False
 
 instance Dependencies LH.Reft where
@@ -43,6 +43,7 @@ instance Dependencies LH.Reft where
 instance Dependencies LH.RefType where
   dependsOn (LH.RefType _ t reft) name = dependsOn t name || dependsOn reft name
   dependsOn (LH.ArrType x dom codom) name = (dom `dependsOn` name || codom `dependsOn` name) && x /= name
+  dependsOn (LH.FAType α tp) name = α /= name && tp `dependsOn` name
 
 dependsBranchCalc :: ((Id, [(Id, Bool)]), Maybe LH.Expr) -> Id -> Bool
 dependsBranchCalc ((c, ys), body) name = (c == name || body `dependsOn` name) && name `notElem` map fst ys
@@ -51,10 +52,11 @@ instance Dependencies LH.Expr where
   dependsOn (LH.Reft r) name = dependsOn r name
   dependsOn (LH.Let x tp df tm) name = (df `dependsOn` name || tm `dependsOn` name || tp `dependsOn` name) && x /= name
   dependsOn (LH.Case r branches _) name = dependsOn r name || any (`dependsBranchCalc` name) branches
+  dependsOn (LH.TyAbs α tm) name = α /= name && tm `dependsOn` name
 
 instance Dependencies LH.Decl where
-  dependsOn (LH.Data n constrs) name =
-    n == name || any (\(c, tp) -> c == name || dependsOn tp name) constrs
+  dependsOn (LH.Data n αs constrs) name =
+    n == name || (name `notElem` αs && any (\(c, tp) -> c == name || dependsOn tp name) constrs)
   dependsOn (LH.Definition f tp expr _) name =
     f == name || dependsOn tp name || dependsOn expr name
 
@@ -62,7 +64,7 @@ class Binder a where
   bindName :: a -> Id
 
 instance Binder LH.Decl where
-  bindName (LH.Data n _) = n
+  bindName (LH.Data n _ _) = n
   bindName (LH.Definition n _ _ _) = n
 
 instance Binder Coq.Decl where

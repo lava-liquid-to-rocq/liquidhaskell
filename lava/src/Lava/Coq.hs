@@ -131,10 +131,11 @@ data BaseSort = TypeSort | PropSort | SetSort deriving (Eq, Data, Show)
 
 -- | Types
 --
--- > A ::= B | κ | {x:A | e} | tc A* | A -> A | ∀(x:A),A | e
+-- > A ::= B | α | κ | {x:A | e} | tc A* | A -> A | ∀(x:A),A | e
 --       | uPack A A* | Pack n (x:A)* A* e* | _
 data RocqType
   = Builtin Builtin
+  | TyVar Id
   | Sort BaseSort
   | Subset Id RocqType CoqTerm
   | TC Id [RocqType]

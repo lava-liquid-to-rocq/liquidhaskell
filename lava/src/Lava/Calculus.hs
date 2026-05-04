@@ -7,10 +7,11 @@
 -- | Grammars, printer and suable functions for ILH
 module Lava.Calculus where
 
-import Data.Bifunctor (first, second)
+import Data.Bifunctor (second)
 import Data.Data
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Data.Tuple.Extra (first3, second3, snd3)
 import Debug.Trace (trace)
 import Lava.Names (Id, freshVar)
 import Text.PrettyPrint
@@ -31,26 +32,27 @@ data Builtin = Integer | Double | String deriving (Data, Eq, Show)
 
 -- | Base Types
 --
--- > A ::= B | TC
-data BaseType = Builtin Builtin | TC Id deriving (Data, Eq, Show)
+-- > A ::= B | TC R* | α
+data BaseType = Builtin Builtin | TC Id [RefType] | TyVar Id deriving (Data, Eq, Show)
 
 -- | Refinement types
 --
--- > R ::= {x: A | r} | x:Rx -> R
+-- > R ::= {x: A | r} | x:Rx -> R | ∀α, R
 data RefType
   = RefType {argName :: Id, argTp :: BaseType, argRef :: Reft}
   | ArrType {parName :: Id, parTp :: RefType, retTp :: RefType}
+  | FAType {tvarName :: Id, polyTp :: RefType}
   deriving (Data, Show)
 
 -- ** Declaration-level grammar
 
 -- | Declarations
 --
--- > D ::= data tc := (C :: R)*
+-- > D ::= data tc α* := (C :: R)*
 -- >     | (reflect)? def f :: R := e
 data Decl
-  = -- | type constructor: name and branches with (constructor name, type)
-    Data Id [(Id, RefType)]
+  = -- | type constructor: name, type variables (for now all considered positive) and branches with (constructor name, type)
+    Data Id [Id] [(Id, RefType)]
   | -- | (function) definition: name, type, body, is it reflected
     Definition Id RefType Expr Bool
   deriving (Data, Eq, Show)
@@ -60,6 +62,7 @@ data Decl
 -- > e ::= r
 -- >     | let x (:: R)? := e in e
 -- >     | case r of (C [(x,bool)]* |-> (e | unreachable))*
+-- >     | Λα.e
 data Expr
   = -- | Refinement used as expression
     Reft Reft
@@ -72,6 +75,8 @@ data Expr
     --   The last element indicates if the case must be translated to
     --   destruct (Nothing) or induction, in which case we have the list of variables to generalize
     Case Reft [((Id, [(Id, Bool)]), Maybe Expr)] (Maybe [Id])
+  | -- Type abstraction
+    TyAbs Id Expr
   deriving (Data, Show)
 
 -- | Simple LH terms including formulas.
@@ -81,6 +86,7 @@ data Expr
 -- >     | lit ∈ B
 -- >     | C
 -- >     | r r
+-- >     | r[R]
 -- >     | ¬r
 -- >     | r `op` r
 -- >     | r ? (r proves r)
@@ -92,6 +98,7 @@ data Reft
   | FloatLit Double
   | DC Id
   | App Reft Reft
+  | TyApp Reft RefType
   | Neg Reft
   | Bop Bop Reft Reft
   | QMark Reft Reft Reft
@@ -145,7 +152,7 @@ ttTm :: Reft
 ttTmName :: Id
 ffTm :: Reft
 ffTmName :: Id
-boolTp = TC boolTpName
+boolTp = TC boolTpName []
 boolTpName = "Bool"
 ttTm = DC ttTmName
 ttTmName = "True"
@@ -156,7 +163,7 @@ unitTp :: BaseType
 unitTpName :: Id
 unitTm :: Reft
 unitTmName :: Id
-unitTp = TC unitTpName
+unitTp = TC unitTpName []
 unitTpName = "Unit"
 unitTm = DC unitTmName
 unitTmName = "unit"
@@ -200,28 +207,32 @@ fromArrType _ = error "ArrType expected"
 
 -- ** Other functions
 
--- | Arity of a refinement type
+-- | Arity of a refinement type (omitting type variables)
 arity :: RefType -> Integer
 arity (ArrType _ _ tp) = 1 + arity tp
 arity (RefType {}) = 0
+arity (FAType _ tp) = arity tp
 
 -- | defaultRef tp := {VV : tp | True}
 defaultRef :: BaseType -> RefType
 defaultRef tp = RefType "VV" tp ttTm
 
--- | arrs(R) := (x_i:R_i)_{i ≤ n} -> R' where n is maximal
-arrs :: RefType -> ([(Id, RefType)], (Id, BaseType, Reft))
-arrs (RefType x a r) = ([], (x, a, r))
-arrs (ArrType x tpx tp) = ((x, tpx) :) `first` arrs tp
+-- | arrs(R) := forall (α_j)_{j ≤ m}, (x_i:R_i)_{i ≤ n} -> R' where n is maximal
+arrs :: RefType -> ([Id], [(Id, RefType)], (Id, BaseType, Reft))
+arrs (RefType x a r) = ([], [], (x, a, r))
+arrs (ArrType x tpx tp) = ((x, tpx) :) `second3` arrs tp
+arrs (FAType α tp) = (α :) `first3` arrs tp
 
 -- | tpArgs(x_i:R_i|r_i)_{i ≤ n} -> R) = [x_i]_{i ≤ n}
 tpArgs :: RefType -> [Id]
-tpArgs = map fst . fst . arrs
+tpArgs = map fst . snd3 . arrs
 
 -- | tpArgsArLoc((x_i:R_i|r_i)_{i ≤ n} -> R) = [Var x_i ar(R_i) Local]_{i ≤ n}
 -- Used to give the initial patterns on the parameters of a function
 tpArgsArLoc :: RefType -> [Reft]
-tpArgsArLoc = map (\(x, tp) -> Var x (arity tp) Local) . fst . arrs
+tpArgsArLoc = map (\(x, tp) -> Var x (arity tp) Local) . snd3 . arrs
+
+-- TODO: add type variables in apps
 
 -- | Flattens an application
 apps :: Reft -> (Reft, [Reft])
@@ -470,6 +481,10 @@ instance Eq RefType where
     let z = fresh x [tp1, tp2]
         (α1, α2) = if x /= y then ([(z, x)], [(z, y)]) else ([], [])
      in tpx == tpy && renames α1 tp1' == renames α2 tp2'
+  tp1@(FAType β tp1') == tp2@(FAType γ tp2') =
+    let z = fresh β [tp1, tp2]
+        (α1, α2) = if β /= γ then ([(z, β)], [(z, γ)]) else ([], [])
+     in renames α1 tp1' == renames α2 tp2'
   _ == _ = False
 
 instance Eq Expr where
@@ -490,6 +505,7 @@ instance Eq Expr where
         if y1 /= y2
           then freshVar y1 (freeVars [e1, e2] `Set.union` Set.fromList vars) : vars
           else y1 : vars
+  e1@(TyAbs β e1') == e2@(TyAbs γ e2') = undefined
   _ == _ = False
 
 -- * Printer for the grammar
@@ -543,7 +559,8 @@ instance Pretty Builtin where
 
 instance Pretty BaseType where
   pPrint (Builtin b) = pPrint b
-  pPrint (TC tc) = text tc
+  pPrint (TC tc tps) = hsep (text tc : map pPrint tps)
+  pPrint (TyVar α) = text α
 
 instance Pretty RefType where
   pPrintPrec _ _ (RefType _ a r) | r == ttTm = braces $ pPrint a
@@ -554,10 +571,10 @@ instance Pretty RefType where
     maybeParens (p > arrPrec) $ sep [text x <> colon <+> pPrintPrec l (arrPrec + 1) tpx, "->" <+> pPrintPrec l arrPrec tp]
 
 instance Pretty Decl where
-  pPrint (Data tc constrs) =
+  pPrint (Data tc αs constrs) =
     sep [ppTC, nest identNb . sep $ map (\dc -> char '|' <+> ppConstr dc) constrs]
     where
-      ppTC = "data" <+> text tc <+> ":="
+      ppTC = "data" <+> hsep (map text (tc : αs)) <+> ":="
       ppConstr (c, tpc) = text c <+> "::" <+> pPrint tpc
   pPrint (Definition f tp e isRefl) =
     sep [ppRefl <+> ppF, nest identNb (pPrint e)]
@@ -579,6 +596,7 @@ instance Pretty Expr where
       des = case genVars of Nothing -> "destruct"; Just _ -> "induct"
       ppAlt (pat, e) = sep [char '|' <+> ppPat pat <+> "->", nest identNb $ maybe "undefined" pPrint e]
       ppPat (c, ys) = text c <+> hsep (map (text . fst) ys)
+  pPrint (TyAbs α e) = "Λ" <> text α <> "." <+> pPrint e
 
 instance Pretty Reft where
   -- pPrintPrec _ _ (Var x ar loc) = text x <> char '/' <> parens (integer ar <> comma <> pPrint loc)
@@ -589,6 +607,8 @@ instance Pretty Reft where
   pPrintPrec _ _ (DC c) = text c
   pPrintPrec l p (App r1 r2) =
     maybeParens (p > appPrec) $ pPrintPrec l p r1 <+> pPrintPrec l (appPrec + 1) r2
+  pPrintPrec l p (TyApp r tp) =
+    maybeParens (p > appPrec) $ pPrintPrec l p r <+> brackets (pPrint tp)
   pPrintPrec l p (Neg r) =
     maybeParens (p > appPrec) $ "not" <+> pPrintPrec l (appPrec + 1) r
   pPrintPrec l p (Bop bop r1 r2) =
