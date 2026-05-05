@@ -321,7 +321,16 @@ trExprTacs eq (LH.Let x (Just tpx@(ArrType {})) e1 e2) =
     intros = Intros $ map (\(xi, _) -> DestrPat $ ConjDestrPat [SingleIdPat xi, SingleIdPat $ subsetWitnessNm xi]) args
     tpxT = trRefTypeTop eq tpx
     x' = "f_" ++ hashName tpxT
-    assertF = Custom $ "unshelve refine (let " ++ x ++ " : ltac:(buildPackG_spec " ++ x' ++ ") := (ltac:(fun_to_pack " ++ x' ++ ")) in _)"
+    assertF =
+      Custom . render $
+        text "unshelve refine"
+          <+> (parens . pPrint)
+            ( Coq.Let
+                x
+                (Just . Prop . PrfTerm Hole . ByTac . Custom $ "buildPackG_spec " ++ x')
+                (PrfTerm Hole . ByTac . Custom $ funToPackName ++ " " ++ x')
+                TermHole
+            )
 trExprTacs eq (Case tm alts genVars) =
   let -- translation of an unreachable branch as intros; exfalso; oracle.
       trAltBody Nothing = [mkConcat $ [Intros [], Exfalso] ++ [Oracle | not eq]]

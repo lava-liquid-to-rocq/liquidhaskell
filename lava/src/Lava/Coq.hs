@@ -351,12 +351,6 @@ simplifySubCast (SubCast Hole _ (Exist _ tm CoqProofTerm {}) ProofHole) =
 simplifySubCast (SubCast Hole _ (Exist _ tm ProofHole {}) (TermWitness TermHole)) =
   Exist TermHole tm (TermWitness TermHole)
 simplifySubCast (SubCast need have t _) | need == have && need /= Hole = t
--- TODO: (merge) add this
-{-SubCast to@(Pack argTps _ z _ _) from t _ -> if properPackSubsumption then addParens $ unwords ["subCastPack", formatLong $ showP argTps, formatLong $ showP z, t', showP (TermWitness TermHole), showP (TermWitness TermHole)] else t'
-where
-  t' = case from of
-    Pack{} -> formatLong $ showP t
-    _ -> formatLong . showP . PrfTerm Hole . ByTac . Custom $ funToPackName ++ " " ++showP t -}
 simplifySubCast t = t
 
 -- * Destructors
@@ -657,6 +651,8 @@ instance Pretty CoqTerm where
          sep ["subsumptionCast", char '_', char '_', pPrintPrec l (appPrec - 1) t, pPrintPrec l (appPrec - 1) z]
        (Subset n b need, Subset _ a _) | a == b ->
          sep ["subsumptionCast", pPrintPrec l (appPrec - 1) a, pPrintPrec l (appPrec - 1) (Lambda n a need), pPrintPrec l (appPrec - 1) t, pPrintPrec l (appPrec - 1) z]
+       (Pack {}, Pack {}) -> pPrint t
+       (Pack {}, _) -> pPrint . PrfTerm Hole . ByTac . Custom . render $ text funToPackName <+> pPrint t
        _ -> sep ["subCast", pPrintPrec l (appPrec - 1) from, pPrintPrec l (appPrec - 1) to, pPrintPrec l (appPrec - 1) t, pPrintPrec l (appPrec - 1) z]
   pPrintPrec l p (Exist _ t (CoqProofTerm "I")) =
     maybeParens (p < appPrec) $ char '#' <+> pPrintPrec l (appPrec - 1) t

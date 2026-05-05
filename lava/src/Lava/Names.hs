@@ -71,9 +71,11 @@ eqFunctionName name = name ++ "_rec"
 packName :: Id
 upackName :: Id
 projPackName :: Id
+funToPackName :: Id
 packName = "@Pack"
 upackName = "@uPack"
 projPackName = "packProj"
+funToPackName = "fun_to_pack"
 
 subsetWitnessNm :: Id -> Id
 subsetWitnessNm x = x ++ "_p"
