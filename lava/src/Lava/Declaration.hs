@@ -77,7 +77,11 @@ unrefTCDecl tc alts =
 -- | Declarations related to the equality on unrefined constructors
 tcEqDecls :: Id -> [(Id, RefType)] -> [Coq.Decl]
 -- tcEqDecls tc _ | traceTC "tcEqDecls" tc = undefined
-tcEqDecls tc alts = eqDecl tc alts : eqReflLem tc ++ eqbEqLem tc ++ [eqbInstanceDecl tc]
+tcEqDecls tc alts =
+  if noHOConstr then eqDecl tc alts : eqReflLem tc ++ eqbEqLem tc ++ [eqbInstanceDecl tc] else []
+  where
+    -- NOTE: For now, kind of useless since we don't typecheck higher-order constructors
+    noHOConstr = all ((\case RefType {} -> True; _ -> False) . snd) alts
 
 -- | Fixpoint definition of equality of two inductives
 --
@@ -113,7 +117,7 @@ eqReflLem tc =
       (eqReflLemName tc)
       []
       (FAType ("x", unrefTC tc) . Prop . mkIsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["x", "x"]))
-      (ProofBody [Custom "eq_refl"])
+      (ProofBody [Custom "eq_refl_rec"])
       Opaque,
     AddHint ResolveHint (eqReflLemName tc) EqHintDB
   ]
@@ -175,7 +179,7 @@ wfDecl eq tc alts =
         argProp (x, tpArg) =
           case trRefType eq tpArg of
             Subset _ _ p -> p
-            Pack {} -> Coq.App (Def uPackWfName) [Coq.Var x] -- TODO: add required conditions
+            Pack argTps _ z _ p -> Coq.App (Def uPackWfName) [mkArgListT argTps, z, p, Coq.Var x] -- TODO: add required conditions
             _ -> PropLit True
 
 -- | Lemma TC_wf_ref:
