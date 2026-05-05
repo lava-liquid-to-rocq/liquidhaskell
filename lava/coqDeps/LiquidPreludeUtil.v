@@ -101,7 +101,7 @@ Ltac preprocessor_ b :=
 
 Ltac preprocessor := preprocessor_ True.
 
-Ltac saturating_solver := first [
+Ltac saturating_solver := simpl in *; first [
   quick_wff_wit
   | lia_preprocessor; lia 
   | repeat unshelve cleanup_hints; 
@@ -124,13 +124,14 @@ Ltac solver := repeat first [
 Ltac solver_loop :=
   repeat_or_fail concat_either (quick_wff_wit) (
     concat_either (quicksolve) (
-      concat_either (cleanup_after_hints) (lia_preprocessor
+      progress concat_either (simpl in *; timeout 1200 cleanup_after_hints) (
+        lia_preprocessor
         (*concat_either (lia_preprocessor) (split_hyps)*)
       )
     )
   ); intros.
 
-Ltac solver := solve [
+Ltac solver := simpl in *; solve [
     solver_loop; progress saturate_context; solver_loop
     | idtac ""; idtac "Falling back to saturating_solver"; saturating_solver].
 #[global] Hint Extern 20 () => solver : solver_db. 
