@@ -28,7 +28,7 @@ coqDeps/LiquidPreludeUtil.v
 
 out/Benchmark/PLE/Append.v
 out/Benchmark/PLE/Lists.v
-out/Benchmark/PLE/Compose.v
+# out/Benchmark/PLE/Compose.v
 
 out/Benchmark/PLE/Lambdas.v
 out/Benchmark/PLE/FoldrUniversal.v
