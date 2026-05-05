@@ -70,7 +70,7 @@ unrefTC tc = Coq.TC (unrefinedTCName tc) []
 unrefTCDecl :: Id -> [(Id, RefType)] -> Coq.Decl
 -- unrefTCDecl tc _ | traceTC "unrefTCDecl" tc = undefined
 unrefTCDecl tc alts =
-  CoqInductive (unrefinedTCName tc) [] (Sort SetSort) $ map trConstr alts
+  CoqInductive (unrefinedTCName tc) [] (Sort TypeSort) $ map trConstr alts
 
 -- ** Equality
 
