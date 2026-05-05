@@ -1,0 +1,348 @@
+From coqDeps Require Export LiquidPreludeUtil.
+Open Scope Z_scope.
+Open Scope Int_scope.
+From Coq Require Import Unicode.Utf8.
+Ltac solver := quicksolve.
+
+Inductive Identity_u: Set :=
+  | Val_u: Z → Identity_u.
+
+Fixpoint Identity_eq (x y : Identity_u): bool :=
+  match (x, y) with | (Val_u n, Val_u n') => true && (n ==? n') end.
+
+Definition Identity_eq_refl : ∀ (x : Identity_u), is_true (Identity_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve Identity_eq_refl: eq_hint_db.
+
+Definition Identity_eqb_eq : ∀ (s t : Identity_u), is_true (Identity_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Identity_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Identity: LeibnitzEqB := {
+    equalB' := Identity_eq;
+    refl' := Identity_eq_refl;
+    eqb_eq' := Identity_eqb_eq }.
+
+Fixpoint Identity_wf (x : Identity_u): Prop :=
+  match x with | Val_u n => True end.
+
+Theorem Identity_wf_ref [p : Identity_u → Prop] (tm : {v: Identity_u | Identity_wf v ∧ p v}):
+  Identity_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation Identity := {x: Identity_u | Identity_wf x ∧ True}.
+
+Definition Val_lem (n : {n: Z | True}): Identity_wf (Val_u ⌊ n ⌋) ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Val (n : {n: Z | True}): Identity :=
+  exist _ (Val_u ⌊ n ⌋) (Val_lem n).
+
+#[global] Hint Resolve Identity_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold Identity_wf: wf_constr_db.
+
+#[global] Hint Resolve Identity_eq: ref_constr_db.
+
+#[global] Hint Unfold Val: ref_constr_db.
+
+Definition compose
+  (vx : Identity)
+  (x : @Pack
+       ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
+       (Z ::UT nilUT)
+       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       Identity_u
+       (λ (x_32508782 : ArgList ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT))
+          (v_x_32508782 : Identity_u),
+        ltac:(flattenP (λ (x : {VV: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_32508782 v_x_32508782))):
+  Identity.
+Proof.
+  destruct vx as [vx vx_p].
+  destruct vx as [x_1].
+  - refine (getPackF x (# x_1)).
+Defined.
+
+Inductive compose_rel: Identity_u → @uPack (Z ::UT nilUT) Identity_u → Identity_u → Prop :=
+  | compose_Val_x: ∀ x_1 (x : @uPack (Z ::UT nilUT) Identity_u) x_res,
+                   getUPackRel x x_1 x_res → compose_rel (Val_u x_1) x x_res.
+
+#[global] Hint Constructors compose_rel: core_hint_db.
+
+#[global] Instance compose_lookup_rel: dictionary rel compose := { lookup' := compose_rel }.
+
+#[global] Instance compose_getF: getFunc compose_rel := { getF' := compose }.
+
+Definition compose_rel_funct [vx : Identity_u] [x : @uPack (Z ::UT nilUT) Identity_u]:
+  ∀ (VV VV' : Identity_u), compose_rel vx x VV → (compose_rel vx x VV' → VV = VV').
+Proof.
+  destruct vx as [x_1]; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve compose_rel_funct: f_rel_funct_db.
+
+Theorem compose_Val_x_lem x x_1 compose_Val_x_lem_res:
+  compose_rel (Val_u x_1) x compose_Val_x_lem_res
+  ↔ ∃ x_res, getUPackRel x x_1 x_res ∧ compose_Val_x_lem_res == x_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite compose_Val_x_lem: f_rel_back.
+
+Theorem compose_rel_ex
+  (vx : Identity_u)
+  (vx_p : Identity_wf vx ∧ True)
+  (x : @Pack
+       ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
+       (Z ::UT nilUT)
+       ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       Identity_u
+       (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT))
+          (v_x_11473763 : Identity_u),
+        ltac:(flattenP (λ (x : {x: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_11473763 v_x_11473763))):
+  compose_rel vx ⌊ x ⌋ ⌊ compose (exist _ vx vx_p) x ⌋.
+Proof.
+  existence_lemma_pre compose;
+  destruct vx as [x_1];
+  [fix_notations];
+  existence_lemma_quicksolve compose;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve compose_rel_ex: rel_ax_db.
+
+Opaque compose.
+
+Theorem compose__compose_rel_rw
+  (vx : Identity_u)
+  (vx_p : Identity_wf vx ∧ True)
+  (x : @Pack
+       ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
+       (Z ::UT nilUT)
+       ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       Identity_u
+       (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT))
+          (v_x_11473763 : Identity_u),
+        ltac:(flattenP (λ (x : {x: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_11473763 v_x_11473763)))
+  (VV : Identity_u):
+  ⌊ compose (exist _ vx vx_p) x ⌋ = VV ↔ compose_rel vx ⌊ x ⌋ VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite compose__compose_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve compose__compose_rel_rw: rel_ax_db.
+
+#[global] Instance compose_lookup_rw: dictionary rwLem compose := {
+    lookup' := compose__compose_rel_rw }.
+
+Theorem compose__compose_rel
+  (vx : Identity)
+  (x : @Pack
+       ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
+       (Z ::UT nilUT)
+       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       Identity_u
+       (λ (x_32508782 : ArgList ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT))
+          (v_x_32508782 : Identity_u),
+        ltac:(flattenP (λ (x : {VV: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_32508782 v_x_32508782)))
+  (VV : Identity_u):
+  ⌊ compose vx x ⌋ = VV ↔ compose_rel ⌊ vx ⌋ ⌊ x ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite compose__compose_rel: f_rel_funct_db.
+
+Theorem compose__compose_rel'
+  (vx_u : Identity_u)
+  (x_u : @uPack (Z ::UT nilUT) Identity_u)
+  (vx : Identity)
+  (x : @Pack
+       ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
+       (Z ::UT nilUT)
+       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       Identity_u
+       (λ (x_32508782 : ArgList ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT))
+          (v_x_32508782 : Identity_u),
+        ltac:(flattenP (λ (x : {VV: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_32508782 v_x_32508782)))
+  (VV : Identity_u):
+  vx_u = ⌊ vx ⌋ → (x_u = ⌊ x ⌋ → ⌊ compose vx x ⌋ = VV ↔ compose_rel vx_u x_u VV).
+Proof.
+  intros -> ->. refine (compose__compose_rel vx x VV).
+Qed.
+
+#[global] Hint Resolve compose__compose_rel': f_rel_funct_db.
+
+Definition compose_rel_mk
+  (vx : Identity_u)
+  (vx_p : Identity_wf vx ∧ True)
+  (x : @Pack
+       ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
+       (Z ::UT nilUT)
+       ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       Identity_u
+       (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT))
+          (v_x_11473763 : Identity_u),
+        ltac:(flattenP (λ (x : {x: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_11473763 v_x_11473763))):
+  {VV: _ | compose_rel vx (packProj x) VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, compose_rel vx (packProj x) VV) (compose (exist _ vx vx_p) x) _);
+  rewrite <- compose__compose_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve compose_rel_mk: f_rel_funct_db.
+
+Definition retrn (v : {v: Z | True}): Identity.
+Proof.
+  destruct v as [v v_p]. refine (Val (# v)).
+Defined.
+
+Inductive retrn_rel: Z → Identity_u → Prop :=
+  | retrn_Constr: ∀ v, retrn_rel v (Val_u v).
+
+#[global] Hint Constructors retrn_rel: core_hint_db.
+
+#[global] Instance retrn_lookup_rel: dictionary rel retrn := { lookup' := retrn_rel }.
+
+#[global] Instance retrn_getF: getFunc retrn_rel := { getF' := retrn }.
+
+Definition retrn_rel_funct [v : Z]:
+  ∀ (VV VV' : Identity_u), retrn_rel v VV → (retrn_rel v VV' → VV = VV').
+Proof.
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve retrn_rel_funct: f_rel_funct_db.
+
+Theorem retrn_inv_lem v retrn_inv_lem_res:
+  retrn_rel v retrn_inv_lem_res ↔ retrn_inv_lem_res == Val_u v.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite retrn_inv_lem: f_rel_back.
+
+Theorem retrn_rel_ex (v : Z) (v_p : True): retrn_rel v ⌊ retrn (exist _ v v_p) ⌋.
+Proof.
+  existence_lemma_pre retrn;
+  fix_notations;
+  existence_lemma_quicksolve retrn;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve retrn_rel_ex: rel_ax_db.
+
+Opaque retrn.
+
+Theorem retrn__retrn_rel_rw (v : Z) (v_p : True) (VV : Identity_u):
+  ⌊ retrn (exist _ v v_p) ⌋ = VV ↔ retrn_rel v VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite retrn__retrn_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve retrn__retrn_rel_rw: rel_ax_db.
+
+#[global] Instance retrn_lookup_rw: dictionary rwLem retrn := { lookup' := retrn__retrn_rel_rw }.
+
+Theorem retrn__retrn_rel (v : {v: Z | True}) (VV : Identity_u):
+  ⌊ retrn v ⌋ = VV ↔ retrn_rel ⌊ v ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite retrn__retrn_rel: f_rel_funct_db.
+
+Theorem retrn__retrn_rel' (v_u : Z) (v : {v: Z | True}) (VV : Identity_u):
+  v_u = ⌊ v ⌋ → ⌊ retrn v ⌋ = VV ↔ retrn_rel v_u VV.
+Proof.
+  intros ->. refine (retrn__retrn_rel v VV).
+Qed.
+
+#[global] Hint Resolve retrn__retrn_rel': f_rel_funct_db.
+
+Definition retrn_rel_mk (v : Z) (v_p : True): {VV: _ | retrn_rel v VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, retrn_rel v VV) (retrn (exist _ v v_p)) _);
+  rewrite <- retrn__retrn_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve retrn_rel_mk: f_rel_funct_db.
+
+#[global] Instance retrn_pack:
+  @Pack
+  ({v: Z | True} ::RT λ (v : {v: Z | True}), nilRT)
+  (Z ::UT nilUT)
+  ltac:(mkProjectsArgListTG (({v: Z | True} ::RT λ (v : {v: Z | True}), nilRT)) ((Z ::UT nilUT)))
+  Identity_u
+  (λ (x_82100618 : ArgList ({v: Z | True} ::RT λ (v : {v: Z | True}), nilRT))
+     (v_x_82100618 : Identity_u),
+   ltac:(flattenP (λ (v : {v: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_82100618 v_x_82100618)).
+Proof.
+  buildPackG retrn retrn_rel retrn__retrn_rel retrn_rel_funct.
+Defined.
+
+#[global] Instance retrn_upack: @uPack (Z ::UT nilUT) Identity_u.
+Proof.
+  buildUPackG retrn_rel retrn_rel_funct.
+Defined.
+
+Definition leftIdentity
+  (x : {x: Z | True})
+  (f : @Pack
+       ({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT)
+       (Z ::UT nilUT)
+       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       Identity_u
+       (λ (x_46517173 : ArgList ({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT))
+          (v_x_46517173 : Identity_u),
+        ltac:(flattenP (λ (f : {VV: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_46517173 v_x_46517173))):
+  {{∀ retrn_res,
+    retrn_rel ⌊ x ⌋ retrn_res
+    → ∀ compose_res,
+      compose_rel retrn_res ⌊ f ⌋ compose_res
+      → ∀ f_res, getPackRel f ⌊ x ⌋ f_res → compose_res == f_res}}.
+Proof.
+  destruct x as [x x_p].
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ retrn_res,
+           retrn_rel ⌊ x ⌋ retrn_res
+           → ∀ compose_res,
+             compose_rel retrn_res ⌊ f ⌋ compose_res → ∀ f_res, getPackRel f ⌊ x ⌋ f_res → compose_res == f_res)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition rightIdentity (x : Identity):
+  {{∀ compose_res, compose_rel ⌊ x ⌋ retrn_upack compose_res → compose_res == ⌊ x ⌋}}.
+Proof.
+  destruct x as [x x_p].
+  destruct x as [x].
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit), ∀ compose_res, compose_rel ⌊ x ⌋ retrn_upack compose_res → compose_res == ⌊ x ⌋)
+            (# unit)
+            ltac:(solver)).
+Defined.

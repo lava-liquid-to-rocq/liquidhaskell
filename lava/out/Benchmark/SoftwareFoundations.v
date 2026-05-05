@@ -1,0 +1,7153 @@
+From coqDeps Require Export LiquidPreludeUtil.
+Open Scope Z_scope.
+Open Scope Int_scope.
+From Coq Require Import Unicode.Utf8.
+Ltac solver := quicksolve.
+
+Inductive SFBool_u: Set :=
+  | SFFalse_u: SFBool_u | SFTrue_u: SFBool_u.
+
+Fixpoint SFBool_eq (x y : SFBool_u): bool :=
+  match (x, y) with
+  | (SFFalse_u, SFFalse_u) => true
+  | (SFTrue_u, SFTrue_u) => true
+  | (_, _) => false
+  end.
+
+Definition SFBool_eq_refl : ∀ (x : SFBool_u), is_true (SFBool_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve SFBool_eq_refl: eq_hint_db.
+
+Definition SFBool_eqb_eq : ∀ (s t : SFBool_u), is_true (SFBool_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve SFBool_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_SFBool: LeibnitzEqB := {
+    equalB' := SFBool_eq;
+    refl' := SFBool_eq_refl;
+    eqb_eq' := SFBool_eqb_eq }.
+
+Fixpoint SFBool_wf (x : SFBool_u): Prop :=
+  match x with | SFFalse_u => True | SFTrue_u => True end.
+
+Theorem SFBool_wf_ref [p : SFBool_u → Prop] (tm : {v: SFBool_u | SFBool_wf v ∧ p v}):
+  SFBool_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation SFBool := {x: SFBool_u | SFBool_wf x ∧ True}.
+
+Definition SFFalse_lem : SFBool_wf SFFalse_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition SFFalse : SFBool :=
+  exist _ SFFalse_u SFFalse_lem.
+
+Definition SFTrue_lem : SFBool_wf SFTrue_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition SFTrue : SFBool :=
+  exist _ SFTrue_u SFTrue_lem.
+
+#[global] Hint Resolve SFBool_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold SFBool_wf: wf_constr_db.
+
+#[global] Hint Resolve SFBool_eq: ref_constr_db.
+
+#[global] Hint Unfold SFFalse: ref_constr_db.
+
+#[global] Hint Unfold SFTrue: ref_constr_db.
+
+Definition andb (b1 b2 : SFBool): SFBool.
+Proof.
+  destruct b1 as [b1 b1_p].
+  destruct b2 as [b2 b2_p].
+  destruct b1 as [|].
+  - refine SFFalse.
+  - refine (exist (λ (b2 : SFBool_u), SFBool_wf b2 ∧ True) b2 ltac:(solver)).
+Defined.
+
+Inductive andb_rel: SFBool_u → SFBool_u → SFBool_u → Prop :=
+  | andb_SFTrue_x: ∀ b2, andb_rel SFTrue_u b2 b2
+  | andb_SFFalse_x: ∀ b2, andb_rel SFFalse_u b2 SFFalse_u.
+
+#[global] Hint Constructors andb_rel: core_hint_db.
+
+#[global] Instance andb_lookup_rel: dictionary rel andb := { lookup' := andb_rel }.
+
+#[global] Instance andb_getF: getFunc andb_rel := { getF' := andb }.
+
+Definition andb_rel_funct [b1 b2 : SFBool_u]:
+  ∀ (VV VV' : SFBool_u), andb_rel b1 b2 VV → (andb_rel b1 b2 VV' → VV = VV').
+Proof.
+  destruct b1 as [|]; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve andb_rel_funct: f_rel_funct_db.
+
+Theorem andb_SFTrue_x_lem b2 andb_SFTrue_x_lem_res:
+  andb_rel SFTrue_u b2 andb_SFTrue_x_lem_res ↔ andb_SFTrue_x_lem_res == b2.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite andb_SFTrue_x_lem: f_rel_back.
+
+Theorem andb_SFFalse_x_lem b2 andb_SFFalse_x_lem_res:
+  andb_rel SFFalse_u b2 andb_SFFalse_x_lem_res ↔ andb_SFFalse_x_lem_res == SFFalse_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite andb_SFFalse_x_lem: f_rel_back.
+
+Theorem andb_rel_ex
+  (b1 : SFBool_u) (b1_p : SFBool_wf b1 ∧ True) (b2 : SFBool_u) (b2_p : SFBool_wf b2 ∧ True):
+  andb_rel b1 b2 ⌊ andb (exist _ b1 b1_p) (exist _ b2 b2_p) ⌋.
+Proof.
+  existence_lemma_pre andb;
+  destruct b1 as [|];
+  [fix_notations | fix_notations];
+  existence_lemma_quicksolve andb;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve andb_rel_ex: rel_ax_db.
+
+Opaque andb.
+
+Theorem andb__andb_rel_rw
+  (b1 : SFBool_u)
+  (b1_p : SFBool_wf b1 ∧ True)
+  (b2 : SFBool_u)
+  (b2_p : SFBool_wf b2 ∧ True)
+  (VV : SFBool_u):
+  ⌊ andb (exist _ b1 b1_p) (exist _ b2 b2_p) ⌋ = VV ↔ andb_rel b1 b2 VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite andb__andb_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve andb__andb_rel_rw: rel_ax_db.
+
+#[global] Instance andb_lookup_rw: dictionary rwLem andb := { lookup' := andb__andb_rel_rw }.
+
+Theorem andb__andb_rel (b1 b2 : SFBool) (VV : SFBool_u):
+  ⌊ andb b1 b2 ⌋ = VV ↔ andb_rel ⌊ b1 ⌋ ⌊ b2 ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite andb__andb_rel: f_rel_funct_db.
+
+Theorem andb__andb_rel' (b1_u b2_u : SFBool_u) (b1 b2 : SFBool) (VV : SFBool_u):
+  b1_u = ⌊ b1 ⌋ → (b2_u = ⌊ b2 ⌋ → ⌊ andb b1 b2 ⌋ = VV ↔ andb_rel b1_u b2_u VV).
+Proof.
+  intros -> ->. refine (andb__andb_rel b1 b2 VV).
+Qed.
+
+#[global] Hint Resolve andb__andb_rel': f_rel_funct_db.
+
+Definition andb_rel_mk
+  (b1 : SFBool_u) (b1_p : SFBool_wf b1 ∧ True) (b2 : SFBool_u) (b2_p : SFBool_wf b2 ∧ True):
+  {VV: _ | andb_rel b1 b2 VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, andb_rel b1 b2 VV) (andb (exist _ b1 b1_p) (exist _ b2 b2_p)) _);
+  rewrite <- andb__andb_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve andb_rel_mk: f_rel_funct_db.
+
+#[global] Instance andb_pack:
+  @Pack
+  (SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT)
+  (SFBool_u ::UT (SFBool_u ::UT nilUT))
+  ltac:(mkProjectsArgListTG ((SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT)) ((SFBool_u ::UT (SFBool_u ::UT nilUT))))
+  SFBool_u
+  (λ (x_89922389 : ArgList (SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT))
+     (v_x_89922389 : SFBool_u),
+   ltac:(flattenP (λ (b1 b2 : SFBool) (VV : SFBool_u), SFBool_wf VV ∧ True) x_89922389 v_x_89922389)).
+Proof.
+  buildPackG andb andb_rel andb__andb_rel andb_rel_funct.
+Defined.
+
+#[global] Instance andb_upack: @uPack (SFBool_u ::UT (SFBool_u ::UT nilUT)) SFBool_u.
+Proof.
+  buildUPackG andb_rel andb_rel_funct.
+Defined.
+
+Definition andb' (b1 b2 : SFBool): SFBool.
+Proof.
+  destruct b1 as [b1 b1_p].
+  destruct b2 as [b2 b2_p].
+  let E := fresh "E" in destruct (b1 ==? SFTrue_u) as [|] eqn:E;
+  [refine SFFalse | refine (exist (λ (b2 : SFBool_u), SFBool_wf b2 ∧ True) b2 ltac:(solver))].
+Defined.
+
+Definition andb3 (b1 b2 b3 : SFBool): SFBool.
+Proof.
+  destruct b1 as [b1 b1_p].
+  destruct b2 as [b2 b2_p].
+  destruct b3 as [b3 b3_p].
+  destruct b1 as [|].
+  - refine SFFalse.
+  - destruct b2 as [|].
+    + refine SFFalse.
+    + destruct b3 as [|].
+      ** refine SFFalse.
+      ** refine SFTrue.
+Defined.
+
+Inductive andb3_rel: SFBool_u → SFBool_u → SFBool_u → SFBool_u → Prop :=
+  | andb3_SFTrue_SFTrue_SFTrue: andb3_rel SFTrue_u SFTrue_u SFTrue_u SFTrue_u
+  | andb3_SFTrue_SFTrue_SFFalse: andb3_rel SFTrue_u SFTrue_u SFFalse_u SFFalse_u
+  | andb3_SFTrue_SFFalse_x: ∀ b3, andb3_rel SFTrue_u SFFalse_u b3 SFFalse_u
+  | andb3_SFFalse_x_x: ∀ b2 b3, andb3_rel SFFalse_u b2 b3 SFFalse_u.
+
+#[global] Hint Constructors andb3_rel: core_hint_db.
+
+#[global] Instance andb3_lookup_rel: dictionary rel andb3 := { lookup' := andb3_rel }.
+
+#[global] Instance andb3_getF: getFunc andb3_rel := { getF' := andb3 }.
+
+Definition andb3_rel_funct [b1 b2 b3 : SFBool_u]:
+  ∀ (VV VV' : SFBool_u), andb3_rel b1 b2 b3 VV → (andb3_rel b1 b2 b3 VV' → VV = VV').
+Proof.
+  destruct b1 as [|];
+  [ |
+   destruct b2 as [|];
+   [ | destruct b3 as [|]]];
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve andb3_rel_funct: f_rel_funct_db.
+
+Theorem andb3_SFTrue_SFTrue_SFTrue_lem andb3_SFTrue_SFTrue_SFTrue_lem_res:
+  andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3_SFTrue_SFTrue_SFTrue_lem_res
+  ↔ andb3_SFTrue_SFTrue_SFTrue_lem_res == SFTrue_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite andb3_SFTrue_SFTrue_SFTrue_lem: f_rel_back.
+
+Theorem andb3_SFTrue_SFTrue_SFFalse_lem andb3_SFTrue_SFTrue_SFFalse_lem_res:
+  andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3_SFTrue_SFTrue_SFFalse_lem_res
+  ↔ andb3_SFTrue_SFTrue_SFFalse_lem_res == SFFalse_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite andb3_SFTrue_SFTrue_SFFalse_lem: f_rel_back.
+
+Theorem andb3_SFTrue_SFFalse_x_lem b3 andb3_SFTrue_SFFalse_x_lem_res:
+  andb3_rel SFTrue_u SFFalse_u b3 andb3_SFTrue_SFFalse_x_lem_res
+  ↔ andb3_SFTrue_SFFalse_x_lem_res == SFFalse_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite andb3_SFTrue_SFFalse_x_lem: f_rel_back.
+
+Theorem andb3_SFFalse_x_x_lem b2 b3 andb3_SFFalse_x_x_lem_res:
+  andb3_rel SFFalse_u b2 b3 andb3_SFFalse_x_x_lem_res ↔ andb3_SFFalse_x_x_lem_res == SFFalse_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite andb3_SFFalse_x_x_lem: f_rel_back.
+
+Theorem andb3_rel_ex
+  (b1 : SFBool_u)
+  (b1_p : SFBool_wf b1 ∧ True)
+  (b2 : SFBool_u)
+  (b2_p : SFBool_wf b2 ∧ True)
+  (b3 : SFBool_u)
+  (b3_p : SFBool_wf b3 ∧ True):
+  andb3_rel b1 b2 b3 ⌊ andb3 (exist _ b1 b1_p) (exist _ b2 b2_p) (exist _ b3 b3_p) ⌋.
+Proof.
+  existence_lemma_pre andb3;
+  destruct b1 as [|];
+  [fix_notations |
+   destruct b2 as [|];
+   [fix_notations |
+    destruct b3 as [|];
+    [fix_notations | fix_notations]]];
+  existence_lemma_quicksolve andb3;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve andb3_rel_ex: rel_ax_db.
+
+Opaque andb3.
+
+Theorem andb3__andb3_rel_rw
+  (b1 : SFBool_u)
+  (b1_p : SFBool_wf b1 ∧ True)
+  (b2 : SFBool_u)
+  (b2_p : SFBool_wf b2 ∧ True)
+  (b3 : SFBool_u)
+  (b3_p : SFBool_wf b3 ∧ True)
+  (VV : SFBool_u):
+  ⌊ andb3 (exist _ b1 b1_p) (exist _ b2 b2_p) (exist _ b3 b3_p) ⌋ = VV ↔ andb3_rel b1 b2 b3 VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite andb3__andb3_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve andb3__andb3_rel_rw: rel_ax_db.
+
+#[global] Instance andb3_lookup_rw: dictionary rwLem andb3 := { lookup' := andb3__andb3_rel_rw }.
+
+Theorem andb3__andb3_rel (b1 b2 b3 : SFBool) (VV : SFBool_u):
+  ⌊ andb3 b1 b2 b3 ⌋ = VV ↔ andb3_rel ⌊ b1 ⌋ ⌊ b2 ⌋ ⌊ b3 ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite andb3__andb3_rel: f_rel_funct_db.
+
+Theorem andb3__andb3_rel' (b1_u b2_u b3_u : SFBool_u) (b1 b2 b3 : SFBool) (VV : SFBool_u):
+  b1_u = ⌊ b1 ⌋
+  → (b2_u = ⌊ b2 ⌋ → (b3_u = ⌊ b3 ⌋ → ⌊ andb3 b1 b2 b3 ⌋ = VV ↔ andb3_rel b1_u b2_u b3_u VV)).
+Proof.
+  intros -> -> ->. refine (andb3__andb3_rel b1 b2 b3 VV).
+Qed.
+
+#[global] Hint Resolve andb3__andb3_rel': f_rel_funct_db.
+
+Definition andb3_rel_mk
+  (b1 : SFBool_u)
+  (b1_p : SFBool_wf b1 ∧ True)
+  (b2 : SFBool_u)
+  (b2_p : SFBool_wf b2 ∧ True)
+  (b3 : SFBool_u)
+  (b3_p : SFBool_wf b3 ∧ True):
+  {VV: _ | andb3_rel b1 b2 b3 VV}.
+Proof.
+  intros;
+  refine (subsumptionCast
+          _
+          (λ VV, andb3_rel b1 b2 b3 VV)
+          (andb3 (exist _ b1 b1_p) (exist _ b2 b2_p) (exist _ b3 b3_p))
+          _);
+  rewrite <- andb3__andb3_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve andb3_rel_mk: f_rel_funct_db.
+
+#[global] Instance andb3_pack:
+  @Pack
+  (SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), SFBool ::RT λ (b3 : SFBool), nilRT)
+  (SFBool_u ::UT (SFBool_u ::UT (SFBool_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG ((SFBool
+  ::RT λ (b1 : SFBool),
+       SFBool ::RT λ (b2 : SFBool), SFBool ::RT λ (b3 : SFBool), nilRT)) ((SFBool_u ::UT (SFBool_u ::UT (SFBool_u ::UT nilUT)))))
+  SFBool_u
+  (λ (x_54994016 : ArgList (SFBool
+                            ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), SFBool ::RT λ (b3 : SFBool), nilRT))
+     (v_x_54994016 : SFBool_u),
+   ltac:(flattenP (λ (b1 b2 b3 : SFBool) (VV : SFBool_u), SFBool_wf VV ∧ True) x_54994016 v_x_54994016)).
+Proof.
+  buildPackG andb3 andb3_rel andb3__andb3_rel andb3_rel_funct.
+Defined.
+
+#[global] Instance andb3_upack:
+  @uPack (SFBool_u ::UT (SFBool_u ::UT (SFBool_u ::UT nilUT))) SFBool_u.
+Proof.
+  buildUPackG andb3_rel andb3_rel_funct.
+Defined.
+
+Definition test_andb31 :
+  {{∀ andb3_res, andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3_res → andb3_res == SFTrue_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit), ∀ andb3_res, andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3_res → andb3_res == SFTrue_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_andb32 :
+  {{∀ andb3_res, andb3_rel SFFalse_u SFTrue_u SFTrue_u andb3_res → andb3_res == SFFalse_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ andb3_res, andb3_rel SFFalse_u SFTrue_u SFTrue_u andb3_res → andb3_res == SFFalse_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_andb33 :
+  {{∀ andb3_res, andb3_rel SFTrue_u SFFalse_u SFTrue_u andb3_res → andb3_res == SFFalse_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ andb3_res, andb3_rel SFTrue_u SFFalse_u SFTrue_u andb3_res → andb3_res == SFFalse_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_andb34 :
+  {{∀ andb3_res, andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3_res → andb3_res == SFFalse_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ andb3_res, andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3_res → andb3_res == SFFalse_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition andb_commutative (b c : SFBool):
+  {{∀ andb_res,
+    andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res
+    → ∀ andb_res_2, andb_rel ⌊ c ⌋ ⌊ b ⌋ andb_res_2 → andb_res == andb_res_2}}.
+Proof.
+  destruct b as [b b_p].
+  destruct c as [c c_p].
+  destruct b as [|].
+  - destruct c as [|].
+    + refine (subsumptionCast
+              Unit
+              (λ (VV : Unit),
+               ∀ andb_res,
+               andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res
+               → ∀ andb_res_2, andb_rel ⌊ c ⌋ ⌊ b ⌋ andb_res_2 → andb_res == andb_res_2)
+              (# unit)
+              ltac:(solver)).
+    + refine (subsumptionCast
+              Unit
+              (λ (VV : Unit),
+               ∀ andb_res,
+               andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res
+               → ∀ andb_res_2, andb_rel ⌊ c ⌋ ⌊ b ⌋ andb_res_2 → andb_res == andb_res_2)
+              (# unit)
+              ltac:(solver)).
+  - destruct c as [|].
+    + refine (subsumptionCast
+              Unit
+              (λ (VV : Unit),
+               ∀ andb_res,
+               andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res
+               → ∀ andb_res_2, andb_rel ⌊ c ⌋ ⌊ b ⌋ andb_res_2 → andb_res == andb_res_2)
+              (# unit)
+              ltac:(solver)).
+    + refine (subsumptionCast
+              Unit
+              (λ (VV : Unit),
+               ∀ andb_res,
+               andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res
+               → ∀ andb_res_2, andb_rel ⌊ c ⌋ ⌊ b ⌋ andb_res_2 → andb_res == andb_res_2)
+              (# unit)
+              ltac:(solver)).
+Defined.
+
+Definition andb_true_elim2
+  (b c : SFBool) (p : {{∀ andb_res, andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res → andb_res == SFTrue_u}}):
+  {{⌊ c ⌋ == SFTrue_u}}.
+Proof.
+  destruct b as [b b_p].
+  destruct c as [c c_p].
+  destruct p as [p p_p].
+  destruct b as [|].
+  - destruct c as [|].
+    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ c ⌋ == SFTrue_u) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ c ⌋ == SFTrue_u) (# unit) ltac:(solver)).
+  - destruct c as [|].
+    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ c ⌋ == SFTrue_u) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ c ⌋ == SFTrue_u) (# unit) ltac:(solver)).
+Defined.
+
+Definition identity_fn_applied_twice
+  (f : @Pack
+       (SFBool ::RT λ (f : SFBool), nilRT)
+       (SFBool_u ::UT nilUT)
+       ltac:(mkProjectsArgListTG ((SFBool ::RT λ (f : SFBool), nilRT)) ((SFBool_u ::UT nilUT)))
+       SFBool_u
+       (λ (x_84124402 : ArgList (SFBool ::RT λ (f : SFBool), nilRT)) (v_x_84124402 : SFBool_u),
+        ltac:(flattenP (λ (f : SFBool) (VV : SFBool_u), SFBool_wf VV ∧ True) x_84124402 v_x_84124402)))
+  (x : @Pack
+       (SFBool ::RT λ (x : SFBool), nilRT)
+       (SFBool_u ::UT nilUT)
+       ltac:(mkProjectsArgListTG ((SFBool ::RT λ (x : SFBool), nilRT)) ((SFBool_u ::UT nilUT)))
+       Unit
+       (λ (x_44180694 : ArgList (SFBool ::RT λ (x : SFBool), nilRT)) (v_x_44180694 : Unit),
+        ltac:(flattenP (λ (x : SFBool) (VV : Unit),
+ ∀ f_res, getPackRel f ⌊ x ⌋ f_res → f_res == ⌊ x ⌋) x_44180694 v_x_44180694)))
+  (b : SFBool):
+  {{∀ f_res, getPackRel f ⌊ b ⌋ f_res → ∀ f_res_2, getPackRel f f_res f_res_2 → f_res_2 == ⌊ b ⌋}}.
+Proof.
+  destruct b as [b b_p].
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ f_res, getPackRel f ⌊ b ⌋ f_res → ∀ f_res_2, getPackRel f f_res f_res_2 → f_res_2 == ⌊ b ⌋)
+          (let _: True :=
+           ⌈ # unit ⌉ in
+           let _: (True ∧ VV == ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋)
+                  ∧ VV
+                    == ⌊ getPackF f (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌋ :=
+           ⌈ let _: True :=
+             ⌈ let _: ∀ f_res, getPackRel f b f_res → f_res == b :=
+               ⌈ getPackF x (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌉ in
+               let _: ⌊ getPackF x (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌋
+                      == b :=
+               ltac:(solver) in
+               exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver) ⌉ in
+             let _: ⌊ getPackF f (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌋
+                    == ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋ :=
+             ltac:(solver) in
+             subsumptionCast
+             SFBool_u
+             (λ (VV : SFBool_u),
+              SFBool_wf VV
+              ∧ (True
+                 ∧ VV == ⌊ getPackF f (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌋))
+             (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)))
+             ltac:(solver) ⌉ in
+           # unit)
+          ltac:(solver)).
+Defined.
+
+Definition nandb (b1 b2 : SFBool): SFBool.
+Proof.
+  destruct b1 as [b1 b1_p].
+  destruct b2 as [b2 b2_p].
+  destruct b1 as [|].
+  - refine SFTrue.
+  - destruct b2 as [|].
+    + refine SFTrue.
+    + refine SFFalse.
+Defined.
+
+Inductive nandb_rel: SFBool_u → SFBool_u → SFBool_u → Prop :=
+  | nandb_SFTrue_SFTrue: nandb_rel SFTrue_u SFTrue_u SFFalse_u
+  | nandb_SFTrue_SFFalse: nandb_rel SFTrue_u SFFalse_u SFTrue_u
+  | nandb_SFFalse_x: ∀ b2, nandb_rel SFFalse_u b2 SFTrue_u.
+
+#[global] Hint Constructors nandb_rel: core_hint_db.
+
+#[global] Instance nandb_lookup_rel: dictionary rel nandb := { lookup' := nandb_rel }.
+
+#[global] Instance nandb_getF: getFunc nandb_rel := { getF' := nandb }.
+
+Definition nandb_rel_funct [b1 b2 : SFBool_u]:
+  ∀ (VV VV' : SFBool_u), nandb_rel b1 b2 VV → (nandb_rel b1 b2 VV' → VV = VV').
+Proof.
+  destruct b1 as [|];
+  [ | destruct b2 as [|]];
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve nandb_rel_funct: f_rel_funct_db.
+
+Theorem nandb_SFTrue_SFTrue_lem nandb_SFTrue_SFTrue_lem_res:
+  nandb_rel SFTrue_u SFTrue_u nandb_SFTrue_SFTrue_lem_res ↔ nandb_SFTrue_SFTrue_lem_res == SFFalse_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite nandb_SFTrue_SFTrue_lem: f_rel_back.
+
+Theorem nandb_SFTrue_SFFalse_lem nandb_SFTrue_SFFalse_lem_res:
+  nandb_rel SFTrue_u SFFalse_u nandb_SFTrue_SFFalse_lem_res
+  ↔ nandb_SFTrue_SFFalse_lem_res == SFTrue_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite nandb_SFTrue_SFFalse_lem: f_rel_back.
+
+Theorem nandb_SFFalse_x_lem b2 nandb_SFFalse_x_lem_res:
+  nandb_rel SFFalse_u b2 nandb_SFFalse_x_lem_res ↔ nandb_SFFalse_x_lem_res == SFTrue_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite nandb_SFFalse_x_lem: f_rel_back.
+
+Theorem nandb_rel_ex
+  (b1 : SFBool_u) (b1_p : SFBool_wf b1 ∧ True) (b2 : SFBool_u) (b2_p : SFBool_wf b2 ∧ True):
+  nandb_rel b1 b2 ⌊ nandb (exist _ b1 b1_p) (exist _ b2 b2_p) ⌋.
+Proof.
+  existence_lemma_pre nandb;
+  destruct b1 as [|];
+  [fix_notations |
+   destruct b2 as [|];
+   [fix_notations | fix_notations]];
+  existence_lemma_quicksolve nandb;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve nandb_rel_ex: rel_ax_db.
+
+Opaque nandb.
+
+Theorem nandb__nandb_rel_rw
+  (b1 : SFBool_u)
+  (b1_p : SFBool_wf b1 ∧ True)
+  (b2 : SFBool_u)
+  (b2_p : SFBool_wf b2 ∧ True)
+  (VV : SFBool_u):
+  ⌊ nandb (exist _ b1 b1_p) (exist _ b2 b2_p) ⌋ = VV ↔ nandb_rel b1 b2 VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite nandb__nandb_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve nandb__nandb_rel_rw: rel_ax_db.
+
+#[global] Instance nandb_lookup_rw: dictionary rwLem nandb := { lookup' := nandb__nandb_rel_rw }.
+
+Theorem nandb__nandb_rel (b1 b2 : SFBool) (VV : SFBool_u):
+  ⌊ nandb b1 b2 ⌋ = VV ↔ nandb_rel ⌊ b1 ⌋ ⌊ b2 ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite nandb__nandb_rel: f_rel_funct_db.
+
+Theorem nandb__nandb_rel' (b1_u b2_u : SFBool_u) (b1 b2 : SFBool) (VV : SFBool_u):
+  b1_u = ⌊ b1 ⌋ → (b2_u = ⌊ b2 ⌋ → ⌊ nandb b1 b2 ⌋ = VV ↔ nandb_rel b1_u b2_u VV).
+Proof.
+  intros -> ->. refine (nandb__nandb_rel b1 b2 VV).
+Qed.
+
+#[global] Hint Resolve nandb__nandb_rel': f_rel_funct_db.
+
+Definition nandb_rel_mk
+  (b1 : SFBool_u) (b1_p : SFBool_wf b1 ∧ True) (b2 : SFBool_u) (b2_p : SFBool_wf b2 ∧ True):
+  {VV: _ | nandb_rel b1 b2 VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, nandb_rel b1 b2 VV) (nandb (exist _ b1 b1_p) (exist _ b2 b2_p)) _);
+  rewrite <- nandb__nandb_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve nandb_rel_mk: f_rel_funct_db.
+
+#[global] Instance nandb_pack:
+  @Pack
+  (SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT)
+  (SFBool_u ::UT (SFBool_u ::UT nilUT))
+  ltac:(mkProjectsArgListTG ((SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT)) ((SFBool_u ::UT (SFBool_u ::UT nilUT))))
+  SFBool_u
+  (λ (x_89922389 : ArgList (SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT))
+     (v_x_89922389 : SFBool_u),
+   ltac:(flattenP (λ (b1 b2 : SFBool) (VV : SFBool_u), SFBool_wf VV ∧ True) x_89922389 v_x_89922389)).
+Proof.
+  buildPackG nandb nandb_rel nandb__nandb_rel nandb_rel_funct.
+Defined.
+
+#[global] Instance nandb_upack: @uPack (SFBool_u ::UT (SFBool_u ::UT nilUT)) SFBool_u.
+Proof.
+  buildUPackG nandb_rel nandb_rel_funct.
+Defined.
+
+Definition test_nandb1 :
+  {{∀ nandb_res, nandb_rel SFTrue_u SFFalse_u nandb_res → nandb_res == SFTrue_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit), ∀ nandb_res, nandb_rel SFTrue_u SFFalse_u nandb_res → nandb_res == SFTrue_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_nandb2 :
+  {{∀ nandb_res, nandb_rel SFFalse_u SFFalse_u nandb_res → nandb_res == SFTrue_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit), ∀ nandb_res, nandb_rel SFFalse_u SFFalse_u nandb_res → nandb_res == SFTrue_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_nandb3 :
+  {{∀ nandb_res, nandb_rel SFFalse_u SFTrue_u nandb_res → nandb_res == SFTrue_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit), ∀ nandb_res, nandb_rel SFFalse_u SFTrue_u nandb_res → nandb_res == SFTrue_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_nandb4 :
+  {{∀ nandb_res, nandb_rel SFTrue_u SFTrue_u nandb_res → nandb_res == SFFalse_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit), ∀ nandb_res, nandb_rel SFTrue_u SFTrue_u nandb_res → nandb_res == SFFalse_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition negb (lq_tmp0 : SFBool): SFBool.
+Proof.
+  destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
+  destruct lq_tmp0 as [|].
+  - refine SFTrue.
+  - refine SFFalse.
+Defined.
+
+Inductive negb_rel: SFBool_u → SFBool_u → Prop :=
+  | negb_SFTrue: negb_rel SFTrue_u SFFalse_u | negb_SFFalse: negb_rel SFFalse_u SFTrue_u.
+
+#[global] Hint Constructors negb_rel: core_hint_db.
+
+#[global] Instance negb_lookup_rel: dictionary rel negb := { lookup' := negb_rel }.
+
+#[global] Instance negb_getF: getFunc negb_rel := { getF' := negb }.
+
+Definition negb_rel_funct [lq_tmp0 : SFBool_u]:
+  ∀ (VV VV' : SFBool_u), negb_rel lq_tmp0 VV → (negb_rel lq_tmp0 VV' → VV = VV').
+Proof.
+  destruct lq_tmp0 as [|]; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve negb_rel_funct: f_rel_funct_db.
+
+Theorem negb_SFTrue_lem negb_SFTrue_lem_res:
+  negb_rel SFTrue_u negb_SFTrue_lem_res ↔ negb_SFTrue_lem_res == SFFalse_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite negb_SFTrue_lem: f_rel_back.
+
+Theorem negb_SFFalse_lem negb_SFFalse_lem_res:
+  negb_rel SFFalse_u negb_SFFalse_lem_res ↔ negb_SFFalse_lem_res == SFTrue_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite negb_SFFalse_lem: f_rel_back.
+
+Theorem negb_rel_ex (lq_tmp0 : SFBool_u) (lq_tmp0_p : SFBool_wf lq_tmp0 ∧ True):
+  negb_rel lq_tmp0 ⌊ negb (exist _ lq_tmp0 lq_tmp0_p) ⌋.
+Proof.
+  existence_lemma_pre negb;
+  destruct lq_tmp0 as [|];
+  [fix_notations | fix_notations];
+  existence_lemma_quicksolve negb;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve negb_rel_ex: rel_ax_db.
+
+Opaque negb.
+
+Theorem negb__negb_rel_rw
+  (lq_tmp0 : SFBool_u) (lq_tmp0_p : SFBool_wf lq_tmp0 ∧ True) (VV : SFBool_u):
+  ⌊ negb (exist _ lq_tmp0 lq_tmp0_p) ⌋ = VV ↔ negb_rel lq_tmp0 VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite negb__negb_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve negb__negb_rel_rw: rel_ax_db.
+
+#[global] Instance negb_lookup_rw: dictionary rwLem negb := { lookup' := negb__negb_rel_rw }.
+
+Theorem negb__negb_rel (lq_tmp0 : SFBool) (VV : SFBool_u):
+  ⌊ negb lq_tmp0 ⌋ = VV ↔ negb_rel ⌊ lq_tmp0 ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite negb__negb_rel: f_rel_funct_db.
+
+Theorem negb__negb_rel' (lq_tmp0_u : SFBool_u) (lq_tmp0 : SFBool) (VV : SFBool_u):
+  lq_tmp0_u = ⌊ lq_tmp0 ⌋ → ⌊ negb lq_tmp0 ⌋ = VV ↔ negb_rel lq_tmp0_u VV.
+Proof.
+  intros ->. refine (negb__negb_rel lq_tmp0 VV).
+Qed.
+
+#[global] Hint Resolve negb__negb_rel': f_rel_funct_db.
+
+Definition negb_rel_mk (lq_tmp0 : SFBool_u) (lq_tmp0_p : SFBool_wf lq_tmp0 ∧ True):
+  {VV: _ | negb_rel lq_tmp0 VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, negb_rel lq_tmp0 VV) (negb (exist _ lq_tmp0 lq_tmp0_p)) _);
+  rewrite <- negb__negb_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve negb_rel_mk: f_rel_funct_db.
+
+#[global] Instance negb_pack:
+  @Pack
+  (SFBool ::RT λ (lq_tmp0 : SFBool), nilRT)
+  (SFBool_u ::UT nilUT)
+  ltac:(mkProjectsArgListTG ((SFBool ::RT λ (lq_tmp0 : SFBool), nilRT)) ((SFBool_u ::UT nilUT)))
+  SFBool_u
+  (λ (x_80611037 : ArgList (SFBool ::RT λ (lq_tmp0 : SFBool), nilRT)) (v_x_80611037 : SFBool_u),
+   ltac:(flattenP (λ (lq_tmp0 : SFBool) (VV : SFBool_u), SFBool_wf VV ∧ True) x_80611037 v_x_80611037)).
+Proof.
+  buildPackG negb negb_rel negb__negb_rel negb_rel_funct.
+Defined.
+
+#[global] Instance negb_upack: @uPack (SFBool_u ::UT nilUT) SFBool_u.
+Proof.
+  buildUPackG negb_rel negb_rel_funct.
+Defined.
+
+Definition negb' (b : SFBool): SFBool.
+Proof.
+  destruct b as [b b_p].
+  let E := fresh "E" in destruct (b ==? SFTrue_u) as [|] eqn:E;
+  [refine SFTrue | refine SFFalse].
+Defined.
+
+Definition negb_involutive (b : SFBool):
+  {{∀ negb_res,
+    negb_rel ⌊ b ⌋ negb_res → ∀ negb_res_2, negb_rel negb_res negb_res_2 → negb_res_2 == ⌊ b ⌋}}.
+Proof.
+  destruct b as [b b_p].
+  destruct b as [|].
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ negb_res,
+             negb_rel ⌊ b ⌋ negb_res → ∀ negb_res_2, negb_rel negb_res negb_res_2 → negb_res_2 == ⌊ b ⌋)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ negb_res,
+             negb_rel ⌊ b ⌋ negb_res → ∀ negb_res_2, negb_rel negb_res negb_res_2 → negb_res_2 == ⌊ b ⌋)
+            (# unit)
+            ltac:(solver)).
+Defined.
+
+Definition orb (b1 b2 : SFBool): SFBool.
+Proof.
+  destruct b1 as [b1 b1_p].
+  destruct b2 as [b2 b2_p].
+  destruct b1 as [|].
+  - refine (exist (λ (b2 : SFBool_u), SFBool_wf b2 ∧ True) b2 ltac:(solver)).
+  - refine SFTrue.
+Defined.
+
+Inductive orb_rel: SFBool_u → SFBool_u → SFBool_u → Prop :=
+  | orb_SFTrue_x: ∀ b2, orb_rel SFTrue_u b2 SFTrue_u | orb_SFFalse_x: ∀ b2, orb_rel SFFalse_u b2 b2.
+
+#[global] Hint Constructors orb_rel: core_hint_db.
+
+#[global] Instance orb_lookup_rel: dictionary rel orb := { lookup' := orb_rel }.
+
+#[global] Instance orb_getF: getFunc orb_rel := { getF' := orb }.
+
+Definition orb_rel_funct [b1 b2 : SFBool_u]:
+  ∀ (VV VV' : SFBool_u), orb_rel b1 b2 VV → (orb_rel b1 b2 VV' → VV = VV').
+Proof.
+  destruct b1 as [|]; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve orb_rel_funct: f_rel_funct_db.
+
+Theorem orb_SFTrue_x_lem b2 orb_SFTrue_x_lem_res:
+  orb_rel SFTrue_u b2 orb_SFTrue_x_lem_res ↔ orb_SFTrue_x_lem_res == SFTrue_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite orb_SFTrue_x_lem: f_rel_back.
+
+Theorem orb_SFFalse_x_lem b2 orb_SFFalse_x_lem_res:
+  orb_rel SFFalse_u b2 orb_SFFalse_x_lem_res ↔ orb_SFFalse_x_lem_res == b2.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite orb_SFFalse_x_lem: f_rel_back.
+
+Theorem orb_rel_ex
+  (b1 : SFBool_u) (b1_p : SFBool_wf b1 ∧ True) (b2 : SFBool_u) (b2_p : SFBool_wf b2 ∧ True):
+  orb_rel b1 b2 ⌊ orb (exist _ b1 b1_p) (exist _ b2 b2_p) ⌋.
+Proof.
+  existence_lemma_pre orb;
+  destruct b1 as [|];
+  [fix_notations | fix_notations];
+  existence_lemma_quicksolve orb;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve orb_rel_ex: rel_ax_db.
+
+Opaque orb.
+
+Theorem orb__orb_rel_rw
+  (b1 : SFBool_u)
+  (b1_p : SFBool_wf b1 ∧ True)
+  (b2 : SFBool_u)
+  (b2_p : SFBool_wf b2 ∧ True)
+  (VV : SFBool_u):
+  ⌊ orb (exist _ b1 b1_p) (exist _ b2 b2_p) ⌋ = VV ↔ orb_rel b1 b2 VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite orb__orb_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve orb__orb_rel_rw: rel_ax_db.
+
+#[global] Instance orb_lookup_rw: dictionary rwLem orb := { lookup' := orb__orb_rel_rw }.
+
+Theorem orb__orb_rel (b1 b2 : SFBool) (VV : SFBool_u):
+  ⌊ orb b1 b2 ⌋ = VV ↔ orb_rel ⌊ b1 ⌋ ⌊ b2 ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite orb__orb_rel: f_rel_funct_db.
+
+Theorem orb__orb_rel' (b1_u b2_u : SFBool_u) (b1 b2 : SFBool) (VV : SFBool_u):
+  b1_u = ⌊ b1 ⌋ → (b2_u = ⌊ b2 ⌋ → ⌊ orb b1 b2 ⌋ = VV ↔ orb_rel b1_u b2_u VV).
+Proof.
+  intros -> ->. refine (orb__orb_rel b1 b2 VV).
+Qed.
+
+#[global] Hint Resolve orb__orb_rel': f_rel_funct_db.
+
+Definition orb_rel_mk
+  (b1 : SFBool_u) (b1_p : SFBool_wf b1 ∧ True) (b2 : SFBool_u) (b2_p : SFBool_wf b2 ∧ True):
+  {VV: _ | orb_rel b1 b2 VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, orb_rel b1 b2 VV) (orb (exist _ b1 b1_p) (exist _ b2 b2_p)) _);
+  rewrite <- orb__orb_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve orb_rel_mk: f_rel_funct_db.
+
+#[global] Instance orb_pack:
+  @Pack
+  (SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT)
+  (SFBool_u ::UT (SFBool_u ::UT nilUT))
+  ltac:(mkProjectsArgListTG ((SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT)) ((SFBool_u ::UT (SFBool_u ::UT nilUT))))
+  SFBool_u
+  (λ (x_89922389 : ArgList (SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT))
+     (v_x_89922389 : SFBool_u),
+   ltac:(flattenP (λ (b1 b2 : SFBool) (VV : SFBool_u), SFBool_wf VV ∧ True) x_89922389 v_x_89922389)).
+Proof.
+  buildPackG orb orb_rel orb__orb_rel orb_rel_funct.
+Defined.
+
+#[global] Instance orb_upack: @uPack (SFBool_u ::UT (SFBool_u ::UT nilUT)) SFBool_u.
+Proof.
+  buildUPackG orb_rel orb_rel_funct.
+Defined.
+
+Definition andb_eq_orb
+  (b c : SFBool)
+  (h : {{∀ andb_res,
+         andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res → ∀ orb_res, orb_rel ⌊ b ⌋ ⌊ c ⌋ orb_res → andb_res == orb_res}}):
+  {{⌊ b ⌋ == ⌊ c ⌋}}.
+Proof.
+  destruct b as [b b_p].
+  destruct c as [c c_p].
+  destruct h as [h h_p].
+  destruct b as [|].
+  - destruct c as [|].
+    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ b ⌋ == ⌊ c ⌋) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ b ⌋ == ⌊ c ⌋) (# unit) ltac:(solver)).
+  - destruct c as [|].
+    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ b ⌋ == ⌊ c ⌋) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ b ⌋ == ⌊ c ⌋) (# unit) ltac:(solver)).
+Defined.
+
+Definition test_orb1 : {{∀ orb_res, orb_rel SFTrue_u SFFalse_u orb_res → orb_res == SFTrue_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit), ∀ orb_res, orb_rel SFTrue_u SFFalse_u orb_res → orb_res == SFTrue_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_orb2 : {{∀ orb_res, orb_rel SFFalse_u SFFalse_u orb_res → orb_res == SFFalse_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit), ∀ orb_res, orb_rel SFFalse_u SFFalse_u orb_res → orb_res == SFFalse_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_orb3 : {{∀ orb_res, orb_rel SFFalse_u SFTrue_u orb_res → orb_res == SFTrue_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit), ∀ orb_res, orb_rel SFFalse_u SFTrue_u orb_res → orb_res == SFTrue_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_orb4 : {{∀ orb_res, orb_rel SFTrue_u SFTrue_u orb_res → orb_res == SFTrue_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit), ∀ orb_res, orb_rel SFTrue_u SFTrue_u orb_res → orb_res == SFTrue_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_orb5 :
+  {{∀ orb_res,
+    orb_rel SFFalse_u SFTrue_u orb_res
+    → ∀ orb_res_2, orb_rel SFFalse_u orb_res orb_res_2 → orb_res_2 == SFTrue_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ orb_res,
+           orb_rel SFFalse_u SFTrue_u orb_res
+           → ∀ orb_res_2, orb_rel SFFalse_u orb_res orb_res_2 → orb_res_2 == SFTrue_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition orb' (b1 b2 : SFBool): SFBool.
+Proof.
+  destruct b1 as [b1 b1_p].
+  destruct b2 as [b2 b2_p].
+  let E := fresh "E" in destruct (b1 ==? SFTrue_u) as [|] eqn:E;
+  [refine (exist (λ (b2 : SFBool_u), SFBool_wf b2 ∧ True) b2 ltac:(solver)) | refine SFTrue].
+Defined.
+
+Inductive SFBit_u: Set :=
+  | B0_u: SFBit_u | B1_u: SFBit_u.
+
+Fixpoint SFBit_eq (x y : SFBit_u): bool :=
+  match (x, y) with | (B0_u, B0_u) => true | (B1_u, B1_u) => true | (_, _) => false end.
+
+Definition SFBit_eq_refl : ∀ (x : SFBit_u), is_true (SFBit_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve SFBit_eq_refl: eq_hint_db.
+
+Definition SFBit_eqb_eq : ∀ (s t : SFBit_u), is_true (SFBit_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve SFBit_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_SFBit: LeibnitzEqB := {
+    equalB' := SFBit_eq;
+    refl' := SFBit_eq_refl;
+    eqb_eq' := SFBit_eqb_eq }.
+
+Fixpoint SFBit_wf (x : SFBit_u): Prop :=
+  match x with | B0_u => True | B1_u => True end.
+
+Theorem SFBit_wf_ref [p : SFBit_u → Prop] (tm : {v: SFBit_u | SFBit_wf v ∧ p v}): SFBit_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation SFBit := {x: SFBit_u | SFBit_wf x ∧ True}.
+
+Definition B0_lem : SFBit_wf B0_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition B0 : SFBit :=
+  exist _ B0_u B0_lem.
+
+Definition B1_lem : SFBit_wf B1_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition B1 : SFBit :=
+  exist _ B1_u B1_lem.
+
+#[global] Hint Resolve SFBit_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold SFBit_wf: wf_constr_db.
+
+#[global] Hint Resolve SFBit_eq: ref_constr_db.
+
+#[global] Hint Unfold B0: ref_constr_db.
+
+#[global] Hint Unfold B1: ref_constr_db.
+
+Inductive SFBin_u: Set :=
+  | Bin0_u: SFBin_u → SFBin_u | Bin1_u: SFBin_u → SFBin_u | Z_u: SFBin_u.
+
+Fixpoint SFBin_eq (x y : SFBin_u): bool :=
+  match (x, y) with
+  | (Bin0_u n, Bin0_u n') => true && SFBin_eq n n'
+  | (Bin1_u n, Bin1_u n') => true && SFBin_eq n n'
+  | (Z_u, Z_u) => true
+  | (_, _) => false
+  end.
+
+Definition SFBin_eq_refl : ∀ (x : SFBin_u), is_true (SFBin_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve SFBin_eq_refl: eq_hint_db.
+
+Definition SFBin_eqb_eq : ∀ (s t : SFBin_u), is_true (SFBin_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve SFBin_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_SFBin: LeibnitzEqB := {
+    equalB' := SFBin_eq;
+    refl' := SFBin_eq_refl;
+    eqb_eq' := SFBin_eqb_eq }.
+
+Fixpoint SFBin_wf (x : SFBin_u): Prop :=
+  match x with | Bin0_u n => SFBin_wf n ∧ True | Bin1_u n => SFBin_wf n ∧ True | Z_u => True end.
+
+Theorem SFBin_wf_ref [p : SFBin_u → Prop] (tm : {v: SFBin_u | SFBin_wf v ∧ p v}): SFBin_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation SFBin := {x: SFBin_u | SFBin_wf x ∧ True}.
+
+Definition Bin0_lem (n : SFBin): SFBin_wf (Bin0_u ⌊ n ⌋) ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Bin0 (n : SFBin): SFBin :=
+  exist _ (Bin0_u ⌊ n ⌋) (Bin0_lem n).
+
+Definition Bin1_lem (n : SFBin): SFBin_wf (Bin1_u ⌊ n ⌋) ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Bin1 (n : SFBin): SFBin :=
+  exist _ (Bin1_u ⌊ n ⌋) (Bin1_lem n).
+
+Definition Z_lem : SFBin_wf Z_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Z : SFBin :=
+  exist _ Z_u Z_lem.
+
+Definition wf_Bin0_n [n : SFBin_u] (p : SFBin_wf (Bin0_u n)): SFBin_wf n.
+Proof.
+  quicksolve.
+Defined.
+
+#[global] Hint Resolve wf_Bin0_n: ref_constr_db.
+
+Definition wf_Bin1_n [n : SFBin_u] (p : SFBin_wf (Bin1_u n)): SFBin_wf n.
+Proof.
+  quicksolve.
+Defined.
+
+#[global] Hint Resolve wf_Bin1_n: ref_constr_db.
+
+#[global] Hint Resolve SFBin_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold SFBin_wf: wf_constr_db.
+
+#[global] Hint Resolve SFBin_eq: ref_constr_db.
+
+#[global] Hint Unfold Bin0: ref_constr_db.
+
+#[global] Hint Unfold Bin1: ref_constr_db.
+
+#[global] Hint Unfold Z: ref_constr_db.
+
+Definition bin_to_nat (m : SFBin): {VV: Z | True}.
+Proof.
+  destruct m as [m m_p].
+  induction m as [m' IH_m'| m' IH_m'|].
+  - refine (subsumptionCast
+            Z
+            (λ (VV : Z), True)
+            (subsumptionCast Z (λ (x_1 : Z), True) (exist (λ (VV : Z), VV == 2) 2 ltac:(solver)) ltac:(solver)
+             *Z IH_m' ltac:(try clear IH_m'; solver))
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Z
+            (λ (VV : Z), True)
+            (subsumptionCast Z (λ (x_1 : Z), True) (exist (λ (VV : Z), VV == 1) 1 ltac:(solver)) ltac:(solver)
+             +Z subsumptionCast
+                Z
+                (λ (x_2 : Z), True)
+                (subsumptionCast Z (λ (x_1 : Z), True) (exist (λ (VV : Z), VV == 2) 2 ltac:(solver)) ltac:(solver)
+                 *Z IH_m' ltac:(try clear IH_m'; solver))
+                ltac:(solver))
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Z
+            (λ (VV : Z), True)
+            (exist (λ (VV : Z), VV == 0) 0 ltac:(solver))
+            ltac:(solver)).
+Defined.
+
+Inductive bin_to_nat_rel: SFBin_u → Z → Prop :=
+  | bin_to_nat_Z: bin_to_nat_rel Z_u 0
+  | bin_to_nat_Bin0: ∀ m' bin_to_nat_res,
+                     bin_to_nat_rel m' bin_to_nat_res
+                     → ∀ multZ_res, multZ_rel 2 bin_to_nat_res multZ_res → bin_to_nat_rel (Bin0_u m') multZ_res
+  | bin_to_nat_Bin1: ∀ m' bin_to_nat_res,
+                     bin_to_nat_rel m' bin_to_nat_res
+                     → ∀ multZ_res,
+                       multZ_rel 2 bin_to_nat_res multZ_res
+                       → ∀ addZ_res, addZ_rel 1 multZ_res addZ_res → bin_to_nat_rel (Bin1_u m') addZ_res.
+
+#[global] Hint Constructors bin_to_nat_rel: core_hint_db.
+
+#[global] Instance bin_to_nat_lookup_rel: dictionary rel bin_to_nat := {
+    lookup' := bin_to_nat_rel }.
+
+#[global] Instance bin_to_nat_getF: getFunc bin_to_nat_rel := { getF' := bin_to_nat }.
+
+Definition bin_to_nat_rel_funct [m : SFBin_u]:
+  ∀ (VV VV' : Z), bin_to_nat_rel m VV → (bin_to_nat_rel m VV' → VV = VV').
+Proof.
+  induction m as [m' IH_m'| m' IH_m'|]; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve bin_to_nat_rel_funct: f_rel_funct_db.
+
+Theorem bin_to_nat_Z_lem bin_to_nat_Z_lem_res:
+  bin_to_nat_rel Z_u bin_to_nat_Z_lem_res ↔ bin_to_nat_Z_lem_res == 0.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite bin_to_nat_Z_lem: f_rel_back.
+
+Theorem bin_to_nat_Bin0_lem m' bin_to_nat_Bin0_lem_res:
+  bin_to_nat_rel (Bin0_u m') bin_to_nat_Bin0_lem_res
+  ↔ ∃ bin_to_nat_res,
+    bin_to_nat_rel m' bin_to_nat_res
+    ∧ ∃ multZ_res, multZ_rel 2 bin_to_nat_res multZ_res ∧ bin_to_nat_Bin0_lem_res == multZ_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite bin_to_nat_Bin0_lem: f_rel_back.
+
+Theorem bin_to_nat_Bin1_lem m' bin_to_nat_Bin1_lem_res:
+  bin_to_nat_rel (Bin1_u m') bin_to_nat_Bin1_lem_res
+  ↔ ∃ bin_to_nat_res,
+    bin_to_nat_rel m' bin_to_nat_res
+    ∧ ∃ multZ_res,
+      multZ_rel 2 bin_to_nat_res multZ_res
+      ∧ ∃ addZ_res, addZ_rel 1 multZ_res addZ_res ∧ bin_to_nat_Bin1_lem_res == addZ_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite bin_to_nat_Bin1_lem: f_rel_back.
+
+Theorem bin_to_nat_rel_ex (m : SFBin_u) (m_p : SFBin_wf m ∧ True):
+  bin_to_nat_rel m ⌊ bin_to_nat (exist _ m m_p) ⌋.
+Proof.
+  existence_lemma_pre bin_to_nat;
+  induction m as [m' IH_m'| m' IH_m'|];
+  [fix_notations; pose proof (IH_m' ltac:(try clear IH_m'; solver)) as IH_34714780; try clear IH_m' |
+   fix_notations; pose proof (IH_m' ltac:(try clear IH_m'; solver)) as IH_34714780; try clear IH_m' |
+   fix_notations];
+  existence_lemma_quicksolve bin_to_nat;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve bin_to_nat_rel_ex: rel_ax_db.
+
+Opaque bin_to_nat.
+
+Theorem bin_to_nat__bin_to_nat_rel_rw (m : SFBin_u) (m_p : SFBin_wf m ∧ True) (VV : Z):
+  ⌊ bin_to_nat (exist _ m m_p) ⌋ = VV ↔ bin_to_nat_rel m VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite bin_to_nat__bin_to_nat_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve bin_to_nat__bin_to_nat_rel_rw: rel_ax_db.
+
+#[global] Instance bin_to_nat_lookup_rw: dictionary rwLem bin_to_nat := {
+    lookup' := bin_to_nat__bin_to_nat_rel_rw }.
+
+Theorem bin_to_nat__bin_to_nat_rel (m : SFBin) (VV : Z):
+  ⌊ bin_to_nat m ⌋ = VV ↔ bin_to_nat_rel ⌊ m ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite bin_to_nat__bin_to_nat_rel: f_rel_funct_db.
+
+Theorem bin_to_nat__bin_to_nat_rel' (m_u : SFBin_u) (m : SFBin) (VV : Z):
+  m_u = ⌊ m ⌋ → ⌊ bin_to_nat m ⌋ = VV ↔ bin_to_nat_rel m_u VV.
+Proof.
+  intros ->. refine (bin_to_nat__bin_to_nat_rel m VV).
+Qed.
+
+#[global] Hint Resolve bin_to_nat__bin_to_nat_rel': f_rel_funct_db.
+
+Definition bin_to_nat_rel_mk (m : SFBin_u) (m_p : SFBin_wf m ∧ True): {VV: _ | bin_to_nat_rel m VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, bin_to_nat_rel m VV) (bin_to_nat (exist _ m m_p)) _);
+  rewrite <- bin_to_nat__bin_to_nat_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve bin_to_nat_rel_mk: f_rel_funct_db.
+
+#[global] Instance bin_to_nat_pack:
+  @Pack
+  (SFBin ::RT λ (m : SFBin), nilRT)
+  (SFBin_u ::UT nilUT)
+  ltac:(mkProjectsArgListTG ((SFBin ::RT λ (m : SFBin), nilRT)) ((SFBin_u ::UT nilUT)))
+  Z
+  (λ (x_29546072 : ArgList (SFBin ::RT λ (m : SFBin), nilRT)) (v_x_29546072 : Z),
+   ltac:(flattenP (λ (m : SFBin) (VV : Z), True) x_29546072 v_x_29546072)).
+Proof.
+  buildPackG bin_to_nat bin_to_nat_rel bin_to_nat__bin_to_nat_rel bin_to_nat_rel_funct.
+Defined.
+
+#[global] Instance bin_to_nat_upack: @uPack (SFBin_u ::UT nilUT) Z.
+Proof.
+  buildUPackG bin_to_nat_rel bin_to_nat_rel_funct.
+Defined.
+
+Definition test_bin_incr4 :
+  {{∀ bin_to_nat_res, bin_to_nat_rel (Bin0_u (Bin1_u Z_u)) bin_to_nat_res → bin_to_nat_res == 2}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ bin_to_nat_res, bin_to_nat_rel (Bin0_u (Bin1_u Z_u)) bin_to_nat_res → bin_to_nat_res == 2)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition incr (m : SFBin): SFBin.
+Proof.
+  destruct m as [m m_p].
+  induction m as [m' _| m' IH_m'|].
+  - refine (Bin1 (exist (λ (n : SFBin_u), SFBin_wf n ∧ True) m' ltac:(solver))).
+  - refine (Bin0 (IH_m' ltac:(try clear IH_m'; solver))).
+  - refine (Bin1 Z).
+Defined.
+
+Inductive incr_rel: SFBin_u → SFBin_u → Prop :=
+  | incr_Z: incr_rel Z_u (Bin1_u Z_u)
+  | incr_Bin0: ∀ m', incr_rel (Bin0_u m') (Bin1_u m')
+  | incr_Bin1: ∀ m' incr_res, incr_rel m' incr_res → incr_rel (Bin1_u m') (Bin0_u incr_res).
+
+#[global] Hint Constructors incr_rel: core_hint_db.
+
+#[global] Instance incr_lookup_rel: dictionary rel incr := { lookup' := incr_rel }.
+
+#[global] Instance incr_getF: getFunc incr_rel := { getF' := incr }.
+
+Definition incr_rel_funct [m : SFBin_u]:
+  ∀ (VV VV' : SFBin_u), incr_rel m VV → (incr_rel m VV' → VV = VV').
+Proof.
+  induction m as [m' _| m' IH_m'|]; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve incr_rel_funct: f_rel_funct_db.
+
+Theorem incr_Z_lem incr_Z_lem_res: incr_rel Z_u incr_Z_lem_res ↔ incr_Z_lem_res == Bin1_u Z_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite incr_Z_lem: f_rel_back.
+
+Theorem incr_Bin0_lem m' incr_Bin0_lem_res:
+  incr_rel (Bin0_u m') incr_Bin0_lem_res ↔ incr_Bin0_lem_res == Bin1_u m'.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite incr_Bin0_lem: f_rel_back.
+
+Theorem incr_Bin1_lem m' incr_Bin1_lem_res:
+  incr_rel (Bin1_u m') incr_Bin1_lem_res
+  ↔ ∃ incr_res, incr_rel m' incr_res ∧ incr_Bin1_lem_res == Bin0_u incr_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite incr_Bin1_lem: f_rel_back.
+
+Theorem incr_rel_ex (m : SFBin_u) (m_p : SFBin_wf m ∧ True): incr_rel m ⌊ incr (exist _ m m_p) ⌋.
+Proof.
+  existence_lemma_pre incr;
+  induction m as [m' _| m' IH_m'|];
+  [fix_notations | fix_notations | fix_notations];
+  existence_lemma_quicksolve incr;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve incr_rel_ex: rel_ax_db.
+
+Opaque incr.
+
+Theorem incr__incr_rel_rw (m : SFBin_u) (m_p : SFBin_wf m ∧ True) (VV : SFBin_u):
+  ⌊ incr (exist _ m m_p) ⌋ = VV ↔ incr_rel m VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite incr__incr_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve incr__incr_rel_rw: rel_ax_db.
+
+#[global] Instance incr_lookup_rw: dictionary rwLem incr := { lookup' := incr__incr_rel_rw }.
+
+Theorem incr__incr_rel (m : SFBin) (VV : SFBin_u): ⌊ incr m ⌋ = VV ↔ incr_rel ⌊ m ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite incr__incr_rel: f_rel_funct_db.
+
+Theorem incr__incr_rel' (m_u : SFBin_u) (m : SFBin) (VV : SFBin_u):
+  m_u = ⌊ m ⌋ → ⌊ incr m ⌋ = VV ↔ incr_rel m_u VV.
+Proof.
+  intros ->. refine (incr__incr_rel m VV).
+Qed.
+
+#[global] Hint Resolve incr__incr_rel': f_rel_funct_db.
+
+Definition incr_rel_mk (m : SFBin_u) (m_p : SFBin_wf m ∧ True): {VV: _ | incr_rel m VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, incr_rel m VV) (incr (exist _ m m_p)) _);
+  rewrite <- incr__incr_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve incr_rel_mk: f_rel_funct_db.
+
+#[global] Instance incr_pack:
+  @Pack
+  (SFBin ::RT λ (m : SFBin), nilRT)
+  (SFBin_u ::UT nilUT)
+  ltac:(mkProjectsArgListTG ((SFBin ::RT λ (m : SFBin), nilRT)) ((SFBin_u ::UT nilUT)))
+  SFBin_u
+  (λ (x_29546072 : ArgList (SFBin ::RT λ (m : SFBin), nilRT)) (v_x_29546072 : SFBin_u),
+   ltac:(flattenP (λ (m : SFBin) (VV : SFBin_u), SFBin_wf VV ∧ True) x_29546072 v_x_29546072)).
+Proof.
+  buildPackG incr incr_rel incr__incr_rel incr_rel_funct.
+Defined.
+
+#[global] Instance incr_upack: @uPack (SFBin_u ::UT nilUT) SFBin_u.
+Proof.
+  buildUPackG incr_rel incr_rel_funct.
+Defined.
+
+Definition test_bin_incr1 :
+  {{∀ incr_res, incr_rel (Bin1_u Z_u) incr_res → incr_res == Bin0_u (Bin1_u Z_u)}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit), ∀ incr_res, incr_rel (Bin1_u Z_u) incr_res → incr_res == Bin0_u (Bin1_u Z_u))
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_bin_incr2 :
+  {{∀ incr_res, incr_rel (Bin0_u (Bin1_u Z_u)) incr_res → incr_res == Bin1_u (Bin1_u Z_u)}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ incr_res, incr_rel (Bin0_u (Bin1_u Z_u)) incr_res → incr_res == Bin1_u (Bin1_u Z_u))
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_bin_incr3 :
+  {{∀ incr_res, incr_rel (Bin1_u (Bin1_u Z_u)) incr_res → incr_res == Bin0_u (Bin0_u (Bin1_u Z_u))}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ incr_res, incr_rel (Bin1_u (Bin1_u Z_u)) incr_res → incr_res == Bin0_u (Bin0_u (Bin1_u Z_u)))
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_bin_incr5 :
+  {{∀ incr_res,
+    incr_rel (Bin1_u Z_u) incr_res
+    → ∀ bin_to_nat_res,
+      bin_to_nat_rel incr_res bin_to_nat_res
+      → ∀ bin_to_nat_res_2,
+        bin_to_nat_rel (Bin1_u Z_u) bin_to_nat_res_2
+        → ∀ addZ_res, addZ_rel 1 bin_to_nat_res_2 addZ_res → bin_to_nat_res == addZ_res}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ incr_res,
+           incr_rel (Bin1_u Z_u) incr_res
+           → ∀ bin_to_nat_res,
+             bin_to_nat_rel incr_res bin_to_nat_res
+             → ∀ bin_to_nat_res_2,
+               bin_to_nat_rel (Bin1_u Z_u) bin_to_nat_res_2
+               → ∀ addZ_res, addZ_rel 1 bin_to_nat_res_2 addZ_res → bin_to_nat_res == addZ_res)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_bin_incr6 :
+  {{∀ incr_res,
+    incr_rel (Bin1_u Z_u) incr_res
+    → ∀ incr_res_2,
+      incr_rel incr_res incr_res_2
+      → ∀ bin_to_nat_res,
+        bin_to_nat_rel incr_res_2 bin_to_nat_res
+        → ∀ bin_to_nat_res_2,
+          bin_to_nat_rel (Bin1_u Z_u) bin_to_nat_res_2
+          → ∀ addZ_res, addZ_rel 2 bin_to_nat_res_2 addZ_res → bin_to_nat_res == addZ_res}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ incr_res,
+           incr_rel (Bin1_u Z_u) incr_res
+           → ∀ incr_res_2,
+             incr_rel incr_res incr_res_2
+             → ∀ bin_to_nat_res,
+               bin_to_nat_rel incr_res_2 bin_to_nat_res
+               → ∀ bin_to_nat_res_2,
+                 bin_to_nat_rel (Bin1_u Z_u) bin_to_nat_res_2
+                 → ∀ addZ_res, addZ_rel 2 bin_to_nat_res_2 addZ_res → bin_to_nat_res == addZ_res)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Inductive RGB_u: Set :=
+  | Blue_u: RGB_u | Green_u: RGB_u | Red_u: RGB_u.
+
+Fixpoint RGB_eq (x y : RGB_u): bool :=
+  match (x, y) with
+  | (Blue_u, Blue_u) => true
+  | (Green_u, Green_u) => true
+  | (Red_u, Red_u) => true
+  | (_, _) => false
+  end.
+
+Definition RGB_eq_refl : ∀ (x : RGB_u), is_true (RGB_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve RGB_eq_refl: eq_hint_db.
+
+Definition RGB_eqb_eq : ∀ (s t : RGB_u), is_true (RGB_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve RGB_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_RGB: LeibnitzEqB := {
+    equalB' := RGB_eq;
+    refl' := RGB_eq_refl;
+    eqb_eq' := RGB_eqb_eq }.
+
+Fixpoint RGB_wf (x : RGB_u): Prop :=
+  match x with | Blue_u => True | Green_u => True | Red_u => True end.
+
+Theorem RGB_wf_ref [p : RGB_u → Prop] (tm : {v: RGB_u | RGB_wf v ∧ p v}): RGB_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation RGB := {x: RGB_u | RGB_wf x ∧ True}.
+
+Definition Blue_lem : RGB_wf Blue_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Blue : RGB :=
+  exist _ Blue_u Blue_lem.
+
+Definition Green_lem : RGB_wf Green_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Green : RGB :=
+  exist _ Green_u Green_lem.
+
+Definition Red_lem : RGB_wf Red_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Red : RGB :=
+  exist _ Red_u Red_lem.
+
+#[global] Hint Resolve RGB_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold RGB_wf: wf_constr_db.
+
+#[global] Hint Resolve RGB_eq: ref_constr_db.
+
+#[global] Hint Unfold Blue: ref_constr_db.
+
+#[global] Hint Unfold Green: ref_constr_db.
+
+#[global] Hint Unfold Red: ref_constr_db.
+
+Inductive OtherNat_u: Set :=
+  | Stop_u: OtherNat_u | Tick_u: OtherNat_u → OtherNat_u.
+
+Fixpoint OtherNat_eq (x y : OtherNat_u): bool :=
+  match (x, y) with
+  | (Stop_u, Stop_u) => true
+  | (Tick_u VV, Tick_u VV') => true && OtherNat_eq VV VV'
+  | (_, _) => false
+  end.
+
+Definition OtherNat_eq_refl : ∀ (x : OtherNat_u), is_true (OtherNat_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve OtherNat_eq_refl: eq_hint_db.
+
+Definition OtherNat_eqb_eq : ∀ (s t : OtherNat_u), is_true (OtherNat_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve OtherNat_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_OtherNat: LeibnitzEqB := {
+    equalB' := OtherNat_eq;
+    refl' := OtherNat_eq_refl;
+    eqb_eq' := OtherNat_eqb_eq }.
+
+Fixpoint OtherNat_wf (x : OtherNat_u): Prop :=
+  match x with | Stop_u => True | Tick_u VV => OtherNat_wf VV ∧ True end.
+
+Theorem OtherNat_wf_ref [p : OtherNat_u → Prop] (tm : {v: OtherNat_u | OtherNat_wf v ∧ p v}):
+  OtherNat_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation OtherNat := {x: OtherNat_u | OtherNat_wf x ∧ True}.
+
+Definition Stop_lem : OtherNat_wf Stop_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Stop : OtherNat :=
+  exist _ Stop_u Stop_lem.
+
+Definition Tick_lem (VV : OtherNat): OtherNat_wf (Tick_u ⌊ VV ⌋) ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Tick (VV : OtherNat): OtherNat :=
+  exist _ (Tick_u ⌊ VV ⌋) (Tick_lem VV).
+
+Definition wf_Tick_VV [VV : OtherNat_u] (p : OtherNat_wf (Tick_u VV)): OtherNat_wf VV.
+Proof.
+  quicksolve.
+Defined.
+
+#[global] Hint Resolve wf_Tick_VV: ref_constr_db.
+
+#[global] Hint Resolve OtherNat_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold OtherNat_wf: wf_constr_db.
+
+#[global] Hint Resolve OtherNat_eq: ref_constr_db.
+
+#[global] Hint Unfold Stop: ref_constr_db.
+
+#[global] Hint Unfold Tick: ref_constr_db.
+
+Inductive Nibble_u: Set :=
+  | Bits_u: SFBit_u → SFBit_u → SFBit_u → SFBit_u → Nibble_u.
+
+Fixpoint Nibble_eq (x y : Nibble_u): bool :=
+  match (x, y) with
+  | (Bits_u VV VV_ VV__ VV___, Bits_u VV' VV_' VV__' VV___') => (((true && (VV ==? VV'))
+                                                                  && (VV_ ==? VV_'))
+                                                                 && (VV__ ==? VV__'))
+                                                                && (VV___ ==? VV___')
+  end.
+
+Definition Nibble_eq_refl : ∀ (x : Nibble_u), is_true (Nibble_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve Nibble_eq_refl: eq_hint_db.
+
+Definition Nibble_eqb_eq : ∀ (s t : Nibble_u), is_true (Nibble_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Nibble_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Nibble: LeibnitzEqB := {
+    equalB' := Nibble_eq;
+    refl' := Nibble_eq_refl;
+    eqb_eq' := Nibble_eqb_eq }.
+
+Fixpoint Nibble_wf (x : Nibble_u): Prop :=
+  match x with
+  | Bits_u VV VV_ VV__ VV___ => (((SFBit_wf VV ∧ True) ∧ (SFBit_wf VV_ ∧ True))
+                                 ∧ (SFBit_wf VV__ ∧ True))
+                                ∧ (SFBit_wf VV___ ∧ True)
+  end.
+
+Theorem Nibble_wf_ref [p : Nibble_u → Prop] (tm : {v: Nibble_u | Nibble_wf v ∧ p v}):
+  Nibble_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation Nibble := {x: Nibble_u | Nibble_wf x ∧ True}.
+
+Definition Bits_lem (VV VV_ VV__ VV___ : SFBit):
+  Nibble_wf (Bits_u ⌊ VV ⌋ ⌊ VV_ ⌋ ⌊ VV__ ⌋ ⌊ VV___ ⌋) ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Bits (VV VV_ VV__ VV___ : SFBit): Nibble :=
+  exist _ (Bits_u ⌊ VV ⌋ ⌊ VV_ ⌋ ⌊ VV__ ⌋ ⌊ VV___ ⌋) (Bits_lem VV VV_ VV__ VV___).
+
+Definition wf_Bits_VV [VV VV_ VV__ VV___ : SFBit_u] (p : Nibble_wf (Bits_u VV VV_ VV__ VV___)):
+  SFBit_wf VV.
+Proof.
+  quicksolve.
+Defined.
+
+#[global] Hint Resolve wf_Bits_VV: ref_constr_db.
+
+Definition wf_Bits_VV_ [VV VV_ VV__ VV___ : SFBit_u] (p : Nibble_wf (Bits_u VV VV_ VV__ VV___)):
+  SFBit_wf VV_.
+Proof.
+  quicksolve.
+Defined.
+
+#[global] Hint Resolve wf_Bits_VV_: ref_constr_db.
+
+Definition wf_Bits_VV__ [VV VV_ VV__ VV___ : SFBit_u] (p : Nibble_wf (Bits_u VV VV_ VV__ VV___)):
+  SFBit_wf VV__.
+Proof.
+  quicksolve.
+Defined.
+
+#[global] Hint Resolve wf_Bits_VV__: ref_constr_db.
+
+Definition wf_Bits_VV___ [VV VV_ VV__ VV___ : SFBit_u] (p : Nibble_wf (Bits_u VV VV_ VV__ VV___)):
+  SFBit_wf VV___.
+Proof.
+  quicksolve.
+Defined.
+
+#[global] Hint Resolve wf_Bits_VV___: ref_constr_db.
+
+#[global] Hint Resolve Nibble_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold Nibble_wf: wf_constr_db.
+
+#[global] Hint Resolve Nibble_eq: ref_constr_db.
+
+#[global] Hint Unfold Bits: ref_constr_db.
+
+Definition allzero (lq_tmp0 : Nibble): SFBool.
+Proof.
+  destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
+  destruct lq_tmp0 as [ds_d3I2 ds_d3I3 ds_d3I4 ds_d3I5].
+  - destruct ds_d3I2 as [|].
+    + destruct ds_d3I3 as [|].
+      ** destruct ds_d3I4 as [|].
+         ** destruct ds_d3I5 as [|].
+            ** refine SFTrue.
+            ** refine SFFalse.
+         ** refine SFFalse.
+      ** refine SFFalse.
+    + refine SFFalse.
+Defined.
+
+Inductive MyNat_u: Set :=
+  | O_u: MyNat_u | S_u: MyNat_u → MyNat_u.
+
+Fixpoint MyNat_eq (x y : MyNat_u): bool :=
+  match (x, y) with
+  | (O_u, O_u) => true
+  | (S_u VV, S_u VV') => true && MyNat_eq VV VV'
+  | (_, _) => false
+  end.
+
+Definition MyNat_eq_refl : ∀ (x : MyNat_u), is_true (MyNat_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve MyNat_eq_refl: eq_hint_db.
+
+Definition MyNat_eqb_eq : ∀ (s t : MyNat_u), is_true (MyNat_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve MyNat_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_MyNat: LeibnitzEqB := {
+    equalB' := MyNat_eq;
+    refl' := MyNat_eq_refl;
+    eqb_eq' := MyNat_eqb_eq }.
+
+Fixpoint MyNat_wf (x : MyNat_u): Prop :=
+  match x with | O_u => True | S_u VV => MyNat_wf VV ∧ True end.
+
+Theorem MyNat_wf_ref [p : MyNat_u → Prop] (tm : {v: MyNat_u | MyNat_wf v ∧ p v}): MyNat_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation MyNat := {x: MyNat_u | MyNat_wf x ∧ True}.
+
+Definition O_lem : MyNat_wf O_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition O : MyNat :=
+  exist _ O_u O_lem.
+
+Definition S_lem (VV : MyNat): MyNat_wf (S_u ⌊ VV ⌋) ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition S (VV : MyNat): MyNat :=
+  exist _ (S_u ⌊ VV ⌋) (S_lem VV).
+
+Definition wf_S_VV [VV : MyNat_u] (p : MyNat_wf (S_u VV)): MyNat_wf VV.
+Proof.
+  quicksolve.
+Defined.
+
+#[global] Hint Resolve wf_S_VV: ref_constr_db.
+
+#[global] Hint Resolve MyNat_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold MyNat_wf: wf_constr_db.
+
+#[global] Hint Resolve MyNat_eq: ref_constr_db.
+
+#[global] Hint Unfold O: ref_constr_db.
+
+#[global] Hint Unfold S: ref_constr_db.
+
+Inductive Natprod_u: Set :=
+  | Pair_u: MyNat_u → MyNat_u → Natprod_u.
+
+Fixpoint Natprod_eq (x y : Natprod_u): bool :=
+  match (x, y) with | (Pair_u n1 n2, Pair_u n1' n2') => (true && (n1 ==? n1')) && (n2 ==? n2') end.
+
+Definition Natprod_eq_refl : ∀ (x : Natprod_u), is_true (Natprod_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve Natprod_eq_refl: eq_hint_db.
+
+Definition Natprod_eqb_eq : ∀ (s t : Natprod_u), is_true (Natprod_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Natprod_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Natprod: LeibnitzEqB := {
+    equalB' := Natprod_eq;
+    refl' := Natprod_eq_refl;
+    eqb_eq' := Natprod_eqb_eq }.
+
+Fixpoint Natprod_wf (x : Natprod_u): Prop :=
+  match x with | Pair_u n1 n2 => (MyNat_wf n1 ∧ True) ∧ (MyNat_wf n2 ∧ True) end.
+
+Theorem Natprod_wf_ref [p : Natprod_u → Prop] (tm : {v: Natprod_u | Natprod_wf v ∧ p v}):
+  Natprod_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation Natprod := {x: Natprod_u | Natprod_wf x ∧ True}.
+
+Definition Pair_lem (n1 n2 : MyNat): Natprod_wf (Pair_u ⌊ n1 ⌋ ⌊ n2 ⌋) ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Pair (n1 n2 : MyNat): Natprod :=
+  exist _ (Pair_u ⌊ n1 ⌋ ⌊ n2 ⌋) (Pair_lem n1 n2).
+
+Definition wf_Pair_n1 [n1 n2 : MyNat_u] (p : Natprod_wf (Pair_u n1 n2)): MyNat_wf n1.
+Proof.
+  quicksolve.
+Defined.
+
+#[global] Hint Resolve wf_Pair_n1: ref_constr_db.
+
+Definition wf_Pair_n2 [n1 n2 : MyNat_u] (p : Natprod_wf (Pair_u n1 n2)): MyNat_wf n2.
+Proof.
+  quicksolve.
+Defined.
+
+#[global] Hint Resolve wf_Pair_n2: ref_constr_db.
+
+#[global] Hint Resolve Natprod_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold Natprod_wf: wf_constr_db.
+
+#[global] Hint Resolve Natprod_eq: ref_constr_db.
+
+#[global] Hint Unfold Pair: ref_constr_db.
+
+Definition swap_pair (p : Natprod): Natprod.
+Proof.
+  destruct p as [p p_p].
+  destruct p as [x y].
+  - refine (Pair
+            (exist (λ (n2 : MyNat_u), MyNat_wf n2 ∧ True) y ltac:(solver))
+            (exist (λ (n1 : MyNat_u), MyNat_wf n1 ∧ True) x ltac:(solver))).
+Defined.
+
+Inductive swap_pair_rel: Natprod_u → Natprod_u → Prop :=
+  | swap_pair_Pair: ∀ x y, swap_pair_rel (Pair_u x y) (Pair_u y x).
+
+#[global] Hint Constructors swap_pair_rel: core_hint_db.
+
+#[global] Instance swap_pair_lookup_rel: dictionary rel swap_pair := { lookup' := swap_pair_rel }.
+
+#[global] Instance swap_pair_getF: getFunc swap_pair_rel := { getF' := swap_pair }.
+
+Definition swap_pair_rel_funct [p : Natprod_u]:
+  ∀ (VV VV' : Natprod_u), swap_pair_rel p VV → (swap_pair_rel p VV' → VV = VV').
+Proof.
+  destruct p as [x y]; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve swap_pair_rel_funct: f_rel_funct_db.
+
+Theorem swap_pair_Pair_lem x y swap_pair_Pair_lem_res:
+  swap_pair_rel (Pair_u x y) swap_pair_Pair_lem_res ↔ swap_pair_Pair_lem_res == Pair_u y x.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite swap_pair_Pair_lem: f_rel_back.
+
+Theorem swap_pair_rel_ex (p : Natprod_u) (p_p : Natprod_wf p ∧ True):
+  swap_pair_rel p ⌊ swap_pair (exist _ p p_p) ⌋.
+Proof.
+  existence_lemma_pre swap_pair;
+  destruct p as [x y];
+  [fix_notations];
+  existence_lemma_quicksolve swap_pair;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve swap_pair_rel_ex: rel_ax_db.
+
+Opaque swap_pair.
+
+Theorem swap_pair__swap_pair_rel_rw (p : Natprod_u) (p_p : Natprod_wf p ∧ True) (VV : Natprod_u):
+  ⌊ swap_pair (exist _ p p_p) ⌋ = VV ↔ swap_pair_rel p VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite swap_pair__swap_pair_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve swap_pair__swap_pair_rel_rw: rel_ax_db.
+
+#[global] Instance swap_pair_lookup_rw: dictionary rwLem swap_pair := {
+    lookup' := swap_pair__swap_pair_rel_rw }.
+
+Theorem swap_pair__swap_pair_rel (p : Natprod) (VV : Natprod_u):
+  ⌊ swap_pair p ⌋ = VV ↔ swap_pair_rel ⌊ p ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite swap_pair__swap_pair_rel: f_rel_funct_db.
+
+Theorem swap_pair__swap_pair_rel' (p_u : Natprod_u) (p : Natprod) (VV : Natprod_u):
+  p_u = ⌊ p ⌋ → ⌊ swap_pair p ⌋ = VV ↔ swap_pair_rel p_u VV.
+Proof.
+  intros ->. refine (swap_pair__swap_pair_rel p VV).
+Qed.
+
+#[global] Hint Resolve swap_pair__swap_pair_rel': f_rel_funct_db.
+
+Definition swap_pair_rel_mk (p : Natprod_u) (p_p : Natprod_wf p ∧ True):
+  {VV: _ | swap_pair_rel p VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, swap_pair_rel p VV) (swap_pair (exist _ p p_p)) _);
+  rewrite <- swap_pair__swap_pair_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve swap_pair_rel_mk: f_rel_funct_db.
+
+#[global] Instance swap_pair_pack:
+  @Pack
+  (Natprod ::RT λ (p : Natprod), nilRT)
+  (Natprod_u ::UT nilUT)
+  ltac:(mkProjectsArgListTG ((Natprod ::RT λ (p : Natprod), nilRT)) ((Natprod_u ::UT nilUT)))
+  Natprod_u
+  (λ (x_48246115 : ArgList (Natprod ::RT λ (p : Natprod), nilRT)) (v_x_48246115 : Natprod_u),
+   ltac:(flattenP (λ (p : Natprod) (VV : Natprod_u), Natprod_wf VV ∧ True) x_48246115 v_x_48246115)).
+Proof.
+  buildPackG swap_pair swap_pair_rel swap_pair__swap_pair_rel swap_pair_rel_funct.
+Defined.
+
+#[global] Instance swap_pair_upack: @uPack (Natprod_u ::UT nilUT) Natprod_u.
+Proof.
+  buildUPackG swap_pair_rel swap_pair_rel_funct.
+Defined.
+
+Definition eqb (n m : MyNat): SFBool.
+Proof.
+  destruct n as [n n_p].
+  destruct m as [m m_p].
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros.
+  - destruct m as [| m'].
+    + refine SFTrue.
+    + refine SFFalse.
+  - destruct m as [| m'].
+    + refine SFFalse.
+    + refine (IH_n' ltac:(try clear IH_n'; solver) m' ltac:(try clear IH_n'; solver)).
+Defined.
+
+Inductive eqb_rel: MyNat_u → MyNat_u → SFBool_u → Prop :=
+  | eqb_O_O: eqb_rel O_u O_u SFTrue_u
+  | eqb_O_S: ∀ m', eqb_rel O_u (S_u m') SFFalse_u
+  | eqb_S_O: ∀ n', eqb_rel (S_u n') O_u SFFalse_u
+  | eqb_S_S: ∀ n' m' eqb_res, eqb_rel n' m' eqb_res → eqb_rel (S_u n') (S_u m') eqb_res.
+
+#[global] Hint Constructors eqb_rel: core_hint_db.
+
+#[global] Instance eqb_lookup_rel: dictionary rel eqb := { lookup' := eqb_rel }.
+
+#[global] Instance eqb_getF: getFunc eqb_rel := { getF' := eqb }.
+
+Definition eqb_rel_funct [n m : MyNat_u]:
+  ∀ (VV VV' : SFBool_u), eqb_rel n m VV → (eqb_rel n m VV' → VV = VV').
+Proof.
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros;
+  [destruct m as [| m'] | destruct m as [| m']];
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve eqb_rel_funct: f_rel_funct_db.
+
+Theorem eqb_O_O_lem eqb_O_O_lem_res: eqb_rel O_u O_u eqb_O_O_lem_res ↔ eqb_O_O_lem_res == SFTrue_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite eqb_O_O_lem: f_rel_back.
+
+Theorem eqb_O_S_lem m' eqb_O_S_lem_res:
+  eqb_rel O_u (S_u m') eqb_O_S_lem_res ↔ eqb_O_S_lem_res == SFFalse_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite eqb_O_S_lem: f_rel_back.
+
+Theorem eqb_S_O_lem n' eqb_S_O_lem_res:
+  eqb_rel (S_u n') O_u eqb_S_O_lem_res ↔ eqb_S_O_lem_res == SFFalse_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite eqb_S_O_lem: f_rel_back.
+
+Theorem eqb_S_S_lem m' n' eqb_S_S_lem_res:
+  eqb_rel (S_u n') (S_u m') eqb_S_S_lem_res
+  ↔ ∃ eqb_res, eqb_rel n' m' eqb_res ∧ eqb_S_S_lem_res == eqb_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite eqb_S_S_lem: f_rel_back.
+
+Theorem eqb_rel_ex (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True):
+  eqb_rel n m ⌊ eqb (exist _ n n_p) (exist _ m m_p) ⌋.
+Proof.
+  existence_lemma_pre eqb;
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros;
+  [destruct m as [| m'];
+   [fix_notations | fix_notations] |
+   destruct m as [| m'];
+   [fix_notations |
+    fix_notations;
+    pose proof (IH_n' ltac:(try clear IH_n'; solver) m' ltac:(try clear IH_n'; solver)) as IH_11391185;
+    try clear IH_n']];
+  existence_lemma_quicksolve eqb;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve eqb_rel_ex: rel_ax_db.
+
+Opaque eqb.
+
+Theorem eqb__eqb_rel_rw
+  (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True) (VV : SFBool_u):
+  ⌊ eqb (exist _ n n_p) (exist _ m m_p) ⌋ = VV ↔ eqb_rel n m VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite eqb__eqb_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve eqb__eqb_rel_rw: rel_ax_db.
+
+#[global] Instance eqb_lookup_rw: dictionary rwLem eqb := { lookup' := eqb__eqb_rel_rw }.
+
+Theorem eqb__eqb_rel (n m : MyNat) (VV : SFBool_u): ⌊ eqb n m ⌋ = VV ↔ eqb_rel ⌊ n ⌋ ⌊ m ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite eqb__eqb_rel: f_rel_funct_db.
+
+Theorem eqb__eqb_rel' (n_u m_u : MyNat_u) (n m : MyNat) (VV : SFBool_u):
+  n_u = ⌊ n ⌋ → (m_u = ⌊ m ⌋ → ⌊ eqb n m ⌋ = VV ↔ eqb_rel n_u m_u VV).
+Proof.
+  intros -> ->. refine (eqb__eqb_rel n m VV).
+Qed.
+
+#[global] Hint Resolve eqb__eqb_rel': f_rel_funct_db.
+
+Definition eqb_rel_mk
+  (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True):
+  {VV: _ | eqb_rel n m VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, eqb_rel n m VV) (eqb (exist _ n n_p) (exist _ m m_p)) _);
+  rewrite <- eqb__eqb_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve eqb_rel_mk: f_rel_funct_db.
+
+#[global] Instance eqb_pack:
+  @Pack
+  (MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT)
+  (MyNat_u ::UT (MyNat_u ::UT nilUT))
+  ltac:(mkProjectsArgListTG ((MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT)) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
+  SFBool_u
+  (λ (x_90301855 : ArgList (MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT))
+     (v_x_90301855 : SFBool_u),
+   ltac:(flattenP (λ (n m : MyNat) (VV : SFBool_u), SFBool_wf VV ∧ True) x_90301855 v_x_90301855)).
+Proof.
+  buildPackG eqb eqb_rel eqb__eqb_rel eqb_rel_funct.
+Defined.
+
+#[global] Instance eqb_upack: @uPack (MyNat_u ::UT (MyNat_u ::UT nilUT)) SFBool_u.
+Proof.
+  buildUPackG eqb_rel eqb_rel_funct.
+Defined.
+
+Definition fstSF (p : Natprod): MyNat.
+Proof.
+  destruct p as [p p_p].
+  destruct p as [n1 n2].
+  - refine (exist (λ (n1 : MyNat_u), MyNat_wf n1 ∧ True) n1 ltac:(solver)).
+Defined.
+
+Inductive fstSF_rel: Natprod_u → MyNat_u → Prop :=
+  | fstSF_Pair: ∀ n1 n2, fstSF_rel (Pair_u n1 n2) n1.
+
+#[global] Hint Constructors fstSF_rel: core_hint_db.
+
+#[global] Instance fstSF_lookup_rel: dictionary rel fstSF := { lookup' := fstSF_rel }.
+
+#[global] Instance fstSF_getF: getFunc fstSF_rel := { getF' := fstSF }.
+
+Definition fstSF_rel_funct [p : Natprod_u]:
+  ∀ (VV VV' : MyNat_u), fstSF_rel p VV → (fstSF_rel p VV' → VV = VV').
+Proof.
+  destruct p as [n1 n2]; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve fstSF_rel_funct: f_rel_funct_db.
+
+Theorem fstSF_Pair_lem n1 n2 fstSF_Pair_lem_res:
+  fstSF_rel (Pair_u n1 n2) fstSF_Pair_lem_res ↔ fstSF_Pair_lem_res == n1.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite fstSF_Pair_lem: f_rel_back.
+
+Theorem fstSF_rel_ex (p : Natprod_u) (p_p : Natprod_wf p ∧ True):
+  fstSF_rel p ⌊ fstSF (exist _ p p_p) ⌋.
+Proof.
+  existence_lemma_pre fstSF;
+  destruct p as [n1 n2];
+  [fix_notations];
+  existence_lemma_quicksolve fstSF;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve fstSF_rel_ex: rel_ax_db.
+
+Opaque fstSF.
+
+Theorem fstSF__fstSF_rel_rw (p : Natprod_u) (p_p : Natprod_wf p ∧ True) (VV : MyNat_u):
+  ⌊ fstSF (exist _ p p_p) ⌋ = VV ↔ fstSF_rel p VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite fstSF__fstSF_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve fstSF__fstSF_rel_rw: rel_ax_db.
+
+#[global] Instance fstSF_lookup_rw: dictionary rwLem fstSF := { lookup' := fstSF__fstSF_rel_rw }.
+
+Theorem fstSF__fstSF_rel (p : Natprod) (VV : MyNat_u): ⌊ fstSF p ⌋ = VV ↔ fstSF_rel ⌊ p ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite fstSF__fstSF_rel: f_rel_funct_db.
+
+Theorem fstSF__fstSF_rel' (p_u : Natprod_u) (p : Natprod) (VV : MyNat_u):
+  p_u = ⌊ p ⌋ → ⌊ fstSF p ⌋ = VV ↔ fstSF_rel p_u VV.
+Proof.
+  intros ->. refine (fstSF__fstSF_rel p VV).
+Qed.
+
+#[global] Hint Resolve fstSF__fstSF_rel': f_rel_funct_db.
+
+Definition fstSF_rel_mk (p : Natprod_u) (p_p : Natprod_wf p ∧ True): {VV: _ | fstSF_rel p VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, fstSF_rel p VV) (fstSF (exist _ p p_p)) _);
+  rewrite <- fstSF__fstSF_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve fstSF_rel_mk: f_rel_funct_db.
+
+#[global] Instance fstSF_pack:
+  @Pack
+  (Natprod ::RT λ (p : Natprod), nilRT)
+  (Natprod_u ::UT nilUT)
+  ltac:(mkProjectsArgListTG ((Natprod ::RT λ (p : Natprod), nilRT)) ((Natprod_u ::UT nilUT)))
+  MyNat_u
+  (λ (x_48246115 : ArgList (Natprod ::RT λ (p : Natprod), nilRT)) (v_x_48246115 : MyNat_u),
+   ltac:(flattenP (λ (p : Natprod) (VV : MyNat_u), MyNat_wf VV ∧ True) x_48246115 v_x_48246115)).
+Proof.
+  buildPackG fstSF fstSF_rel fstSF__fstSF_rel fstSF_rel_funct.
+Defined.
+
+#[global] Instance fstSF_upack: @uPack (Natprod_u ::UT nilUT) MyNat_u.
+Proof.
+  buildUPackG fstSF_rel fstSF_rel_funct.
+Defined.
+
+Definition leb (n m : MyNat): SFBool.
+Proof.
+  destruct n as [n n_p].
+  destruct m as [m m_p].
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros.
+  - refine SFTrue.
+  - destruct m as [| m'].
+    + refine SFFalse.
+    + refine (IH_n' ltac:(try clear IH_n'; solver) m' ltac:(try clear IH_n'; solver)).
+Defined.
+
+Inductive leb_rel: MyNat_u → MyNat_u → SFBool_u → Prop :=
+  | leb_O_x: ∀ m, leb_rel O_u m SFTrue_u
+  | leb_S_O: ∀ n', leb_rel (S_u n') O_u SFFalse_u
+  | leb_S_S: ∀ n' m' leb_res, leb_rel n' m' leb_res → leb_rel (S_u n') (S_u m') leb_res.
+
+#[global] Hint Constructors leb_rel: core_hint_db.
+
+#[global] Instance leb_lookup_rel: dictionary rel leb := { lookup' := leb_rel }.
+
+#[global] Instance leb_getF: getFunc leb_rel := { getF' := leb }.
+
+Definition leb_rel_funct [n m : MyNat_u]:
+  ∀ (VV VV' : SFBool_u), leb_rel n m VV → (leb_rel n m VV' → VV = VV').
+Proof.
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros;
+  [ | destruct m as [| m']];
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve leb_rel_funct: f_rel_funct_db.
+
+Theorem leb_O_x_lem m leb_O_x_lem_res: leb_rel O_u m leb_O_x_lem_res ↔ leb_O_x_lem_res == SFTrue_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite leb_O_x_lem: f_rel_back.
+
+Theorem leb_S_O_lem n' leb_S_O_lem_res:
+  leb_rel (S_u n') O_u leb_S_O_lem_res ↔ leb_S_O_lem_res == SFFalse_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite leb_S_O_lem: f_rel_back.
+
+Theorem leb_S_S_lem m' n' leb_S_S_lem_res:
+  leb_rel (S_u n') (S_u m') leb_S_S_lem_res
+  ↔ ∃ leb_res, leb_rel n' m' leb_res ∧ leb_S_S_lem_res == leb_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite leb_S_S_lem: f_rel_back.
+
+Theorem leb_rel_ex (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True):
+  leb_rel n m ⌊ leb (exist _ n n_p) (exist _ m m_p) ⌋.
+Proof.
+  existence_lemma_pre leb;
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros;
+  [fix_notations |
+   destruct m as [| m'];
+   [fix_notations |
+    fix_notations;
+    pose proof (IH_n' ltac:(try clear IH_n'; solver) m' ltac:(try clear IH_n'; solver)) as IH_11391185;
+    try clear IH_n']];
+  existence_lemma_quicksolve leb;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve leb_rel_ex: rel_ax_db.
+
+Opaque leb.
+
+Theorem leb__leb_rel_rw
+  (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True) (VV : SFBool_u):
+  ⌊ leb (exist _ n n_p) (exist _ m m_p) ⌋ = VV ↔ leb_rel n m VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite leb__leb_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve leb__leb_rel_rw: rel_ax_db.
+
+#[global] Instance leb_lookup_rw: dictionary rwLem leb := { lookup' := leb__leb_rel_rw }.
+
+Theorem leb__leb_rel (n m : MyNat) (VV : SFBool_u): ⌊ leb n m ⌋ = VV ↔ leb_rel ⌊ n ⌋ ⌊ m ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite leb__leb_rel: f_rel_funct_db.
+
+Theorem leb__leb_rel' (n_u m_u : MyNat_u) (n m : MyNat) (VV : SFBool_u):
+  n_u = ⌊ n ⌋ → (m_u = ⌊ m ⌋ → ⌊ leb n m ⌋ = VV ↔ leb_rel n_u m_u VV).
+Proof.
+  intros -> ->. refine (leb__leb_rel n m VV).
+Qed.
+
+#[global] Hint Resolve leb__leb_rel': f_rel_funct_db.
+
+Definition leb_rel_mk
+  (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True):
+  {VV: _ | leb_rel n m VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, leb_rel n m VV) (leb (exist _ n n_p) (exist _ m m_p)) _);
+  rewrite <- leb__leb_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve leb_rel_mk: f_rel_funct_db.
+
+#[global] Instance leb_pack:
+  @Pack
+  (MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT)
+  (MyNat_u ::UT (MyNat_u ::UT nilUT))
+  ltac:(mkProjectsArgListTG ((MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT)) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
+  SFBool_u
+  (λ (x_90301855 : ArgList (MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT))
+     (v_x_90301855 : SFBool_u),
+   ltac:(flattenP (λ (n m : MyNat) (VV : SFBool_u), SFBool_wf VV ∧ True) x_90301855 v_x_90301855)).
+Proof.
+  buildPackG leb leb_rel leb__leb_rel leb_rel_funct.
+Defined.
+
+#[global] Instance leb_upack: @uPack (MyNat_u ::UT (MyNat_u ::UT nilUT)) SFBool_u.
+Proof.
+  buildUPackG leb_rel leb_rel_funct.
+Defined.
+
+Definition ltb (n m : MyNat): SFBool.
+Proof.
+  destruct n as [n n_p].
+  destruct m as [m m_p].
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros.
+  - destruct m as [| m'].
+    + refine SFFalse.
+    + refine SFTrue.
+  - destruct m as [| m'].
+    + refine SFFalse.
+    + refine (IH_n' ltac:(try clear IH_n'; solver) m' ltac:(try clear IH_n'; solver)).
+Defined.
+
+Inductive ltb_rel: MyNat_u → MyNat_u → SFBool_u → Prop :=
+  | ltb_O_O: ltb_rel O_u O_u SFFalse_u
+  | ltb_O_S: ∀ m', ltb_rel O_u (S_u m') SFTrue_u
+  | ltb_S_O: ∀ n', ltb_rel (S_u n') O_u SFFalse_u
+  | ltb_S_S: ∀ n' m' ltb_res, ltb_rel n' m' ltb_res → ltb_rel (S_u n') (S_u m') ltb_res.
+
+#[global] Hint Constructors ltb_rel: core_hint_db.
+
+#[global] Instance ltb_lookup_rel: dictionary rel ltb := { lookup' := ltb_rel }.
+
+#[global] Instance ltb_getF: getFunc ltb_rel := { getF' := ltb }.
+
+Definition ltb_rel_funct [n m : MyNat_u]:
+  ∀ (VV VV' : SFBool_u), ltb_rel n m VV → (ltb_rel n m VV' → VV = VV').
+Proof.
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros;
+  [destruct m as [| m'] | destruct m as [| m']];
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve ltb_rel_funct: f_rel_funct_db.
+
+Theorem ltb_O_O_lem ltb_O_O_lem_res: ltb_rel O_u O_u ltb_O_O_lem_res ↔ ltb_O_O_lem_res == SFFalse_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite ltb_O_O_lem: f_rel_back.
+
+Theorem ltb_O_S_lem m' ltb_O_S_lem_res:
+  ltb_rel O_u (S_u m') ltb_O_S_lem_res ↔ ltb_O_S_lem_res == SFTrue_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite ltb_O_S_lem: f_rel_back.
+
+Theorem ltb_S_O_lem n' ltb_S_O_lem_res:
+  ltb_rel (S_u n') O_u ltb_S_O_lem_res ↔ ltb_S_O_lem_res == SFFalse_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite ltb_S_O_lem: f_rel_back.
+
+Theorem ltb_S_S_lem m' n' ltb_S_S_lem_res:
+  ltb_rel (S_u n') (S_u m') ltb_S_S_lem_res
+  ↔ ∃ ltb_res, ltb_rel n' m' ltb_res ∧ ltb_S_S_lem_res == ltb_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite ltb_S_S_lem: f_rel_back.
+
+Theorem ltb_rel_ex (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True):
+  ltb_rel n m ⌊ ltb (exist _ n n_p) (exist _ m m_p) ⌋.
+Proof.
+  existence_lemma_pre ltb;
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros;
+  [destruct m as [| m'];
+   [fix_notations | fix_notations] |
+   destruct m as [| m'];
+   [fix_notations |
+    fix_notations;
+    pose proof (IH_n' ltac:(try clear IH_n'; solver) m' ltac:(try clear IH_n'; solver)) as IH_11391185;
+    try clear IH_n']];
+  existence_lemma_quicksolve ltb;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve ltb_rel_ex: rel_ax_db.
+
+Opaque ltb.
+
+Theorem ltb__ltb_rel_rw
+  (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True) (VV : SFBool_u):
+  ⌊ ltb (exist _ n n_p) (exist _ m m_p) ⌋ = VV ↔ ltb_rel n m VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite ltb__ltb_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve ltb__ltb_rel_rw: rel_ax_db.
+
+#[global] Instance ltb_lookup_rw: dictionary rwLem ltb := { lookup' := ltb__ltb_rel_rw }.
+
+Theorem ltb__ltb_rel (n m : MyNat) (VV : SFBool_u): ⌊ ltb n m ⌋ = VV ↔ ltb_rel ⌊ n ⌋ ⌊ m ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite ltb__ltb_rel: f_rel_funct_db.
+
+Theorem ltb__ltb_rel' (n_u m_u : MyNat_u) (n m : MyNat) (VV : SFBool_u):
+  n_u = ⌊ n ⌋ → (m_u = ⌊ m ⌋ → ⌊ ltb n m ⌋ = VV ↔ ltb_rel n_u m_u VV).
+Proof.
+  intros -> ->. refine (ltb__ltb_rel n m VV).
+Qed.
+
+#[global] Hint Resolve ltb__ltb_rel': f_rel_funct_db.
+
+Definition ltb_rel_mk
+  (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True):
+  {VV: _ | ltb_rel n m VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, ltb_rel n m VV) (ltb (exist _ n n_p) (exist _ m m_p)) _);
+  rewrite <- ltb__ltb_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve ltb_rel_mk: f_rel_funct_db.
+
+#[global] Instance ltb_pack:
+  @Pack
+  (MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT)
+  (MyNat_u ::UT (MyNat_u ::UT nilUT))
+  ltac:(mkProjectsArgListTG ((MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT)) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
+  SFBool_u
+  (λ (x_90301855 : ArgList (MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT))
+     (v_x_90301855 : SFBool_u),
+   ltac:(flattenP (λ (n m : MyNat) (VV : SFBool_u), SFBool_wf VV ∧ True) x_90301855 v_x_90301855)).
+Proof.
+  buildPackG ltb ltb_rel ltb__ltb_rel ltb_rel_funct.
+Defined.
+
+#[global] Instance ltb_upack: @uPack (MyNat_u ::UT (MyNat_u ::UT nilUT)) SFBool_u.
+Proof.
+  buildUPackG ltb_rel ltb_rel_funct.
+Defined.
+
+Definition minus (n m : MyNat): MyNat.
+Proof.
+  destruct n as [n n_p].
+  destruct m as [m m_p].
+  try revert m_p; generalize dependent m; induction n as [| ds_d3Hz IH_ds_d3Hz]; intros.
+  - refine O.
+  - destruct m as [| m'].
+    + refine (S (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) ds_d3Hz ltac:(solver))).
+    + refine (IH_ds_d3Hz ltac:(try clear IH_ds_d3Hz; solver) m' ltac:(try clear IH_ds_d3Hz; solver)).
+Defined.
+
+Inductive minus_rel: MyNat_u → MyNat_u → MyNat_u → Prop :=
+  | minus_O_x: ∀ m, minus_rel O_u m O_u
+  | minus_S_O: ∀ ds_d3Hz, minus_rel (S_u ds_d3Hz) O_u (S_u ds_d3Hz)
+  | minus_S_S: ∀ ds_d3Hz m' minus_res,
+               minus_rel ds_d3Hz m' minus_res → minus_rel (S_u ds_d3Hz) (S_u m') minus_res.
+
+#[global] Hint Constructors minus_rel: core_hint_db.
+
+#[global] Instance minus_lookup_rel: dictionary rel minus := { lookup' := minus_rel }.
+
+#[global] Instance minus_getF: getFunc minus_rel := { getF' := minus }.
+
+Definition minus_rel_funct [n m : MyNat_u]:
+  ∀ (VV VV' : MyNat_u), minus_rel n m VV → (minus_rel n m VV' → VV = VV').
+Proof.
+  try revert m_p; generalize dependent m; induction n as [| ds_d3Hz IH_ds_d3Hz]; intros;
+  [ | destruct m as [| m']];
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve minus_rel_funct: f_rel_funct_db.
+
+Theorem minus_O_x_lem m minus_O_x_lem_res:
+  minus_rel O_u m minus_O_x_lem_res ↔ minus_O_x_lem_res == O_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite minus_O_x_lem: f_rel_back.
+
+Theorem minus_S_O_lem ds_d3Hz minus_S_O_lem_res:
+  minus_rel (S_u ds_d3Hz) O_u minus_S_O_lem_res ↔ minus_S_O_lem_res == S_u ds_d3Hz.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite minus_S_O_lem: f_rel_back.
+
+Theorem minus_S_S_lem ds_d3Hz m' minus_S_S_lem_res:
+  minus_rel (S_u ds_d3Hz) (S_u m') minus_S_S_lem_res
+  ↔ ∃ minus_res, minus_rel ds_d3Hz m' minus_res ∧ minus_S_S_lem_res == minus_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite minus_S_S_lem: f_rel_back.
+
+Theorem minus_rel_ex
+  (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True):
+  minus_rel n m ⌊ minus (exist _ n n_p) (exist _ m m_p) ⌋.
+Proof.
+  existence_lemma_pre minus;
+  try revert m_p; generalize dependent m; induction n as [| ds_d3Hz IH_ds_d3Hz]; intros;
+  [fix_notations |
+   destruct m as [| m'];
+   [fix_notations |
+    fix_notations;
+    pose proof (IH_ds_d3Hz
+                ltac:(try clear IH_ds_d3Hz; solver)
+                m'
+                ltac:(try clear IH_ds_d3Hz; solver)) as IH_55484705;
+    try clear IH_ds_d3Hz]];
+  existence_lemma_quicksolve minus;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve minus_rel_ex: rel_ax_db.
+
+Opaque minus.
+
+Theorem minus__minus_rel_rw
+  (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True) (VV : MyNat_u):
+  ⌊ minus (exist _ n n_p) (exist _ m m_p) ⌋ = VV ↔ minus_rel n m VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite minus__minus_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve minus__minus_rel_rw: rel_ax_db.
+
+#[global] Instance minus_lookup_rw: dictionary rwLem minus := { lookup' := minus__minus_rel_rw }.
+
+Theorem minus__minus_rel (n m : MyNat) (VV : MyNat_u):
+  ⌊ minus n m ⌋ = VV ↔ minus_rel ⌊ n ⌋ ⌊ m ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite minus__minus_rel: f_rel_funct_db.
+
+Theorem minus__minus_rel' (n_u m_u : MyNat_u) (n m : MyNat) (VV : MyNat_u):
+  n_u = ⌊ n ⌋ → (m_u = ⌊ m ⌋ → ⌊ minus n m ⌋ = VV ↔ minus_rel n_u m_u VV).
+Proof.
+  intros -> ->. refine (minus__minus_rel n m VV).
+Qed.
+
+#[global] Hint Resolve minus__minus_rel': f_rel_funct_db.
+
+Definition minus_rel_mk
+  (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True):
+  {VV: _ | minus_rel n m VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, minus_rel n m VV) (minus (exist _ n n_p) (exist _ m m_p)) _);
+  rewrite <- minus__minus_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve minus_rel_mk: f_rel_funct_db.
+
+#[global] Instance minus_pack:
+  @Pack
+  (MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT)
+  (MyNat_u ::UT (MyNat_u ::UT nilUT))
+  ltac:(mkProjectsArgListTG ((MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT)) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
+  MyNat_u
+  (λ (x_90301855 : ArgList (MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT))
+     (v_x_90301855 : MyNat_u),
+   ltac:(flattenP (λ (n m : MyNat) (VV : MyNat_u), MyNat_wf VV ∧ True) x_90301855 v_x_90301855)).
+Proof.
+  buildPackG minus minus_rel minus__minus_rel minus_rel_funct.
+Defined.
+
+#[global] Instance minus_upack: @uPack (MyNat_u ::UT (MyNat_u ::UT nilUT)) MyNat_u.
+Proof.
+  buildUPackG minus_rel minus_rel_funct.
+Defined.
+
+Definition minus_n_n (n : MyNat):
+  {{∀ minus_res, minus_rel ⌊ n ⌋ ⌊ n ⌋ minus_res → minus_res == O_u}}.
+Proof.
+  destruct n as [n n_p].
+  induction n as [| n' IH_n'].
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit), ∀ minus_res, minus_rel ⌊ n ⌋ ⌊ n ⌋ minus_res → minus_res == O_u)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit), ∀ minus_res, minus_rel ⌊ n ⌋ ⌊ n ⌋ minus_res → minus_res == O_u)
+            (IH_n' ltac:(try clear IH_n'; solver))
+            ltac:(solver)).
+Defined.
+
+Definition minustwo (lq_tmp0 : MyNat): MyNat.
+Proof.
+  destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
+  destruct lq_tmp0 as [| ds_d3HZ].
+  - refine O.
+  - destruct ds_d3HZ as [| n'].
+    + refine O.
+    + refine (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)).
+Defined.
+
+Definition one : MyNat.
+Proof.
+  refine (S O).
+Defined.
+
+Inductive one_rel: MyNat_u → Prop :=
+  | one_Constr: one_rel (S_u O_u).
+
+#[global] Hint Constructors one_rel: core_hint_db.
+
+#[global] Instance one_lookup_rel: dictionary rel one := { lookup' := one_rel }.
+
+#[global] Instance one_getF: getFunc one_rel := { getF' := one }.
+
+Definition one_rel_funct : ∀ (VV VV' : MyNat_u), one_rel VV → (one_rel VV' → VV = VV').
+Proof.
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve one_rel_funct: f_rel_funct_db.
+
+Theorem one_inv_lem one_inv_lem_res: one_rel one_inv_lem_res ↔ one_inv_lem_res == S_u O_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite one_inv_lem: f_rel_back.
+
+Theorem one_rel_ex : one_rel ⌊ one ⌋.
+Proof.
+  existence_lemma_pre one;
+  fix_notations;
+  existence_lemma_quicksolve one;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve one_rel_ex: rel_ax_db.
+
+Opaque one.
+
+Theorem one__one_rel_rw (VV : MyNat_u): ⌊ one ⌋ = VV ↔ one_rel VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite one__one_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve one__one_rel_rw: rel_ax_db.
+
+#[global] Instance one_lookup_rw: dictionary rwLem one := { lookup' := one__one_rel_rw }.
+
+Theorem one__one_rel (VV : MyNat_u): ⌊ one ⌋ = VV ↔ one_rel VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite one__one_rel: f_rel_funct_db.
+
+Theorem one__one_rel' (VV : MyNat_u): ⌊ one ⌋ = VV ↔ one_rel VV.
+Proof.
+  intros. refine (one__one_rel VV).
+Qed.
+
+#[global] Hint Resolve one__one_rel': f_rel_funct_db.
+
+Definition one_rel_mk : {VV: _ | one_rel VV}.
+Proof.
+  intros; refine (subsumptionCast _ (λ VV, one_rel VV) one _); rewrite <- one__one_rel'; quicksolve.
+Qed.
+
+#[global] Hint Resolve one_rel_mk: f_rel_funct_db.
+
+Definition plus (n m : MyNat): MyNat.
+Proof.
+  destruct n as [n n_p].
+  destruct m as [m m_p].
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros.
+  - refine (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver)).
+  - refine (S (IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver))).
+Defined.
+
+Inductive plus_rel: MyNat_u → MyNat_u → MyNat_u → Prop :=
+  | plus_O_x: ∀ m, plus_rel O_u m m
+  | plus_S_x: ∀ n' m plus_res, plus_rel n' m plus_res → plus_rel (S_u n') m (S_u plus_res).
+
+#[global] Hint Constructors plus_rel: core_hint_db.
+
+#[global] Instance plus_lookup_rel: dictionary rel plus := { lookup' := plus_rel }.
+
+#[global] Instance plus_getF: getFunc plus_rel := { getF' := plus }.
+
+Definition plus_rel_funct [n m : MyNat_u]:
+  ∀ (VV VV' : MyNat_u), plus_rel n m VV → (plus_rel n m VV' → VV = VV').
+Proof.
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve plus_rel_funct: f_rel_funct_db.
+
+Theorem plus_O_x_lem m plus_O_x_lem_res: plus_rel O_u m plus_O_x_lem_res ↔ plus_O_x_lem_res == m.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite plus_O_x_lem: f_rel_back.
+
+Theorem plus_S_x_lem m n' plus_S_x_lem_res:
+  plus_rel (S_u n') m plus_S_x_lem_res
+  ↔ ∃ plus_res, plus_rel n' m plus_res ∧ plus_S_x_lem_res == S_u plus_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite plus_S_x_lem: f_rel_back.
+
+Theorem plus_rel_ex (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True):
+  plus_rel n m ⌊ plus (exist _ n n_p) (exist _ m m_p) ⌋.
+Proof.
+  existence_lemma_pre plus;
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros;
+  [fix_notations | fix_notations];
+  existence_lemma_quicksolve plus;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve plus_rel_ex: rel_ax_db.
+
+Opaque plus.
+
+Theorem plus__plus_rel_rw
+  (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True) (VV : MyNat_u):
+  ⌊ plus (exist _ n n_p) (exist _ m m_p) ⌋ = VV ↔ plus_rel n m VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite plus__plus_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve plus__plus_rel_rw: rel_ax_db.
+
+#[global] Instance plus_lookup_rw: dictionary rwLem plus := { lookup' := plus__plus_rel_rw }.
+
+Theorem plus__plus_rel (n m : MyNat) (VV : MyNat_u): ⌊ plus n m ⌋ = VV ↔ plus_rel ⌊ n ⌋ ⌊ m ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite plus__plus_rel: f_rel_funct_db.
+
+Theorem plus__plus_rel' (n_u m_u : MyNat_u) (n m : MyNat) (VV : MyNat_u):
+  n_u = ⌊ n ⌋ → (m_u = ⌊ m ⌋ → ⌊ plus n m ⌋ = VV ↔ plus_rel n_u m_u VV).
+Proof.
+  intros -> ->. refine (plus__plus_rel n m VV).
+Qed.
+
+#[global] Hint Resolve plus__plus_rel': f_rel_funct_db.
+
+Definition plus_rel_mk
+  (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True):
+  {VV: _ | plus_rel n m VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, plus_rel n m VV) (plus (exist _ n n_p) (exist _ m m_p)) _);
+  rewrite <- plus__plus_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve plus_rel_mk: f_rel_funct_db.
+
+#[global] Instance plus_pack:
+  @Pack
+  (MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT)
+  (MyNat_u ::UT (MyNat_u ::UT nilUT))
+  ltac:(mkProjectsArgListTG ((MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT)) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
+  MyNat_u
+  (λ (x_90301855 : ArgList (MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT))
+     (v_x_90301855 : MyNat_u),
+   ltac:(flattenP (λ (n m : MyNat) (VV : MyNat_u), MyNat_wf VV ∧ True) x_90301855 v_x_90301855)).
+Proof.
+  buildPackG plus plus_rel plus__plus_rel plus_rel_funct.
+Defined.
+
+#[global] Instance plus_upack: @uPack (MyNat_u ::UT (MyNat_u ::UT nilUT)) MyNat_u.
+Proof.
+  buildUPackG plus_rel plus_rel_funct.
+Defined.
+
+Definition add_0_r (n : MyNat): {{∀ plus_res, plus_rel ⌊ n ⌋ O_u plus_res → plus_res == ⌊ n ⌋}}.
+Proof.
+  destruct n as [n n_p].
+  induction n as [| n' IH_n'].
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit), ∀ plus_res, plus_rel ⌊ n ⌋ O_u plus_res → plus_res == ⌊ n ⌋)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit), ∀ plus_res, plus_rel ⌊ n ⌋ O_u plus_res → plus_res == ⌊ n ⌋)
+            (IH_n' ltac:(try clear IH_n'; solver))
+            ltac:(solver)).
+Defined.
+
+Definition add_assoc (n m p : MyNat):
+  {{∀ plus_res,
+    plus_rel ⌊ m ⌋ ⌊ p ⌋ plus_res
+    → ∀ plus_res_2,
+      plus_rel ⌊ n ⌋ plus_res plus_res_2
+      → ∀ plus_res_3,
+        plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res_3
+        → ∀ plus_res_4, plus_rel plus_res_3 ⌊ p ⌋ plus_res_4 → plus_res_2 == plus_res_4}}.
+Proof.
+  destruct n as [n n_p].
+  destruct m as [m m_p].
+  destruct p as [p p_p].
+  try revert p_p; generalize dependent p; try revert m_p; generalize dependent m;
+  induction n as [| n' IH_n'];
+  intros.
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ plus_res,
+             plus_rel ⌊ m ⌋ ⌊ p ⌋ plus_res
+             → ∀ plus_res_2,
+               plus_rel ⌊ n ⌋ plus_res plus_res_2
+               → ∀ plus_res_3,
+                 plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res_3
+                 → ∀ plus_res_4, plus_rel plus_res_3 ⌊ p ⌋ plus_res_4 → plus_res_2 == plus_res_4)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ plus_res,
+             plus_rel ⌊ m ⌋ ⌊ p ⌋ plus_res
+             → ∀ plus_res_2,
+               plus_rel ⌊ n ⌋ plus_res plus_res_2
+               → ∀ plus_res_3,
+                 plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res_3
+                 → ∀ plus_res_4, plus_rel plus_res_3 ⌊ p ⌋ plus_res_4 → plus_res_2 == plus_res_4)
+            (IH_n'
+             ltac:(try clear IH_n'; solver)
+             m
+             ltac:(try clear IH_n'; solver)
+             p
+             ltac:(try clear IH_n'; solver))
+            ltac:(solver)).
+Defined.
+
+Definition add_succ_r (n m : MyNat):
+  {{∀ plus_res,
+    plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res
+    → ∀ plus_res_2, plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res_2 → plus_res == S_u plus_res_2}}.
+Proof.
+  destruct n as [n n_p].
+  destruct m as [m m_p].
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros.
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ plus_res,
+             plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res
+             → ∀ plus_res_2, plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res_2 → plus_res == S_u plus_res_2)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ plus_res,
+             plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res
+             → ∀ plus_res_2, plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res_2 → plus_res == S_u plus_res_2)
+            (IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver))
+            ltac:(solver)).
+Defined.
+
+Definition mult (n m : MyNat): MyNat.
+Proof.
+  destruct n as [n n_p].
+  destruct m as [m m_p].
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros.
+  - refine O.
+  - refine (plus
+            (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))
+            (IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver))).
+Defined.
+
+Inductive mult_rel: MyNat_u → MyNat_u → MyNat_u → Prop :=
+  | mult_O_x: ∀ m, mult_rel O_u m O_u
+  | mult_S_x: ∀ n' m mult_res,
+              mult_rel n' m mult_res → ∀ plus_res, plus_rel m mult_res plus_res → mult_rel (S_u n') m plus_res.
+
+#[global] Hint Constructors mult_rel: core_hint_db.
+
+#[global] Instance mult_lookup_rel: dictionary rel mult := { lookup' := mult_rel }.
+
+#[global] Instance mult_getF: getFunc mult_rel := { getF' := mult }.
+
+Definition mult_rel_funct [n m : MyNat_u]:
+  ∀ (VV VV' : MyNat_u), mult_rel n m VV → (mult_rel n m VV' → VV = VV').
+Proof.
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve mult_rel_funct: f_rel_funct_db.
+
+Theorem mult_O_x_lem m mult_O_x_lem_res: mult_rel O_u m mult_O_x_lem_res ↔ mult_O_x_lem_res == O_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite mult_O_x_lem: f_rel_back.
+
+Theorem mult_S_x_lem m n' mult_S_x_lem_res:
+  mult_rel (S_u n') m mult_S_x_lem_res
+  ↔ ∃ mult_res,
+    mult_rel n' m mult_res ∧ ∃ plus_res, plus_rel m mult_res plus_res ∧ mult_S_x_lem_res == plus_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite mult_S_x_lem: f_rel_back.
+
+Theorem mult_rel_ex (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True):
+  mult_rel n m ⌊ mult (exist _ n n_p) (exist _ m m_p) ⌋.
+Proof.
+  existence_lemma_pre mult;
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros;
+  [fix_notations | fix_notations];
+  existence_lemma_quicksolve mult;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve mult_rel_ex: rel_ax_db.
+
+Opaque mult.
+
+Theorem mult__mult_rel_rw
+  (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True) (VV : MyNat_u):
+  ⌊ mult (exist _ n n_p) (exist _ m m_p) ⌋ = VV ↔ mult_rel n m VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite mult__mult_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve mult__mult_rel_rw: rel_ax_db.
+
+#[global] Instance mult_lookup_rw: dictionary rwLem mult := { lookup' := mult__mult_rel_rw }.
+
+Theorem mult__mult_rel (n m : MyNat) (VV : MyNat_u): ⌊ mult n m ⌋ = VV ↔ mult_rel ⌊ n ⌋ ⌊ m ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite mult__mult_rel: f_rel_funct_db.
+
+Theorem mult__mult_rel' (n_u m_u : MyNat_u) (n m : MyNat) (VV : MyNat_u):
+  n_u = ⌊ n ⌋ → (m_u = ⌊ m ⌋ → ⌊ mult n m ⌋ = VV ↔ mult_rel n_u m_u VV).
+Proof.
+  intros -> ->. refine (mult__mult_rel n m VV).
+Qed.
+
+#[global] Hint Resolve mult__mult_rel': f_rel_funct_db.
+
+Definition mult_rel_mk
+  (n : MyNat_u) (n_p : MyNat_wf n ∧ True) (m : MyNat_u) (m_p : MyNat_wf m ∧ True):
+  {VV: _ | mult_rel n m VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, mult_rel n m VV) (mult (exist _ n n_p) (exist _ m m_p)) _);
+  rewrite <- mult__mult_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve mult_rel_mk: f_rel_funct_db.
+
+#[global] Instance mult_pack:
+  @Pack
+  (MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT)
+  (MyNat_u ::UT (MyNat_u ::UT nilUT))
+  ltac:(mkProjectsArgListTG ((MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT)) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
+  MyNat_u
+  (λ (x_90301855 : ArgList (MyNat ::RT λ (n : MyNat), MyNat ::RT λ (m : MyNat), nilRT))
+     (v_x_90301855 : MyNat_u),
+   ltac:(flattenP (λ (n m : MyNat) (VV : MyNat_u), MyNat_wf VV ∧ True) x_90301855 v_x_90301855)).
+Proof.
+  buildPackG mult mult_rel mult__mult_rel mult_rel_funct.
+Defined.
+
+#[global] Instance mult_upack: @uPack (MyNat_u ::UT (MyNat_u ::UT nilUT)) MyNat_u.
+Proof.
+  buildUPackG mult_rel mult_rel_funct.
+Defined.
+
+Definition factorial (lq_tmp0 : MyNat): MyNat.
+Proof.
+  destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
+  induction lq_tmp0 as [| n' IH_n'].
+  - refine (S O).
+  - refine (mult
+            (S (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)))
+            (IH_n' ltac:(try clear IH_n'; solver))).
+Defined.
+
+Inductive factorial_rel: MyNat_u → MyNat_u → Prop :=
+  | factorial_O: factorial_rel O_u (S_u O_u)
+  | factorial_S: ∀ n' factorial_res,
+                 factorial_rel n' factorial_res
+                 → ∀ mult_res, mult_rel (S_u n') factorial_res mult_res → factorial_rel (S_u n') mult_res.
+
+#[global] Hint Constructors factorial_rel: core_hint_db.
+
+#[global] Instance factorial_lookup_rel: dictionary rel factorial := { lookup' := factorial_rel }.
+
+#[global] Instance factorial_getF: getFunc factorial_rel := { getF' := factorial }.
+
+Definition factorial_rel_funct [lq_tmp0 : MyNat_u]:
+  ∀ (VV VV' : MyNat_u), factorial_rel lq_tmp0 VV → (factorial_rel lq_tmp0 VV' → VV = VV').
+Proof.
+  induction lq_tmp0 as [| n' IH_n']; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve factorial_rel_funct: f_rel_funct_db.
+
+Theorem factorial_O_lem factorial_O_lem_res:
+  factorial_rel O_u factorial_O_lem_res ↔ factorial_O_lem_res == S_u O_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite factorial_O_lem: f_rel_back.
+
+Theorem factorial_S_lem n' factorial_S_lem_res:
+  factorial_rel (S_u n') factorial_S_lem_res
+  ↔ ∃ factorial_res,
+    factorial_rel n' factorial_res
+    ∧ ∃ mult_res, mult_rel (S_u n') factorial_res mult_res ∧ factorial_S_lem_res == mult_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite factorial_S_lem: f_rel_back.
+
+Theorem factorial_rel_ex (lq_tmp0 : MyNat_u) (lq_tmp0_p : MyNat_wf lq_tmp0 ∧ True):
+  factorial_rel lq_tmp0 ⌊ factorial (exist _ lq_tmp0 lq_tmp0_p) ⌋.
+Proof.
+  existence_lemma_pre factorial;
+  induction lq_tmp0 as [| n' IH_n'];
+  [fix_notations | fix_notations];
+  existence_lemma_quicksolve factorial;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve factorial_rel_ex: rel_ax_db.
+
+Opaque factorial.
+
+Theorem factorial__factorial_rel_rw
+  (lq_tmp0 : MyNat_u) (lq_tmp0_p : MyNat_wf lq_tmp0 ∧ True) (VV : MyNat_u):
+  ⌊ factorial (exist _ lq_tmp0 lq_tmp0_p) ⌋ = VV ↔ factorial_rel lq_tmp0 VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite factorial__factorial_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve factorial__factorial_rel_rw: rel_ax_db.
+
+#[global] Instance factorial_lookup_rw: dictionary rwLem factorial := {
+    lookup' := factorial__factorial_rel_rw }.
+
+Theorem factorial__factorial_rel (lq_tmp0 : MyNat) (VV : MyNat_u):
+  ⌊ factorial lq_tmp0 ⌋ = VV ↔ factorial_rel ⌊ lq_tmp0 ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite factorial__factorial_rel: f_rel_funct_db.
+
+Theorem factorial__factorial_rel' (lq_tmp0_u : MyNat_u) (lq_tmp0 : MyNat) (VV : MyNat_u):
+  lq_tmp0_u = ⌊ lq_tmp0 ⌋ → ⌊ factorial lq_tmp0 ⌋ = VV ↔ factorial_rel lq_tmp0_u VV.
+Proof.
+  intros ->. refine (factorial__factorial_rel lq_tmp0 VV).
+Qed.
+
+#[global] Hint Resolve factorial__factorial_rel': f_rel_funct_db.
+
+Definition factorial_rel_mk (lq_tmp0 : MyNat_u) (lq_tmp0_p : MyNat_wf lq_tmp0 ∧ True):
+  {VV: _ | factorial_rel lq_tmp0 VV}.
+Proof.
+  intros;
+  refine (subsumptionCast
+          _
+          (λ VV, factorial_rel lq_tmp0 VV)
+          (factorial (exist _ lq_tmp0 lq_tmp0_p))
+          _);
+  rewrite <- factorial__factorial_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve factorial_rel_mk: f_rel_funct_db.
+
+#[global] Instance factorial_pack:
+  @Pack
+  (MyNat ::RT λ (lq_tmp0 : MyNat), nilRT)
+  (MyNat_u ::UT nilUT)
+  ltac:(mkProjectsArgListTG ((MyNat ::RT λ (lq_tmp0 : MyNat), nilRT)) ((MyNat_u ::UT nilUT)))
+  MyNat_u
+  (λ (x_43244490 : ArgList (MyNat ::RT λ (lq_tmp0 : MyNat), nilRT)) (v_x_43244490 : MyNat_u),
+   ltac:(flattenP (λ (lq_tmp0 : MyNat) (VV : MyNat_u), MyNat_wf VV ∧ True) x_43244490 v_x_43244490)).
+Proof.
+  buildPackG factorial factorial_rel factorial__factorial_rel factorial_rel_funct.
+Defined.
+
+#[global] Instance factorial_upack: @uPack (MyNat_u ::UT nilUT) MyNat_u.
+Proof.
+  buildUPackG factorial_rel factorial_rel_funct.
+Defined.
+
+Definition mul_0_r (n : MyNat): {{∀ mult_res, mult_rel ⌊ n ⌋ O_u mult_res → mult_res == O_u}}.
+Proof.
+  destruct n as [n n_p].
+  induction n as [| n' IH_n'].
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit), ∀ mult_res, mult_rel ⌊ n ⌋ O_u mult_res → mult_res == O_u)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit), ∀ mult_res, mult_rel ⌊ n ⌋ O_u mult_res → mult_res == O_u)
+            (IH_n' ltac:(try clear IH_n'; solver))
+            ltac:(solver)).
+Defined.
+
+Definition mult_0_1 (n : MyNat): {{∀ mult_res, mult_rel O_u ⌊ n ⌋ mult_res → mult_res == O_u}}.
+Proof.
+  destruct n as [n n_p].
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit), ∀ mult_res, mult_rel O_u ⌊ n ⌋ mult_res → mult_res == O_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition mult_n_O (n : MyNat): {{∀ mult_res, mult_rel ⌊ n ⌋ O_u mult_res → O_u == mult_res}}.
+Proof.
+  destruct n as [n n_p].
+  induction n as [| n' IH_n'].
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit), ∀ mult_res, mult_rel ⌊ n ⌋ O_u mult_res → O_u == mult_res)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit), ∀ mult_res, mult_rel ⌊ n ⌋ O_u mult_res → O_u == mult_res)
+            (IH_n' ltac:(try clear IH_n'; solver))
+            ltac:(solver)).
+Defined.
+
+Definition mult_n_0_m_0 (p q : MyNat):
+  {{∀ mult_res,
+    mult_rel ⌊ q ⌋ O_u mult_res
+    → ∀ mult_res_2,
+      mult_rel ⌊ p ⌋ O_u mult_res_2
+      → ∀ plus_res, plus_rel mult_res_2 mult_res plus_res → plus_res == O_u}}.
+Proof.
+  destruct p as [p p_p].
+  destruct q as [q q_p].
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ mult_res,
+           mult_rel ⌊ q ⌋ O_u mult_res
+           → ∀ mult_res_2,
+             mult_rel ⌊ p ⌋ O_u mult_res_2 → ∀ plus_res, plus_rel mult_res_2 mult_res plus_res → plus_res == O_u)
+          (let _: ∀ mult_res, mult_rel q O_u mult_res → O_u == mult_res :=
+           ⌈ mult_n_O (exist (λ (q : MyNat_u), MyNat_wf q ∧ True) q ltac:(solver)) ⌉ in
+           mult_n_O (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)))
+          ltac:(solver)).
+Defined.
+
+Definition mult_n_Sm (n m : MyNat):
+  {{∀ mult_res,
+    mult_rel ⌊ n ⌋ ⌊ m ⌋ mult_res
+    → ∀ plus_res,
+      plus_rel mult_res ⌊ n ⌋ plus_res
+      → ∀ mult_res_2, mult_rel ⌊ n ⌋ (S_u ⌊ m ⌋) mult_res_2 → plus_res == mult_res_2}}.
+Proof.
+  destruct n as [n n_p].
+  destruct m as [m m_p].
+  destruct n as [| n'].
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ mult_res,
+             mult_rel ⌊ n ⌋ ⌊ m ⌋ mult_res
+             → ∀ plus_res,
+               plus_rel mult_res ⌊ n ⌋ plus_res
+               → ∀ mult_res_2, mult_rel ⌊ n ⌋ (S_u ⌊ m ⌋) mult_res_2 → plus_res == mult_res_2)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ mult_res,
+             mult_rel ⌊ n ⌋ ⌊ m ⌋ mult_res
+             → ∀ plus_res,
+               plus_rel mult_res ⌊ n ⌋ plus_res
+               → ∀ mult_res_2, mult_rel ⌊ n ⌋ (S_u ⌊ m ⌋) mult_res_2 → plus_res == mult_res_2)
+            (let _: ∀ plus_res,
+                    plus_rel
+                    ⌊ plus
+                      (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))
+                      (mult
+                       (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
+                       (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))) ⌋
+                    (S_u n')
+                    plus_res
+                    → ∀ plus_res_2,
+                      plus_rel
+                      ⌊ plus
+                        (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))
+                        (mult
+                         (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
+                         (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))) ⌋
+                      n'
+                      plus_res_2
+                      → plus_res == S_u plus_res_2 :=
+             ⌈ add_succ_r
+               (plus
+                (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))
+                (mult
+                 (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
+                 (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))))
+               (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)) ⌉ in
+             add_assoc
+             (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))
+             (mult
+              (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
+              (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver)))
+             (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)))
+            ltac:(solver)).
+Defined.
+
+Definition mult_n_1 (p : MyNat):
+  {{∀ one_res, one_rel one_res → ∀ mult_res, mult_rel ⌊ p ⌋ one_res mult_res → mult_res == ⌊ p ⌋}}.
+Proof.
+  destruct p as [p p_p].
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ one_res, one_rel one_res → ∀ mult_res, mult_rel ⌊ p ⌋ one_res mult_res → mult_res == ⌊ p ⌋)
+          (let _: ∀ mult_res, mult_rel p O_u mult_res → O_u == mult_res :=
+           ⌈ mult_n_O (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)) ⌉ in
+           mult_n_Sm (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)) O)
+          ltac:(solver)).
+Defined.
+
+Definition plus_1_1 (n : MyNat):
+  {{∀ one_res,
+    one_rel one_res → ∀ plus_res, plus_rel one_res ⌊ n ⌋ plus_res → plus_res == S_u ⌊ n ⌋}}.
+Proof.
+  destruct n as [n n_p].
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ one_res, one_rel one_res → ∀ plus_res, plus_rel one_res ⌊ n ⌋ plus_res → plus_res == S_u ⌊ n ⌋)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition plus_1_neq_0 (n : MyNat):
+  {{∀ one_res, one_rel one_res → ∀ plus_res, plus_rel ⌊ n ⌋ one_res plus_res → plus_res ≠ O_u}}.
+Proof.
+  destruct n as [n n_p].
+  destruct n as [| ds_d3Hk].
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ one_res, one_rel one_res → ∀ plus_res, plus_rel ⌊ n ⌋ one_res plus_res → plus_res ≠ O_u)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ one_res, one_rel one_res → ∀ plus_res, plus_rel ⌊ n ⌋ one_res plus_res → plus_res ≠ O_u)
+            (# unit)
+            ltac:(solver)).
+Defined.
+
+Definition plus_O_n (n : MyNat): {{∀ plus_res, plus_rel O_u ⌊ n ⌋ plus_res → plus_res == ⌊ n ⌋}}.
+Proof.
+  destruct n as [n n_p].
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit), ∀ plus_res, plus_rel O_u ⌊ n ⌋ plus_res → plus_res == ⌊ n ⌋)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition plus_id_example (n m : MyNat) (z : {{⌊ n ⌋ == ⌊ m ⌋}}):
+  {{∀ plus_res,
+    plus_rel ⌊ n ⌋ ⌊ n ⌋ plus_res
+    → ∀ plus_res_2, plus_rel ⌊ m ⌋ ⌊ m ⌋ plus_res_2 → plus_res == plus_res_2}}.
+Proof.
+  destruct n as [n n_p].
+  destruct m as [m m_p].
+  destruct z as [z z_p].
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ plus_res,
+           plus_rel ⌊ n ⌋ ⌊ n ⌋ plus_res
+           → ∀ plus_res_2, plus_rel ⌊ m ⌋ ⌊ m ⌋ plus_res_2 → plus_res == plus_res_2)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition plus_id_exercise (n m o : MyNat) (p : {{⌊ n ⌋ == ⌊ m ⌋}}) (q : {{⌊ m ⌋ == ⌊ o ⌋}}):
+  {{∀ plus_res,
+    plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
+    → ∀ plus_res_2, plus_rel ⌊ m ⌋ ⌊ o ⌋ plus_res_2 → plus_res == plus_res_2}}.
+Proof.
+  destruct n as [n n_p].
+  destruct m as [m m_p].
+  destruct o as [o o_p].
+  destruct p as [p p_p].
+  destruct q as [q q_p].
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ plus_res,
+           plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
+           → ∀ plus_res_2, plus_rel ⌊ m ⌋ ⌊ o ⌋ plus_res_2 → plus_res == plus_res_2)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition plus_n_Sm (n m : MyNat):
+  {{∀ plus_res,
+    plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
+    → ∀ plus_res_2, plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res_2 → S_u plus_res == plus_res_2}}.
+Proof.
+  destruct n as [n n_p].
+  destruct m as [m m_p].
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros.
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ plus_res,
+             plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
+             → ∀ plus_res_2, plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res_2 → S_u plus_res == plus_res_2)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ plus_res,
+             plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
+             → ∀ plus_res_2, plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res_2 → S_u plus_res == plus_res_2)
+            (IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver))
+            ltac:(solver)).
+Defined.
+
+Definition add_comm (n m : MyNat):
+  {{∀ plus_res,
+    plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
+    → ∀ plus_res_2, plus_rel ⌊ m ⌋ ⌊ n ⌋ plus_res_2 → plus_res == plus_res_2}}.
+Proof.
+  destruct n as [n n_p].
+  destruct m as [m m_p].
+  try revert m_p; generalize dependent m; induction n as [| n' IH_n']; intros.
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ plus_res,
+             plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
+             → ∀ plus_res_2, plus_rel ⌊ m ⌋ ⌊ n ⌋ plus_res_2 → plus_res == plus_res_2)
+            (add_0_r (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver)))
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ plus_res,
+             plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
+             → ∀ plus_res_2, plus_rel ⌊ m ⌋ ⌊ n ⌋ plus_res_2 → plus_res == plus_res_2)
+            (let _: ∀ plus_res,
+                    plus_rel n' m plus_res → ∀ plus_res_2, plus_rel m n' plus_res_2 → plus_res == plus_res_2 :=
+             ⌈ IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver) ⌉ in
+             plus_n_Sm
+             (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))
+             (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)))
+            ltac:(solver)).
+Defined.
+
+Definition pred (lq_tmp0 : MyNat): MyNat.
+Proof.
+  destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
+  destruct lq_tmp0 as [| n'].
+  - refine O.
+  - refine (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)).
+Defined.
+
+Inductive pred_rel: MyNat_u → MyNat_u → Prop :=
+  | pred_O: pred_rel O_u O_u | pred_S: ∀ n', pred_rel (S_u n') n'.
+
+#[global] Hint Constructors pred_rel: core_hint_db.
+
+#[global] Instance pred_lookup_rel: dictionary rel pred := { lookup' := pred_rel }.
+
+#[global] Instance pred_getF: getFunc pred_rel := { getF' := pred }.
+
+Definition pred_rel_funct [lq_tmp0 : MyNat_u]:
+  ∀ (VV VV' : MyNat_u), pred_rel lq_tmp0 VV → (pred_rel lq_tmp0 VV' → VV = VV').
+Proof.
+  destruct lq_tmp0 as [| n']; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve pred_rel_funct: f_rel_funct_db.
+
+Theorem pred_O_lem pred_O_lem_res: pred_rel O_u pred_O_lem_res ↔ pred_O_lem_res == O_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite pred_O_lem: f_rel_back.
+
+Theorem pred_S_lem n' pred_S_lem_res: pred_rel (S_u n') pred_S_lem_res ↔ pred_S_lem_res == n'.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite pred_S_lem: f_rel_back.
+
+Theorem pred_rel_ex (lq_tmp0 : MyNat_u) (lq_tmp0_p : MyNat_wf lq_tmp0 ∧ True):
+  pred_rel lq_tmp0 ⌊ pred (exist _ lq_tmp0 lq_tmp0_p) ⌋.
+Proof.
+  existence_lemma_pre pred;
+  destruct lq_tmp0 as [| n'];
+  [fix_notations | fix_notations];
+  existence_lemma_quicksolve pred;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve pred_rel_ex: rel_ax_db.
+
+Opaque pred.
+
+Theorem pred__pred_rel_rw (lq_tmp0 : MyNat_u) (lq_tmp0_p : MyNat_wf lq_tmp0 ∧ True) (VV : MyNat_u):
+  ⌊ pred (exist _ lq_tmp0 lq_tmp0_p) ⌋ = VV ↔ pred_rel lq_tmp0 VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite pred__pred_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve pred__pred_rel_rw: rel_ax_db.
+
+#[global] Instance pred_lookup_rw: dictionary rwLem pred := { lookup' := pred__pred_rel_rw }.
+
+Theorem pred__pred_rel (lq_tmp0 : MyNat) (VV : MyNat_u):
+  ⌊ pred lq_tmp0 ⌋ = VV ↔ pred_rel ⌊ lq_tmp0 ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite pred__pred_rel: f_rel_funct_db.
+
+Theorem pred__pred_rel' (lq_tmp0_u : MyNat_u) (lq_tmp0 : MyNat) (VV : MyNat_u):
+  lq_tmp0_u = ⌊ lq_tmp0 ⌋ → ⌊ pred lq_tmp0 ⌋ = VV ↔ pred_rel lq_tmp0_u VV.
+Proof.
+  intros ->. refine (pred__pred_rel lq_tmp0 VV).
+Qed.
+
+#[global] Hint Resolve pred__pred_rel': f_rel_funct_db.
+
+Definition pred_rel_mk (lq_tmp0 : MyNat_u) (lq_tmp0_p : MyNat_wf lq_tmp0 ∧ True):
+  {VV: _ | pred_rel lq_tmp0 VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, pred_rel lq_tmp0 VV) (pred (exist _ lq_tmp0 lq_tmp0_p)) _);
+  rewrite <- pred__pred_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve pred_rel_mk: f_rel_funct_db.
+
+#[global] Instance pred_pack:
+  @Pack
+  (MyNat ::RT λ (lq_tmp0 : MyNat), nilRT)
+  (MyNat_u ::UT nilUT)
+  ltac:(mkProjectsArgListTG ((MyNat ::RT λ (lq_tmp0 : MyNat), nilRT)) ((MyNat_u ::UT nilUT)))
+  MyNat_u
+  (λ (x_43244490 : ArgList (MyNat ::RT λ (lq_tmp0 : MyNat), nilRT)) (v_x_43244490 : MyNat_u),
+   ltac:(flattenP (λ (lq_tmp0 : MyNat) (VV : MyNat_u), MyNat_wf VV ∧ True) x_43244490 v_x_43244490)).
+Proof.
+  buildPackG pred pred_rel pred__pred_rel pred_rel_funct.
+Defined.
+
+#[global] Instance pred_upack: @uPack (MyNat_u ::UT nilUT) MyNat_u.
+Proof.
+  buildUPackG pred_rel pred_rel_funct.
+Defined.
+
+Definition sf_exp (base power : MyNat): MyNat.
+Proof.
+  destruct base as [base base_p].
+  destruct power as [power power_p].
+  try revert base_p; generalize dependent base; induction power as [| p IH_p]; intros.
+  - refine (S O).
+  - refine (mult
+            (exist (λ (base : MyNat_u), MyNat_wf base ∧ True) base ltac:(solver))
+            (IH_p ltac:(try clear IH_p; solver) base ltac:(try clear IH_p; solver))).
+Defined.
+
+Inductive sf_exp_rel: MyNat_u → MyNat_u → MyNat_u → Prop :=
+  | sf_exp_x_O: ∀ base, sf_exp_rel base O_u (S_u O_u)
+  | sf_exp_x_S: ∀ base p sf_exp_res,
+                sf_exp_rel base p sf_exp_res
+                → ∀ mult_res, mult_rel base sf_exp_res mult_res → sf_exp_rel base (S_u p) mult_res.
+
+#[global] Hint Constructors sf_exp_rel: core_hint_db.
+
+#[global] Instance sf_exp_lookup_rel: dictionary rel sf_exp := { lookup' := sf_exp_rel }.
+
+#[global] Instance sf_exp_getF: getFunc sf_exp_rel := { getF' := sf_exp }.
+
+Definition sf_exp_rel_funct [base power : MyNat_u]:
+  ∀ (VV VV' : MyNat_u), sf_exp_rel base power VV → (sf_exp_rel base power VV' → VV = VV').
+Proof.
+  try revert base_p; generalize dependent base; induction power as [| p IH_p]; intros;
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve sf_exp_rel_funct: f_rel_funct_db.
+
+Theorem sf_exp_x_O_lem base sf_exp_x_O_lem_res:
+  sf_exp_rel base O_u sf_exp_x_O_lem_res ↔ sf_exp_x_O_lem_res == S_u O_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite sf_exp_x_O_lem: f_rel_back.
+
+Theorem sf_exp_x_S_lem base p sf_exp_x_S_lem_res:
+  sf_exp_rel base (S_u p) sf_exp_x_S_lem_res
+  ↔ ∃ sf_exp_res,
+    sf_exp_rel base p sf_exp_res
+    ∧ ∃ mult_res, mult_rel base sf_exp_res mult_res ∧ sf_exp_x_S_lem_res == mult_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite sf_exp_x_S_lem: f_rel_back.
+
+Theorem sf_exp_rel_ex
+  (base : MyNat_u)
+  (base_p : MyNat_wf base ∧ True)
+  (power : MyNat_u)
+  (power_p : MyNat_wf power ∧ True):
+  sf_exp_rel base power ⌊ sf_exp (exist _ base base_p) (exist _ power power_p) ⌋.
+Proof.
+  existence_lemma_pre sf_exp;
+  try revert base_p; generalize dependent base; induction power as [| p IH_p]; intros;
+  [fix_notations | fix_notations];
+  existence_lemma_quicksolve sf_exp;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve sf_exp_rel_ex: rel_ax_db.
+
+Opaque sf_exp.
+
+Theorem sf_exp__sf_exp_rel_rw
+  (base : MyNat_u)
+  (base_p : MyNat_wf base ∧ True)
+  (power : MyNat_u)
+  (power_p : MyNat_wf power ∧ True)
+  (VV : MyNat_u):
+  ⌊ sf_exp (exist _ base base_p) (exist _ power power_p) ⌋ = VV ↔ sf_exp_rel base power VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite sf_exp__sf_exp_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve sf_exp__sf_exp_rel_rw: rel_ax_db.
+
+#[global] Instance sf_exp_lookup_rw: dictionary rwLem sf_exp := {
+    lookup' := sf_exp__sf_exp_rel_rw }.
+
+Theorem sf_exp__sf_exp_rel (base power : MyNat) (VV : MyNat_u):
+  ⌊ sf_exp base power ⌋ = VV ↔ sf_exp_rel ⌊ base ⌋ ⌊ power ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite sf_exp__sf_exp_rel: f_rel_funct_db.
+
+Theorem sf_exp__sf_exp_rel' (base_u power_u : MyNat_u) (base power : MyNat) (VV : MyNat_u):
+  base_u = ⌊ base ⌋
+  → (power_u = ⌊ power ⌋ → ⌊ sf_exp base power ⌋ = VV ↔ sf_exp_rel base_u power_u VV).
+Proof.
+  intros -> ->. refine (sf_exp__sf_exp_rel base power VV).
+Qed.
+
+#[global] Hint Resolve sf_exp__sf_exp_rel': f_rel_funct_db.
+
+Definition sf_exp_rel_mk
+  (base : MyNat_u)
+  (base_p : MyNat_wf base ∧ True)
+  (power : MyNat_u)
+  (power_p : MyNat_wf power ∧ True):
+  {VV: _ | sf_exp_rel base power VV}.
+Proof.
+  intros;
+  refine (subsumptionCast
+          _
+          (λ VV, sf_exp_rel base power VV)
+          (sf_exp (exist _ base base_p) (exist _ power power_p))
+          _);
+  rewrite <- sf_exp__sf_exp_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve sf_exp_rel_mk: f_rel_funct_db.
+
+#[global] Instance sf_exp_pack:
+  @Pack
+  (MyNat ::RT λ (base : MyNat), MyNat ::RT λ (power : MyNat), nilRT)
+  (MyNat_u ::UT (MyNat_u ::UT nilUT))
+  ltac:(mkProjectsArgListTG ((MyNat
+  ::RT λ (base : MyNat), MyNat ::RT λ (power : MyNat), nilRT)) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
+  MyNat_u
+  (λ (x_15064480 : ArgList (MyNat ::RT λ (base : MyNat), MyNat ::RT λ (power : MyNat), nilRT))
+     (v_x_15064480 : MyNat_u),
+   ltac:(flattenP (λ (base power : MyNat) (VV : MyNat_u), MyNat_wf VV ∧ True) x_15064480 v_x_15064480)).
+Proof.
+  buildPackG sf_exp sf_exp_rel sf_exp__sf_exp_rel sf_exp_rel_funct.
+Defined.
+
+#[global] Instance sf_exp_upack: @uPack (MyNat_u ::UT (MyNat_u ::UT nilUT)) MyNat_u.
+Proof.
+  buildUPackG sf_exp_rel sf_exp_rel_funct.
+Defined.
+
+Definition sndSF (p : Natprod): MyNat.
+Proof.
+  destruct p as [p p_p].
+  destruct p as [n1 n2].
+  - refine (exist (λ (n2 : MyNat_u), MyNat_wf n2 ∧ True) n2 ltac:(solver)).
+Defined.
+
+Inductive sndSF_rel: Natprod_u → MyNat_u → Prop :=
+  | sndSF_Pair: ∀ n1 n2, sndSF_rel (Pair_u n1 n2) n2.
+
+#[global] Hint Constructors sndSF_rel: core_hint_db.
+
+#[global] Instance sndSF_lookup_rel: dictionary rel sndSF := { lookup' := sndSF_rel }.
+
+#[global] Instance sndSF_getF: getFunc sndSF_rel := { getF' := sndSF }.
+
+Definition sndSF_rel_funct [p : Natprod_u]:
+  ∀ (VV VV' : MyNat_u), sndSF_rel p VV → (sndSF_rel p VV' → VV = VV').
+Proof.
+  destruct p as [n1 n2]; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve sndSF_rel_funct: f_rel_funct_db.
+
+Theorem sndSF_Pair_lem n1 n2 sndSF_Pair_lem_res:
+  sndSF_rel (Pair_u n1 n2) sndSF_Pair_lem_res ↔ sndSF_Pair_lem_res == n2.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite sndSF_Pair_lem: f_rel_back.
+
+Theorem sndSF_rel_ex (p : Natprod_u) (p_p : Natprod_wf p ∧ True):
+  sndSF_rel p ⌊ sndSF (exist _ p p_p) ⌋.
+Proof.
+  existence_lemma_pre sndSF;
+  destruct p as [n1 n2];
+  [fix_notations];
+  existence_lemma_quicksolve sndSF;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve sndSF_rel_ex: rel_ax_db.
+
+Opaque sndSF.
+
+Theorem sndSF__sndSF_rel_rw (p : Natprod_u) (p_p : Natprod_wf p ∧ True) (VV : MyNat_u):
+  ⌊ sndSF (exist _ p p_p) ⌋ = VV ↔ sndSF_rel p VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite sndSF__sndSF_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve sndSF__sndSF_rel_rw: rel_ax_db.
+
+#[global] Instance sndSF_lookup_rw: dictionary rwLem sndSF := { lookup' := sndSF__sndSF_rel_rw }.
+
+Theorem sndSF__sndSF_rel (p : Natprod) (VV : MyNat_u): ⌊ sndSF p ⌋ = VV ↔ sndSF_rel ⌊ p ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite sndSF__sndSF_rel: f_rel_funct_db.
+
+Theorem sndSF__sndSF_rel' (p_u : Natprod_u) (p : Natprod) (VV : MyNat_u):
+  p_u = ⌊ p ⌋ → ⌊ sndSF p ⌋ = VV ↔ sndSF_rel p_u VV.
+Proof.
+  intros ->. refine (sndSF__sndSF_rel p VV).
+Qed.
+
+#[global] Hint Resolve sndSF__sndSF_rel': f_rel_funct_db.
+
+Definition sndSF_rel_mk (p : Natprod_u) (p_p : Natprod_wf p ∧ True): {VV: _ | sndSF_rel p VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, sndSF_rel p VV) (sndSF (exist _ p p_p)) _);
+  rewrite <- sndSF__sndSF_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve sndSF_rel_mk: f_rel_funct_db.
+
+#[global] Instance sndSF_pack:
+  @Pack
+  (Natprod ::RT λ (p : Natprod), nilRT)
+  (Natprod_u ::UT nilUT)
+  ltac:(mkProjectsArgListTG ((Natprod ::RT λ (p : Natprod), nilRT)) ((Natprod_u ::UT nilUT)))
+  MyNat_u
+  (λ (x_48246115 : ArgList (Natprod ::RT λ (p : Natprod), nilRT)) (v_x_48246115 : MyNat_u),
+   ltac:(flattenP (λ (p : Natprod) (VV : MyNat_u), MyNat_wf VV ∧ True) x_48246115 v_x_48246115)).
+Proof.
+  buildPackG sndSF sndSF_rel sndSF__sndSF_rel sndSF_rel_funct.
+Defined.
+
+#[global] Instance sndSF_upack: @uPack (Natprod_u ::UT nilUT) MyNat_u.
+Proof.
+  buildUPackG sndSF_rel sndSF_rel_funct.
+Defined.
+
+Definition surjective_pairing (p : Natprod):
+  {{∀ sndSF_res,
+    sndSF_rel ⌊ p ⌋ sndSF_res
+    → ∀ fstSF_res, fstSF_rel ⌊ p ⌋ fstSF_res → ⌊ p ⌋ == Pair_u fstSF_res sndSF_res}}.
+Proof.
+  destruct p as [p p_p].
+  destruct p as [n m].
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ sndSF_res,
+             sndSF_rel ⌊ p ⌋ sndSF_res
+             → ∀ fstSF_res, fstSF_rel ⌊ p ⌋ fstSF_res → ⌊ p ⌋ == Pair_u fstSF_res sndSF_res)
+            (# unit)
+            ltac:(solver)).
+Defined.
+
+Definition surjective_pairing' (n m : MyNat):
+  {{∀ sndSF_res,
+    sndSF_rel (Pair_u ⌊ n ⌋ ⌊ m ⌋) sndSF_res
+    → ∀ fstSF_res,
+      fstSF_rel (Pair_u ⌊ n ⌋ ⌊ m ⌋) fstSF_res → Pair_u ⌊ n ⌋ ⌊ m ⌋ == Pair_u fstSF_res sndSF_res}}.
+Proof.
+  destruct n as [n n_p].
+  destruct m as [m m_p].
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ sndSF_res,
+           sndSF_rel (Pair_u ⌊ n ⌋ ⌊ m ⌋) sndSF_res
+           → ∀ fstSF_res,
+             fstSF_rel (Pair_u ⌊ n ⌋ ⌊ m ⌋) fstSF_res → Pair_u ⌊ n ⌋ ⌊ m ⌋ == Pair_u fstSF_res sndSF_res)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition two : MyNat.
+Proof.
+  refine (S one).
+Defined.
+
+Inductive two_rel: MyNat_u → Prop :=
+  | two_Constr: ∀ one_res, one_rel one_res → two_rel (S_u one_res).
+
+#[global] Hint Constructors two_rel: core_hint_db.
+
+#[global] Instance two_lookup_rel: dictionary rel two := { lookup' := two_rel }.
+
+#[global] Instance two_getF: getFunc two_rel := { getF' := two }.
+
+Definition two_rel_funct : ∀ (VV VV' : MyNat_u), two_rel VV → (two_rel VV' → VV = VV').
+Proof.
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve two_rel_funct: f_rel_funct_db.
+
+Theorem two_inv_lem two_inv_lem_res:
+  two_rel two_inv_lem_res ↔ ∃ one_res, one_rel one_res ∧ two_inv_lem_res == S_u one_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite two_inv_lem: f_rel_back.
+
+Theorem two_rel_ex : two_rel ⌊ two ⌋.
+Proof.
+  existence_lemma_pre two;
+  fix_notations;
+  existence_lemma_quicksolve two;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve two_rel_ex: rel_ax_db.
+
+Opaque two.
+
+Theorem two__two_rel_rw (VV : MyNat_u): ⌊ two ⌋ = VV ↔ two_rel VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite two__two_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve two__two_rel_rw: rel_ax_db.
+
+#[global] Instance two_lookup_rw: dictionary rwLem two := { lookup' := two__two_rel_rw }.
+
+Theorem two__two_rel (VV : MyNat_u): ⌊ two ⌋ = VV ↔ two_rel VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite two__two_rel: f_rel_funct_db.
+
+Theorem two__two_rel' (VV : MyNat_u): ⌊ two ⌋ = VV ↔ two_rel VV.
+Proof.
+  intros. refine (two__two_rel VV).
+Qed.
+
+#[global] Hint Resolve two__two_rel': f_rel_funct_db.
+
+Definition two_rel_mk : {VV: _ | two_rel VV}.
+Proof.
+  intros; refine (subsumptionCast _ (λ VV, two_rel VV) two _); rewrite <- two__two_rel'; quicksolve.
+Qed.
+
+#[global] Hint Resolve two_rel_mk: f_rel_funct_db.
+
+Definition test_leb1 :
+  {{∀ two_res, two_rel two_res → ∀ leb_res, leb_rel two_res two_res leb_res → leb_res == SFTrue_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ two_res, two_rel two_res → ∀ leb_res, leb_rel two_res two_res leb_res → leb_res == SFTrue_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_ltb1 :
+  {{∀ two_res, two_rel two_res → ∀ ltb_res, ltb_rel two_res two_res ltb_res → ltb_res == SFFalse_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ two_res, two_rel two_res → ∀ ltb_res, ltb_rel two_res two_res ltb_res → ltb_res == SFFalse_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition three : MyNat.
+Proof.
+  refine (S two).
+Defined.
+
+Inductive three_rel: MyNat_u → Prop :=
+  | three_Constr: ∀ two_res, two_rel two_res → three_rel (S_u two_res).
+
+#[global] Hint Constructors three_rel: core_hint_db.
+
+#[global] Instance three_lookup_rel: dictionary rel three := { lookup' := three_rel }.
+
+#[global] Instance three_getF: getFunc three_rel := { getF' := three }.
+
+Definition three_rel_funct : ∀ (VV VV' : MyNat_u), three_rel VV → (three_rel VV' → VV = VV').
+Proof.
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve three_rel_funct: f_rel_funct_db.
+
+Theorem three_inv_lem three_inv_lem_res:
+  three_rel three_inv_lem_res ↔ ∃ two_res, two_rel two_res ∧ three_inv_lem_res == S_u two_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite three_inv_lem: f_rel_back.
+
+Theorem three_rel_ex : three_rel ⌊ three ⌋.
+Proof.
+  existence_lemma_pre three;
+  fix_notations;
+  existence_lemma_quicksolve three;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve three_rel_ex: rel_ax_db.
+
+Opaque three.
+
+Theorem three__three_rel_rw (VV : MyNat_u): ⌊ three ⌋ = VV ↔ three_rel VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite three__three_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve three__three_rel_rw: rel_ax_db.
+
+#[global] Instance three_lookup_rw: dictionary rwLem three := { lookup' := three__three_rel_rw }.
+
+Theorem three__three_rel (VV : MyNat_u): ⌊ three ⌋ = VV ↔ three_rel VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite three__three_rel: f_rel_funct_db.
+
+Theorem three__three_rel' (VV : MyNat_u): ⌊ three ⌋ = VV ↔ three_rel VV.
+Proof.
+  intros. refine (three__three_rel VV).
+Qed.
+
+#[global] Hint Resolve three__three_rel': f_rel_funct_db.
+
+Definition three_rel_mk : {VV: _ | three_rel VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, three_rel VV) three _);
+  rewrite <- three__three_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve three_rel_mk: f_rel_funct_db.
+
+Definition four : MyNat.
+Proof.
+  refine (S three).
+Defined.
+
+Inductive four_rel: MyNat_u → Prop :=
+  | four_Constr: ∀ three_res, three_rel three_res → four_rel (S_u three_res).
+
+#[global] Hint Constructors four_rel: core_hint_db.
+
+#[global] Instance four_lookup_rel: dictionary rel four := { lookup' := four_rel }.
+
+#[global] Instance four_getF: getFunc four_rel := { getF' := four }.
+
+Definition four_rel_funct : ∀ (VV VV' : MyNat_u), four_rel VV → (four_rel VV' → VV = VV').
+Proof.
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve four_rel_funct: f_rel_funct_db.
+
+Theorem four_inv_lem four_inv_lem_res:
+  four_rel four_inv_lem_res ↔ ∃ three_res, three_rel three_res ∧ four_inv_lem_res == S_u three_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite four_inv_lem: f_rel_back.
+
+Theorem four_rel_ex : four_rel ⌊ four ⌋.
+Proof.
+  existence_lemma_pre four;
+  fix_notations;
+  existence_lemma_quicksolve four;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve four_rel_ex: rel_ax_db.
+
+Opaque four.
+
+Theorem four__four_rel_rw (VV : MyNat_u): ⌊ four ⌋ = VV ↔ four_rel VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite four__four_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve four__four_rel_rw: rel_ax_db.
+
+#[global] Instance four_lookup_rw: dictionary rwLem four := { lookup' := four__four_rel_rw }.
+
+Theorem four__four_rel (VV : MyNat_u): ⌊ four ⌋ = VV ↔ four_rel VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite four__four_rel: f_rel_funct_db.
+
+Theorem four__four_rel' (VV : MyNat_u): ⌊ four ⌋ = VV ↔ four_rel VV.
+Proof.
+  intros. refine (four__four_rel VV).
+Qed.
+
+#[global] Hint Resolve four__four_rel': f_rel_funct_db.
+
+Definition four_rel_mk : {VV: _ | four_rel VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, four_rel VV) four _);
+  rewrite <- four__four_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve four_rel_mk: f_rel_funct_db.
+
+Definition five : MyNat.
+Proof.
+  refine (S four).
+Defined.
+
+Inductive five_rel: MyNat_u → Prop :=
+  | five_Constr: ∀ four_res, four_rel four_res → five_rel (S_u four_res).
+
+#[global] Hint Constructors five_rel: core_hint_db.
+
+#[global] Instance five_lookup_rel: dictionary rel five := { lookup' := five_rel }.
+
+#[global] Instance five_getF: getFunc five_rel := { getF' := five }.
+
+Definition five_rel_funct : ∀ (VV VV' : MyNat_u), five_rel VV → (five_rel VV' → VV = VV').
+Proof.
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve five_rel_funct: f_rel_funct_db.
+
+Theorem five_inv_lem five_inv_lem_res:
+  five_rel five_inv_lem_res ↔ ∃ four_res, four_rel four_res ∧ five_inv_lem_res == S_u four_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite five_inv_lem: f_rel_back.
+
+Theorem five_rel_ex : five_rel ⌊ five ⌋.
+Proof.
+  existence_lemma_pre five;
+  fix_notations;
+  existence_lemma_quicksolve five;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve five_rel_ex: rel_ax_db.
+
+Opaque five.
+
+Theorem five__five_rel_rw (VV : MyNat_u): ⌊ five ⌋ = VV ↔ five_rel VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite five__five_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve five__five_rel_rw: rel_ax_db.
+
+#[global] Instance five_lookup_rw: dictionary rwLem five := { lookup' := five__five_rel_rw }.
+
+Theorem five__five_rel (VV : MyNat_u): ⌊ five ⌋ = VV ↔ five_rel VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite five__five_rel: f_rel_funct_db.
+
+Theorem five__five_rel' (VV : MyNat_u): ⌊ five ⌋ = VV ↔ five_rel VV.
+Proof.
+  intros. refine (five__five_rel VV).
+Qed.
+
+#[global] Hint Resolve five__five_rel': f_rel_funct_db.
+
+Definition five_rel_mk : {VV: _ | five_rel VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, five_rel VV) five _);
+  rewrite <- five__five_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve five_rel_mk: f_rel_funct_db.
+
+Definition six : MyNat.
+Proof.
+  refine (S five).
+Defined.
+
+Inductive six_rel: MyNat_u → Prop :=
+  | six_Constr: ∀ five_res, five_rel five_res → six_rel (S_u five_res).
+
+#[global] Hint Constructors six_rel: core_hint_db.
+
+#[global] Instance six_lookup_rel: dictionary rel six := { lookup' := six_rel }.
+
+#[global] Instance six_getF: getFunc six_rel := { getF' := six }.
+
+Definition six_rel_funct : ∀ (VV VV' : MyNat_u), six_rel VV → (six_rel VV' → VV = VV').
+Proof.
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve six_rel_funct: f_rel_funct_db.
+
+Theorem six_inv_lem six_inv_lem_res:
+  six_rel six_inv_lem_res ↔ ∃ five_res, five_rel five_res ∧ six_inv_lem_res == S_u five_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite six_inv_lem: f_rel_back.
+
+Theorem six_rel_ex : six_rel ⌊ six ⌋.
+Proof.
+  existence_lemma_pre six;
+  fix_notations;
+  existence_lemma_quicksolve six;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve six_rel_ex: rel_ax_db.
+
+Opaque six.
+
+Theorem six__six_rel_rw (VV : MyNat_u): ⌊ six ⌋ = VV ↔ six_rel VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite six__six_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve six__six_rel_rw: rel_ax_db.
+
+#[global] Instance six_lookup_rw: dictionary rwLem six := { lookup' := six__six_rel_rw }.
+
+Theorem six__six_rel (VV : MyNat_u): ⌊ six ⌋ = VV ↔ six_rel VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite six__six_rel: f_rel_funct_db.
+
+Theorem six__six_rel' (VV : MyNat_u): ⌊ six ⌋ = VV ↔ six_rel VV.
+Proof.
+  intros. refine (six__six_rel VV).
+Qed.
+
+#[global] Hint Resolve six__six_rel': f_rel_funct_db.
+
+Definition six_rel_mk : {VV: _ | six_rel VV}.
+Proof.
+  intros; refine (subsumptionCast _ (λ VV, six_rel VV) six _); rewrite <- six__six_rel'; quicksolve.
+Qed.
+
+#[global] Hint Resolve six_rel_mk: f_rel_funct_db.
+
+Definition seven : MyNat.
+Proof.
+  refine (S six).
+Defined.
+
+Inductive seven_rel: MyNat_u → Prop :=
+  | seven_Constr: ∀ six_res, six_rel six_res → seven_rel (S_u six_res).
+
+#[global] Hint Constructors seven_rel: core_hint_db.
+
+#[global] Instance seven_lookup_rel: dictionary rel seven := { lookup' := seven_rel }.
+
+#[global] Instance seven_getF: getFunc seven_rel := { getF' := seven }.
+
+Definition seven_rel_funct : ∀ (VV VV' : MyNat_u), seven_rel VV → (seven_rel VV' → VV = VV').
+Proof.
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve seven_rel_funct: f_rel_funct_db.
+
+Theorem seven_inv_lem seven_inv_lem_res:
+  seven_rel seven_inv_lem_res ↔ ∃ six_res, six_rel six_res ∧ seven_inv_lem_res == S_u six_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite seven_inv_lem: f_rel_back.
+
+Theorem seven_rel_ex : seven_rel ⌊ seven ⌋.
+Proof.
+  existence_lemma_pre seven;
+  fix_notations;
+  existence_lemma_quicksolve seven;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve seven_rel_ex: rel_ax_db.
+
+Opaque seven.
+
+Theorem seven__seven_rel_rw (VV : MyNat_u): ⌊ seven ⌋ = VV ↔ seven_rel VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite seven__seven_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve seven__seven_rel_rw: rel_ax_db.
+
+#[global] Instance seven_lookup_rw: dictionary rwLem seven := { lookup' := seven__seven_rel_rw }.
+
+Theorem seven__seven_rel (VV : MyNat_u): ⌊ seven ⌋ = VV ↔ seven_rel VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite seven__seven_rel: f_rel_funct_db.
+
+Theorem seven__seven_rel' (VV : MyNat_u): ⌊ seven ⌋ = VV ↔ seven_rel VV.
+Proof.
+  intros. refine (seven__seven_rel VV).
+Qed.
+
+#[global] Hint Resolve seven__seven_rel': f_rel_funct_db.
+
+Definition seven_rel_mk : {VV: _ | seven_rel VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, seven_rel VV) seven _);
+  rewrite <- seven__seven_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve seven_rel_mk: f_rel_funct_db.
+
+Definition eight : MyNat.
+Proof.
+  refine (S seven).
+Defined.
+
+Inductive eight_rel: MyNat_u → Prop :=
+  | eight_Constr: ∀ seven_res, seven_rel seven_res → eight_rel (S_u seven_res).
+
+#[global] Hint Constructors eight_rel: core_hint_db.
+
+#[global] Instance eight_lookup_rel: dictionary rel eight := { lookup' := eight_rel }.
+
+#[global] Instance eight_getF: getFunc eight_rel := { getF' := eight }.
+
+Definition eight_rel_funct : ∀ (VV VV' : MyNat_u), eight_rel VV → (eight_rel VV' → VV = VV').
+Proof.
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve eight_rel_funct: f_rel_funct_db.
+
+Theorem eight_inv_lem eight_inv_lem_res:
+  eight_rel eight_inv_lem_res ↔ ∃ seven_res, seven_rel seven_res ∧ eight_inv_lem_res == S_u seven_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite eight_inv_lem: f_rel_back.
+
+Theorem eight_rel_ex : eight_rel ⌊ eight ⌋.
+Proof.
+  existence_lemma_pre eight;
+  fix_notations;
+  existence_lemma_quicksolve eight;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve eight_rel_ex: rel_ax_db.
+
+Opaque eight.
+
+Theorem eight__eight_rel_rw (VV : MyNat_u): ⌊ eight ⌋ = VV ↔ eight_rel VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite eight__eight_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve eight__eight_rel_rw: rel_ax_db.
+
+#[global] Instance eight_lookup_rw: dictionary rwLem eight := { lookup' := eight__eight_rel_rw }.
+
+Theorem eight__eight_rel (VV : MyNat_u): ⌊ eight ⌋ = VV ↔ eight_rel VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite eight__eight_rel: f_rel_funct_db.
+
+Theorem eight__eight_rel' (VV : MyNat_u): ⌊ eight ⌋ = VV ↔ eight_rel VV.
+Proof.
+  intros. refine (eight__eight_rel VV).
+Qed.
+
+#[global] Hint Resolve eight__eight_rel': f_rel_funct_db.
+
+Definition eight_rel_mk : {VV: _ | eight_rel VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, eight_rel VV) eight _);
+  rewrite <- eight__eight_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve eight_rel_mk: f_rel_funct_db.
+
+Definition nine : MyNat.
+Proof.
+  refine (S eight).
+Defined.
+
+Inductive nine_rel: MyNat_u → Prop :=
+  | nine_Constr: ∀ eight_res, eight_rel eight_res → nine_rel (S_u eight_res).
+
+#[global] Hint Constructors nine_rel: core_hint_db.
+
+#[global] Instance nine_lookup_rel: dictionary rel nine := { lookup' := nine_rel }.
+
+#[global] Instance nine_getF: getFunc nine_rel := { getF' := nine }.
+
+Definition nine_rel_funct : ∀ (VV VV' : MyNat_u), nine_rel VV → (nine_rel VV' → VV = VV').
+Proof.
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve nine_rel_funct: f_rel_funct_db.
+
+Theorem nine_inv_lem nine_inv_lem_res:
+  nine_rel nine_inv_lem_res ↔ ∃ eight_res, eight_rel eight_res ∧ nine_inv_lem_res == S_u eight_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite nine_inv_lem: f_rel_back.
+
+Theorem nine_rel_ex : nine_rel ⌊ nine ⌋.
+Proof.
+  existence_lemma_pre nine;
+  fix_notations;
+  existence_lemma_quicksolve nine;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve nine_rel_ex: rel_ax_db.
+
+Opaque nine.
+
+Theorem nine__nine_rel_rw (VV : MyNat_u): ⌊ nine ⌋ = VV ↔ nine_rel VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite nine__nine_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve nine__nine_rel_rw: rel_ax_db.
+
+#[global] Instance nine_lookup_rw: dictionary rwLem nine := { lookup' := nine__nine_rel_rw }.
+
+Theorem nine__nine_rel (VV : MyNat_u): ⌊ nine ⌋ = VV ↔ nine_rel VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite nine__nine_rel: f_rel_funct_db.
+
+Theorem nine__nine_rel' (VV : MyNat_u): ⌊ nine ⌋ = VV ↔ nine_rel VV.
+Proof.
+  intros. refine (nine__nine_rel VV).
+Qed.
+
+#[global] Hint Resolve nine__nine_rel': f_rel_funct_db.
+
+Definition nine_rel_mk : {VV: _ | nine_rel VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, nine_rel VV) nine _);
+  rewrite <- nine__nine_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve nine_rel_mk: f_rel_funct_db.
+
+Definition ten : MyNat.
+Proof.
+  refine (S nine).
+Defined.
+
+Inductive ten_rel: MyNat_u → Prop :=
+  | ten_Constr: ∀ nine_res, nine_rel nine_res → ten_rel (S_u nine_res).
+
+#[global] Hint Constructors ten_rel: core_hint_db.
+
+#[global] Instance ten_lookup_rel: dictionary rel ten := { lookup' := ten_rel }.
+
+#[global] Instance ten_getF: getFunc ten_rel := { getF' := ten }.
+
+Definition ten_rel_funct : ∀ (VV VV' : MyNat_u), ten_rel VV → (ten_rel VV' → VV = VV').
+Proof.
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve ten_rel_funct: f_rel_funct_db.
+
+Theorem ten_inv_lem ten_inv_lem_res:
+  ten_rel ten_inv_lem_res ↔ ∃ nine_res, nine_rel nine_res ∧ ten_inv_lem_res == S_u nine_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite ten_inv_lem: f_rel_back.
+
+Theorem ten_rel_ex : ten_rel ⌊ ten ⌋.
+Proof.
+  existence_lemma_pre ten;
+  fix_notations;
+  existence_lemma_quicksolve ten;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve ten_rel_ex: rel_ax_db.
+
+Opaque ten.
+
+Theorem ten__ten_rel_rw (VV : MyNat_u): ⌊ ten ⌋ = VV ↔ ten_rel VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite ten__ten_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve ten__ten_rel_rw: rel_ax_db.
+
+#[global] Instance ten_lookup_rw: dictionary rwLem ten := { lookup' := ten__ten_rel_rw }.
+
+Theorem ten__ten_rel (VV : MyNat_u): ⌊ ten ⌋ = VV ↔ ten_rel VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite ten__ten_rel: f_rel_funct_db.
+
+Theorem ten__ten_rel' (VV : MyNat_u): ⌊ ten ⌋ = VV ↔ ten_rel VV.
+Proof.
+  intros. refine (ten__ten_rel VV).
+Qed.
+
+#[global] Hint Resolve ten__ten_rel': f_rel_funct_db.
+
+Definition ten_rel_mk : {VV: _ | ten_rel VV}.
+Proof.
+  intros; refine (subsumptionCast _ (λ VV, ten_rel VV) ten _); rewrite <- ten__ten_rel'; quicksolve.
+Qed.
+
+#[global] Hint Resolve ten_rel_mk: f_rel_funct_db.
+
+Definition eleven : MyNat.
+Proof.
+  refine (S ten).
+Defined.
+
+Inductive eleven_rel: MyNat_u → Prop :=
+  | eleven_Constr: ∀ ten_res, ten_rel ten_res → eleven_rel (S_u ten_res).
+
+#[global] Hint Constructors eleven_rel: core_hint_db.
+
+#[global] Instance eleven_lookup_rel: dictionary rel eleven := { lookup' := eleven_rel }.
+
+#[global] Instance eleven_getF: getFunc eleven_rel := { getF' := eleven }.
+
+Definition eleven_rel_funct : ∀ (VV VV' : MyNat_u), eleven_rel VV → (eleven_rel VV' → VV = VV').
+Proof.
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve eleven_rel_funct: f_rel_funct_db.
+
+Theorem eleven_inv_lem eleven_inv_lem_res:
+  eleven_rel eleven_inv_lem_res ↔ ∃ ten_res, ten_rel ten_res ∧ eleven_inv_lem_res == S_u ten_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite eleven_inv_lem: f_rel_back.
+
+Theorem eleven_rel_ex : eleven_rel ⌊ eleven ⌋.
+Proof.
+  existence_lemma_pre eleven;
+  fix_notations;
+  existence_lemma_quicksolve eleven;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve eleven_rel_ex: rel_ax_db.
+
+Opaque eleven.
+
+Theorem eleven__eleven_rel_rw (VV : MyNat_u): ⌊ eleven ⌋ = VV ↔ eleven_rel VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite eleven__eleven_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve eleven__eleven_rel_rw: rel_ax_db.
+
+#[global] Instance eleven_lookup_rw: dictionary rwLem eleven := {
+    lookup' := eleven__eleven_rel_rw }.
+
+Theorem eleven__eleven_rel (VV : MyNat_u): ⌊ eleven ⌋ = VV ↔ eleven_rel VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite eleven__eleven_rel: f_rel_funct_db.
+
+Theorem eleven__eleven_rel' (VV : MyNat_u): ⌊ eleven ⌋ = VV ↔ eleven_rel VV.
+Proof.
+  intros. refine (eleven__eleven_rel VV).
+Qed.
+
+#[global] Hint Resolve eleven__eleven_rel': f_rel_funct_db.
+
+Definition eleven_rel_mk : {VV: _ | eleven_rel VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, eleven_rel VV) eleven _);
+  rewrite <- eleven__eleven_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve eleven_rel_mk: f_rel_funct_db.
+
+Definition twelve : MyNat.
+Proof.
+  refine (S eleven).
+Defined.
+
+Inductive twelve_rel: MyNat_u → Prop :=
+  | twelve_Constr: ∀ eleven_res, eleven_rel eleven_res → twelve_rel (S_u eleven_res).
+
+#[global] Hint Constructors twelve_rel: core_hint_db.
+
+#[global] Instance twelve_lookup_rel: dictionary rel twelve := { lookup' := twelve_rel }.
+
+#[global] Instance twelve_getF: getFunc twelve_rel := { getF' := twelve }.
+
+Definition twelve_rel_funct : ∀ (VV VV' : MyNat_u), twelve_rel VV → (twelve_rel VV' → VV = VV').
+Proof.
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve twelve_rel_funct: f_rel_funct_db.
+
+Theorem twelve_inv_lem twelve_inv_lem_res:
+  twelve_rel twelve_inv_lem_res
+  ↔ ∃ eleven_res, eleven_rel eleven_res ∧ twelve_inv_lem_res == S_u eleven_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite twelve_inv_lem: f_rel_back.
+
+Theorem twelve_rel_ex : twelve_rel ⌊ twelve ⌋.
+Proof.
+  existence_lemma_pre twelve;
+  fix_notations;
+  existence_lemma_quicksolve twelve;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve twelve_rel_ex: rel_ax_db.
+
+Opaque twelve.
+
+Theorem twelve__twelve_rel_rw (VV : MyNat_u): ⌊ twelve ⌋ = VV ↔ twelve_rel VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite twelve__twelve_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve twelve__twelve_rel_rw: rel_ax_db.
+
+#[global] Instance twelve_lookup_rw: dictionary rwLem twelve := {
+    lookup' := twelve__twelve_rel_rw }.
+
+Theorem twelve__twelve_rel (VV : MyNat_u): ⌊ twelve ⌋ = VV ↔ twelve_rel VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite twelve__twelve_rel: f_rel_funct_db.
+
+Theorem twelve__twelve_rel' (VV : MyNat_u): ⌊ twelve ⌋ = VV ↔ twelve_rel VV.
+Proof.
+  intros. refine (twelve__twelve_rel VV).
+Qed.
+
+#[global] Hint Resolve twelve__twelve_rel': f_rel_funct_db.
+
+Definition twelve_rel_mk : {VV: _ | twelve_rel VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, twelve_rel VV) twelve _);
+  rewrite <- twelve__twelve_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve twelve_rel_mk: f_rel_funct_db.
+
+Definition test_leb2 :
+  {{∀ four_res,
+    four_rel four_res
+    → ∀ two_res, two_rel two_res → ∀ leb_res, leb_rel two_res four_res leb_res → leb_res == SFTrue_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ four_res,
+           four_rel four_res
+           → ∀ two_res, two_rel two_res → ∀ leb_res, leb_rel two_res four_res leb_res → leb_res == SFTrue_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_leb3 :
+  {{∀ two_res,
+    two_rel two_res
+    → ∀ four_res,
+      four_rel four_res → ∀ leb_res, leb_rel four_res two_res leb_res → leb_res == SFFalse_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ two_res,
+           two_rel two_res
+           → ∀ four_res,
+             four_rel four_res → ∀ leb_res, leb_rel four_res two_res leb_res → leb_res == SFFalse_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_ltb2 :
+  {{∀ four_res,
+    four_rel four_res
+    → ∀ two_res, two_rel two_res → ∀ ltb_res, ltb_rel two_res four_res ltb_res → ltb_res == SFTrue_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ four_res,
+           four_rel four_res
+           → ∀ two_res, two_rel two_res → ∀ ltb_res, ltb_rel two_res four_res ltb_res → ltb_res == SFTrue_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_ltb3 :
+  {{∀ two_res,
+    two_rel two_res
+    → ∀ four_res,
+      four_rel four_res → ∀ ltb_res, ltb_rel four_res two_res ltb_res → ltb_res == SFFalse_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ two_res,
+           two_rel two_res
+           → ∀ four_res,
+             four_rel four_res → ∀ ltb_res, ltb_rel four_res two_res ltb_res → ltb_res == SFFalse_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_factorial1 :
+  {{∀ three_res,
+    three_rel three_res
+    → ∀ factorial_res,
+      factorial_rel three_res factorial_res → ∀ six_res, six_rel six_res → factorial_res == six_res}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ three_res,
+           three_rel three_res
+           → ∀ factorial_res,
+             factorial_rel three_res factorial_res → ∀ six_res, six_rel six_res → factorial_res == six_res)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition test_mult1 :
+  {{∀ three_res,
+    three_rel three_res
+    → ∀ mult_res,
+      mult_rel three_res three_res mult_res → ∀ nine_res, nine_rel nine_res → mult_res == nine_res}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ three_res,
+           three_rel three_res
+           → ∀ mult_res,
+             mult_rel three_res three_res mult_res → ∀ nine_res, nine_rel nine_res → mult_res == nine_res)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition zero_nbeq_plus_1 (n : MyNat):
+  {{∀ one_res,
+    one_rel one_res
+    → ∀ plus_res,
+      plus_rel ⌊ n ⌋ one_res plus_res → ∀ eqb_res, eqb_rel O_u plus_res eqb_res → eqb_res == SFFalse_u}}.
+Proof.
+  destruct n as [n n_p].
+  destruct n as [| n'].
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ one_res,
+             one_rel one_res
+             → ∀ plus_res,
+               plus_rel ⌊ n ⌋ one_res plus_res → ∀ eqb_res, eqb_rel O_u plus_res eqb_res → eqb_res == SFFalse_u)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ one_res,
+             one_rel one_res
+             → ∀ plus_res,
+               plus_rel ⌊ n ⌋ one_res plus_res → ∀ eqb_res, eqb_rel O_u plus_res eqb_res → eqb_res == SFFalse_u)
+            (# unit)
+            ltac:(solver)).
+Defined.
+
+Inductive Modifier_u: Set :=
+  | Minus_u: Modifier_u | Natural_u: Modifier_u | Plus_u: Modifier_u.
+
+Fixpoint Modifier_eq (x y : Modifier_u): bool :=
+  match (x, y) with
+  | (Minus_u, Minus_u) => true
+  | (Natural_u, Natural_u) => true
+  | (Plus_u, Plus_u) => true
+  | (_, _) => false
+  end.
+
+Definition Modifier_eq_refl : ∀ (x : Modifier_u), is_true (Modifier_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve Modifier_eq_refl: eq_hint_db.
+
+Definition Modifier_eqb_eq : ∀ (s t : Modifier_u), is_true (Modifier_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Modifier_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Modifier: LeibnitzEqB := {
+    equalB' := Modifier_eq;
+    refl' := Modifier_eq_refl;
+    eqb_eq' := Modifier_eqb_eq }.
+
+Fixpoint Modifier_wf (x : Modifier_u): Prop :=
+  match x with | Minus_u => True | Natural_u => True | Plus_u => True end.
+
+Theorem Modifier_wf_ref [p : Modifier_u → Prop] (tm : {v: Modifier_u | Modifier_wf v ∧ p v}):
+  Modifier_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation Modifier := {x: Modifier_u | Modifier_wf x ∧ True}.
+
+Definition Minus_lem : Modifier_wf Minus_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Minus : Modifier :=
+  exist _ Minus_u Minus_lem.
+
+Definition Natural_lem : Modifier_wf Natural_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Natural : Modifier :=
+  exist _ Natural_u Natural_lem.
+
+Definition Plus_lem : Modifier_wf Plus_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Plus : Modifier :=
+  exist _ Plus_u Plus_lem.
+
+#[global] Hint Resolve Modifier_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold Modifier_wf: wf_constr_db.
+
+#[global] Hint Resolve Modifier_eq: ref_constr_db.
+
+#[global] Hint Unfold Minus: ref_constr_db.
+
+#[global] Hint Unfold Natural: ref_constr_db.
+
+#[global] Hint Unfold Plus: ref_constr_db.
+
+Inductive Letter_u: Set :=
+  | A_u: Letter_u | B_u: Letter_u | C_u: Letter_u | D_u: Letter_u | F_u: Letter_u.
+
+Fixpoint Letter_eq (x y : Letter_u): bool :=
+  match (x, y) with
+  | (A_u, A_u) => true
+  | (B_u, B_u) => true
+  | (C_u, C_u) => true
+  | (D_u, D_u) => true
+  | (F_u, F_u) => true
+  | (_, _) => false
+  end.
+
+Definition Letter_eq_refl : ∀ (x : Letter_u), is_true (Letter_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve Letter_eq_refl: eq_hint_db.
+
+Definition Letter_eqb_eq : ∀ (s t : Letter_u), is_true (Letter_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Letter_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Letter: LeibnitzEqB := {
+    equalB' := Letter_eq;
+    refl' := Letter_eq_refl;
+    eqb_eq' := Letter_eqb_eq }.
+
+Fixpoint Letter_wf (x : Letter_u): Prop :=
+  match x with | A_u => True | B_u => True | C_u => True | D_u => True | F_u => True end.
+
+Theorem Letter_wf_ref [p : Letter_u → Prop] (tm : {v: Letter_u | Letter_wf v ∧ p v}):
+  Letter_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation Letter := {x: Letter_u | Letter_wf x ∧ True}.
+
+Definition A_lem : Letter_wf A_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition A : Letter :=
+  exist _ A_u A_lem.
+
+Definition B_lem : Letter_wf B_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition B : Letter :=
+  exist _ B_u B_lem.
+
+Definition C_lem : Letter_wf C_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition C : Letter :=
+  exist _ C_u C_lem.
+
+Definition D_lem : Letter_wf D_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition D : Letter :=
+  exist _ D_u D_lem.
+
+Definition F_lem : Letter_wf F_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition F : Letter :=
+  exist _ F_u F_lem.
+
+#[global] Hint Resolve Letter_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold Letter_wf: wf_constr_db.
+
+#[global] Hint Resolve Letter_eq: ref_constr_db.
+
+#[global] Hint Unfold A: ref_constr_db.
+
+#[global] Hint Unfold B: ref_constr_db.
+
+#[global] Hint Unfold C: ref_constr_db.
+
+#[global] Hint Unfold D: ref_constr_db.
+
+#[global] Hint Unfold F: ref_constr_db.
+
+Definition lower_letter (l : Letter): Letter.
+Proof.
+  destruct l as [l l_p].
+  destruct l as [| | | |].
+  - refine B.
+  - refine C.
+  - refine D.
+  - refine F.
+  - refine F.
+Defined.
+
+Inductive lower_letter_rel: Letter_u → Letter_u → Prop :=
+  | lower_letter_A: lower_letter_rel A_u B_u
+  | lower_letter_B: lower_letter_rel B_u C_u
+  | lower_letter_C: lower_letter_rel C_u D_u
+  | lower_letter_D: lower_letter_rel D_u F_u
+  | lower_letter_F: lower_letter_rel F_u F_u.
+
+#[global] Hint Constructors lower_letter_rel: core_hint_db.
+
+#[global] Instance lower_letter_lookup_rel: dictionary rel lower_letter := {
+    lookup' := lower_letter_rel }.
+
+#[global] Instance lower_letter_getF: getFunc lower_letter_rel := { getF' := lower_letter }.
+
+Definition lower_letter_rel_funct [l : Letter_u]:
+  ∀ (VV VV' : Letter_u), lower_letter_rel l VV → (lower_letter_rel l VV' → VV = VV').
+Proof.
+  destruct l as [| | | |]; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve lower_letter_rel_funct: f_rel_funct_db.
+
+Theorem lower_letter_A_lem lower_letter_A_lem_res:
+  lower_letter_rel A_u lower_letter_A_lem_res ↔ lower_letter_A_lem_res == B_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lower_letter_A_lem: f_rel_back.
+
+Theorem lower_letter_B_lem lower_letter_B_lem_res:
+  lower_letter_rel B_u lower_letter_B_lem_res ↔ lower_letter_B_lem_res == C_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lower_letter_B_lem: f_rel_back.
+
+Theorem lower_letter_C_lem lower_letter_C_lem_res:
+  lower_letter_rel C_u lower_letter_C_lem_res ↔ lower_letter_C_lem_res == D_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lower_letter_C_lem: f_rel_back.
+
+Theorem lower_letter_D_lem lower_letter_D_lem_res:
+  lower_letter_rel D_u lower_letter_D_lem_res ↔ lower_letter_D_lem_res == F_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lower_letter_D_lem: f_rel_back.
+
+Theorem lower_letter_F_lem lower_letter_F_lem_res:
+  lower_letter_rel F_u lower_letter_F_lem_res ↔ lower_letter_F_lem_res == F_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lower_letter_F_lem: f_rel_back.
+
+Theorem lower_letter_rel_ex (l : Letter_u) (l_p : Letter_wf l ∧ True):
+  lower_letter_rel l ⌊ lower_letter (exist _ l l_p) ⌋.
+Proof.
+  existence_lemma_pre lower_letter;
+  destruct l as [| | | |];
+  [fix_notations | fix_notations | fix_notations | fix_notations | fix_notations];
+  existence_lemma_quicksolve lower_letter;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve lower_letter_rel_ex: rel_ax_db.
+
+Opaque lower_letter.
+
+Theorem lower_letter__lower_letter_rel_rw (l : Letter_u) (l_p : Letter_wf l ∧ True) (VV : Letter_u):
+  ⌊ lower_letter (exist _ l l_p) ⌋ = VV ↔ lower_letter_rel l VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite lower_letter__lower_letter_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve lower_letter__lower_letter_rel_rw: rel_ax_db.
+
+#[global] Instance lower_letter_lookup_rw: dictionary rwLem lower_letter := {
+    lookup' := lower_letter__lower_letter_rel_rw }.
+
+Theorem lower_letter__lower_letter_rel (l : Letter) (VV : Letter_u):
+  ⌊ lower_letter l ⌋ = VV ↔ lower_letter_rel ⌊ l ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite lower_letter__lower_letter_rel: f_rel_funct_db.
+
+Theorem lower_letter__lower_letter_rel' (l_u : Letter_u) (l : Letter) (VV : Letter_u):
+  l_u = ⌊ l ⌋ → ⌊ lower_letter l ⌋ = VV ↔ lower_letter_rel l_u VV.
+Proof.
+  intros ->. refine (lower_letter__lower_letter_rel l VV).
+Qed.
+
+#[global] Hint Resolve lower_letter__lower_letter_rel': f_rel_funct_db.
+
+Definition lower_letter_rel_mk (l : Letter_u) (l_p : Letter_wf l ∧ True):
+  {VV: _ | lower_letter_rel l VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, lower_letter_rel l VV) (lower_letter (exist _ l l_p)) _);
+  rewrite <- lower_letter__lower_letter_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve lower_letter_rel_mk: f_rel_funct_db.
+
+#[global] Instance lower_letter_pack:
+  @Pack
+  (Letter ::RT λ (l : Letter), nilRT)
+  (Letter_u ::UT nilUT)
+  ltac:(mkProjectsArgListTG ((Letter ::RT λ (l : Letter), nilRT)) ((Letter_u ::UT nilUT)))
+  Letter_u
+  (λ (x_39179640 : ArgList (Letter ::RT λ (l : Letter), nilRT)) (v_x_39179640 : Letter_u),
+   ltac:(flattenP (λ (l : Letter) (VV : Letter_u), Letter_wf VV ∧ True) x_39179640 v_x_39179640)).
+Proof.
+  buildPackG lower_letter lower_letter_rel lower_letter__lower_letter_rel lower_letter_rel_funct.
+Defined.
+
+#[global] Instance lower_letter_upack: @uPack (Letter_u ::UT nilUT) Letter_u.
+Proof.
+  buildUPackG lower_letter_rel lower_letter_rel_funct.
+Defined.
+
+Definition lower_letter_F_is_F :
+  {{∀ lower_letter_res, lower_letter_rel F_u lower_letter_res → lower_letter_res == F_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit), ∀ lower_letter_res, lower_letter_rel F_u lower_letter_res → lower_letter_res == F_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Inductive Grades_u: Set :=
+  | Grade_u: Letter_u → Modifier_u → Grades_u.
+
+Fixpoint Grades_eq (x y : Grades_u): bool :=
+  match (x, y) with
+  | (Grade_u VV VV_, Grade_u VV' VV_') => (true && (VV ==? VV')) && (VV_ ==? VV_')
+  end.
+
+Definition Grades_eq_refl : ∀ (x : Grades_u), is_true (Grades_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve Grades_eq_refl: eq_hint_db.
+
+Definition Grades_eqb_eq : ∀ (s t : Grades_u), is_true (Grades_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Grades_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Grades: LeibnitzEqB := {
+    equalB' := Grades_eq;
+    refl' := Grades_eq_refl;
+    eqb_eq' := Grades_eqb_eq }.
+
+Fixpoint Grades_wf (x : Grades_u): Prop :=
+  match x with | Grade_u VV VV_ => (Letter_wf VV ∧ True) ∧ (Modifier_wf VV_ ∧ True) end.
+
+Theorem Grades_wf_ref [p : Grades_u → Prop] (tm : {v: Grades_u | Grades_wf v ∧ p v}):
+  Grades_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation Grades := {x: Grades_u | Grades_wf x ∧ True}.
+
+Definition Grade_lem (VV : Letter) (VV_ : Modifier): Grades_wf (Grade_u ⌊ VV ⌋ ⌊ VV_ ⌋) ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Grade (VV : Letter) (VV_ : Modifier): Grades :=
+  exist _ (Grade_u ⌊ VV ⌋ ⌊ VV_ ⌋) (Grade_lem VV VV_).
+
+Definition wf_Grade_VV [VV : Letter_u] [VV_ : Modifier_u] (p : Grades_wf (Grade_u VV VV_)):
+  Letter_wf VV.
+Proof.
+  quicksolve.
+Defined.
+
+#[global] Hint Resolve wf_Grade_VV: ref_constr_db.
+
+Definition wf_Grade_VV_ [VV : Letter_u] [VV_ : Modifier_u] (p : Grades_wf (Grade_u VV VV_)):
+  Modifier_wf VV_.
+Proof.
+  quicksolve.
+Defined.
+
+#[global] Hint Resolve wf_Grade_VV_: ref_constr_db.
+
+#[global] Hint Resolve Grades_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold Grades_wf: wf_constr_db.
+
+#[global] Hint Resolve Grades_eq: ref_constr_db.
+
+#[global] Hint Unfold Grade: ref_constr_db.
+
+Definition lower_grade (g : Grades): Grades.
+Proof.
+  destruct g as [g g_p].
+  destruct g as [l m].
+  - destruct m as [| |].
+    + destruct l as [| | | |].
+      ** refine (Grade (lower_letter A) Plus).
+      ** refine (Grade (lower_letter B) Plus).
+      ** refine (Grade (lower_letter C) Plus).
+      ** refine (Grade (lower_letter D) Plus).
+      ** refine (Grade F Minus).
+    + refine (Grade (exist (λ (VV : Letter_u), Letter_wf VV ∧ True) l ltac:(solver)) Minus).
+    + refine (Grade (exist (λ (VV : Letter_u), Letter_wf VV ∧ True) l ltac:(solver)) Natural).
+Defined.
+
+Inductive lower_grade_rel: Grades_u → Grades_u → Prop :=
+  | lower_grade__Grade_x_Plus: ∀ l, lower_grade_rel (Grade_u l Plus_u) (Grade_u l Natural_u)
+  | lower_grade__Grade_x_Natural: ∀ l, lower_grade_rel (Grade_u l Natural_u) (Grade_u l Minus_u)
+  | lower_grade__Grade_A_Minus: ∀ lower_letter_res,
+                                lower_letter_rel A_u lower_letter_res
+                                → lower_grade_rel (Grade_u A_u Minus_u) (Grade_u lower_letter_res Plus_u)
+  | lower_grade__Grade_B_Minus: ∀ lower_letter_res,
+                                lower_letter_rel B_u lower_letter_res
+                                → lower_grade_rel (Grade_u B_u Minus_u) (Grade_u lower_letter_res Plus_u)
+  | lower_grade__Grade_C_Minus: ∀ lower_letter_res,
+                                lower_letter_rel C_u lower_letter_res
+                                → lower_grade_rel (Grade_u C_u Minus_u) (Grade_u lower_letter_res Plus_u)
+  | lower_grade__Grade_D_Minus: ∀ lower_letter_res,
+                                lower_letter_rel D_u lower_letter_res
+                                → lower_grade_rel (Grade_u D_u Minus_u) (Grade_u lower_letter_res Plus_u)
+  | lower_grade__Grade_F_Minus: lower_grade_rel (Grade_u F_u Minus_u) (Grade_u F_u Minus_u).
+
+#[global] Hint Constructors lower_grade_rel: core_hint_db.
+
+#[global] Instance lower_grade_lookup_rel: dictionary rel lower_grade := {
+    lookup' := lower_grade_rel }.
+
+#[global] Instance lower_grade_getF: getFunc lower_grade_rel := { getF' := lower_grade }.
+
+Definition lower_grade_rel_funct [g : Grades_u]:
+  ∀ (VV VV' : Grades_u), lower_grade_rel g VV → (lower_grade_rel g VV' → VV = VV').
+Proof.
+  destruct g as [l m];
+  [destruct m as [| |];
+   [destruct l as [| | | |] |  |]];
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve lower_grade_rel_funct: f_rel_funct_db.
+
+Theorem lower_grade__Grade_x_Plus_lem l lower_grade__Grade_x_Plus_lem_res:
+  lower_grade_rel (Grade_u l Plus_u) lower_grade__Grade_x_Plus_lem_res
+  ↔ lower_grade__Grade_x_Plus_lem_res == Grade_u l Natural_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lower_grade__Grade_x_Plus_lem: f_rel_back.
+
+Theorem lower_grade__Grade_x_Natural_lem l lower_grade__Grade_x_Natural_lem_res:
+  lower_grade_rel (Grade_u l Natural_u) lower_grade__Grade_x_Natural_lem_res
+  ↔ lower_grade__Grade_x_Natural_lem_res == Grade_u l Minus_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lower_grade__Grade_x_Natural_lem: f_rel_back.
+
+Theorem lower_grade__Grade_A_Minus_lem lower_grade__Grade_A_Minus_lem_res:
+  lower_grade_rel (Grade_u A_u Minus_u) lower_grade__Grade_A_Minus_lem_res
+  ↔ ∃ lower_letter_res,
+    lower_letter_rel A_u lower_letter_res
+    ∧ lower_grade__Grade_A_Minus_lem_res == Grade_u lower_letter_res Plus_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lower_grade__Grade_A_Minus_lem: f_rel_back.
+
+Theorem lower_grade__Grade_B_Minus_lem lower_grade__Grade_B_Minus_lem_res:
+  lower_grade_rel (Grade_u B_u Minus_u) lower_grade__Grade_B_Minus_lem_res
+  ↔ ∃ lower_letter_res,
+    lower_letter_rel B_u lower_letter_res
+    ∧ lower_grade__Grade_B_Minus_lem_res == Grade_u lower_letter_res Plus_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lower_grade__Grade_B_Minus_lem: f_rel_back.
+
+Theorem lower_grade__Grade_C_Minus_lem lower_grade__Grade_C_Minus_lem_res:
+  lower_grade_rel (Grade_u C_u Minus_u) lower_grade__Grade_C_Minus_lem_res
+  ↔ ∃ lower_letter_res,
+    lower_letter_rel C_u lower_letter_res
+    ∧ lower_grade__Grade_C_Minus_lem_res == Grade_u lower_letter_res Plus_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lower_grade__Grade_C_Minus_lem: f_rel_back.
+
+Theorem lower_grade__Grade_D_Minus_lem lower_grade__Grade_D_Minus_lem_res:
+  lower_grade_rel (Grade_u D_u Minus_u) lower_grade__Grade_D_Minus_lem_res
+  ↔ ∃ lower_letter_res,
+    lower_letter_rel D_u lower_letter_res
+    ∧ lower_grade__Grade_D_Minus_lem_res == Grade_u lower_letter_res Plus_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lower_grade__Grade_D_Minus_lem: f_rel_back.
+
+Theorem lower_grade__Grade_F_Minus_lem lower_grade__Grade_F_Minus_lem_res:
+  lower_grade_rel (Grade_u F_u Minus_u) lower_grade__Grade_F_Minus_lem_res
+  ↔ lower_grade__Grade_F_Minus_lem_res == Grade_u F_u Minus_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lower_grade__Grade_F_Minus_lem: f_rel_back.
+
+Theorem lower_grade_rel_ex (g : Grades_u) (g_p : Grades_wf g ∧ True):
+  lower_grade_rel g ⌊ lower_grade (exist _ g g_p) ⌋.
+Proof.
+  existence_lemma_pre lower_grade;
+  destruct g as [l m];
+  [destruct m as [| |];
+   [destruct l as [| | | |];
+    [fix_notations | fix_notations | fix_notations | fix_notations | fix_notations] |
+    fix_notations |
+    fix_notations]];
+  existence_lemma_quicksolve lower_grade;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve lower_grade_rel_ex: rel_ax_db.
+
+Opaque lower_grade.
+
+Theorem lower_grade__lower_grade_rel_rw (g : Grades_u) (g_p : Grades_wf g ∧ True) (VV : Grades_u):
+  ⌊ lower_grade (exist _ g g_p) ⌋ = VV ↔ lower_grade_rel g VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite lower_grade__lower_grade_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve lower_grade__lower_grade_rel_rw: rel_ax_db.
+
+#[global] Instance lower_grade_lookup_rw: dictionary rwLem lower_grade := {
+    lookup' := lower_grade__lower_grade_rel_rw }.
+
+Theorem lower_grade__lower_grade_rel (g : Grades) (VV : Grades_u):
+  ⌊ lower_grade g ⌋ = VV ↔ lower_grade_rel ⌊ g ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite lower_grade__lower_grade_rel: f_rel_funct_db.
+
+Theorem lower_grade__lower_grade_rel' (g_u : Grades_u) (g : Grades) (VV : Grades_u):
+  g_u = ⌊ g ⌋ → ⌊ lower_grade g ⌋ = VV ↔ lower_grade_rel g_u VV.
+Proof.
+  intros ->. refine (lower_grade__lower_grade_rel g VV).
+Qed.
+
+#[global] Hint Resolve lower_grade__lower_grade_rel': f_rel_funct_db.
+
+Definition lower_grade_rel_mk (g : Grades_u) (g_p : Grades_wf g ∧ True):
+  {VV: _ | lower_grade_rel g VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, lower_grade_rel g VV) (lower_grade (exist _ g g_p)) _);
+  rewrite <- lower_grade__lower_grade_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve lower_grade_rel_mk: f_rel_funct_db.
+
+#[global] Instance lower_grade_pack:
+  @Pack
+  (Grades ::RT λ (g : Grades), nilRT)
+  (Grades_u ::UT nilUT)
+  ltac:(mkProjectsArgListTG ((Grades ::RT λ (g : Grades), nilRT)) ((Grades_u ::UT nilUT)))
+  Grades_u
+  (λ (x_30383084 : ArgList (Grades ::RT λ (g : Grades), nilRT)) (v_x_30383084 : Grades_u),
+   ltac:(flattenP (λ (g : Grades) (VV : Grades_u), Grades_wf VV ∧ True) x_30383084 v_x_30383084)).
+Proof.
+  buildPackG lower_grade lower_grade_rel lower_grade__lower_grade_rel lower_grade_rel_funct.
+Defined.
+
+#[global] Instance lower_grade_upack: @uPack (Grades_u ::UT nilUT) Grades_u.
+Proof.
+  buildUPackG lower_grade_rel lower_grade_rel_funct.
+Defined.
+
+Definition apply_late_policy (late_days : {late_days: Z | True}) (g : Grades): Grades.
+Proof.
+  destruct late_days as [late_days late_days_p].
+  destruct g as [g g_p].
+  let E := fresh "E" in destruct (late_days <? 9) as [|] eqn:E;
+  [let E := fresh "E" in destruct (late_days <? 17) as [|] eqn:E;
+   [let E := fresh "E" in destruct (late_days <? 21) as [|] eqn:E;
+    [refine (lower_grade
+             (lower_grade (lower_grade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver))))) |
+     refine (lower_grade (lower_grade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver))))] |
+    refine (lower_grade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver)))] |
+   refine (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver))].
+Defined.
+
+Inductive apply_late_policy_rel: Z → Grades_u → Grades_u → Prop :=
+  | apply_late_policy_x_x_False_False_False: ∀ late_days g,
+                                             (late_days <? 9) == false
+                                             → ((late_days <? 17) == false
+                                                → ((late_days <? 21) == false
+                                                   → ∀ lower_grade_res,
+                                                     lower_grade_rel g lower_grade_res
+                                                     → ∀ lower_grade_res_2,
+                                                       lower_grade_rel lower_grade_res lower_grade_res_2
+                                                       → ∀ lower_grade_res_3,
+                                                         lower_grade_rel lower_grade_res_2 lower_grade_res_3
+                                                         → apply_late_policy_rel late_days g lower_grade_res_3))
+  | apply_late_policy_x_x_False_False_True: ∀ late_days g,
+                                            (late_days <? 9) == false
+                                            → ((late_days <? 17) == false
+                                               → ((late_days <? 21) == true
+                                                  → ∀ lower_grade_res,
+                                                    lower_grade_rel g lower_grade_res
+                                                    → ∀ lower_grade_res_2,
+                                                      lower_grade_rel lower_grade_res lower_grade_res_2
+                                                      → apply_late_policy_rel late_days g lower_grade_res_2))
+  | apply_late_policy_x_x_False_True: ∀ late_days g,
+                                      (late_days <? 9) == false
+                                      → ((late_days <? 17) == true
+                                         → ∀ lower_grade_res,
+                                           lower_grade_rel g lower_grade_res
+                                           → apply_late_policy_rel late_days g lower_grade_res)
+  | apply_late_policy_x_x_True: ∀ late_days g,
+                                (late_days <? 9) == true → apply_late_policy_rel late_days g g.
+
+#[global] Hint Constructors apply_late_policy_rel: core_hint_db.
+
+#[global] Instance apply_late_policy_lookup_rel: dictionary rel apply_late_policy := {
+    lookup' := apply_late_policy_rel }.
+
+#[global] Instance apply_late_policy_getF: getFunc apply_late_policy_rel := {
+    getF' := apply_late_policy }.
+
+Definition apply_late_policy_rel_funct [late_days : Z] [g : Grades_u]:
+  ∀ (VV VV' : Grades_u),
+  apply_late_policy_rel late_days g VV → (apply_late_policy_rel late_days g VV' → VV = VV').
+Proof.
+  let E := fresh "E" in destruct (late_days <? 9) as [|] eqn:E;
+  [let E := fresh "E" in destruct (late_days <? 17) as [|] eqn:E;
+   [let E := fresh "E" in destruct (late_days <? 21) as [|] eqn:E |] |];
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve apply_late_policy_rel_funct: f_rel_funct_db.
+
+Theorem apply_late_policy_inv_lem g late_days apply_late_policy_inv_lem_res:
+  apply_late_policy_rel late_days g apply_late_policy_inv_lem_res
+  ↔ ((((late_days <? 9) == false
+       → ((late_days <? 17) == false
+          → ((late_days <? 21) == false
+             → ∃ lower_grade_res,
+               lower_grade_rel g lower_grade_res
+               ∧ ∃ lower_grade_res_2,
+                 lower_grade_rel lower_grade_res lower_grade_res_2
+                 ∧ ∃ lower_grade_res_3,
+                   lower_grade_rel lower_grade_res_2 lower_grade_res_3
+                   ∧ apply_late_policy_inv_lem_res == lower_grade_res_3)))
+      ∨ ((late_days <? 9) == false
+         → ((late_days <? 17) == false
+            → ((late_days <? 21) == true
+               → ∃ lower_grade_res,
+                 lower_grade_rel g lower_grade_res
+                 ∧ ∃ lower_grade_res_2,
+                   lower_grade_rel lower_grade_res lower_grade_res_2
+                   ∧ apply_late_policy_inv_lem_res == lower_grade_res_2))))
+     ∨ ((late_days <? 9) == false
+        → ((late_days <? 17) == true
+           → ∃ lower_grade_res,
+             lower_grade_rel g lower_grade_res ∧ apply_late_policy_inv_lem_res == lower_grade_res)))
+    ∨ ((late_days <? 9) == true → apply_late_policy_inv_lem_res == g).
+Proof.
+  rel_back' ((late_days <? 9) _::_
+           (late_days <? 17) _::_
+           (late_days <? 21) _::_ _nil).
+Qed.
+
+#[global] Hint Rewrite apply_late_policy_inv_lem: f_rel_back.
+
+Theorem apply_late_policy_rel_ex
+  (late_days : Z) (late_days_p : True) (g : Grades_u) (g_p : Grades_wf g ∧ True):
+  apply_late_policy_rel
+  late_days
+  g
+  ⌊ apply_late_policy (exist _ late_days late_days_p) (exist _ g g_p) ⌋.
+Proof.
+  existence_lemma_pre apply_late_policy;
+  let E := fresh "E" in destruct (late_days <? 9) as [|] eqn:E;
+  [let E := fresh "E" in destruct (late_days <? 17) as [|] eqn:E;
+   [let E := fresh "E" in destruct (late_days <? 21) as [|] eqn:E;
+    [fix_notations | fix_notations] |
+    fix_notations] |
+   fix_notations];
+  existence_lemma_quicksolve apply_late_policy;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve apply_late_policy_rel_ex: rel_ax_db.
+
+Opaque apply_late_policy.
+
+Theorem apply_late_policy__apply_late_policy_rel_rw
+  (late_days : Z) (late_days_p : True) (g : Grades_u) (g_p : Grades_wf g ∧ True) (VV : Grades_u):
+  ⌊ apply_late_policy (exist _ late_days late_days_p) (exist _ g g_p) ⌋ = VV
+  ↔ apply_late_policy_rel late_days g VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite apply_late_policy__apply_late_policy_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve apply_late_policy__apply_late_policy_rel_rw: rel_ax_db.
+
+#[global] Instance apply_late_policy_lookup_rw: dictionary rwLem apply_late_policy := {
+    lookup' := apply_late_policy__apply_late_policy_rel_rw }.
+
+Theorem apply_late_policy__apply_late_policy_rel
+  (late_days : {late_days: Z | True}) (g : Grades) (VV : Grades_u):
+  ⌊ apply_late_policy late_days g ⌋ = VV ↔ apply_late_policy_rel ⌊ late_days ⌋ ⌊ g ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite apply_late_policy__apply_late_policy_rel: f_rel_funct_db.
+
+Theorem apply_late_policy__apply_late_policy_rel'
+  (late_days_u : Z) (g_u : Grades_u) (late_days : {late_days: Z | True}) (g : Grades) (VV : Grades_u):
+  late_days_u = ⌊ late_days ⌋
+  → (g_u = ⌊ g ⌋ → ⌊ apply_late_policy late_days g ⌋ = VV ↔ apply_late_policy_rel late_days_u g_u VV).
+Proof.
+  intros -> ->. refine (apply_late_policy__apply_late_policy_rel late_days g VV).
+Qed.
+
+#[global] Hint Resolve apply_late_policy__apply_late_policy_rel': f_rel_funct_db.
+
+Definition apply_late_policy_rel_mk
+  (late_days : Z) (late_days_p : True) (g : Grades_u) (g_p : Grades_wf g ∧ True):
+  {VV: _ | apply_late_policy_rel late_days g VV}.
+Proof.
+  intros;
+  refine (subsumptionCast
+          _
+          (λ VV, apply_late_policy_rel late_days g VV)
+          (apply_late_policy (exist _ late_days late_days_p) (exist _ g g_p))
+          _);
+  rewrite <- apply_late_policy__apply_late_policy_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve apply_late_policy_rel_mk: f_rel_funct_db.
+
+#[global] Instance apply_late_policy_pack:
+  @Pack
+  ({late_days: Z | True}
+   ::RT λ (late_days : {late_days: Z | True}), Grades ::RT λ (g : Grades), nilRT)
+  (Z ::UT (Grades_u ::UT nilUT))
+  ltac:(mkProjectsArgListTG (({late_days: Z | True}
+  ::RT λ (late_days : {late_days: Z | True}),
+       Grades ::RT λ (g : Grades), nilRT)) ((Z ::UT (Grades_u ::UT nilUT))))
+  Grades_u
+  (λ (x_47115878 : ArgList ({late_days: Z | True}
+                            ::RT λ (late_days : {late_days: Z | True}), Grades ::RT λ (g : Grades), nilRT))
+     (v_x_47115878 : Grades_u),
+   ltac:(flattenP (λ (late_days : {late_days: Z | True})
+   (g : Grades)
+   (VV : Grades_u),
+ Grades_wf VV ∧ True) x_47115878 v_x_47115878)).
+Proof.
+  buildPackG apply_late_policy apply_late_policy_rel apply_late_policy__apply_late_policy_rel apply_late_policy_rel_funct.
+Defined.
+
+#[global] Instance apply_late_policy_upack: @uPack (Z ::UT (Grades_u ::UT nilUT)) Grades_u.
+Proof.
+  buildUPackG apply_late_policy_rel apply_late_policy_rel_funct.
+Defined.
+
+Definition lower_grade_F_Minus :
+  {{∀ lower_grade_res,
+    lower_grade_rel (Grade_u F_u Minus_u) lower_grade_res → lower_grade_res == Grade_u F_u Minus_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ lower_grade_res,
+           lower_grade_rel (Grade_u F_u Minus_u) lower_grade_res → lower_grade_res == Grade_u F_u Minus_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition lower_grade_thrice :
+  {{∀ lower_grade_res,
+    lower_grade_rel (Grade_u B_u Minus_u) lower_grade_res
+    → ∀ lower_grade_res_2,
+      lower_grade_rel lower_grade_res lower_grade_res_2
+      → ∀ lower_grade_res_3,
+        lower_grade_rel lower_grade_res_2 lower_grade_res_3 → lower_grade_res_3 == Grade_u C_u Minus_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ lower_grade_res,
+           lower_grade_rel (Grade_u B_u Minus_u) lower_grade_res
+           → ∀ lower_grade_res_2,
+             lower_grade_rel lower_grade_res lower_grade_res_2
+             → ∀ lower_grade_res_3,
+               lower_grade_rel lower_grade_res_2 lower_grade_res_3 → lower_grade_res_3 == Grade_u C_u Minus_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition lower_grade_twice :
+  {{∀ lower_grade_res,
+    lower_grade_rel (Grade_u B_u Minus_u) lower_grade_res
+    → ∀ lower_grade_res_2,
+      lower_grade_rel lower_grade_res lower_grade_res_2 → lower_grade_res_2 == Grade_u C_u Natural_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ lower_grade_res,
+           lower_grade_rel (Grade_u B_u Minus_u) lower_grade_res
+           → ∀ lower_grade_res_2,
+             lower_grade_rel lower_grade_res lower_grade_res_2 → lower_grade_res_2 == Grade_u C_u Natural_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Definition no_penalty_for_mostly_on_time
+  (late_days : {late_days: Z | True}) (g : Grades) (h : {{ltbZ_rel ⌊ late_days ⌋ 9 true}}):
+  {{∀ apply_late_policy_res,
+    apply_late_policy_rel ⌊ late_days ⌋ ⌊ g ⌋ apply_late_policy_res → apply_late_policy_res == ⌊ g ⌋}}.
+Proof.
+  destruct late_days as [late_days late_days_p].
+  destruct g as [g g_p].
+  destruct h as [h h_p].
+  let E := fresh "E" in destruct (late_days <? 9) as [|] eqn:E;
+  [refine (subsumptionCast
+           Unit
+           (λ (VV : Unit),
+            ∀ apply_late_policy_res,
+            apply_late_policy_rel ⌊ late_days ⌋ ⌊ g ⌋ apply_late_policy_res → apply_late_policy_res == ⌊ g ⌋)
+           (exist (λ (h : Unit), ltbZ_rel ⌊ late_days ⌋ 9 true) h ltac:(solver))
+           ltac:(solver)) |
+   refine (subsumptionCast
+           Unit
+           (λ (VV : Unit),
+            ∀ apply_late_policy_res,
+            apply_late_policy_rel ⌊ late_days ⌋ ⌊ g ⌋ apply_late_policy_res → apply_late_policy_res == ⌊ g ⌋)
+           (# unit)
+           ltac:(solver))].
+Defined.
+
+Inductive Day_u: Set :=
+  | Friday_u: Day_u
+  | Monday_u: Day_u
+  | Saturday_u: Day_u
+  | Sunday_u: Day_u
+  | Thursday_u: Day_u
+  | Tuesday_u: Day_u
+  | Wednesday_u: Day_u.
+
+Fixpoint Day_eq (x y : Day_u): bool :=
+  match (x, y) with
+  | (Friday_u, Friday_u) => true
+  | (Monday_u, Monday_u) => true
+  | (Saturday_u, Saturday_u) => true
+  | (Sunday_u, Sunday_u) => true
+  | (Thursday_u, Thursday_u) => true
+  | (Tuesday_u, Tuesday_u) => true
+  | (Wednesday_u, Wednesday_u) => true
+  | (_, _) => false
+  end.
+
+Definition Day_eq_refl : ∀ (x : Day_u), is_true (Day_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve Day_eq_refl: eq_hint_db.
+
+Definition Day_eqb_eq : ∀ (s t : Day_u), is_true (Day_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Day_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Day: LeibnitzEqB := {
+    equalB' := Day_eq;
+    refl' := Day_eq_refl;
+    eqb_eq' := Day_eqb_eq }.
+
+Fixpoint Day_wf (x : Day_u): Prop :=
+  match x with
+  | Friday_u => True
+  | Monday_u => True
+  | Saturday_u => True
+  | Sunday_u => True
+  | Thursday_u => True
+  | Tuesday_u => True
+  | Wednesday_u => True
+  end.
+
+Theorem Day_wf_ref [p : Day_u → Prop] (tm : {v: Day_u | Day_wf v ∧ p v}): Day_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation Day := {x: Day_u | Day_wf x ∧ True}.
+
+Definition Friday_lem : Day_wf Friday_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Friday : Day :=
+  exist _ Friday_u Friday_lem.
+
+Definition Monday_lem : Day_wf Monday_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Monday : Day :=
+  exist _ Monday_u Monday_lem.
+
+Definition Saturday_lem : Day_wf Saturday_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Saturday : Day :=
+  exist _ Saturday_u Saturday_lem.
+
+Definition Sunday_lem : Day_wf Sunday_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Sunday : Day :=
+  exist _ Sunday_u Sunday_lem.
+
+Definition Thursday_lem : Day_wf Thursday_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Thursday : Day :=
+  exist _ Thursday_u Thursday_lem.
+
+Definition Tuesday_lem : Day_wf Tuesday_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Tuesday : Day :=
+  exist _ Tuesday_u Tuesday_lem.
+
+Definition Wednesday_lem : Day_wf Wednesday_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Wednesday : Day :=
+  exist _ Wednesday_u Wednesday_lem.
+
+#[global] Hint Resolve Day_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold Day_wf: wf_constr_db.
+
+#[global] Hint Resolve Day_eq: ref_constr_db.
+
+#[global] Hint Unfold Friday: ref_constr_db.
+
+#[global] Hint Unfold Monday: ref_constr_db.
+
+#[global] Hint Unfold Saturday: ref_constr_db.
+
+#[global] Hint Unfold Sunday: ref_constr_db.
+
+#[global] Hint Unfold Thursday: ref_constr_db.
+
+#[global] Hint Unfold Tuesday: ref_constr_db.
+
+#[global] Hint Unfold Wednesday: ref_constr_db.
+
+Definition next_weekday (d : Day): Day.
+Proof.
+  destruct d as [d d_p].
+  destruct d as [| | | | | |].
+  - refine Monday.
+  - refine Tuesday.
+  - refine Monday.
+  - refine Monday.
+  - refine Friday.
+  - refine Wednesday.
+  - refine Thursday.
+Defined.
+
+Inductive next_weekday_rel: Day_u → Day_u → Prop :=
+  | next_weekday_Monday: next_weekday_rel Monday_u Tuesday_u
+  | next_weekday_Tuesday: next_weekday_rel Tuesday_u Wednesday_u
+  | next_weekday_Wednesday: next_weekday_rel Wednesday_u Thursday_u
+  | next_weekday_Thursday: next_weekday_rel Thursday_u Friday_u
+  | next_weekday_Friday: next_weekday_rel Friday_u Monday_u
+  | next_weekday_Saturday: next_weekday_rel Saturday_u Monday_u
+  | next_weekday_Sunday: next_weekday_rel Sunday_u Monday_u.
+
+#[global] Hint Constructors next_weekday_rel: core_hint_db.
+
+#[global] Instance next_weekday_lookup_rel: dictionary rel next_weekday := {
+    lookup' := next_weekday_rel }.
+
+#[global] Instance next_weekday_getF: getFunc next_weekday_rel := { getF' := next_weekday }.
+
+Definition next_weekday_rel_funct [d : Day_u]:
+  ∀ (VV VV' : Day_u), next_weekday_rel d VV → (next_weekday_rel d VV' → VV = VV').
+Proof.
+  destruct d as [| | | | | |]; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve next_weekday_rel_funct: f_rel_funct_db.
+
+Theorem next_weekday_Monday_lem next_weekday_Monday_lem_res:
+  next_weekday_rel Monday_u next_weekday_Monday_lem_res ↔ next_weekday_Monday_lem_res == Tuesday_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite next_weekday_Monday_lem: f_rel_back.
+
+Theorem next_weekday_Tuesday_lem next_weekday_Tuesday_lem_res:
+  next_weekday_rel Tuesday_u next_weekday_Tuesday_lem_res
+  ↔ next_weekday_Tuesday_lem_res == Wednesday_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite next_weekday_Tuesday_lem: f_rel_back.
+
+Theorem next_weekday_Wednesday_lem next_weekday_Wednesday_lem_res:
+  next_weekday_rel Wednesday_u next_weekday_Wednesday_lem_res
+  ↔ next_weekday_Wednesday_lem_res == Thursday_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite next_weekday_Wednesday_lem: f_rel_back.
+
+Theorem next_weekday_Thursday_lem next_weekday_Thursday_lem_res:
+  next_weekday_rel Thursday_u next_weekday_Thursday_lem_res
+  ↔ next_weekday_Thursday_lem_res == Friday_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite next_weekday_Thursday_lem: f_rel_back.
+
+Theorem next_weekday_Friday_lem next_weekday_Friday_lem_res:
+  next_weekday_rel Friday_u next_weekday_Friday_lem_res ↔ next_weekday_Friday_lem_res == Monday_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite next_weekday_Friday_lem: f_rel_back.
+
+Theorem next_weekday_Saturday_lem next_weekday_Saturday_lem_res:
+  next_weekday_rel Saturday_u next_weekday_Saturday_lem_res
+  ↔ next_weekday_Saturday_lem_res == Monday_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite next_weekday_Saturday_lem: f_rel_back.
+
+Theorem next_weekday_Sunday_lem next_weekday_Sunday_lem_res:
+  next_weekday_rel Sunday_u next_weekday_Sunday_lem_res ↔ next_weekday_Sunday_lem_res == Monday_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite next_weekday_Sunday_lem: f_rel_back.
+
+Theorem next_weekday_rel_ex (d : Day_u) (d_p : Day_wf d ∧ True):
+  next_weekday_rel d ⌊ next_weekday (exist _ d d_p) ⌋.
+Proof.
+  existence_lemma_pre next_weekday;
+  destruct d as [| | | | | |];
+  [fix_notations |
+   fix_notations |
+   fix_notations |
+   fix_notations |
+   fix_notations |
+   fix_notations |
+   fix_notations];
+  existence_lemma_quicksolve next_weekday;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve next_weekday_rel_ex: rel_ax_db.
+
+Opaque next_weekday.
+
+Theorem next_weekday__next_weekday_rel_rw (d : Day_u) (d_p : Day_wf d ∧ True) (VV : Day_u):
+  ⌊ next_weekday (exist _ d d_p) ⌋ = VV ↔ next_weekday_rel d VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite next_weekday__next_weekday_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve next_weekday__next_weekday_rel_rw: rel_ax_db.
+
+#[global] Instance next_weekday_lookup_rw: dictionary rwLem next_weekday := {
+    lookup' := next_weekday__next_weekday_rel_rw }.
+
+Theorem next_weekday__next_weekday_rel (d : Day) (VV : Day_u):
+  ⌊ next_weekday d ⌋ = VV ↔ next_weekday_rel ⌊ d ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite next_weekday__next_weekday_rel: f_rel_funct_db.
+
+Theorem next_weekday__next_weekday_rel' (d_u : Day_u) (d : Day) (VV : Day_u):
+  d_u = ⌊ d ⌋ → ⌊ next_weekday d ⌋ = VV ↔ next_weekday_rel d_u VV.
+Proof.
+  intros ->. refine (next_weekday__next_weekday_rel d VV).
+Qed.
+
+#[global] Hint Resolve next_weekday__next_weekday_rel': f_rel_funct_db.
+
+Definition next_weekday_rel_mk (d : Day_u) (d_p : Day_wf d ∧ True): {VV: _ | next_weekday_rel d VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, next_weekday_rel d VV) (next_weekday (exist _ d d_p)) _);
+  rewrite <- next_weekday__next_weekday_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve next_weekday_rel_mk: f_rel_funct_db.
+
+#[global] Instance next_weekday_pack:
+  @Pack
+  (Day ::RT λ (d : Day), nilRT)
+  (Day_u ::UT nilUT)
+  ltac:(mkProjectsArgListTG ((Day ::RT λ (d : Day), nilRT)) ((Day_u ::UT nilUT)))
+  Day_u
+  (λ (x_17529333 : ArgList (Day ::RT λ (d : Day), nilRT)) (v_x_17529333 : Day_u),
+   ltac:(flattenP (λ (d : Day) (VV : Day_u), Day_wf VV ∧ True) x_17529333 v_x_17529333)).
+Proof.
+  buildPackG next_weekday next_weekday_rel next_weekday__next_weekday_rel next_weekday_rel_funct.
+Defined.
+
+#[global] Instance next_weekday_upack: @uPack (Day_u ::UT nilUT) Day_u.
+Proof.
+  buildUPackG next_weekday_rel next_weekday_rel_funct.
+Defined.
+
+Definition test_next_weekday :
+  {{∀ next_weekday_res,
+    next_weekday_rel Saturday_u next_weekday_res
+    → ∀ next_weekday_res_2,
+      next_weekday_rel next_weekday_res next_weekday_res_2 → next_weekday_res_2 == Tuesday_u}}.
+Proof.
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit),
+           ∀ next_weekday_res,
+           next_weekday_rel Saturday_u next_weekday_res
+           → ∀ next_weekday_res_2,
+             next_weekday_rel next_weekday_res next_weekday_res_2 → next_weekday_res_2 == Tuesday_u)
+          (# unit)
+          ltac:(solver)).
+Defined.
+
+Inductive Comparison_u: Set :=
+  | Eq_u: Comparison_u | Gt_u: Comparison_u | Lt_u: Comparison_u.
+
+Fixpoint Comparison_eq (x y : Comparison_u): bool :=
+  match (x, y) with
+  | (Eq_u, Eq_u) => true
+  | (Gt_u, Gt_u) => true
+  | (Lt_u, Lt_u) => true
+  | (_, _) => false
+  end.
+
+Definition Comparison_eq_refl : ∀ (x : Comparison_u), is_true (Comparison_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve Comparison_eq_refl: eq_hint_db.
+
+Definition Comparison_eqb_eq : ∀ (s t : Comparison_u), is_true (Comparison_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Comparison_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Comparison: LeibnitzEqB := {
+    equalB' := Comparison_eq;
+    refl' := Comparison_eq_refl;
+    eqb_eq' := Comparison_eqb_eq }.
+
+Fixpoint Comparison_wf (x : Comparison_u): Prop :=
+  match x with | Eq_u => True | Gt_u => True | Lt_u => True end.
+
+Theorem Comparison_wf_ref
+  [p : Comparison_u → Prop] (tm : {v: Comparison_u | Comparison_wf v ∧ p v}):
+  Comparison_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation Comparison := {x: Comparison_u | Comparison_wf x ∧ True}.
+
+Definition Eq_lem : Comparison_wf Eq_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Eq : Comparison :=
+  exist _ Eq_u Eq_lem.
+
+Definition Gt_lem : Comparison_wf Gt_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Gt : Comparison :=
+  exist _ Gt_u Gt_lem.
+
+Definition Lt_lem : Comparison_wf Lt_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Lt : Comparison :=
+  exist _ Lt_u Lt_lem.
+
+#[global] Hint Resolve Comparison_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold Comparison_wf: wf_constr_db.
+
+#[global] Hint Resolve Comparison_eq: ref_constr_db.
+
+#[global] Hint Unfold Eq: ref_constr_db.
+
+#[global] Hint Unfold Gt: ref_constr_db.
+
+#[global] Hint Unfold Lt: ref_constr_db.
+
+Definition letter_comparison (l1 l2 : Letter): Comparison.
+Proof.
+  destruct l1 as [l1 l1_p].
+  destruct l2 as [l2 l2_p].
+  destruct l1 as [| | | |].
+  - destruct l2 as [| | | |].
+    + refine Eq.
+    + refine Gt.
+    + refine Gt.
+    + refine Gt.
+    + refine Gt.
+  - destruct l2 as [| | | |].
+    + refine Lt.
+    + refine Eq.
+    + refine Gt.
+    + refine Gt.
+    + refine Gt.
+  - destruct l2 as [| | | |].
+    + refine Lt.
+    + refine Lt.
+    + refine Eq.
+    + refine Gt.
+    + refine Gt.
+  - destruct l2 as [| | | |].
+    + refine Lt.
+    + refine Lt.
+    + refine Lt.
+    + refine Eq.
+    + refine Gt.
+  - destruct l2 as [| | | |].
+    + refine Lt.
+    + refine Lt.
+    + refine Lt.
+    + refine Lt.
+    + refine Eq.
+Defined.
+
+Inductive letter_comparison_rel: Letter_u → Letter_u → Comparison_u → Prop :=
+  | letter_comparison_A_A: letter_comparison_rel A_u A_u Eq_u
+  | letter_comparison_A_B: letter_comparison_rel A_u B_u Gt_u
+  | letter_comparison_A_C: letter_comparison_rel A_u C_u Gt_u
+  | letter_comparison_A_D: letter_comparison_rel A_u D_u Gt_u
+  | letter_comparison_A_F: letter_comparison_rel A_u F_u Gt_u
+  | letter_comparison_B_A: letter_comparison_rel B_u A_u Lt_u
+  | letter_comparison_B_B: letter_comparison_rel B_u B_u Eq_u
+  | letter_comparison_B_C: letter_comparison_rel B_u C_u Gt_u
+  | letter_comparison_B_D: letter_comparison_rel B_u D_u Gt_u
+  | letter_comparison_B_F: letter_comparison_rel B_u F_u Gt_u
+  | letter_comparison_C_A: letter_comparison_rel C_u A_u Lt_u
+  | letter_comparison_C_B: letter_comparison_rel C_u B_u Lt_u
+  | letter_comparison_C_C: letter_comparison_rel C_u C_u Eq_u
+  | letter_comparison_C_D: letter_comparison_rel C_u D_u Gt_u
+  | letter_comparison_C_F: letter_comparison_rel C_u F_u Gt_u
+  | letter_comparison_D_A: letter_comparison_rel D_u A_u Lt_u
+  | letter_comparison_D_B: letter_comparison_rel D_u B_u Lt_u
+  | letter_comparison_D_C: letter_comparison_rel D_u C_u Lt_u
+  | letter_comparison_D_D: letter_comparison_rel D_u D_u Eq_u
+  | letter_comparison_D_F: letter_comparison_rel D_u F_u Gt_u
+  | letter_comparison_F_A: letter_comparison_rel F_u A_u Lt_u
+  | letter_comparison_F_B: letter_comparison_rel F_u B_u Lt_u
+  | letter_comparison_F_C: letter_comparison_rel F_u C_u Lt_u
+  | letter_comparison_F_D: letter_comparison_rel F_u D_u Lt_u
+  | letter_comparison_F_F: letter_comparison_rel F_u F_u Eq_u.
+
+#[global] Hint Constructors letter_comparison_rel: core_hint_db.
+
+#[global] Instance letter_comparison_lookup_rel: dictionary rel letter_comparison := {
+    lookup' := letter_comparison_rel }.
+
+#[global] Instance letter_comparison_getF: getFunc letter_comparison_rel := {
+    getF' := letter_comparison }.
+
+Definition letter_comparison_rel_funct [l1 l2 : Letter_u]:
+  ∀ (VV VV' : Comparison_u),
+  letter_comparison_rel l1 l2 VV → (letter_comparison_rel l1 l2 VV' → VV = VV').
+Proof.
+  destruct l1 as [| | | |];
+  [destruct l2 as [| | | |] |
+   destruct l2 as [| | | |] |
+   destruct l2 as [| | | |] |
+   destruct l2 as [| | | |] |
+   destruct l2 as [| | | |]];
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve letter_comparison_rel_funct: f_rel_funct_db.
+
+Theorem letter_comparison_A_A_lem letter_comparison_A_A_lem_res:
+  letter_comparison_rel A_u A_u letter_comparison_A_A_lem_res ↔ letter_comparison_A_A_lem_res == Eq_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_A_A_lem: f_rel_back.
+
+Theorem letter_comparison_A_B_lem letter_comparison_A_B_lem_res:
+  letter_comparison_rel A_u B_u letter_comparison_A_B_lem_res ↔ letter_comparison_A_B_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_A_B_lem: f_rel_back.
+
+Theorem letter_comparison_A_C_lem letter_comparison_A_C_lem_res:
+  letter_comparison_rel A_u C_u letter_comparison_A_C_lem_res ↔ letter_comparison_A_C_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_A_C_lem: f_rel_back.
+
+Theorem letter_comparison_A_D_lem letter_comparison_A_D_lem_res:
+  letter_comparison_rel A_u D_u letter_comparison_A_D_lem_res ↔ letter_comparison_A_D_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_A_D_lem: f_rel_back.
+
+Theorem letter_comparison_A_F_lem letter_comparison_A_F_lem_res:
+  letter_comparison_rel A_u F_u letter_comparison_A_F_lem_res ↔ letter_comparison_A_F_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_A_F_lem: f_rel_back.
+
+Theorem letter_comparison_B_A_lem letter_comparison_B_A_lem_res:
+  letter_comparison_rel B_u A_u letter_comparison_B_A_lem_res ↔ letter_comparison_B_A_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_B_A_lem: f_rel_back.
+
+Theorem letter_comparison_B_B_lem letter_comparison_B_B_lem_res:
+  letter_comparison_rel B_u B_u letter_comparison_B_B_lem_res ↔ letter_comparison_B_B_lem_res == Eq_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_B_B_lem: f_rel_back.
+
+Theorem letter_comparison_B_C_lem letter_comparison_B_C_lem_res:
+  letter_comparison_rel B_u C_u letter_comparison_B_C_lem_res ↔ letter_comparison_B_C_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_B_C_lem: f_rel_back.
+
+Theorem letter_comparison_B_D_lem letter_comparison_B_D_lem_res:
+  letter_comparison_rel B_u D_u letter_comparison_B_D_lem_res ↔ letter_comparison_B_D_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_B_D_lem: f_rel_back.
+
+Theorem letter_comparison_B_F_lem letter_comparison_B_F_lem_res:
+  letter_comparison_rel B_u F_u letter_comparison_B_F_lem_res ↔ letter_comparison_B_F_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_B_F_lem: f_rel_back.
+
+Theorem letter_comparison_C_A_lem letter_comparison_C_A_lem_res:
+  letter_comparison_rel C_u A_u letter_comparison_C_A_lem_res ↔ letter_comparison_C_A_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_C_A_lem: f_rel_back.
+
+Theorem letter_comparison_C_B_lem letter_comparison_C_B_lem_res:
+  letter_comparison_rel C_u B_u letter_comparison_C_B_lem_res ↔ letter_comparison_C_B_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_C_B_lem: f_rel_back.
+
+Theorem letter_comparison_C_C_lem letter_comparison_C_C_lem_res:
+  letter_comparison_rel C_u C_u letter_comparison_C_C_lem_res ↔ letter_comparison_C_C_lem_res == Eq_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_C_C_lem: f_rel_back.
+
+Theorem letter_comparison_C_D_lem letter_comparison_C_D_lem_res:
+  letter_comparison_rel C_u D_u letter_comparison_C_D_lem_res ↔ letter_comparison_C_D_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_C_D_lem: f_rel_back.
+
+Theorem letter_comparison_C_F_lem letter_comparison_C_F_lem_res:
+  letter_comparison_rel C_u F_u letter_comparison_C_F_lem_res ↔ letter_comparison_C_F_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_C_F_lem: f_rel_back.
+
+Theorem letter_comparison_D_A_lem letter_comparison_D_A_lem_res:
+  letter_comparison_rel D_u A_u letter_comparison_D_A_lem_res ↔ letter_comparison_D_A_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_D_A_lem: f_rel_back.
+
+Theorem letter_comparison_D_B_lem letter_comparison_D_B_lem_res:
+  letter_comparison_rel D_u B_u letter_comparison_D_B_lem_res ↔ letter_comparison_D_B_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_D_B_lem: f_rel_back.
+
+Theorem letter_comparison_D_C_lem letter_comparison_D_C_lem_res:
+  letter_comparison_rel D_u C_u letter_comparison_D_C_lem_res ↔ letter_comparison_D_C_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_D_C_lem: f_rel_back.
+
+Theorem letter_comparison_D_D_lem letter_comparison_D_D_lem_res:
+  letter_comparison_rel D_u D_u letter_comparison_D_D_lem_res ↔ letter_comparison_D_D_lem_res == Eq_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_D_D_lem: f_rel_back.
+
+Theorem letter_comparison_D_F_lem letter_comparison_D_F_lem_res:
+  letter_comparison_rel D_u F_u letter_comparison_D_F_lem_res ↔ letter_comparison_D_F_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_D_F_lem: f_rel_back.
+
+Theorem letter_comparison_F_A_lem letter_comparison_F_A_lem_res:
+  letter_comparison_rel F_u A_u letter_comparison_F_A_lem_res ↔ letter_comparison_F_A_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_F_A_lem: f_rel_back.
+
+Theorem letter_comparison_F_B_lem letter_comparison_F_B_lem_res:
+  letter_comparison_rel F_u B_u letter_comparison_F_B_lem_res ↔ letter_comparison_F_B_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_F_B_lem: f_rel_back.
+
+Theorem letter_comparison_F_C_lem letter_comparison_F_C_lem_res:
+  letter_comparison_rel F_u C_u letter_comparison_F_C_lem_res ↔ letter_comparison_F_C_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_F_C_lem: f_rel_back.
+
+Theorem letter_comparison_F_D_lem letter_comparison_F_D_lem_res:
+  letter_comparison_rel F_u D_u letter_comparison_F_D_lem_res ↔ letter_comparison_F_D_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_F_D_lem: f_rel_back.
+
+Theorem letter_comparison_F_F_lem letter_comparison_F_F_lem_res:
+  letter_comparison_rel F_u F_u letter_comparison_F_F_lem_res ↔ letter_comparison_F_F_lem_res == Eq_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite letter_comparison_F_F_lem: f_rel_back.
+
+Theorem letter_comparison_rel_ex
+  (l1 : Letter_u) (l1_p : Letter_wf l1 ∧ True) (l2 : Letter_u) (l2_p : Letter_wf l2 ∧ True):
+  letter_comparison_rel l1 l2 ⌊ letter_comparison (exist _ l1 l1_p) (exist _ l2 l2_p) ⌋.
+Proof.
+  existence_lemma_pre letter_comparison;
+  destruct l1 as [| | | |];
+  [destruct l2 as [| | | |];
+   [fix_notations | fix_notations | fix_notations | fix_notations | fix_notations] |
+   destruct l2 as [| | | |];
+   [fix_notations | fix_notations | fix_notations | fix_notations | fix_notations] |
+   destruct l2 as [| | | |];
+   [fix_notations | fix_notations | fix_notations | fix_notations | fix_notations] |
+   destruct l2 as [| | | |];
+   [fix_notations | fix_notations | fix_notations | fix_notations | fix_notations] |
+   destruct l2 as [| | | |];
+   [fix_notations | fix_notations | fix_notations | fix_notations | fix_notations]];
+  existence_lemma_quicksolve letter_comparison;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve letter_comparison_rel_ex: rel_ax_db.
+
+Opaque letter_comparison.
+
+Theorem letter_comparison__letter_comparison_rel_rw
+  (l1 : Letter_u)
+  (l1_p : Letter_wf l1 ∧ True)
+  (l2 : Letter_u)
+  (l2_p : Letter_wf l2 ∧ True)
+  (VV : Comparison_u):
+  ⌊ letter_comparison (exist _ l1 l1_p) (exist _ l2 l2_p) ⌋ = VV ↔ letter_comparison_rel l1 l2 VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite letter_comparison__letter_comparison_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve letter_comparison__letter_comparison_rel_rw: rel_ax_db.
+
+#[global] Instance letter_comparison_lookup_rw: dictionary rwLem letter_comparison := {
+    lookup' := letter_comparison__letter_comparison_rel_rw }.
+
+Theorem letter_comparison__letter_comparison_rel (l1 l2 : Letter) (VV : Comparison_u):
+  ⌊ letter_comparison l1 l2 ⌋ = VV ↔ letter_comparison_rel ⌊ l1 ⌋ ⌊ l2 ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite letter_comparison__letter_comparison_rel: f_rel_funct_db.
+
+Theorem letter_comparison__letter_comparison_rel'
+  (l1_u l2_u : Letter_u) (l1 l2 : Letter) (VV : Comparison_u):
+  l1_u = ⌊ l1 ⌋
+  → (l2_u = ⌊ l2 ⌋ → ⌊ letter_comparison l1 l2 ⌋ = VV ↔ letter_comparison_rel l1_u l2_u VV).
+Proof.
+  intros -> ->. refine (letter_comparison__letter_comparison_rel l1 l2 VV).
+Qed.
+
+#[global] Hint Resolve letter_comparison__letter_comparison_rel': f_rel_funct_db.
+
+Definition letter_comparison_rel_mk
+  (l1 : Letter_u) (l1_p : Letter_wf l1 ∧ True) (l2 : Letter_u) (l2_p : Letter_wf l2 ∧ True):
+  {VV: _ | letter_comparison_rel l1 l2 VV}.
+Proof.
+  intros;
+  refine (subsumptionCast
+          _
+          (λ VV, letter_comparison_rel l1 l2 VV)
+          (letter_comparison (exist _ l1 l1_p) (exist _ l2 l2_p))
+          _);
+  rewrite <- letter_comparison__letter_comparison_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve letter_comparison_rel_mk: f_rel_funct_db.
+
+#[global] Instance letter_comparison_pack:
+  @Pack
+  (Letter ::RT λ (l1 : Letter), Letter ::RT λ (l2 : Letter), nilRT)
+  (Letter_u ::UT (Letter_u ::UT nilUT))
+  ltac:(mkProjectsArgListTG ((Letter ::RT λ (l1 : Letter), Letter ::RT λ (l2 : Letter), nilRT)) ((Letter_u ::UT (Letter_u ::UT nilUT))))
+  Comparison_u
+  (λ (x_66454643 : ArgList (Letter ::RT λ (l1 : Letter), Letter ::RT λ (l2 : Letter), nilRT))
+     (v_x_66454643 : Comparison_u),
+   ltac:(flattenP (λ (l1 l2 : Letter) (VV : Comparison_u), Comparison_wf VV ∧ True) x_66454643 v_x_66454643)).
+Proof.
+  buildPackG letter_comparison letter_comparison_rel letter_comparison__letter_comparison_rel letter_comparison_rel_funct.
+Defined.
+
+#[global] Instance letter_comparison_upack:
+  @uPack (Letter_u ::UT (Letter_u ::UT nilUT)) Comparison_u.
+Proof.
+  buildUPackG letter_comparison_rel letter_comparison_rel_funct.
+Defined.
+
+Definition letter_comparison_eq (l : Letter):
+  {{∀ letter_comparison_res,
+    letter_comparison_rel ⌊ l ⌋ ⌊ l ⌋ letter_comparison_res → letter_comparison_res == Eq_u}}.
+Proof.
+  destruct l as [l l_p].
+  destruct l as [| | | |].
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ letter_comparison_res,
+             letter_comparison_rel ⌊ l ⌋ ⌊ l ⌋ letter_comparison_res → letter_comparison_res == Eq_u)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ letter_comparison_res,
+             letter_comparison_rel ⌊ l ⌋ ⌊ l ⌋ letter_comparison_res → letter_comparison_res == Eq_u)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ letter_comparison_res,
+             letter_comparison_rel ⌊ l ⌋ ⌊ l ⌋ letter_comparison_res → letter_comparison_res == Eq_u)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ letter_comparison_res,
+             letter_comparison_rel ⌊ l ⌋ ⌊ l ⌋ letter_comparison_res → letter_comparison_res == Eq_u)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ letter_comparison_res,
+             letter_comparison_rel ⌊ l ⌋ ⌊ l ⌋ letter_comparison_res → letter_comparison_res == Eq_u)
+            (# unit)
+            ltac:(solver)).
+Defined.
+
+Definition lower_letter_lowers
+  (l : Letter)
+  (p : {{∀ letter_comparison_res,
+         letter_comparison_rel F_u ⌊ l ⌋ letter_comparison_res → letter_comparison_res == Lt_u}}):
+  {{∀ lower_letter_res,
+    lower_letter_rel ⌊ l ⌋ lower_letter_res
+    → ∀ letter_comparison_res,
+      letter_comparison_rel lower_letter_res ⌊ l ⌋ letter_comparison_res
+      → letter_comparison_res == Lt_u}}.
+Proof.
+  destruct l as [l l_p].
+  destruct p as [p p_p].
+  destruct l as [| | | |].
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ lower_letter_res,
+             lower_letter_rel ⌊ l ⌋ lower_letter_res
+             → ∀ letter_comparison_res,
+               letter_comparison_rel lower_letter_res ⌊ l ⌋ letter_comparison_res → letter_comparison_res == Lt_u)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ lower_letter_res,
+             lower_letter_rel ⌊ l ⌋ lower_letter_res
+             → ∀ letter_comparison_res,
+               letter_comparison_rel lower_letter_res ⌊ l ⌋ letter_comparison_res → letter_comparison_res == Lt_u)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ lower_letter_res,
+             lower_letter_rel ⌊ l ⌋ lower_letter_res
+             → ∀ letter_comparison_res,
+               letter_comparison_rel lower_letter_res ⌊ l ⌋ letter_comparison_res → letter_comparison_res == Lt_u)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ lower_letter_res,
+             lower_letter_rel ⌊ l ⌋ lower_letter_res
+             → ∀ letter_comparison_res,
+               letter_comparison_rel lower_letter_res ⌊ l ⌋ letter_comparison_res → letter_comparison_res == Lt_u)
+            (# unit)
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∀ lower_letter_res,
+             lower_letter_rel ⌊ l ⌋ lower_letter_res
+             → ∀ letter_comparison_res,
+               letter_comparison_rel lower_letter_res ⌊ l ⌋ letter_comparison_res → letter_comparison_res == Lt_u)
+            (exist (λ (p : Unit),
+                    ∀ letter_comparison_res,
+                    letter_comparison_rel F_u ⌊ l ⌋ letter_comparison_res
+                    → letter_comparison_res == Lt_u) p ltac:(solver))
+            ltac:(solver)).
+Defined.
+
+Definition modifier_comparison (m1 m2 : Modifier): Comparison.
+Proof.
+  destruct m1 as [m1 m1_p].
+  destruct m2 as [m2 m2_p].
+  destruct m1 as [| |].
+  - destruct m2 as [| |].
+    + refine Eq.
+    + refine Lt.
+    + refine Lt.
+  - destruct m2 as [| |].
+    + refine Gt.
+    + refine Eq.
+    + refine Lt.
+  - destruct m2 as [| |].
+    + refine Gt.
+    + refine Gt.
+    + refine Eq.
+Defined.
+
+Inductive modifier_comparison_rel: Modifier_u → Modifier_u → Comparison_u → Prop :=
+  | modifier_comparison_Plus_Plus: modifier_comparison_rel Plus_u Plus_u Eq_u
+  | modifier_comparison_Plus_Natural: modifier_comparison_rel Plus_u Natural_u Gt_u
+  | modifier_comparison_Plus_Minus: modifier_comparison_rel Plus_u Minus_u Gt_u
+  | modifier_comparison_Natural_Plus: modifier_comparison_rel Natural_u Plus_u Lt_u
+  | modifier_comparison_Natural_Natural: modifier_comparison_rel Natural_u Natural_u Eq_u
+  | modifier_comparison_Natural_Minus: modifier_comparison_rel Natural_u Minus_u Gt_u
+  | modifier_comparison_Minus_Plus: modifier_comparison_rel Minus_u Plus_u Lt_u
+  | modifier_comparison_Minus_Natural: modifier_comparison_rel Minus_u Natural_u Lt_u
+  | modifier_comparison_Minus_Minus: modifier_comparison_rel Minus_u Minus_u Eq_u.
+
+#[global] Hint Constructors modifier_comparison_rel: core_hint_db.
+
+#[global] Instance modifier_comparison_lookup_rel: dictionary rel modifier_comparison := {
+    lookup' := modifier_comparison_rel }.
+
+#[global] Instance modifier_comparison_getF: getFunc modifier_comparison_rel := {
+    getF' := modifier_comparison }.
+
+Definition modifier_comparison_rel_funct [m1 m2 : Modifier_u]:
+  ∀ (VV VV' : Comparison_u),
+  modifier_comparison_rel m1 m2 VV → (modifier_comparison_rel m1 m2 VV' → VV = VV').
+Proof.
+  destruct m1 as [| |];
+  [destruct m2 as [| |] | destruct m2 as [| |] | destruct m2 as [| |]];
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve modifier_comparison_rel_funct: f_rel_funct_db.
+
+Theorem modifier_comparison_Plus_Plus_lem modifier_comparison_Plus_Plus_lem_res:
+  modifier_comparison_rel Plus_u Plus_u modifier_comparison_Plus_Plus_lem_res
+  ↔ modifier_comparison_Plus_Plus_lem_res == Eq_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Plus_Plus_lem: f_rel_back.
+
+Theorem modifier_comparison_Plus_Natural_lem modifier_comparison_Plus_Natural_lem_res:
+  modifier_comparison_rel Plus_u Natural_u modifier_comparison_Plus_Natural_lem_res
+  ↔ modifier_comparison_Plus_Natural_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Plus_Natural_lem: f_rel_back.
+
+Theorem modifier_comparison_Plus_Minus_lem modifier_comparison_Plus_Minus_lem_res:
+  modifier_comparison_rel Plus_u Minus_u modifier_comparison_Plus_Minus_lem_res
+  ↔ modifier_comparison_Plus_Minus_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Plus_Minus_lem: f_rel_back.
+
+Theorem modifier_comparison_Natural_Plus_lem modifier_comparison_Natural_Plus_lem_res:
+  modifier_comparison_rel Natural_u Plus_u modifier_comparison_Natural_Plus_lem_res
+  ↔ modifier_comparison_Natural_Plus_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Natural_Plus_lem: f_rel_back.
+
+Theorem modifier_comparison_Natural_Natural_lem modifier_comparison_Natural_Natural_lem_res:
+  modifier_comparison_rel Natural_u Natural_u modifier_comparison_Natural_Natural_lem_res
+  ↔ modifier_comparison_Natural_Natural_lem_res == Eq_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Natural_Natural_lem: f_rel_back.
+
+Theorem modifier_comparison_Natural_Minus_lem modifier_comparison_Natural_Minus_lem_res:
+  modifier_comparison_rel Natural_u Minus_u modifier_comparison_Natural_Minus_lem_res
+  ↔ modifier_comparison_Natural_Minus_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Natural_Minus_lem: f_rel_back.
+
+Theorem modifier_comparison_Minus_Plus_lem modifier_comparison_Minus_Plus_lem_res:
+  modifier_comparison_rel Minus_u Plus_u modifier_comparison_Minus_Plus_lem_res
+  ↔ modifier_comparison_Minus_Plus_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Minus_Plus_lem: f_rel_back.
+
+Theorem modifier_comparison_Minus_Natural_lem modifier_comparison_Minus_Natural_lem_res:
+  modifier_comparison_rel Minus_u Natural_u modifier_comparison_Minus_Natural_lem_res
+  ↔ modifier_comparison_Minus_Natural_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Minus_Natural_lem: f_rel_back.
+
+Theorem modifier_comparison_Minus_Minus_lem modifier_comparison_Minus_Minus_lem_res:
+  modifier_comparison_rel Minus_u Minus_u modifier_comparison_Minus_Minus_lem_res
+  ↔ modifier_comparison_Minus_Minus_lem_res == Eq_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Minus_Minus_lem: f_rel_back.
+
+Theorem modifier_comparison_rel_ex
+  (m1 : Modifier_u) (m1_p : Modifier_wf m1 ∧ True) (m2 : Modifier_u) (m2_p : Modifier_wf m2 ∧ True):
+  modifier_comparison_rel m1 m2 ⌊ modifier_comparison (exist _ m1 m1_p) (exist _ m2 m2_p) ⌋.
+Proof.
+  existence_lemma_pre modifier_comparison;
+  destruct m1 as [| |];
+  [destruct m2 as [| |];
+   [fix_notations | fix_notations | fix_notations] |
+   destruct m2 as [| |];
+   [fix_notations | fix_notations | fix_notations] |
+   destruct m2 as [| |];
+   [fix_notations | fix_notations | fix_notations]];
+  existence_lemma_quicksolve modifier_comparison;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve modifier_comparison_rel_ex: rel_ax_db.
+
+Opaque modifier_comparison.
+
+Theorem modifier_comparison__modifier_comparison_rel_rw
+  (m1 : Modifier_u)
+  (m1_p : Modifier_wf m1 ∧ True)
+  (m2 : Modifier_u)
+  (m2_p : Modifier_wf m2 ∧ True)
+  (VV : Comparison_u):
+  ⌊ modifier_comparison (exist _ m1 m1_p) (exist _ m2 m2_p) ⌋ = VV ↔ modifier_comparison_rel m1 m2 VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison__modifier_comparison_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve modifier_comparison__modifier_comparison_rel_rw: rel_ax_db.
+
+#[global] Instance modifier_comparison_lookup_rw: dictionary rwLem modifier_comparison := {
+    lookup' := modifier_comparison__modifier_comparison_rel_rw }.
+
+Theorem modifier_comparison__modifier_comparison_rel (m1 m2 : Modifier) (VV : Comparison_u):
+  ⌊ modifier_comparison m1 m2 ⌋ = VV ↔ modifier_comparison_rel ⌊ m1 ⌋ ⌊ m2 ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison__modifier_comparison_rel: f_rel_funct_db.
+
+Theorem modifier_comparison__modifier_comparison_rel'
+  (m1_u m2_u : Modifier_u) (m1 m2 : Modifier) (VV : Comparison_u):
+  m1_u = ⌊ m1 ⌋
+  → (m2_u = ⌊ m2 ⌋ → ⌊ modifier_comparison m1 m2 ⌋ = VV ↔ modifier_comparison_rel m1_u m2_u VV).
+Proof.
+  intros -> ->. refine (modifier_comparison__modifier_comparison_rel m1 m2 VV).
+Qed.
+
+#[global] Hint Resolve modifier_comparison__modifier_comparison_rel': f_rel_funct_db.
+
+Definition modifier_comparison_rel_mk
+  (m1 : Modifier_u) (m1_p : Modifier_wf m1 ∧ True) (m2 : Modifier_u) (m2_p : Modifier_wf m2 ∧ True):
+  {VV: _ | modifier_comparison_rel m1 m2 VV}.
+Proof.
+  intros;
+  refine (subsumptionCast
+          _
+          (λ VV, modifier_comparison_rel m1 m2 VV)
+          (modifier_comparison (exist _ m1 m1_p) (exist _ m2 m2_p))
+          _);
+  rewrite <- modifier_comparison__modifier_comparison_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve modifier_comparison_rel_mk: f_rel_funct_db.
+
+#[global] Instance modifier_comparison_pack:
+  @Pack
+  (Modifier ::RT λ (m1 : Modifier), Modifier ::RT λ (m2 : Modifier), nilRT)
+  (Modifier_u ::UT (Modifier_u ::UT nilUT))
+  ltac:(mkProjectsArgListTG ((Modifier
+  ::RT λ (m1 : Modifier), Modifier ::RT λ (m2 : Modifier), nilRT)) ((Modifier_u ::UT (Modifier_u ::UT nilUT))))
+  Comparison_u
+  (λ (x_60743842 : ArgList (Modifier ::RT λ (m1 : Modifier), Modifier ::RT λ (m2 : Modifier), nilRT))
+     (v_x_60743842 : Comparison_u),
+   ltac:(flattenP (λ (m1 m2 : Modifier) (VV : Comparison_u), Comparison_wf VV ∧ True) x_60743842 v_x_60743842)).
+Proof.
+  buildPackG modifier_comparison modifier_comparison_rel modifier_comparison__modifier_comparison_rel modifier_comparison_rel_funct.
+Defined.
+
+#[global] Instance modifier_comparison_upack:
+  @uPack (Modifier_u ::UT (Modifier_u ::UT nilUT)) Comparison_u.
+Proof.
+  buildUPackG modifier_comparison_rel modifier_comparison_rel_funct.
+Defined.
+
+Inductive Color_u: Set :=
+  | Black_u: Color_u | Primary_u: RGB_u → Color_u | White_u: Color_u.
+
+Fixpoint Color_eq (x y : Color_u): bool :=
+  match (x, y) with
+  | (Black_u, Black_u) => true
+  | (Primary_u VV, Primary_u VV') => true && (VV ==? VV')
+  | (White_u, White_u) => true
+  | (_, _) => false
+  end.
+
+Definition Color_eq_refl : ∀ (x : Color_u), is_true (Color_eq x x).
+Proof.
+  eq_refl.
+Qed.
+
+#[global] Hint Resolve Color_eq_refl: eq_hint_db.
+
+Definition Color_eqb_eq : ∀ (s t : Color_u), is_true (Color_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Color_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Color: LeibnitzEqB := {
+    equalB' := Color_eq;
+    refl' := Color_eq_refl;
+    eqb_eq' := Color_eqb_eq }.
+
+Fixpoint Color_wf (x : Color_u): Prop :=
+  match x with | Black_u => True | Primary_u VV => RGB_wf VV ∧ True | White_u => True end.
+
+Theorem Color_wf_ref [p : Color_u → Prop] (tm : {v: Color_u | Color_wf v ∧ p v}): Color_wf ⌊ tm ⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation Color := {x: Color_u | Color_wf x ∧ True}.
+
+Definition Black_lem : Color_wf Black_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Black : Color :=
+  exist _ Black_u Black_lem.
+
+Definition Primary_lem (VV : RGB): Color_wf (Primary_u ⌊ VV ⌋) ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition Primary (VV : RGB): Color :=
+  exist _ (Primary_u ⌊ VV ⌋) (Primary_lem VV).
+
+Definition White_lem : Color_wf White_u ∧ True.
+Proof.
+  repeat first [split; solver].
+Defined.
+
+Definition White : Color :=
+  exist _ White_u White_lem.
+
+Definition wf_Primary_VV [VV : RGB_u] (p : Color_wf (Primary_u VV)): RGB_wf VV.
+Proof.
+  quicksolve.
+Defined.
+
+#[global] Hint Resolve wf_Primary_VV: ref_constr_db.
+
+#[global] Hint Resolve Color_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold Color_wf: wf_constr_db.
+
+#[global] Hint Resolve Color_eq: ref_constr_db.
+
+#[global] Hint Unfold Black: ref_constr_db.
+
+#[global] Hint Unfold Primary: ref_constr_db.
+
+#[global] Hint Unfold White: ref_constr_db.
+
+Definition isred (c : Color): SFBool.
+Proof.
+  destruct c as [c c_p].
+  destruct c as [| ds_d3Ib|].
+  - refine SFFalse.
+  - destruct ds_d3Ib as [| |].
+    + refine SFFalse.
+    + refine SFFalse.
+    + refine SFTrue.
+  - refine SFFalse.
+Defined.
+
+Definition monochrome (c : Color): SFBool.
+Proof.
+  destruct c as [c c_p].
+  destruct c as [| p|].
+  - refine SFTrue.
+  - refine SFFalse.
+  - refine SFTrue.
+Defined.
+
+Inductive monochrome_rel: Color_u → SFBool_u → Prop :=
+  | monochrome_Black: monochrome_rel Black_u SFTrue_u
+  | monochrome_White: monochrome_rel White_u SFTrue_u
+  | monochrome_Primary: ∀ p, monochrome_rel (Primary_u p) SFFalse_u.
+
+#[global] Hint Constructors monochrome_rel: core_hint_db.
+
+#[global] Instance monochrome_lookup_rel: dictionary rel monochrome := {
+    lookup' := monochrome_rel }.
+
+#[global] Instance monochrome_getF: getFunc monochrome_rel := { getF' := monochrome }.
+
+Definition monochrome_rel_funct [c : Color_u]:
+  ∀ (VV VV' : SFBool_u), monochrome_rel c VV → (monochrome_rel c VV' → VV = VV').
+Proof.
+  destruct c as [| p|]; rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve monochrome_rel_funct: f_rel_funct_db.
+
+Theorem monochrome_Black_lem monochrome_Black_lem_res:
+  monochrome_rel Black_u monochrome_Black_lem_res ↔ monochrome_Black_lem_res == SFTrue_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite monochrome_Black_lem: f_rel_back.
+
+Theorem monochrome_White_lem monochrome_White_lem_res:
+  monochrome_rel White_u monochrome_White_lem_res ↔ monochrome_White_lem_res == SFTrue_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite monochrome_White_lem: f_rel_back.
+
+Theorem monochrome_Primary_lem p monochrome_Primary_lem_res:
+  monochrome_rel (Primary_u p) monochrome_Primary_lem_res ↔ monochrome_Primary_lem_res == SFFalse_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite monochrome_Primary_lem: f_rel_back.
+
+Theorem monochrome_rel_ex (c : Color_u) (c_p : Color_wf c ∧ True):
+  monochrome_rel c ⌊ monochrome (exist _ c c_p) ⌋.
+Proof.
+  existence_lemma_pre monochrome;
+  destruct c as [| p|];
+  [fix_notations | fix_notations | fix_notations];
+  existence_lemma_quicksolve monochrome;
+  f__f_rel_ex_body;
+  f_rel_finish.
+Qed.
+
+#[global] Hint Resolve monochrome_rel_ex: rel_ax_db.
+
+Opaque monochrome.
+
+Theorem monochrome__monochrome_rel_rw (c : Color_u) (c_p : Color_wf c ∧ True) (VV : SFBool_u):
+  ⌊ monochrome (exist _ c c_p) ⌋ = VV ↔ monochrome_rel c VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite monochrome__monochrome_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve monochrome__monochrome_rel_rw: rel_ax_db.
+
+#[global] Instance monochrome_lookup_rw: dictionary rwLem monochrome := {
+    lookup' := monochrome__monochrome_rel_rw }.
+
+Theorem monochrome__monochrome_rel (c : Color) (VV : SFBool_u):
+  ⌊ monochrome c ⌋ = VV ↔ monochrome_rel ⌊ c ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite monochrome__monochrome_rel: f_rel_funct_db.
+
+Theorem monochrome__monochrome_rel' (c_u : Color_u) (c : Color) (VV : SFBool_u):
+  c_u = ⌊ c ⌋ → ⌊ monochrome c ⌋ = VV ↔ monochrome_rel c_u VV.
+Proof.
+  intros ->. refine (monochrome__monochrome_rel c VV).
+Qed.
+
+#[global] Hint Resolve monochrome__monochrome_rel': f_rel_funct_db.
+
+Definition monochrome_rel_mk (c : Color_u) (c_p : Color_wf c ∧ True): {VV: _ | monochrome_rel c VV}.
+Proof.
+  intros;
+  refine (subsumptionCast _ (λ VV, monochrome_rel c VV) (monochrome (exist _ c c_p)) _);
+  rewrite <- monochrome__monochrome_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve monochrome_rel_mk: f_rel_funct_db.
+
+#[global] Instance monochrome_pack:
+  @Pack
+  (Color ::RT λ (c : Color), nilRT)
+  (Color_u ::UT nilUT)
+  ltac:(mkProjectsArgListTG ((Color ::RT λ (c : Color), nilRT)) ((Color_u ::UT nilUT)))
+  SFBool_u
+  (λ (x_66000557 : ArgList (Color ::RT λ (c : Color), nilRT)) (v_x_66000557 : SFBool_u),
+   ltac:(flattenP (λ (c : Color) (VV : SFBool_u), SFBool_wf VV ∧ True) x_66000557 v_x_66000557)).
+Proof.
+  buildPackG monochrome monochrome_rel monochrome__monochrome_rel monochrome_rel_funct.
+Defined.
+
+#[global] Instance monochrome_upack: @uPack (Color_u ::UT nilUT) SFBool_u.
+Proof.
+  buildUPackG monochrome_rel monochrome_rel_funct.
+Defined.
