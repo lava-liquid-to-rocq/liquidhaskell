@@ -8,12 +8,16 @@
 coqDeps/BoolTacs.v
 coqDeps/PairLists.v
 coqDeps/Snipe.v
+coqDeps/EqualityInterface.v
 coqDeps/Equality.v
+coqDeps/LiquidPreludeInterface.v
 coqDeps/LiquidPrelude.v
 coqDeps/SubsumptionTacs.v
 coqDeps/QuickTacs.v
-coqDeps/TacticUtils.v
+coqDeps/SimpleTacticUtils.v
+coqDeps/GetRelInterface.v
 coqDeps/GetRelFlattening.v
+coqDeps/TacticUtils.v
 coqDeps/LHCoqTactics.v
 
 coqDeps/LiquidPreludeUtil.v
@@ -22,15 +26,17 @@ coqDeps/LiquidPreludeUtil.v
 # manual/Benchmark/SFGradeExample0.v
 # manual/Benchmark/SFGradeExample.v
 
-out/Benchmark/PLE/MonadMaybe.v
-out/Benchmark/PLE/MonadId.v
-# # out/Benchmark/PLE/MonadList.v
-out/Benchmark/PLE/MonoidList.v
-out/Benchmark/PLE/MonoidMaybe.v
-#
+out/Benchmark/PLE/Append.v
+out/Benchmark/PLE/Lists.v
 out/Benchmark/PLE/Compose.v
 out/Benchmark/PLE/Lambdas.v
-out/Benchmark/PLE/Lists.v
+out/Benchmark/PLE/FoldrUniversal.v
+#
+out/Benchmark/PLE/MonadMaybe.v
+out/Benchmark/PLE/MonadId.v
+out/Benchmark/PLE/MonadList.v
+out/Benchmark/PLE/MonoidList.v
+out/Benchmark/PLE/MonoidMaybe.v
 #
 #
 out/Benchmark/RBinsToBins.v
@@ -38,6 +44,10 @@ out/Benchmark/SoftwareFoundations.v
 out/Benchmark/PeanoNats.v
 # out/Benchmark/Half.v
 out/Benchmark/Overview.v
+
+#out/TranslationTests/FunctorId.v
+#out/TranslationTests/FunctorMaybe.v
+#out/TranslationTests/FunctorList.v
 
 # subsumed by SoftwareFoundations, Overview, PeanoNats resp.
 # out/Benchmark/GradeExample.v
