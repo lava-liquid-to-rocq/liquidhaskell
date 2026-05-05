@@ -1818,11 +1818,11 @@ Defined.
 Definition allzero (lq_tmp0 : Nibble): SFBool.
 Proof.
   destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
-  destruct lq_tmp0 as [ds_d3I2 ds_d3I3 ds_d3I4 ds_d3I5].
-  - destruct ds_d3I2 as [|].
-    + destruct ds_d3I3 as [|].
-      ** destruct ds_d3I4 as [|].
-         ** destruct ds_d3I5 as [|].
+  destruct lq_tmp0 as [ds_d3FS ds_d3FT ds_d3FU ds_d3FV].
+  - destruct ds_d3FS as [|].
+    + destruct ds_d3FT as [|].
+      ** destruct ds_d3FU as [|].
+         ** destruct ds_d3FV as [|].
             ** refine SFTrue.
             ** refine SFFalse.
          ** refine SFFalse.
@@ -2605,18 +2605,18 @@ Definition minus (n m : MyNat): MyNat.
 Proof.
   destruct n as [n n_p].
   destruct m as [m m_p].
-  try revert m_p; generalize dependent m; induction n as [| ds_d3Hz IH_ds_d3Hz]; intros.
+  try revert m_p; generalize dependent m; induction n as [| ds_d3Fp IH_ds_d3Fp]; intros.
   - refine O.
   - destruct m as [| m'].
-    + refine (S (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) ds_d3Hz ltac:(solver))).
-    + refine (IH_ds_d3Hz ltac:(try clear IH_ds_d3Hz; solver) m' ltac:(try clear IH_ds_d3Hz; solver)).
+    + refine (S (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) ds_d3Fp ltac:(solver))).
+    + refine (IH_ds_d3Fp ltac:(try clear IH_ds_d3Fp; solver) m' ltac:(try clear IH_ds_d3Fp; solver)).
 Defined.
 
 Inductive minus_rel: MyNat_u → MyNat_u → MyNat_u → Prop :=
   | minus_O_x: ∀ m, minus_rel O_u m O_u
-  | minus_S_O: ∀ ds_d3Hz, minus_rel (S_u ds_d3Hz) O_u (S_u ds_d3Hz)
-  | minus_S_S: ∀ ds_d3Hz m' minus_res,
-               minus_rel ds_d3Hz m' minus_res → minus_rel (S_u ds_d3Hz) (S_u m') minus_res.
+  | minus_S_O: ∀ ds_d3Fp, minus_rel (S_u ds_d3Fp) O_u (S_u ds_d3Fp)
+  | minus_S_S: ∀ ds_d3Fp m' minus_res,
+               minus_rel ds_d3Fp m' minus_res → minus_rel (S_u ds_d3Fp) (S_u m') minus_res.
 
 #[global] Hint Constructors minus_rel: core_hint_db.
 
@@ -2627,7 +2627,7 @@ Inductive minus_rel: MyNat_u → MyNat_u → MyNat_u → Prop :=
 Definition minus_rel_funct [n m : MyNat_u]:
   ∀ (VV VV' : MyNat_u), minus_rel n m VV → (minus_rel n m VV' → VV = VV').
 Proof.
-  try revert m_p; generalize dependent m; induction n as [| ds_d3Hz IH_ds_d3Hz]; intros;
+  try revert m_p; generalize dependent m; induction n as [| ds_d3Fp IH_ds_d3Fp]; intros;
   [ | destruct m as [| m']];
   rel_functionhood_body.
 Qed.
@@ -2642,17 +2642,17 @@ Qed.
 
 #[global] Hint Rewrite minus_O_x_lem: f_rel_back.
 
-Theorem minus_S_O_lem ds_d3Hz minus_S_O_lem_res:
-  minus_rel (S_u ds_d3Hz) O_u minus_S_O_lem_res ↔ minus_S_O_lem_res == S_u ds_d3Hz.
+Theorem minus_S_O_lem ds_d3Fp minus_S_O_lem_res:
+  minus_rel (S_u ds_d3Fp) O_u minus_S_O_lem_res ↔ minus_S_O_lem_res == S_u ds_d3Fp.
 Proof.
   rel_back' _nil.
 Qed.
 
 #[global] Hint Rewrite minus_S_O_lem: f_rel_back.
 
-Theorem minus_S_S_lem ds_d3Hz m' minus_S_S_lem_res:
-  minus_rel (S_u ds_d3Hz) (S_u m') minus_S_S_lem_res
-  ↔ ∃ minus_res, minus_rel ds_d3Hz m' minus_res ∧ minus_S_S_lem_res == minus_res.
+Theorem minus_S_S_lem ds_d3Fp m' minus_S_S_lem_res:
+  minus_rel (S_u ds_d3Fp) (S_u m') minus_S_S_lem_res
+  ↔ ∃ minus_res, minus_rel ds_d3Fp m' minus_res ∧ minus_S_S_lem_res == minus_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -2664,16 +2664,16 @@ Theorem minus_rel_ex
   minus_rel n m ⌊ minus (exist _ n n_p) (exist _ m m_p) ⌋.
 Proof.
   existence_lemma_pre minus;
-  try revert m_p; generalize dependent m; induction n as [| ds_d3Hz IH_ds_d3Hz]; intros;
+  try revert m_p; generalize dependent m; induction n as [| ds_d3Fp IH_ds_d3Fp]; intros;
   [fix_notations |
    destruct m as [| m'];
    [fix_notations |
     fix_notations;
-    pose proof (IH_ds_d3Hz
-                ltac:(try clear IH_ds_d3Hz; solver)
+    pose proof (IH_ds_d3Fp
+                ltac:(try clear IH_ds_d3Fp; solver)
                 m'
-                ltac:(try clear IH_ds_d3Hz; solver)) as IH_55484705;
-    try clear IH_ds_d3Hz]];
+                ltac:(try clear IH_ds_d3Fp; solver)) as IH_91838075;
+    try clear IH_ds_d3Fp]];
   existence_lemma_quicksolve minus;
   f__f_rel_ex_body;
   f_rel_finish.
@@ -2762,9 +2762,9 @@ Defined.
 Definition minustwo (lq_tmp0 : MyNat): MyNat.
 Proof.
   destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
-  destruct lq_tmp0 as [| ds_d3HZ].
+  destruct lq_tmp0 as [| ds_d3FP].
   - refine O.
-  - destruct ds_d3HZ as [| n'].
+  - destruct ds_d3FP as [| n'].
     + refine O.
     + refine (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)).
 Defined.
@@ -3450,7 +3450,7 @@ Definition plus_1_neq_0 (n : MyNat):
   {{∀ one_res, one_rel one_res → ∀ plus_res, plus_rel ⌊ n ⌋ one_res plus_res → plus_res ≠ O_u}}.
 Proof.
   destruct n as [n n_p].
-  destruct n as [| ds_d3Hk].
+  destruct n as [| ds_d3Fa].
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
@@ -7019,9 +7019,9 @@ Defined.
 Definition isred (c : Color): SFBool.
 Proof.
   destruct c as [c c_p].
-  destruct c as [| ds_d3Ib|].
+  destruct c as [| ds_d3G1|].
   - refine SFFalse.
-  - destruct ds_d3Ib as [| |].
+  - destruct ds_d3G1 as [| |].
     + refine SFFalse.
     + refine SFFalse.
     + refine SFTrue.

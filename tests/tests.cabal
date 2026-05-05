@@ -2669,6 +2669,7 @@ executable benchmark-lava
     ghc-options: -fforce-recomp
     other-modules:
                     -- Benchmark.PLE.Compose -- Fix HO
+                    , Benchmark.PLE.Append
                     , Benchmark.PLE.Lambdas
                     , Benchmark.PLE.Lists
                     , Benchmark.PLE.MonadId

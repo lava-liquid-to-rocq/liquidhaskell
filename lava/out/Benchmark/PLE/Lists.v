@@ -261,7 +261,7 @@ Defined.
 Definition length (lq_tmp0 : L): {VV: Z | gebZ_rel VV 0 true}.
 Proof.
   destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
-  induction lq_tmp0 as [ds_d1KC xs IH_xs|].
+  induction lq_tmp0 as [ds_d1Is xs IH_xs|].
   - refine (subsumptionCast
             Z
             (λ (VV : Z), gebZ_rel VV 0 true)
@@ -277,9 +277,9 @@ Defined.
 
 Inductive length_rel: L_u → Z → Prop :=
   | length_Emp: length_rel Emp_u 0
-  | length_C: ∀ ds_d1KC xs length_res,
+  | length_C: ∀ ds_d1Is xs length_res,
               length_rel xs length_res
-              → ∀ addZ_res, addZ_rel 1 length_res addZ_res → length_rel (C_u ds_d1KC xs) addZ_res.
+              → ∀ addZ_res, addZ_rel 1 length_res addZ_res → length_rel (C_u ds_d1Is xs) addZ_res.
 
 #[global] Hint Constructors length_rel: core_hint_db.
 
@@ -290,7 +290,7 @@ Inductive length_rel: L_u → Z → Prop :=
 Definition length_rel_funct [lq_tmp0 : L_u]:
   ∀ (VV VV' : Z), length_rel lq_tmp0 VV → (length_rel lq_tmp0 VV' → VV = VV').
 Proof.
-  induction lq_tmp0 as [ds_d1KC xs IH_xs|]; rel_functionhood_body.
+  induction lq_tmp0 as [ds_d1Is xs IH_xs|]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve length_rel_funct: f_rel_funct_db.
@@ -303,8 +303,8 @@ Qed.
 
 #[global] Hint Rewrite length_Emp_lem: f_rel_back.
 
-Theorem length_C_lem ds_d1KC xs length_C_lem_res:
-  length_rel (C_u ds_d1KC xs) length_C_lem_res
+Theorem length_C_lem ds_d1Is xs length_C_lem_res:
+  length_rel (C_u ds_d1Is xs) length_C_lem_res
   ↔ ∃ length_res,
     length_rel xs length_res
     ∧ ∃ addZ_res, addZ_rel 1 length_res addZ_res ∧ length_C_lem_res == addZ_res.
@@ -318,7 +318,7 @@ Theorem length_rel_ex (lq_tmp0 : L_u) (lq_tmp0_p : L_wf lq_tmp0 ∧ True):
   length_rel lq_tmp0 ⌊ length (exist _ lq_tmp0 lq_tmp0_p) ⌋.
 Proof.
   existence_lemma_pre length;
-  induction lq_tmp0 as [ds_d1KC xs IH_xs|];
+  induction lq_tmp0 as [ds_d1Is xs IH_xs|];
   [fix_notations; pose proof (IH_xs ltac:(try clear IH_xs; solver)) as IH_67415571; try clear IH_xs |
    fix_notations];
   existence_lemma_quicksolve length;
