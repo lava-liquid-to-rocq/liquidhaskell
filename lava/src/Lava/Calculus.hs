@@ -53,6 +53,8 @@ data Decl
     Data Id [(Id, RefType)]
   | -- | (function) definition: name, type, body, is it reflected
     Definition Id RefType Expr Bool
+  | -- | imported module: module name and its declarations
+    Import Id [Decl]
   deriving (Data, Eq, Show)
 
 -- | Structural expressions
@@ -564,6 +566,8 @@ instance Pretty Decl where
     where
       ppRefl = if isRefl then "refl" else empty
       ppF = "def" <+> text f <+> "::" <+> pPrint tp <+> ":="
+  pPrint (Import modName decls) =
+    vcat $ ("import" <+> text modName) : map (nest identNb . pPrint) decls
 
 instance Pretty Expr where
   pPrint (Reft r) = pPrint r

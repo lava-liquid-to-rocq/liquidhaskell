@@ -2731,6 +2731,29 @@ executable benchmark-lava-ple
                     , lava
     default-extensions: GADTs
 
+flag import-lava
+     default: False
+
+executable import-lava
+    import:           common-ghc-options
+    main-is:          Main.hs
+    if !flag(import-lava) && flag(stack)
+      buildable:      False
+    ghc-options: -fforce-recomp
+    other-modules:
+                    , Import.RBins
+                    , Import.RBinsToBins
+                    , Import.SoftwareFoundationsBasics
+                    , Import.SoftwareFoundationsInduction
+                    , Import.SoftwareFoundationsLists
+    build-depends:    base
+                    , liquid-prelude
+                    , liquidhaskell
+                    , lava
+    hs-source-dirs:   app
+                    , lava
+    default-extensions: GADTs
+
 -- This test suite is for internal function unit tests, not for checking LH on
 -- source files.
 test-suite tasty

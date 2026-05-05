@@ -5,20 +5,20 @@ module Language.Haskell.Liquid.Lava.Translate (runLava, SrcInfo (..)) where
 
 import Control.Monad (unless, void)
 import Data.Bifunctor (bimap)
+
 import Data.Char (isSpace)
-import Data.Foldable (traverse_)
-import Data.List (intercalate)
+import Data.List (intercalate, isPrefixOf)
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import GHC.Core
 import GHC.Plugins hiding (Id, split)
-import qualified Language.Fixpoint.Types as F (val)
+import qualified Language.Fixpoint.Types as F (Located, val)
 import qualified Language.Haskell.Liquid.Lava.CoreToLH as CLH
 import Language.Haskell.Liquid.Lava.Misc (isIgnoredBind, removeSuffix, split, stripLegalName)
 import Language.Haskell.Liquid.Lava.Parse
 import Language.Haskell.Liquid.Lava.Simplify (simplify)
 import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
-import Language.Haskell.Liquid.Types.RType (SpecType)
+import Language.Haskell.Liquid.Types.RType (SpecType, TyConP(..))
 import qualified Language.Haskell.Liquid.Types.Specs as Specs
 import Language.Haskell.Liquid.Types.Types (AnnInfo (..))
 import qualified Lava.Calculus as Calc
@@ -41,7 +41,9 @@ data SrcInfo = SrcInfo
     -- | Liquid Haskell's TargetInfo structure
     s_targetInfo :: Specs.TargetInfo,
     -- | Liquid Haskell's location to inferred types map
-    s_infTypes :: AnnInfo SpecType
+    s_infTypes :: AnnInfo SpecType,
+    -- | Directly imported GHC modules
+    s_imports :: [Module]
   }
 
 -- | The main function of the plugin.
@@ -71,7 +73,7 @@ parseFile sinfo filename equations = do
 
   -- \| Step 2: Get information from LH:
   let pb = getBindsAndSpecs moduleId sinfo
-      importNames = getModIdsAndImports (pb_src pb)
+      importNames = getModIdsAndImports sinfo
 
   -- \| Step 3: Get the Calculus source and the imported files
   -- This translates from Liquid Haskell and GHC data structures to Calculus data structures,
@@ -79,7 +81,8 @@ parseFile sinfo filename equations = do
   -- and parseSourceContent gives arguments a unique name in specs
 
   -- \| Translate the LH type constructors to Calculus declarations
-  let dataDecls = parsePData moduleId (pb_decls pb)
+  let localDecls = filterLocalPData (s_moduleName sinfo) (pb_decls pb)
+      dataDecls = parsePData moduleId localDecls
       -- \| Translate the LH specs of function/theorem definitions to Calculus types
       specMap = SLH.transSig moduleId Nothing <$> M.fromList (pb_specs pb)
       -- \| Translate the GHC binds of function/theorem definitions to Calculus expressions
@@ -93,11 +96,18 @@ parseFile sinfo filename equations = do
   -- \| Step 4: Do the translation to Coq
   putStrLn $ "Input file: " ++ filename
 
-  -- Thanks to sinfo, this will also produce declarations from this rather than from the imported modules
-  traverse_ (\f -> translateFile sinfo f equations) importedSourceFiles
+  -- Create Import declarations for each imported module, populated with their
+  -- data declarations and function type stubs from LH specs.
+  -- This lets elaboration learn about imported types and functions.
+  let specSig = Specs.gsSig . Specs.giSpec $ s_targetInfo sinfo
+      rawSpecs = Specs.gsTySigs specSig
+      asmSpecs = Specs.gsAsmSigs specSig
+      refSpecs = Specs.gsRefSigs specSig
+      allSpecs = rawSpecs ++ asmSpecs ++ refSpecs
+      importDecls = map (mkImportDecl moduleId (pb_decls pb) allSpecs) importNames
 
   let calcSource :: [Calc.Decl]
-      calcSource = topologicalSort (dataDecls ++ defDecls)
+      calcSource = importDecls ++ topologicalSort (dataDecls ++ defDecls)
 
       outputFolder = getOutputFolder moduleId filename workingPath
 
@@ -130,9 +140,8 @@ translateFile sinfo arg equations = do
       createDirectoryIfMissing True outputFolder
       writeOut outputFolder modulename ILH PP.empty calcSourceElaborated
       -- Translate Calculus declarations to Coq declarations
-      let coqImports = map Coq.Load importNames
-          coqResult = coqImports ++ concatMap (trDecl equations) calcSourceElaborated
       let coqPreamble = if hasImports then PP.empty else preamble equations
+      let coqResult = concatMap (trDecl equations) calcSourceElaborated
       writeOut outputFolder modulename Rocq coqPreamble coqResult
       pure coqResult
 
@@ -204,12 +213,46 @@ getOutputFolder moduleId filename workingPath =
     implementationFolder = joinPath . init . init $ exampleFolderPath
     subfolder = joinPath modulePrefixes
 
--- TODO: gsAllImps does not exist anymore (since commit 99f6d787b15e63bbc4b939a950d8babce97469cd)
--- maybe use allImports instead of Specs.gsAllImps (see Plugin.hs)
-getModIdsAndImports :: Specs.TargetSrc -> [String]
--- getModIdsAndImports src = map symbolString . H.toList $ Specs.gsAllImps src
--- getModIdsAndImports src = error $ "TODO: imports"
-getModIdsAndImports _ = []
+-- | Extract imported module names from GHC's direct imports (via Plugin.hs).
+--   Filters out standard library modules that don't correspond to user source files.
+getModIdsAndImports :: SrcInfo -> [String]
+getModIdsAndImports sinfo = map moduleNameString' $ filter (not . isStdLibModule) (s_imports sinfo)
+  where
+    moduleNameString' = moduleNameString . moduleName
+    isStdLibModule m = any (`isPrefixOf` name) stdLibPrefixes
+      where name = moduleNameString' m
+    stdLibPrefixes = ["GHC.", "Data.", "Control.", "System.", "Prelude", "Foreign.", "Text.", "Numeric.", "Language."]
+
+-- | Filter PData to only include type constructors and data constructors defined in the current module.
+--   LH's gsCtors/gsTconsP include imported types, which must not be re-declared in the output.
+filterLocalPData :: ModuleName -> PData -> PData
+filterLocalPData modName pd = pd { pdTyCons = filteredTyCons, pdCtors = filteredCtors } where
+    filteredTyCons = filter isLocalTC (pdTyCons pd)
+    filteredCtors = filter (isLocalCtor . fst) (pdCtors pd)
+    isLocalTC tcp = maybe True ((== modName) . moduleName) $ nameModule_maybe (tyConName (tcpCon tcp))
+    isLocalCtor v = maybe True ((== modName) . moduleName) $ nameModule_maybe (varName v)
+
+-- | Filter PData to only include type constructors and data constructors from the given module.
+filterPDataForModule :: String -> PData -> PData
+filterPDataForModule modStr pd = pd { pdTyCons = filter isFromMod (pdTyCons pd), pdCtors = filter (isFromMod' . fst) (pdCtors pd) }
+  where
+    isFromMod tcp = maybe False ((== modStr) . moduleNameString . moduleName) $ nameModule_maybe (tyConName (tcpCon tcp))
+    isFromMod' v = maybe False ((== modStr) . moduleNameString . moduleName) $ nameModule_maybe (varName v)
+
+-- | Build a Calc.Import declaration for the given module name, populated with
+--   imported data declarations and function type stubs.
+mkImportDecl :: Id -> PData -> [(Var, F.Located SpecType)] -> String -> Calc.Decl
+mkImportDecl moduleId allPData rawSpecs modName = Calc.Import modName (dataDs ++ defDs)
+  where
+    dataDs = parsePData moduleId (filterPDataForModule modName allPData)
+    defDs = map mkDefStub $ filter (isFromModule modName . fst) rawSpecs
+    mkDefStub (v, locSpec) =
+      Calc.Definition
+        (stripLegalName moduleId (show (varName v)))
+        (SLH.transSig moduleId Nothing (F.val locSpec))
+        (Calc.Reft (Calc.Var "imported" 0 Calc.Global))
+        False
+    isFromModule modStr v = maybe False ((== modStr) . moduleNameString . moduleName) $ nameModule_maybe (varName v)
 
 pairLHDefsWithSigs :: Id -> [CLH.Def] -> M.Map Id Calc.RefType -> [Var] -> [(CLH.Def, Maybe Calc.RefType, Bool)]
 pairLHDefsWithSigs modId defs specMap reflectedDecls = map single defs

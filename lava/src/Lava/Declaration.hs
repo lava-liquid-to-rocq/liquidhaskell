@@ -38,6 +38,7 @@ trDecl equations (LH.Data tc alts) =
     -- For an unreflected definition, we only generate the refined definition,
     -- if the graph relation is needed, we generate it on the fly.
     -- For a reflected definition, we generate the graph relation, packs and other lemmas
+trDecl _         (LH.Import modName _) = [Coq.Load modName]
 trDecl equations (LH.Definition f tpf e isRefl) =
   (if equations then trDefEquations fdata else trDefRefDef fdata) -- f  -- f
     ++ if isRefl
