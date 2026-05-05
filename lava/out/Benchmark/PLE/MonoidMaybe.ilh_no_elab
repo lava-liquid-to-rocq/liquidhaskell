@@ -1,0 +1,27 @@
+
+
+data MaybeInt := | Just :: VV: {Integer} -> {MaybeInt} | Nothing :: {MaybeInt}
+
+refl def mappend :: lq_tmp0: {MaybeInt} -> lq_tmp1: {MaybeInt} -> {MaybeInt} :=
+  destruct lq_tmp0 of
+  | Nothing -> lq_tmp1
+  | Just x -> Just x
+
+def mappend_assoc :: xs: {MaybeInt}
+                     -> ys: {MaybeInt}
+                        -> zs: {MaybeInt} -> {{mappend ((mappend xs) ys) zs == mappend xs ((mappend ys) zs)}} :=
+  destruct xs of
+  | Nothing ->
+    destruct ys of
+    | Nothing -> unit
+    | Just y -> unit
+  | Just x -> unit
+
+refl def mempty :: {MaybeInt} := Nothing
+
+def mempty_left :: x: {MaybeInt} -> {{mappend mempty x == x}} := unit
+
+def mempty_right :: x: {MaybeInt} -> {{mappend x mempty == x}} :=
+  destruct x of
+  | Nothing -> unit
+  | Just x -> unit

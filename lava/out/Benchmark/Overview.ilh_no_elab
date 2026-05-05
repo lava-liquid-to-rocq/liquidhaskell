@@ -1,0 +1,40 @@
+
+
+data IList := | Cons :: n: {n: Integer | 5 < n} -> l: {IList} -> {IList} | Nil :: {IList}
+
+refl def llen :: l: {IList} -> {v: Integer | v >= 0} :=
+  destruct l of
+  | Cons ds_dZF l' -> llen l' + 1
+  | Nil -> 0
+
+refl def append :: xs: {IList} -> ys: {IList} -> {v: IList | llen v == llen xs + llen ys} :=
+  destruct xs of
+  | Cons x xs -> Cons x ((append xs) ys)
+  | Nil -> ys
+
+refl def get :: xs: {IList} -> i: {i: Integer | 0 <= i && i < llen xs} -> {v: Integer | 5 < v} :=
+  destruct xs of
+  | Cons x xs' ->
+    let x_36912863 := i == 0
+     in destruct x_36912863 of
+        | False -> get xs' (i - 1)
+        | True -> x
+  | Nil -> undefined
+
+refl def applyToFirst :: f: (f: {Integer} -> {y: Integer | 5 < y})
+                         -> xs: {xs: IList | llen xs /= 0} -> {v: Integer | v == f ((get xs) 0)} :=
+  destruct xs of
+  | Cons x l' -> f x
+  | Nil -> undefined
+
+def thm1 :: xs: {IList}
+            -> x: {x: Integer | 5 < x}
+               -> i: {i: Integer | 0 <= i && i < llen xs} -> {{get xs i == get ((Cons x) xs) (i + 1)}} :=
+  unit
+
+def thm2 :: xs: {IList}
+            -> ys: {IList}
+               -> i: {i: Integer | 0 <= i && i < llen xs} -> {{get xs i == get ((append ys) xs) (i + llen ys)}} :=
+  destruct ys of
+  | Cons y ys -> thm2 xs ys i ? (thm1 ((append ys) xs) y (i + llen ys) proves True)
+  | Nil -> unit

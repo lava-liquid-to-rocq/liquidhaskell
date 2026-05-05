@@ -17,7 +17,6 @@ import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding (lookup, (<>))
 
-
 -- * The grammar
 
 -- ** Types

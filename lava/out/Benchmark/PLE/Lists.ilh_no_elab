@@ -1,0 +1,29 @@
+
+
+data L := | C :: VV: {Integer} -> VV_: {L} -> {L} | Emp :: {L}
+
+refl def append :: lq_tmp0: {L} -> lq_tmp1: {L} -> {L} :=
+  destruct lq_tmp0 of
+  | Emp -> lq_tmp1
+  | C x xs -> C x ((append xs) lq_tmp1)
+
+def propConst1 :: lq_tmp0: {Unit} -> {{append ((append ((C 1) Emp)) Emp) Emp == C 1 Emp}} := unit
+
+def propConst2 :: lq_tmp0: {Unit}
+                  -> {{append ((append ((C 1) ((C 2) Emp))) Emp) Emp == C 1 ((C 2) Emp)}} :=
+  unit
+
+def propConst3 :: lq_tmp0: {Unit}
+                  -> {{append ((append ((C 1) ((C 2) ((C 3) Emp)))) Emp) Emp == C 1 ((C 2) ((C 3) Emp))}} :=
+  unit
+
+refl def length :: lq_tmp0: {L} -> {VV: Integer | VV >= 0} :=
+  destruct lq_tmp0 of
+  | Emp -> 0
+  | C ds_d1Is xs -> 1 + length xs
+
+def prop :: x: {Integer}
+            -> xs: {L}
+               -> ys: {L}
+                  -> zs: {L} -> {{append ((append ((C x) xs)) ys) zs == C x ((append ((append xs) ys)) zs)}} :=
+  unit

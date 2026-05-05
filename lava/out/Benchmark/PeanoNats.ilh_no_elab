@@ -1,0 +1,116 @@
+
+
+data Nats := | Suc :: n: {Nats} -> {Nats} | Zero :: {Nats}
+
+refl def add :: m: {Nats} -> n: {Nats} -> {Nats} :=
+  destruct m of
+  | Zero -> n
+  | Suc m -> Suc ((add m) n)
+
+def add' :: m: {Nats} -> n: {Nats} -> {v: Nats | add ((add m) n) Zero == v} := add ((add m) n) Zero
+
+def add'' :: m: {Nats} -> n: {Nats} -> {v: Nats | add m n == v} := add m n
+
+def add_assoc :: m: {Nats}
+                 -> n: {Nats} -> o: {Nats} -> {{add m ((add n) o) == add ((add m) n) o}} :=
+  destruct m of
+  | Zero -> unit
+  | Suc m -> add_assoc m n o
+
+def add_suc_r :: m: {Nats} -> n: {Nats} -> {{Suc ((add m) n) == add m (Suc n)}} :=
+  destruct m of
+  | Zero -> unit
+  | Suc m -> add_suc_r m n
+
+def add_zero_l :: n: {Nats} -> {{add Zero n == n}} :=
+  destruct n of
+  | Zero -> unit
+  | Suc n -> add_zero_l n
+
+def add_zero_l_test :: {{add Zero (Suc (Suc Zero)) == Suc (Suc Zero)}} :=
+  add_zero_l (Suc (Suc Zero))
+
+def add_zero_r :: n: {Nats} -> {{add n Zero == n}} :=
+  destruct n of
+  | Zero -> unit
+  | Suc n -> add_zero_r n
+
+refl def eqN :: m: {Nats} -> n: {Nats} -> {Bool} :=
+  destruct m of
+  | Zero ->
+    destruct n of
+    | Zero -> True
+    | Suc lq_anf7205759403792802883 -> False
+  | Suc m ->
+    destruct n of
+    | Zero -> False
+    | Suc n -> eqN m n
+
+def test_eqN :: {r: Bool | r} := eqN (Suc (Suc (Suc Zero))) (Suc (Suc (Suc Zero)))
+
+def test_eqN' :: {r: Bool | not r} := eqN (Suc (Suc Zero)) (Suc Zero)
+
+refl def geqN :: m: {Nats} -> n: {Nats} -> {Bool} :=
+  destruct n of
+  | Zero -> True
+  | Suc lq_anf7205759403792802880 ->
+    destruct m of
+    | Zero ->
+      destruct Suc lq_anf7205759403792802880 of
+      | Zero -> undefined
+      | Suc ds_d2o1 -> False
+    | Suc m ->
+      destruct Suc lq_anf7205759403792802880 of
+      | Zero -> undefined
+      | Suc n -> geqN m n
+
+refl def mult :: m: {Nats} -> n: {Nats} -> {Nats} :=
+  destruct m of
+  | Zero -> Zero
+  | Suc m -> add n ((mult m) n)
+
+def add_dist_rmult :: m: {Nats}
+                      -> n: {Nats} -> o: {Nats} -> {{mult ((add m) n) o == add ((mult m) o) ((mult n) o)}} :=
+  destruct m of
+  | Zero -> unit
+  | Suc m -> add_dist_rmult m n o ? (add_assoc o ((mult m) o) ((mult n) o) proves True)
+
+refl def one :: {Nats} := Suc Zero
+
+refl def sub :: m: {Nats} -> n: {n: Nats | geqN m n} -> {o: Nats | o /= Zero <=> m /= n} :=
+  destruct m of
+  | Zero ->
+    destruct n of
+    | Zero -> Zero
+    | Suc lq_anf7205759403792802899 -> undefined
+  | Suc m ->
+    destruct n of
+    | Zero -> Suc m
+    | Suc n -> sub m n
+
+def add_sub :: m: {Nats} -> n: {Nats} -> {{sub ((add m) n) n == m}} :=
+  destruct m of
+  | Zero ->
+    destruct n of
+    | Zero -> unit
+    | Suc lq_anf7205759403792802861 ->
+      destruct Suc lq_anf7205759403792802861 of
+      | Zero -> undefined
+      | Suc n -> add_suc_r Zero n ? (add_sub Zero n proves True)
+  | Suc m ->
+    destruct n of
+    | Zero -> add_zero_r m
+    | Suc lq_anf7205759403792802869 ->
+      destruct Suc lq_anf7205759403792802869 of
+      | Zero -> undefined
+      | Suc n -> add_suc_r (Suc m) n ? (add_sub (Suc m) n proves True)
+
+def sub_self :: m: {Nats} -> n: {Nats} -> {{eqN m n => sub m n == Zero}} :=
+  destruct m of
+  | Zero -> unit
+  | Suc m ->
+    destruct n of
+    | Zero -> unit
+    | Suc n -> sub_self m n
+
+refl def two :: {Nats} := Suc one
