@@ -26,27 +26,45 @@ import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding ((<>))
 
 {- ORMOLU_DISABLE -}
-unitTmName :: Id
-btrueTmName :: Id
-bfalseTmName :: Id
-unitTm :: CoqTerm
-btrue :: CoqTerm
-bfalse :: CoqTerm
 boolTp :: RocqType
-unitTp :: RocqType
-unitTmName = "unit"
-btrueTmName = "true"
-bfalseTmName = "false"
-unitTm = Cr unitTmName
+boolTpName :: Id
+btrue :: CoqTerm
+btrueTmName :: Id
+bfalse :: CoqTerm
+bfalseTmName :: Id
+boolTp = TC boolTpName []
+boolTpName = "bool"
 btrue = Cr btrueTmName
+btrueTmName = "true"
 bfalse = Cr bfalseTmName
-boolTp = TC "bool" []
-unitTp = TC "Unit" []
+bfalseTmName = "false"
+
+unitTp :: RocqType
+unitTpName :: Id
+unitTm :: CoqTerm
+unitTmName :: Id
+unitTp = TC unitTpName []
+unitTpName = "Unit"
+unitTm = Cr unitTmName
+unitTmName = "unit"
+
+listTp :: RocqType -> RocqType
+listTpName :: Id
+consTm :: CoqTerm
+consTmName :: Id
+nilTm :: CoqTerm
+nilTmName :: Id
+listTp tp = TC listTpName [tp]
+listTpName = "list"
+consTm = Cr btrueTmName
+consTmName = "true"
+nilTm = Cr bfalseTmName
+nilTmName = "false"
 {- ORMOLU_ENABLE -}
 
 -- | List of builtin CoqInductives
-coqBuiltinInductDataTypes :: [RocqType]
-coqBuiltinInductDataTypes = [boolTp, unitTp]
+builtinTCs :: [Id]
+builtinTCs = [boolTpName, unitTpName, listTpName]
 
 -- * The actual ECoq grammar
 
@@ -161,14 +179,17 @@ newtype UArgListT = UArgListT [RocqType] deriving (Eq, Data, Show)
 newtype UArgList = UArgList [CoqTerm]
 
 -- TODO: remove these functions and the BopArgList operators that are only used for pretty-printing
+-- change ConsRT, ConsUT, ConsR and ConsU to polymorphic constructors
 
 mkArgListT :: ArgListT -> CoqTerm
-mkArgListT (ArgListT xs) =
-  foldl (\tlTm (x, t) -> Bop (Binop ConsRT RefOp) (TypeArg t) $ Lambda x t tlTm) (Def "nilRT") (reverse xs)
+mkArgListT (ArgListT xs) = undefined
+
+{- foldl (\tlTm (x, t) -> App (TyApp (Bop (Binop ConsRT RefOp)) t) [Lambda x t tlTm]) (Def "nilRT") (reverse xs) -}
 
 mkUArgListT :: UArgListT -> CoqTerm
-mkUArgListT (UArgListT xs) =
-  foldl (\tlTm t -> Bop (Binop ConsUT RefOp) (TypeArg t) tlTm) (Def "nilUT") (reverse xs)
+mkUArgListT (UArgListT xs) = undefined
+
+-- foldl (\tlTm t -> Bop (Binop ConsUT RefOp) (TypeArg t) tlTm) (Def "nilUT") (reverse xs)
 
 mkArgList :: ArgList -> CoqTerm
 mkArgList (ArgList args) = foldl (flip (Bop (Binop ConsR RefOp))) (Def "nilR") args
@@ -205,6 +226,7 @@ data CoqTerm
   | IntLiteral Integer
   | FloatLiteral Double
   | App CoqTerm [CoqTerm]
+  | TyApp CoqTerm RocqType
   | Lambda Id RocqType CoqTerm
   | Project CoqTerm
   | Proj2sig CoqTerm
@@ -218,7 +240,6 @@ data CoqTerm
   | TermHole
   | PrfTerm RocqType ProofTerm
   | InlineInstance [(Id, CoqTerm)]
-  | TypeArg RocqType
   deriving (Data, Eq, Show)
 
 data Binop = Binop BaseBop OpKind deriving (Data, Eq)
@@ -536,12 +557,13 @@ instance Pretty Builtin where
 -- (Bool for {_:bool|True} and {{…}} for a lemma)
 pPrintRocqType :: PrettyLevel -> Rational -> RocqType -> Bool -> Doc
 pPrintRocqType _ _ (Builtin b) _ = pPrint b
+pPrintRocqType _ _ (TyVar α) _ = text α
 pPrintRocqType _ _ (Sort sort) _ = pPrint sort
 pPrintRocqType l p tp@(Subset x tc@(TC tc' []) e) True = case tc' of
   "bool" | isTrivial e -> "Bool"
   "Unit" -> braces (braces (pPrint e))
   _ -> case (e, tc_base) of
-    _ | tc `elem` coqBuiltinInductDataTypes -> braces (text x <+> colon <+> pPrint tc <+> "|" <+> pPrint e)
+    _ | tc' `elem` builtinTCs -> braces (text x <+> colon <+> pPrint tc <+> "|" <+> pPrint e)
     -- Use the refined name TC for {x: TC_u | wf_TC x /\ True}
     (Bop (Binop And PropOp) (App (Def wf) [Var x']) true, Just tc_ref)
       | x == x' && wf == wfTCName tc_ref && isTrivial true && not (null tc_ref)-> text tc_ref
@@ -549,7 +571,7 @@ pPrintRocqType l p tp@(Subset x tc@(TC tc' []) e) True = case tc' of
     where tc_base = reverse <$> stripPrefix (reverse $ unrefinedTCName "") (reverse tc')
 pPrintRocqType _ _ (Subset x tp e) _ =
   braces (text x <> colon <+> pPrint tp <+> "|" <+> pPrint e)
-pPrintRocqType _ _ tc@(TC tc' []) _ | tc `elem` coqBuiltinInductDataTypes = text tc'
+pPrintRocqType _ _ (TC tc' []) _ | tc' `elem` builtinTCs = text tc'
 pPrintRocqType l p (TC typeName tpArgs) b =
   maybeParens (p < appPrec) . hsep $
   text typeName : map (\tp -> pPrintRocqType l (appPrec - 1) tp b) tpArgs
@@ -630,6 +652,9 @@ instance Pretty CoqTerm where
   pPrintPrec l p (App f ts) =
     maybeParens (p < appPrec)
       $ sep (pPrintPrec l appPrec f : map (pPrintPrec l (appPrec - 1)) ts)
+  pPrintPrec l p (TyApp tm tp) =
+    maybeParens (p < appPrec)
+      $ sep [pPrintPrec l appPrec tm, pPrintPrec l (appPrec - 1) tp]
   pPrintPrec _ p tm@(Lambda {}) =
     let (args, tm') = concatLambdas tm
      in maybeParens (p < 10) $ sep ["λ" <+> pPrintArgs (map (,False) args) <> comma, pPrint tm']
@@ -667,7 +692,6 @@ instance Pretty CoqTerm where
       "let" <+> parens (text x <> colon <+> text xp) <+> ":=", pPrint s <+> "in", pPrint t]
   pPrintPrec _ _ (InlineInstance fields) =
     sep ["{|", sep . punctuate semi $ map (\(field, val) -> text field <+> ":=" <+> pPrint val) fields, "|}"]
-  pPrintPrec l p (TypeArg tp) = pPrintPrec l p tp
   pPrintPrec _ _ TermHole = char '_'
   pPrintPrec l p (PrfTerm _ z) = pPrintPrec l p z
 

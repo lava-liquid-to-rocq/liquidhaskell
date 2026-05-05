@@ -14,6 +14,7 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Lava.Calculus
 import Lava.Names (Id)
+import Lava.SystemF
 import Lava.TypingEnvironment
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
@@ -24,118 +25,6 @@ import Prelude hiding ((<>))
 -- Typecheck and elaborate a list of declarations
 elaborate :: [Decl] -> Either TypeError [Decl]
 elaborate = wfDecls initial
-
--- * Types of primitives
-
--- | Singleton type of a literal
-litType :: Builtin -> Reft -> RefType
-litType tp l = RefType "VV" (Builtin tp) (Bop Eq (Var "VV" 0 Local) l)
-
--- | Type of negation, with singleton return type
-negType :: RefType
-negType = ArrType "x" (RefType "x" boolTp ttTm) (RefType "VV" boolTp (Bop Eq (Var "VV" 0 Local) (Neg . Proj $ Var "x" 0 Local)))
-
--- | Types of binary operators, with singleton return type
-bopTypes :: [(Bop, RefType)]
-bopTypes =
-  [ (Plus, mkBopType Plus (Builtin Integer) (Builtin Integer) ttTm (Builtin Integer)),
-    (Minus, mkBopType Minus (Builtin Integer) (Builtin Integer) ttTm (Builtin Integer)),
-    (Times, mkBopType Times (Builtin Integer) (Builtin Integer) ttTm (Builtin Integer)),
-    (Div, mkBopType Div (Builtin Integer) (Builtin Integer) (Bop Neq (Var "x_2" 0 Local) (IntLit 0)) (Builtin Integer)),
-    (Mod, mkBopType Mod (Builtin Integer) (Builtin Integer) (Bop Neq (Var "x_2" 0 Local) (IntLit 0)) (Builtin Integer)),
-    (Leq, mkBopType Leq (Builtin Integer) (Builtin Integer) ttTm boolTp),
-    (Geq, mkBopType Geq (Builtin Integer) (Builtin Integer) ttTm boolTp),
-    (Lt, mkBopType Lt (Builtin Integer) (Builtin Integer) ttTm boolTp),
-    (Gt, mkBopType Gt (Builtin Integer) (Builtin Integer) ttTm boolTp),
-    (And, mkBopType And boolTp boolTp ttTm boolTp),
-    (Or, mkBopType Or boolTp boolTp ttTm boolTp),
-    (Impl, mkBopType Impl boolTp boolTp ttTm boolTp),
-    (Iff, mkBopType Iff boolTp boolTp ttTm boolTp)
-  ]
-
--- | Type of the equality and inequality for any base type
-eqneqTypes :: BaseType -> [(Bop, RefType)]
-eqneqTypes b = [(Eq, mkBopType Eq b b ttTm boolTp), (Neq, mkBopType Neq b b ttTm boolTp)]
-
--- | Wrapper for the arrow type for a binary operator, with specialization of the output refinement
-mkBopType :: Bop -> BaseType -> BaseType -> Reft -> BaseType -> RefType
-mkBopType bop a1 a2 r2 a3 =
-  ArrType "x_1" (RefType "x_1" a1 ttTm) $
-    ArrType "x_2" (RefType "x_2" a2 r2) $
-      RefType "VV" a3 (Bop Eq (Var "VV" 0 Local) (Bop bop (Proj $ Var "x_1" 0 Local) (Proj $ Var "x_2" 0 Local)))
-
--- * Simple types, used for typing type refinements
-
--- Simple types
---
--- T ::= B | TC | T -> T
-data SimpleType = SmpBuiltin Builtin | SmpTC Id | SmpArrow SimpleType SimpleType
-  deriving (Eq)
-
--- | Extracts the elements out of an SmpArrow and raises an error for another type
-fromSmpArrow :: SimpleType -> (SimpleType, SimpleType)
-fromSmpArrow (SmpArrow tp1 tp2) = (tp1, tp2)
-fromSmpArrow _ = error "SmpArrow expected"
-
-instance Pretty SimpleType where
-  pPrint (SmpBuiltin b) = pPrint b
-  pPrint (SmpTC tc) = text tc
-  pPrint (SmpArrow tp1 tp2) = pPrint tp1 <+> "->" <+> pPrint tp2
-
--- | Projects a refinement type into a simple type
-refTptoSmpTp :: RefType -> SimpleType
-refTptoSmpTp (RefType _ (TC tc) _) = SmpTC tc
-refTptoSmpTp (RefType _ (Builtin b) _) = SmpBuiltin b
-refTptoSmpTp (ArrType _ tpx tp) = SmpArrow (refTptoSmpTp tpx) (refTptoSmpTp tp)
-
--- | Type checking in a simple type system, used to typecheck type refinements
-smpTpCheck :: TypEnv -> Reft -> Either TypeError (SimpleType, Reft)
-smpTpCheck γ (Var x _ locx) = do
-  (locγ, tp) <- lookupVar x γ
-  let res loc = return (refTptoSmpTp tp, Var x (arity tp) loc)
-  case locx of
-    Recursive {} -> res locx
-    _ -> case locγ of
-      Recursive {} -> Left . SynErr $ "Impossible to build induction for an occurence of the function" <+> text x
-      _ -> res locγ
-smpTpCheck _ r@(StringLit _) = return (SmpBuiltin String, r)
-smpTpCheck _ r@(IntLit _) = return (SmpBuiltin Integer, r)
-smpTpCheck _ r@(FloatLit _) = return (SmpBuiltin Double, r)
-smpTpCheck γ r@(DC c) = do
-  tpc <- lookupDC c γ
-  return (refTptoSmpTp tpc, r)
-smpTpCheck γ (App r1 r2) = do
-  (tp1, r1') <- smpTpCheck γ r1
-  (tp2, r2') <- smpTpCheck γ r2
-  case tp1 of
-    SmpArrow tpx tp | tpx == tp2 -> return (tp, App r1' r2')
-    _ ->
-      Left . SmpTpErr $
-        "Too many arguments given in the application" <+> pPrint (App r1' r2') <+> colon
-          $$ pPrint r1' <+> "has type" <+> pPrint r1'
-smpTpCheck γ (Neg r) = do
-  (tp, r') <- smpTpCheck γ r
-  if tp == SmpTC boolTpName
-    then return (tp, Neg r')
-    else Left . SmpTpErr $ "Term" <+> pPrint r <+> "should be boolean"
-smpTpCheck γ r@(Bop bop r1 r2) | bop == Eq || bop == Neq = do
-  (tp1, r1') <- smpTpCheck γ r1
-  (tp2, r2') <- smpTpCheck γ r2
-  if tp1 == tp2
-    then return (SmpTC boolTpName, Bop bop r1' r2')
-    else
-      Left . SmpTpErr $
-        "Different types on both sides of (in)equality" <+> pPrint r <> ": found" <+> pPrint tp1 <+> "and" <+> pPrint tp2
-smpTpCheck γ r@(Bop bop r1 r2) = do
-  let (tp1, (tp2, tp)) = second fromSmpArrow . fromSmpArrow $ refTptoSmpTp (fromJust $ lookup bop bopTypes)
-  (tp1', r1') <- smpTpCheck γ r1
-  (tp2', r2') <- smpTpCheck γ r2
-  if tp1' == tp1 && tp2' == tp2
-    then return (tp, Bop bop r1' r2')
-    else Left . SmpTpErr $ "Wrong types for the arguments of the operator" <+> pPrint r
-smpTpCheck γ (Proj r) = second Proj <$> smpTpCheck γ r
-smpTpCheck _ r@(Sub {}; Inj {}; QMark {}; Pop {}) =
-  error . render $ "Unexpected term" <+> pPrint r <+> "found in type refinement"
 
 -- * Subtyping
 
@@ -157,11 +46,11 @@ wfRefType :: TypEnv -> RefType -> Either TypeError RefType
 -- (E-TRef)
 wfRefType γ (RefType x tp r) =
   case tp of
-    TC tc | tc `notMember` γ -> Left . WfErr $ "Unknown type" <+> text tc
+    TC tc tps | tc `notMember` γ -> Left . WfErr $ "Unknown type" <+> text tc
     _ -> do
       let γ' = insertLocalVar (x, RefType x tp ttTm) γ
       (tp_r, r') <- smpTpCheck γ' r
-      if tp_r == SmpTC boolTpName
+      if tp_r == SmpTC boolTpName []
         then return $ RefType x tp r'
         else Left . WfErr $ "Refinement of type" <+> pPrint (RefType x tp r') <+> "is not boolean"
 -- (E-TFun)
@@ -170,34 +59,40 @@ wfRefType γ (ArrType x tpx tp) = do
   let γ' = insertLocalVar (x, tpx') γ
   tp' <- wfRefType γ' tp
   return $ ArrType x tpx' (subst (Proj (Var x (arity tpx') Local)) x tp')
+-- (E-TFA)
+wfRefType γ (FAType α tp) =
+  if lookupTyVar α γ
+    then let α' = mkFresh α γ in wfRefType (insertTyVar α' γ) (rename α' α tp)
+    else wfRefType (insertTyVar α γ) tp
 
 -- * Well-formedness of declarations
 
 wfDecls :: TypEnv -> [Decl] -> Either TypeError [Decl]
 -- (WF-DTC)
-wfDecls γ (Data tc constrs : decls) = do
+wfDecls γ (Data tc αs constrs : decls) = do
   -- We pre-populate the environment with all constructors using trivialized
   -- refinements, so that refinements of any constructor can refer to any other
   -- constructor of the same type (not just previously declared ones).
-  let γtc = insertTC (tc, map (second trivializeRefs) constrs) γ
+  let γtc = insertTC (tc, αs, map (second trivializeRefs) constrs) γ
   (γ', constrs') <- foldM checkBranch (γtc, []) constrs
   decls' <- wfDecls γ' decls
-  return $ Data tc (reverse constrs') : decls'
+  return $ Data tc αs (reverse constrs') : decls'
   where
     trivializeRefs :: RefType -> RefType
     trivializeRefs (RefType x tp _) = RefType x tp ttTm
     trivializeRefs (ArrType x tpx tp) = ArrType x (trivializeRefs tpx) (trivializeRefs tp)
+    trivializeRefs (FAType α tp) = FAType α (trivializeRefs tp)
     checkBranch :: (TypEnv, [(Id, RefType)]) -> (Id, RefType) -> Either TypeError (TypEnv, [(Id, RefType)])
     checkBranch (γi, dcs) (ci, tpi) = first (annotateErr ci) $ do
       checkFOandTC tpi
       tpi' <- wfRefType γi tpi
       -- Replace the trivialized entry for ci with the elaborated one
-      γtc <- lookupTC tc γi
+      (_, γtc) <- lookupTC tc γi
       let γtc' = map (\(c, tp) -> if c == ci then (ci, tpi') else (c, tp)) γtc
-      return (insertTC (tc, γtc') γi, (ci, tpi') : dcs)
+      return (insertTC (tc, αs, γtc') γi, (ci, tpi') : dcs)
     checkFOandTC :: RefType -> Either TypeError ()
     checkFOandTC tp =
-      let (args, (_, tc', _)) = arrs tp
+      let (_, args, (_, tc', _)) = arrs tp
        in if any ((\case RefType {} -> False; _ -> True) . snd) args
             then Left . WfErr $ "The constructor type" <+> pPrint tp <+> "is higher-order, which is forbidden"
             else when (tc' /= TC tc) . Left . WfErr $ "The constructor type" <+> pPrint tp <+> "must return a refinement of" <+> text tc
@@ -367,7 +262,7 @@ checkExpr _ _ e@(Let {}) _ = Left . CheckingErr $ "Type annotation expected for 
 checkExpr γ state e0@(Case r branches _) tp = do
   (tpr, r') <- synReft γ r
   case tpr of
-    RefType _ (TC _) _ -> do
+    RefType _ (TC _ tps) _ -> do
       (branches', indVars) <- second Set.unions <$> mapAndUnzipM checkBranch branches
       let -- In an induct, we generalize the other parameters that have not been destructed already
           -- the set indVars being non empty tells us that we use induction rather than destruct
@@ -401,7 +296,7 @@ checkExpr γ state e0@(Case r branches _) tp = do
       tpc <- lookupDC c γ
       -- Replace the binders in tpc by the names of the match in ys
       let tpcRenamed = renameParams (map fst ys) tpc
-          (argsc, (_, tc, _)) = arrs tpcRenamed
+          (αs, argsc, (_, tc, _)) = arrs tpcRenamed
           -- Variables of ys that are of type tc and can thus be used for induction
           potentialInductives = concatMap (\case (xi, RefType _ tc' _) | tc' == tc && isJust matchedParamAndPos -> [xi]; _ -> []) argsc
           -- We look for applications where one of the potentialInductives can be
@@ -468,6 +363,7 @@ checkExpr γ state e0@(Case r branches _) tp = do
                         Nothing -> res hd Set.empty
                     _ -> res hd Set.empty
                   _ -> res hd Set.empty
+          TyApp {} -> undefined
           Bop bop r1 r2 ->
             let (r1', indVars1) = instRecReft inds r1
                 (r2', indVars2) = instRecReft inds r2
@@ -516,7 +412,7 @@ checkExpr γ state e0@(Case r branches _) tp = do
     instantiateAllIndVars :: ((Id, [(Id, Bool)]), Maybe Expr) -> Either TypeError ((Id, [(Id, Bool)]), Maybe Expr)
     instantiateAllIndVars ((c, ys), e) = do
       tpc <- lookupDC c γ
-      let (argsc, (_, tc, _)) = arrs tpc
+      let (αs, argsc, (_, tc, _)) = arrs tpc
           inductives = map (\case (_, RefType _ tc' _) -> tc' == tc; (_, ArrType {}) -> False) argsc
           ys' = zip (map fst ys) inductives
       return ((c, ys'), e)

@@ -62,11 +62,10 @@ data Decl
 -- > e ::= r
 -- >     | let x (:: R)? := e in e
 -- >     | case r of (C [(x,bool)]* |-> (e | unreachable))*
--- >     | Λα.e
 data Expr
   = -- | Refinement used as expression
     Reft Reft
-  | -- | Let with type annotation. binds the dependent variables in R
+  | -- | Let with type annotation. binds the type and dependent variables in R
     --   for lets in the code, we can always get an annotation, but we also create some for ANF
     Let Id (Maybe RefType) Expr Expr
   | -- | Pattern matching (includes conditionals), with Maybe for optional branches.
@@ -75,8 +74,6 @@ data Expr
     --   The last element indicates if the case must be translated to
     --   destruct (Nothing) or induction, in which case we have the list of variables to generalize
     Case Reft [((Id, [(Id, Bool)]), Maybe Expr)] (Maybe [Id])
-  | -- Type abstraction
-    TyAbs Id Expr
   deriving (Data, Show)
 
 -- | Simple LH terms including formulas.
@@ -168,10 +165,23 @@ unitTpName = "Unit"
 unitTm = DC unitTmName
 unitTmName = "unit"
 
+listTp :: RefType -> BaseType
+listTpName :: Id
+consTm :: Reft
+consTmName :: Id
+nilTm :: Reft
+nilTmName :: Id
+listTp tp = TC listTpName [tp]
+listTpName = "list"
+consTm = DC consTmName
+consTmName = "cons"
+nilTm = DC nilTmName
+nilTmName = "nil"
+
 builtinDCs :: [Reft]
-builtinTCs :: [BaseType]
-builtinDCs = [ttTm, ffTm, unitTm]
-builtinTCs = [boolTp, unitTp]
+builtinTCs :: [Id]
+builtinDCs = [ttTm, ffTm, unitTm, consTm, nilTm]
+builtinTCs = [boolTpName, unitTpName, listTpName]
 {- ORMOLU_ENABLE -}
 
 -- * Functions on the terms
@@ -505,7 +515,6 @@ instance Eq Expr where
         if y1 /= y2
           then freshVar y1 (freeVars [e1, e2] `Set.union` Set.fromList vars) : vars
           else y1 : vars
-  e1@(TyAbs β e1') == e2@(TyAbs γ e2') = undefined
   _ == _ = False
 
 -- * Printer for the grammar
@@ -596,7 +605,6 @@ instance Pretty Expr where
       des = case genVars of Nothing -> "destruct"; Just _ -> "induct"
       ppAlt (pat, e) = sep [char '|' <+> ppPat pat <+> "->", nest identNb $ maybe "undefined" pPrint e]
       ppPat (c, ys) = text c <+> hsep (map (text . fst) ys)
-  pPrint (TyAbs α e) = "Λ" <> text α <> "." <+> pPrint e
 
 instance Pretty Reft where
   -- pPrintPrec _ _ (Var x ar loc) = text x <> char '/' <> parens (integer ar <> comma <> pPrint loc)

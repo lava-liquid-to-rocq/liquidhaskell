@@ -26,6 +26,7 @@ library
       Lava.Declaration
       Lava.Elaboration
       Lava.Names
+      Lava.SystemF
       Lava.TopologicalSort
       Lava.Translation
       Lava.TypingEnvironment

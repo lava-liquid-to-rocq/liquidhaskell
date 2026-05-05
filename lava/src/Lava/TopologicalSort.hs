@@ -52,7 +52,6 @@ instance Dependencies LH.Expr where
   dependsOn (LH.Reft r) name = dependsOn r name
   dependsOn (LH.Let x tp df tm) name = (df `dependsOn` name || tm `dependsOn` name || tp `dependsOn` name) && x /= name
   dependsOn (LH.Case r branches _) name = dependsOn r name || any (`dependsBranchCalc` name) branches
-  dependsOn (LH.TyAbs α tm) name = α /= name && tm `dependsOn` name
 
 instance Dependencies LH.Decl where
   dependsOn (LH.Data n αs constrs) name =

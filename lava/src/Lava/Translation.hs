@@ -27,14 +27,12 @@ trBuiltin Double = error "Doubles not yet supported in Coq (function Translation
 trBuiltin String = error "Strings not yet supported in Coq (function Translation.trBuiltin)"
 
 -- | Translation of base types
-trBaseType :: LH.BaseType -> RocqType
-trBaseType (LH.Builtin b) = Coq.Builtin $ trBuiltin b
-trBaseType (LH.TC tc) = Coq.TC tc' []
+trBaseType :: Bool -> LH.BaseType -> RocqType
+trBaseType _ (LH.Builtin b) = Coq.Builtin $ trBuiltin b
+trBaseType eq (LH.TC tc tps) = Coq.TC tcT (map (trRefType eq) tps)
   where
-    tc' = case tc of
-      _ | tc == boolTpName -> "bool"
-      _ | tc == unitTpName -> "Unit"
-      _ -> unrefinedTCName tc
+    tcT = if tc `elem` LH.builtinTCs then trDC tc else unrefinedTCName tc
+trBaseType _ (LH.TyVar α) = Coq.TyVar α
 
 -- | Translation of ILH binary operators to Coq binary operators
 trBop :: LH.Bop -> Coq.BaseBop
@@ -67,21 +65,25 @@ utrDC c = unrefinedConstrName c
 
 -- | Translation of refinement types
 --   Function TtoU (def 3.1) of the paper
-utrRefType :: LH.RefType -> RocqType
-utrRefType (RefType _ tp _) = trBaseType tp
-utrRefType tp@(ArrType {}) =
-  let (argsUT, retUT) = bimap (map (utrRefType . snd)) (utrRefType . mkRefType) $ arrs tp
-   in UPack (UArgListT argsUT) retUT
+utrRefType :: Bool -> LH.RefType -> RocqType
+utrRefType eq (RefType _ tp _) = trBaseType eq tp
+utrRefType eq tp@(ArrType {}) =
+  let (αs, args, ret) = arrs tp
+      (argsUT, retUT) = bimap (map (utrRefType eq . snd)) (utrRefType eq . mkRefType) (args, ret)
+   in UPack (UArgListT $ map Coq.TyVar αs ++ argsUT) retUT
+utrRefType eq (LH.FAType α tp) = Coq.FAType (α, Sort TypeSort) (utrRefType eq tp)
 
 -- | Translation of refinement types at top-level (with arrows)
-utrRefTypeTop :: LH.RefType -> RocqType
-utrRefTypeTop tp@(RefType {}) = utrRefType tp
-utrRefTypeTop (ArrType _ tpx tp) = Coq.Arrow (utrRefType tpx) (utrRefTypeTop tp)
+utrRefTypeTop :: Bool -> LH.RefType -> RocqType
+utrRefTypeTop eq tp@(RefType {}) = utrRefType eq tp
+utrRefTypeTop eq (ArrType _ tpx tp) = Coq.Arrow (utrRefType eq tpx) (utrRefTypeTop eq tp)
+utrRefTypeTop eq (LH.FAType α tp) = Coq.FAType (α, Sort TypeSort) (utrRefTypeTop eq tp)
 
 -- | Translation of refinement types at top level (with arrows and Prop at the end)
-utrRefTypeTopProp :: LH.RefType -> RocqType
-utrRefTypeTopProp tp@(RefType {}) = Arrow (utrRefType tp) (Coq.Sort Coq.PropSort)
-utrRefTypeTopProp (ArrType _ tpx tp) = Coq.Arrow (utrRefType tpx) (utrRefTypeTopProp tp)
+utrRefTypeTopProp :: Bool -> LH.RefType -> RocqType
+utrRefTypeTopProp eq tp@(RefType {}) = Arrow (utrRefType eq tp) (Coq.Sort Coq.PropSort)
+utrRefTypeTopProp eq (ArrType _ tpx tp) = Coq.Arrow (utrRefType eq tpx) (utrRefTypeTopProp eq tp)
+utrRefTypeTopProp eq (LH.FAType α tp) = Coq.FAType (α, Sort TypeSort) (utrRefTypeTopProp eq tp)
 
 -- | Translation of refinements
 --   Function RtoU (def 3.2) of the paper
@@ -95,6 +97,7 @@ utrReft eq r0 = case r0 of
   LH.FloatLit d -> Coq.FloatLiteral d
   LH.DC c -> Coq.Cr $ utrDC c
   LH.App r1 r2 -> Coq.App (utrReft eq r1) [utrReft eq r2]
+  LH.TyApp r tp -> Coq.TyApp (utrReft eq r) (utrRefType eq tp)
   LH.Neg r -> Coq.Neg UnrefOp $ utrReft eq r
   LH.Bop op r1 r2 -> Coq.Bop (Binop (trBop op) UnrefOp) (utrReft eq r1) (utrReft eq r2)
   LH.QMark r _ _ -> utrReft eq r
@@ -227,12 +230,14 @@ trDC c = c
 trRefType :: Bool -> LH.RefType -> RocqType
 -- trRefType tp@(RefType {}) | traceFunc "trRefType" [pPrint tp] = undefined
 trRefType eq (RefType x tp r) =
-  Coq.Subset x (trBaseType tp) rT
+  Coq.Subset x (trBaseType eq tp) rT
   where
     rT = case tp of
       (LH.Builtin {}) -> utrReftProp eq r
-      _ | tp `elem` builtinTCs -> utrReftProp eq r
-      (LH.TC tc) -> Coq.Bop (Binop Coq.And PropOp) (Coq.App (Def $ wfTCName tc) [Coq.Var x]) (utrReftProp eq r)
+      LH.TC tc _ | tc `elem` LH.builtinTCs -> utrReftProp eq r
+      -- TODO:
+      (LH.TC tc αs) -> Coq.Bop (Binop Coq.And PropOp) (Coq.App (Def $ wfTCName tc) [Coq.Var x]) (utrReftProp eq r)
+      (LH.TyVar α) -> undefined
 trRefType eq tp@(ArrType {}) =
   Pack argTps uargTps (argListCorPrf argTps uargTps) tpx p_
   where
@@ -241,15 +246,16 @@ trRefType eq tp@(ArrType {}) =
        args = map (\(x, xTp) -> (x, cleanupSubst (filter (\(y, _) -> x /= y) substs) xTp)) args_
        tpx = cleanupSubst substs tpx_
        rx = subst substs rx_ -}
-    (args, ret) = arrs tp
+    (αs, args, ret) = arrs tp
     (x, tpx, rx) = fromSubset . trRefType eq $ mkRefType ret
     argsT = map (second (trRefType eq)) args
     argTps = ArgListT argsT
-    uargTps = UArgListT $ map (utrRefType . snd) args
+    uargTps = UArgListT $ map (utrRefType eq . snd) args
     p = mkLam argsT (Lambda x tpx rx)
     argsNm = "x_" ++ hashName argTps
     v = "v_" ++ argsNm
     p_ = Lambda argsNm (ArgumentList argTps) (Lambda v tpx (PrfTerm Hole (ByTac . Custom $ unwords ["flattenP", render $ parens (pPrint p), argsNm, v])))
+trRefType eq tp@(LH.FAType {}) = undefined
 
 -- | Translation of refinement types at top-level (with foralls)
 trRefTypeTop :: Bool -> LH.RefType -> RocqType
@@ -263,7 +269,7 @@ trRefTypeTop eq (ArrType x tpx tp) = Coq.FAType (x, trRefType eq tpx) (trRefType
 -- >   = ([(x: Z) (x_p: geq_rel x 0 true) (f: Pack(Int -> Int))], {v: Z | (getPackRel f) x v})
 trRefTypeSplit :: Bool -> LH.RefType -> ([(Id, RocqType)], RocqType)
 trRefTypeSplit eq tp =
-  let (args, ret) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
+  let (αs, args, ret) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
    in (concatMap (splitIfFO . second (trRefType eq)) args, trRefType eq $ mkRefType ret)
   where
     splitIfFO (x, Subset _ tpx p) = [(x, tpx), (subsetWitnessNm x, Prop p)]
@@ -317,7 +323,7 @@ trExprTacs eq (LH.Let x (Just tpx@(ArrType {})) e1 e2) =
   ]
     ++ trExprTacs eq e2
   where
-    (args, _) = arrs tpx
+    (αs, args, _) = arrs tpx
     intros = Intros $ map (\(xi, _) -> DestrPat $ ConjDestrPat [SingleIdPat xi, SingleIdPat $ subsetWitnessNm xi]) args
     tpxT = trRefTypeTop eq tpx
     x' = "f_" ++ hashName tpxT

@@ -13,6 +13,7 @@ import Data.List (groupBy, mapAccumL, nub, union, (\\))
 import qualified Data.Map as Map
 import Data.Maybe (isNothing)
 import qualified Data.Set as Set
+import Data.Tuple.Extra (snd3)
 import Debug.Trace (trace)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
@@ -28,12 +29,12 @@ import Text.PrettyPrint.HughesPJClass hiding (first)
 trDecl :: Bool -> LH.Decl -> [Coq.Decl]
 -- An inductive data type gives an unrefined data type, a well-formedness predicate, some utility definitions and pseudo-constructors
 -- trDecl decl | trace (render $ text "Translating" <+> pPrint decl) False = undefined
-trDecl equations (LH.Data tc alts) =
-  unrefTCDecl tc alts --                     TC_u: unrefined datatype declaration
+trDecl equations (LH.Data tc αs alts) =
+  unrefTCDecl equations tc alts --                     TC_u: unrefined datatype declaration
     : tcEqDecls tc alts --                   TC_eq: equality for TC_u and associated declarations
     ++ tcRefDecls equations tc alts --                 TC_wf and TC: Well-formedness and type alias
     ++ concatMap (mkPseudoConstr equations tc) alts -- C_i: Refined data constructors
-    ++ concatMap (mkConstrWf tc) alts --     Lemmas for decomposing well-formedness on data constructors
+    ++ concatMap (mkConstrWf equations tc) alts --     Lemmas for decomposing well-formedness on data constructors
     ++ tcHints tc alts --                    Final hints for datatypes and constructor
     -- For an unreflected definition, we only generate the refined definition,
     -- if the graph relation is needed, we generate it on the fly.
@@ -58,18 +59,18 @@ trDecl equations (LH.Definition f tpf e isRefl) =
 -- * Declarations generated for the translation of a datatype
 
 -- | Translates a constructor to an unrefined constructor
-trConstr :: (Id, RefType) -> Coq.CoqConstr
-trConstr (c, tp) = Constr (unrefinedConstrName c) (utrRefTypeTop tp)
+trConstr :: Bool -> (Id, RefType) -> Coq.CoqConstr
+trConstr eq (c, tp) = Constr (unrefinedConstrName c) (utrRefTypeTop eq tp)
 
 -- | unrefTC(tc) = tc_u
 unrefTC :: Id -> RocqType
 unrefTC tc = Coq.TC (unrefinedTCName tc) []
 
 -- | Unrefined datatype declaration TC_u
-unrefTCDecl :: Id -> [(Id, RefType)] -> Coq.Decl
+unrefTCDecl :: Bool -> Id -> [(Id, RefType)] -> Coq.Decl
 -- unrefTCDecl tc _ | traceTC "unrefTCDecl" tc = undefined
-unrefTCDecl tc alts =
-  CoqInductive (unrefinedTCName tc) [] (Sort SetSort) $ map trConstr alts
+unrefTCDecl eq tc alts =
+  CoqInductive (unrefinedTCName tc) [] (Sort SetSort) $ map (trConstr eq) alts
 
 -- ** Equality
 
@@ -90,7 +91,7 @@ eqDecl tc alts =
     mkConstrEqBranch (c, tp) =
       let c_u = unrefinedConstrName c
        in ( [(c_u, tpArgs tp), (c_u, map (++ "'") $ tpArgs tp)],
-            foldl (\b (x, tpx) -> Coq.Bop (Binop Coq.And UnrefOp) b (mkEq tpx (Coq.Var x) (Coq.Var $ x ++ "'"))) btrue (fst $ arrs tp)
+            foldl (\b (x, tpx) -> Coq.Bop (Binop Coq.And UnrefOp) b (mkEq tpx (Coq.Var x) (Coq.Var $ x ++ "'"))) btrue (snd3 $ arrs tp)
           )
     defaultBranch = ([("_", []), ("_", [])], bfalse)
     -- TODO: we could have an inductive tc' that is not the same one, but for which
@@ -98,7 +99,8 @@ eqDecl tc alts =
     -- overload boolean equality)
     -- Is it really not possible to expand the boolean equality automatically?
     mkEq :: RefType -> CoqTerm -> CoqTerm -> CoqTerm
-    mkEq (RefType _ (LH.TC tc') _) x x' | tc' == tc = Coq.App (Def $ tcEqName tc) [x, x']
+    -- TODO: deal with type application
+    mkEq (RefType _ (LH.TC tc' tps) _) x x' | tc' == tc = Coq.App (Def $ tcEqName tc) [x, x']
     mkEq _ x x' = Coq.Bop (Binop Coq.Eq RefOp) x x'
 
 -- | Lemma TC_eq_refl: reflexivity of TC_eq, with associated hint:
@@ -111,7 +113,7 @@ eqReflLem tc =
   [ Coq.Definition
       (eqReflLemName tc)
       []
-      (FAType ("x", unrefTC tc) . Prop . mkIsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["x", "x"]))
+      (Coq.FAType ("x", unrefTC tc) . Prop . mkIsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["x", "x"]))
       (ProofBody [Custom "eq_refl"])
       Opaque,
     AddHint ResolveHint (eqReflLemName tc) EqHintDb
@@ -127,8 +129,8 @@ eqbEqLem tc =
   [ Coq.Definition
       (eqEqbEqLemName tc)
       []
-      ( FAType ("s", unrefTC tc)
-          . FAType ("t", unrefTC tc)
+      ( Coq.FAType ("s", unrefTC tc)
+          . Coq.FAType ("t", unrefTC tc)
           . Prop
           $ Coq.Bop
             (Binop Coq.Impl PropOp)
@@ -167,7 +169,7 @@ wfDecl eq tc alts =
     mkBranch :: (Id, RefType) -> ([(Id, [Id])], CoqTerm)
     mkBranch (c, tp) = ([(unrefinedConstrName c, map fst args)], mkAnd (retRefT : map argProp args))
       where
-        (args, (vv, _, retRef)) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
+        (αs, args, (vv, _, retRef)) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
         -- Proposition for the refinement of the return type, with C x1 … xn in the refinement
         retRefT = utrReftProp eq (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef)
         -- Proposition for each argument
@@ -212,7 +214,7 @@ mkPseudoConstr eq tc (c, tp) =
     Coq.Definition c argsT retT bodyConstr Transparent
   ]
   where
-    (args, ret@(x, _, retRef)) = arrs tp
+    (αs, args, ret@(x, _, retRef)) = arrs tp
     argsT = map ((,False) . second (trRefType eq)) args
     retT = trRefType eq (mkRefType ret)
     -- C proj(x1) … proj(xn) (in LH), that translates to C_u proj1_sig(x1) … proj1_sig(x_n)
@@ -236,15 +238,16 @@ mkPseudoConstr eq tc (c, tp) =
 -- > ...
 -- > Definition wf_C_argIndn [args] (p: TC_wf (C [args])): IList_wf [inductive arg n].
 -- > #[global] Hint Resolve wf_C_argIndn : ref_constr_db.
-mkConstrWf :: Id -> (Id, RefType) -> [Coq.Decl]
+mkConstrWf :: Bool -> Id -> (Id, RefType) -> [Coq.Decl]
 -- mkConstrWf tc (c, _) | traceDC "mkConstrWf" tc c = undefined
-mkConstrWf tc (c, tp) =
+mkConstrWf eq tc (c, tp) =
   concatMap mkConstrWfArg (concatMap userTCs args)
   where
-    args = fst $ arrs tp
+    args = snd3 $ arrs tp
     -- List of inductive datatypes (not builtin) appearing in args.
     -- For those we create a lemma
-    userTCs (x, RefType _ (LH.TC tcInd) _) | isLeft (lookupTC tcInd initial) = [(x, tcInd)]
+    -- TODO: deal with type application
+    userTCs (x, RefType _ (LH.TC tcInd tps) _) | isLeft (lookupTC tcInd initial) = [(x, tcInd)]
     userTCs _ = []
     -- Build the lemma wf_tcInd_x and the associated hint
     mkConstrWfArg (x, tcInd) =
@@ -257,7 +260,7 @@ mkConstrWf tc (c, tp) =
         AddHint ResolveHint (constrWfName c x) RefConstrDB
       ]
       where
-        argsUT = map ((,True) . second utrRefType) args
+        argsUT = map ((,True) . second (utrRefType eq)) args
         unrefCrApp = Coq.App (Def $ unrefinedConstrName c) $ map (Coq.Var . fst) args
         ass = Prop $ Coq.App (Def $ wfTCName tc) [unrefCrApp]
         goal = Coq.App (Def $ wfTCName tcInd) [Coq.Var x]
@@ -319,16 +322,16 @@ mkFuncData eq name tpf body =
       args,
       retName,
       argsT = map (second (trRefType eq)) args,
-      argsUT = map (second utrRefType) args,
+      argsUT = map (second (utrRefType eq)) args,
       retT = trRefType eq ret,
-      retUT = utrRefType ret,
+      retUT = utrRefType eq ret,
       paths = functionPaths body (tpArgsArLoc tpf),
       projArgs = map projArg args,
       injArgs = map injArg args,
       equations = eq
     }
   where
-    (args, ret0@(retName, _, _)) = arrs tpf
+    (αs, args, ret0@(retName, _, _)) = arrs tpf
     ret = mkRefType ret0
     projArg (x, ArrType {}) = Project (Coq.Var x)
     projArg (x, _) = Coq.Var x
@@ -506,7 +509,7 @@ defGraphRelAndHints f =
     trDefGraphRel :: Coq.Decl
     trDefGraphRel =
       let pathConstrs = snd . mapAccumL mkUniqueNames Map.empty $ map pathConstr (paths f)
-       in CoqInductive (relDefName $ name f) [] (utrRefTypeTopProp $ tpf f) pathConstrs
+       in CoqInductive (relDefName $ name f) [] (utrRefTypeTopProp (equations f) (tpf f)) pathConstrs
     pathConstr path@(σxs, guards, _) =
       Coq.Constr (pathConstrName (name f) (map snd σxs ++ map snd guards) "Constr") (trPathToConstr (equations f) (name f) (map snd $ argsUT f) path)
     -- Make names of the constructors unique: there can be redundancy when there are additional guards
@@ -786,7 +789,7 @@ packInstances :: FuncData -> [Coq.Decl]
 -- packInstance f | traceF "packInstance" f = undefined
 packInstances f =
   [TacInstance (packInstanceName $ name f) (trRefType (equations f) $ tpf f) def | firstOrder, arrowType]
-    ++ [TacInstance (upackInstanceName $ name f) (utrRefType $ tpf f) udef | firstOrder, arrowType]
+    ++ [TacInstance (upackInstanceName $ name f) (utrRefType (equations f) (tpf f)) udef | firstOrder, arrowType]
   where
     def = Custom $ unwords ["buildPackG", name f, relDefName $ name f, relDefThmName $ name f, funcHoodLemName $ name f]
     udef = Custom $ unwords ["buildUPackG", relDefName $ name f, funcHoodLemName $ name f]
