@@ -90,4 +90,4 @@ lava/out/**/*.timing
 lava/out/TranslationTests
 tests/lava/**/.lia.cache
 
-lava/out/TranslationTests/PLE/*.v
+lava/out/**
