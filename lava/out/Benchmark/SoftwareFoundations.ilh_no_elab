@@ -158,17 +158,17 @@ data Nibble := | Bits :: VV: {SFBit} -> VV_: {SFBit} -> VV__: {SFBit} -> VV___: 
 
 def allzero :: lq_tmp0: {Nibble} -> {SFBool} :=
   destruct lq_tmp0 of
-  | Bits ds_d3FS ds_d3FT ds_d3FU ds_d3FV ->
-    destruct ds_d3FS of
+  | Bits ds_d5TQ ds_d5TR ds_d5TS ds_d5TT ->
+    destruct ds_d5TQ of
     | B1 -> SFFalse
     | B0 ->
-      destruct ds_d3FT of
+      destruct ds_d5TR of
       | B1 -> SFFalse
       | B0 ->
-        destruct ds_d3FU of
+        destruct ds_d5TS of
         | B1 -> SFFalse
         | B0 ->
-          destruct ds_d3FV of
+          destruct ds_d5TT of
           | B1 -> SFFalse
           | B0 -> SFTrue
 
@@ -217,10 +217,10 @@ refl def ltb :: n: {MyNat} -> m: {MyNat} -> {SFBool} :=
 refl def minus :: n: {MyNat} -> m: {MyNat} -> {MyNat} :=
   destruct n of
   | O -> O
-  | S ds_d3Fp ->
+  | S ds_d5Tn ->
     destruct m of
-    | O -> S ds_d3Fp
-    | S m' -> minus ds_d3Fp m'
+    | O -> S ds_d5Tn
+    | S m' -> minus ds_d5Tn m'
 
 def minus_n_n :: n: {MyNat} -> {{minus n n == O}} :=
   destruct n of
@@ -230,8 +230,8 @@ def minus_n_n :: n: {MyNat} -> {{minus n n == O}} :=
 def minustwo :: lq_tmp0: {MyNat} -> {MyNat} :=
   destruct lq_tmp0 of
   | O -> O
-  | S ds_d3FP ->
-    destruct ds_d3FP of
+  | S ds_d5TN ->
+    destruct ds_d5TN of
     | O -> O
     | S n' -> n'
 
@@ -295,7 +295,7 @@ def plus_1_1 :: n: {MyNat} -> {{plus one n == S n}} := unit
 def plus_1_neq_0 :: n: {MyNat} -> {{plus n one /= O}} :=
   destruct n of
   | O -> unit
-  | S ds_d3Fa -> unit
+  | S ds_d5T8 -> unit
 
 def plus_O_n :: n: {MyNat} -> {{plus O n == n}} := unit
 
@@ -541,8 +541,8 @@ def isred :: c: {Color} -> {SFBool} :=
   destruct c of
   | Black -> SFFalse
   | White -> SFFalse
-  | Primary ds_d3G1 ->
-    destruct ds_d3G1 of
+  | Primary ds_d5TZ ->
+    destruct ds_d5TZ of
     | Red -> SFTrue
     | Green -> SFFalse
     | Blue -> SFFalse

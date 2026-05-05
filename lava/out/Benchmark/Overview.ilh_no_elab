@@ -4,7 +4,7 @@ data IList := | Cons :: n: {n: Integer | 5 < n} -> l: {IList} -> {IList} | Nil :
 
 refl def llen :: l: {IList} -> {v: Integer | v >= 0} :=
   destruct l of
-  | Cons ds_dZF l' -> llen l' + 1
+  | Cons ds_d27I l' -> llen l' + 1
   | Nil -> 0
 
 refl def append :: xs: {IList} -> ys: {IList} -> {v: IList | llen v == llen xs + llen ys} :=

@@ -40,7 +40,7 @@ refl def eqN :: m: {Nats} -> n: {Nats} -> {Bool} :=
   | Zero ->
     destruct n of
     | Zero -> True
-    | Suc lq_anf7205759403792802883 -> False
+    | Suc lq_anf7205759403792810464 -> False
   | Suc m ->
     destruct n of
     | Zero -> False
@@ -53,14 +53,14 @@ def test_eqN' :: {r: Bool | not r} := eqN (Suc (Suc Zero)) (Suc Zero)
 refl def geqN :: m: {Nats} -> n: {Nats} -> {Bool} :=
   destruct n of
   | Zero -> True
-  | Suc lq_anf7205759403792802880 ->
+  | Suc lq_anf7205759403792810461 ->
     destruct m of
     | Zero ->
-      destruct Suc lq_anf7205759403792802880 of
+      destruct Suc lq_anf7205759403792810461 of
       | Zero -> undefined
-      | Suc ds_d2o1 -> False
+      | Suc ds_d4mi -> False
     | Suc m ->
-      destruct Suc lq_anf7205759403792802880 of
+      destruct Suc lq_anf7205759403792810461 of
       | Zero -> undefined
       | Suc n -> geqN m n
 
@@ -82,7 +82,7 @@ refl def sub :: m: {Nats} -> n: {n: Nats | geqN m n} -> {o: Nats | o /= Zero <=>
   | Zero ->
     destruct n of
     | Zero -> Zero
-    | Suc lq_anf7205759403792802899 -> undefined
+    | Suc lq_anf7205759403792810480 -> undefined
   | Suc m ->
     destruct n of
     | Zero -> Suc m
@@ -93,15 +93,15 @@ def add_sub :: m: {Nats} -> n: {Nats} -> {{sub ((add m) n) n == m}} :=
   | Zero ->
     destruct n of
     | Zero -> unit
-    | Suc lq_anf7205759403792802861 ->
-      destruct Suc lq_anf7205759403792802861 of
+    | Suc lq_anf7205759403792810442 ->
+      destruct Suc lq_anf7205759403792810442 of
       | Zero -> undefined
       | Suc n -> add_suc_r Zero n ? (add_sub Zero n proves True)
   | Suc m ->
     destruct n of
     | Zero -> add_zero_r m
-    | Suc lq_anf7205759403792802869 ->
-      destruct Suc lq_anf7205759403792802869 of
+    | Suc lq_anf7205759403792810450 ->
+      destruct Suc lq_anf7205759403792810450 of
       | Zero -> undefined
       | Suc n -> add_suc_r (Suc m) n ? (add_sub (Suc m) n proves True)
 

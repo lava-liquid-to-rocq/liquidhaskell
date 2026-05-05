@@ -20,7 +20,7 @@ def propConst3 :: lq_tmp0: {Unit}
 refl def length :: lq_tmp0: {L} -> {VV: Integer | VV >= 0} :=
   destruct lq_tmp0 of
   | Emp -> 0
-  | C ds_d1Is xs -> 1 + length xs
+  | C ds_d3vT xs -> 1 + length xs
 
 def prop :: x: {Integer}
             -> xs: {L}
