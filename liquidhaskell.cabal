@@ -1,4 +1,7 @@
 cabal-version:      2.4
+homepage:           https://github.com/ucsd-progsys/liquidhaskell
+build-type:         Custom
+tested-with:        GHC == 9.12.2
 name:               liquidhaskell
 version:            0.9.12.2.1
 synopsis:           Liquid Types for Haskell
@@ -9,9 +12,6 @@ copyright:          2010-19 Ranjit Jhala & Niki Vazou & Eric L. Seidel, Universi
 author:             Ranjit Jhala, Niki Vazou, Eric Seidel
 maintainer:         Ranjit Jhala <jhala@cs.ucsd.edu>
 category:           Language
-homepage:           https://github.com/ucsd-progsys/liquidhaskell
-build-type:         Custom
-tested-with:        GHC == 9.12.2
 extra-doc-files: CHANGES.md
                  README.md
 

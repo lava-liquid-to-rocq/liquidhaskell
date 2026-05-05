@@ -4,7 +4,7 @@
 
 -- | Universal property of foldr a la Zombie
 -- | cite : http://www.seas.upenn.edu/~sweirich/papers/congruence-extended.pdf
-module TranslationTests.FoldrUniversal where
+module Benchmark.PLE.FoldrUniversal where
 
 import Language.Haskell.Liquid.ProofCombinators
 import Prelude hiding (foldr)
@@ -54,7 +54,8 @@ foldrUniversal f h e (C x xs) base step =
 
 -- 37 SLOC
 
-{- this needs type annotations
+{- 
+-- this needs type annotations
 -- | foldrFunsion
 
 -- This will fail as the function foldr is not fully applied
@@ -91,5 +92,6 @@ fuse_base :: (Int->Int) -> (Int -> Int -> Int) -> Int -> Proof
               -> { h (foldr f e Emp) == h e } @-}
 fuse_base h f e
   = trivial
--}
 
+-- 61 SLOC
+-}

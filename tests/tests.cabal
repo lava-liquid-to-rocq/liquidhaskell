@@ -2668,35 +2668,33 @@ executable benchmark-lava
       buildable:      False
     ghc-options: -fforce-recomp
     other-modules:
-                    -- Benchmark.PLE.Compose -- Fix HO
+                    Benchmark.ReviewerAExample
                     , Benchmark.PLE.Append
+                    , Benchmark.PLE.Compose
                     , Benchmark.PLE.Lambdas
                     , Benchmark.PLE.Lists
                     , Benchmark.PLE.MonadId
                     , Benchmark.PLE.MonadMaybe
+                    , Benchmark.PLE.MonadList
                     , Benchmark.PLE.MonoidList
                     , Benchmark.PLE.MonoidMaybe
-                    , TranslationTests.Append
-                    -- , TranslationTests.ApplicativeId -- HO constructor
-                    -- , TranslationTests.ApplicativeList -- HO constructor
-                    -- , TranslationTests.ApplicativeMaybe -- HO constructor
-                    
-                    -- Fix HO
-                    , TranslationTests.FoldrUniversal
+                    , Benchmark.PLE.FoldrUniversal
+                    , TranslationTests.ApplicativeId
+                    , TranslationTests.ApplicativeList
+                    , TranslationTests.ApplicativeMaybe
                     , TranslationTests.FunctorId
                     , TranslationTests.FunctorList
                     , TranslationTests.FunctorMaybe
-                    , TranslationTests.MonadList
-                    -- , Benchmark.GradeExample
-                    -- , Benchmark.Half
-                    -- , Benchmark.SafeIndexing
-                    
-                    -- Presumeably working
+                    , Benchmark.GradeExample
+                    , Benchmark.Half
                     , Benchmark.Overview
                     , Benchmark.PeanoNats
                     , Benchmark.RBinsToBins
+                    , Benchmark.SafeIndexing
                     , Benchmark.SoftwareFoundations
-
+                    , Benchmark.SoftwareFoundationsBasics
+                    , Benchmark.SoftwareFoundationsInduction
+                    , Benchmark.SoftwareFoundationsLists
     build-depends:    base
                     , liquid-prelude
                     -- , containers
@@ -2726,29 +2724,6 @@ executable benchmark-lava-ple
     build-depends:    base
                     , liquid-prelude
                     -- , containers
-                    , liquidhaskell
-                    , lava
-    hs-source-dirs:   app
-                    , lava
-    default-extensions: GADTs
-
-flag import-lava
-     default: False
-
-executable import-lava
-    import:           common-ghc-options
-    main-is:          Main.hs
-    if !flag(import-lava) && flag(stack)
-      buildable:      False
-    ghc-options: -fforce-recomp
-    other-modules:
-                    , Import.RBins
-                    , Import.RBinsToBins
-                    , Import.SoftwareFoundationsBasics
-                    , Import.SoftwareFoundationsInduction
-                    , Import.SoftwareFoundationsLists
-    build-depends:    base
-                    , liquid-prelude
                     , liquidhaskell
                     , lava
     hs-source-dirs:   app
