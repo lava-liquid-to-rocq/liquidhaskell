@@ -100,6 +100,7 @@ data Decl
 data DefBody
   = ProofBody [Tactic]
   | TermBody CoqTerm
+  | TypeBody RocqType
   deriving (Data, Eq, Show)
 
 -- | A branch for Equations: argument patterns, guards (without pattern) and list of patterns for the guards with the branch term
@@ -114,7 +115,16 @@ data Visibility = Transparent | Opaque deriving (Data, Eq, Show)
 
 data HintKind = UnfoldHint | ConstructorsHint | ResolveHint | RewriteHint deriving (Data, Eq)
 
-data HintDatabase = CoreDB | GraphRelDB | GraphRelBackDB | WfDB | RefConstrDB | RelAxDB | EqHintDb deriving (Data, Eq)
+data HintDatabase
+  = CoreDB
+  | GraphRelDB
+  | GraphRelBackDB
+  | WfDB
+  | RefConstrDB
+  | RelAxDB
+  | EqHintDB
+  | LiaUnfoldDB
+  deriving (Data, Eq)
 
 -- ** Object-level grammar
 
@@ -341,6 +351,12 @@ simplifySubCast (SubCast Hole _ (Exist _ tm CoqProofTerm {}) ProofHole) =
 simplifySubCast (SubCast Hole _ (Exist _ tm ProofHole {}) (TermWitness TermHole)) =
   Exist TermHole tm (TermWitness TermHole)
 simplifySubCast (SubCast need have t _) | need == have && need /= Hole = t
+-- TODO: (merge) add this
+{-SubCast to@(Pack argTps _ z _ _) from t _ -> if properPackSubsumption then addParens $ unwords ["subCastPack", formatLong $ showP argTps, formatLong $ showP z, t', showP (TermWitness TermHole), showP (TermWitness TermHole)] else t'
+where
+  t' = case from of
+    Pack{} -> formatLong $ showP t
+    _ -> formatLong . showP . PrfTerm Hole . ByTac . Custom $ funToPackName ++ " " ++showP t -}
 simplifySubCast t = t
 
 -- * Destructors
@@ -458,14 +474,14 @@ instance Pretty Decl where
         $$ "Proof."
         $$ nest identNb (sep $ map pPrint tacs)
         $$ (if admitted tacs then "Admitted" else qedSym) <> dot
-      TermBody expr -> header <> " :=" $$ nest identNb (pPrint expr <> dot)
+      TermBody expr -> tmBody (pPrint expr)
+      TypeBody tp -> tmBody (pPrint tp)
     where
-      kind = case ret of
-        Prop {} | vis == Opaque -> "Theorem"
-        _ ->  "Definition"
+      kind = if vis == Opaque then "Theorem" else "Definition"
       header =
         hang (hang (kind <+> text f) identNb (pPrintArgs args <> colon))
         identNb (pPrint ret)
+      tmBody tm = header <+> ":=" $$ nest identNb (tm <> dot)
       qedSym = case vis of
         Transparent -> "Defined"
         Opaque -> "Qed"
@@ -478,7 +494,7 @@ instance Pretty Decl where
   pPrint (CoqInductive f args ret constrs) =
     hang ("Inductive" <+> text f <+> pPrintArgs (map (,False) args) <> colon) identNb (pPrint ret <+> ":=")
       $$ nest identNb (sep (map (("|" <+>) . pPrint) constrs) <> dot)
-  pPrint (ChangeVisibility f vis) = text (show vis) <+> text f <> char '.'
+  pPrint (ChangeVisibility f vis) = "#[global]" <+> text (show vis) <+> text f <> dot
   pPrint (AddHint kind ax db) =
     "#[global] Hint" <+> pPrint kind <+> text ax <> colon <+> pPrint db <> dot
   pPrint (Instance instName tp opDefs) =
@@ -524,7 +540,8 @@ instance Pretty HintDatabase where
   pPrint CoreDB = "core_hint_db"
   pPrint GraphRelBackDB = "f_rel_back"
   pPrint RelAxDB = "rel_ax_db"
-  pPrint EqHintDb = "eq_hint_db"
+  pPrint EqHintDB = "eq_hint_db"
+  pPrint LiaUnfoldDB = "lia_unfold"
 
 instance Pretty Builtin where
   pPrint CTInt = "Z"

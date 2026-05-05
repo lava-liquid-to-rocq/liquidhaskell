@@ -54,6 +54,8 @@ preamble equations =
     scope x = text "Open Scope" <+> text x <> text "_scope."
 
 {- ORMOLU_DISABLE -}
+specName :: Id -> Id
+specName def = def ++ "_spec"
 unrefinedTCName :: Id -> Id
 unrefinedTCName name = name ++ "_u"
 refinedConstrName :: Id -> Id

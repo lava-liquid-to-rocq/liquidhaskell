@@ -38,7 +38,7 @@ trDecl equations (LH.Data tc alts) =
     -- For an unreflected definition, we only generate the refined definition,
     -- if the graph relation is needed, we generate it on the fly.
     -- For a reflected definition, we generate the graph relation, packs and other lemmas
-trDecl _         (LH.Import modName _) = [Coq.Load modName]
+trDecl _ (LH.Import modName _) = [Coq.Load modName]
 trDecl equations (LH.Definition f tpf e isRefl) =
   (if equations then trDefEquations fdata else trDefRefDef fdata) -- f  -- f
     ++ if isRefl
@@ -115,7 +115,7 @@ eqReflLem tc =
       (FAType ("x", unrefTC tc) . Prop . mkIsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["x", "x"]))
       (ProofBody [Custom "eq_refl"])
       Opaque,
-    AddHint ResolveHint (eqReflLemName tc) EqHintDb
+    AddHint ResolveHint (eqReflLemName tc) EqHintDB
   ]
 
 -- | Lemma TC_eqb_eq and hint:
@@ -138,7 +138,7 @@ eqbEqLem tc =
       )
       (ProofBody [Custom "eqb_eq_lem"])
       Opaque,
-    AddHint ResolveHint (eqEqbEqLemName tc) EqHintDb
+    AddHint ResolveHint (eqEqbEqLemName tc) EqHintDB
   ]
 
 -- | Instantiation of the equality typeclass for TC_u
@@ -440,11 +440,21 @@ groupArgPaths branches =
 -- ** Refined definition
 
 -- | Translation of a definition `f` to the refined definition `f` (with tactics)
+--
+-- > Definition f_spec (xi:Ai)_i : Type := {v:A|p}.
+-- > #[global] Hint Unfold f_spec : lia_unfold.
+-- > Definition f (xi:Ai)_i : f_spec (x_i)_i.
+-- > Proof. … Defined.
 trDefRefDef :: FuncData -> [Coq.Decl]
 -- trDefRefDef f | traceF "trDefRefDef" f = undefined
 trDefRefDef f =
-  [Coq.Definition (name f) (map (,False) (argsT f)) (retT f) (ProofBody tacs) Transparent]
+  [ Coq.Definition f_spec (map (,False) $ argsT f) (Sort TypeSort) (TypeBody $ retT f) Transparent,
+    AddHint UnfoldHint f_spec LiaUnfoldDB,
+    Coq.Definition (name f) (map (,False) (argsT f)) f_ret (ProofBody tacs) Transparent
+  ]
   where
+    f_spec = specName $ name f
+    f_ret = Prop $ Coq.App (Def f_spec) (map (Coq.Var . fst) (argsT f))
     tacs =
       let destructArgs = map (mkVarDestruct . fst) $ onlyFOArgs (args f)
        in destructArgs ++ trExprTacs (equations f) (body f)
