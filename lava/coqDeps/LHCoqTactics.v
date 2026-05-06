@@ -154,12 +154,14 @@ Ltac destructEqnResAppProj :=
 Ltac isExistProj exp :=
   match exp with
   | ⌊ exist _ _ _ -⌋ => idtac
+  | ⌊ exist _ _ _ ⌋ => idtac
   | _ => (* idtac "subterm not matching " exp; *) fail
   end.
 
 Ltac isSubCastProj exp :=
   match exp with
   | ⌊ subsumptionCast _ _ _ _ -⌋ => idtac
+  | ⌊ subsumptionCast _ _ _ _ ⌋ => idtac
   | _ => (* idtac "subterm not matching " exp; *) fail
   end.
 
@@ -169,7 +171,12 @@ Ltac isAppProj exp :=
     | subsumptionCast _ _ _ => idtac
     | exist _ _ => idtac
     end) then fail else idtac (* "found matching subterm " exp *)
+  | (refinement_proj.(proj) (?fApp _)) => tryif (match fApp with
+    | subsumptionCast _ _ _ => idtac
+    | exist _ _ => idtac
+    end) then fail else idtac (* "found matching subterm " exp *)
   | ⌊ ?const -⌋ => has_rel const; idtac
+  | (refinement_proj.(proj)  ?const) => has_rel const; idtac
   | _ => (* idtac "subterm not matching " exp; *) fail
   end.
 
@@ -184,6 +191,9 @@ Tactic Notation "undoProj" ident(Res) :=
   match type of temp with
   | ` ?tm = _ => clear temp; set tm as Res in *
   | ⌊ ?tm -⌋ = _ => clear temp; 
+    (* idtac "found projection of " tm; *)
+    tryif (set tm as Res in *) then idtac else (idtac "failed to pose that projection"; fail)
+  | (refinement_proj.(proj) ?tm) = _ => clear temp; 
     (* idtac "found projection of " tm; *)
     tryif (set tm as Res in *) then idtac else (idtac "failed to pose that projection"; fail)
   end.
@@ -202,6 +212,9 @@ Ltac cleanupExistProj exp :=
   | ⌊ ?tm -⌋ = _ => clear temp; 
     pose proof ⌈ tm ⌉;
     set ⌊ tm -⌋ as Res in *
+  | (refinement_proj.(proj) ?tm) = _ => clear temp; 
+    pose proof ⌈ tm ⌉;
+    set ⌊ tm -⌋ as Res in *
   end;
   first [rewrite proj_ex'' in Res | timeout 1 simpl in Res];
   subst Res.
@@ -214,6 +227,9 @@ Ltac cleanupSubCastProj exp :=
   assRefl Res as temp;
   match type of temp with
   | ⌊ ?tm -⌋ = _ => clear temp; 
+    pose proof ⌈ tm ⌉;
+    set ⌊ tm -⌋ as Res in *
+  | (refinement_proj.(proj) ?tm) = _ => clear temp; 
     pose proof ⌈ tm ⌉;
     set ⌊ tm -⌋ as Res in *
   end;
@@ -298,32 +314,25 @@ Ltac applyRwLem h :=
           let resArgs := fresh "resArgs" in
           let resArgsRefl := fresh "resArgsRefl" in
           pose ts as remTs;
-          pose _nil as resArgs;
           let rwAppl := fresh "rwAppl" in
-          let rwApplRefl := fresh "rwApplRefl" in
           
+          pose proof rwLemSimpl as rwAppl;
           repeat (
             assRefl remTs as remTsRefl;
             match type of remTsRefl with
             | _nil = _ => clear remTsRefl;
-              prepend_res resArgs v;
-              reverse_res resArgs;
+              specialize (rwAppl v);
               fail
             | ((exist _ ?x1 ?x1p) _::_ ?tl) = _ => clear remTsRefl; pose tl as remTs;
-              prepend_res resArgs x1;
-              prepend_res resArgs x1p
+              specialize (rwAppl x1);
+              specialize (rwAppl x1p)
+            | (?rtm _::_ ?tl) = _ => clear remTsRefl; pose tl as remTs;
+              specialize (rwAppl ⌊ rtm -⌋);
+              specialize (rwAppl ⌈ rtm ⌉);
+              simpl_proj
             end
           ); 
-          assRefl resArgs as resArgsRefl;
-          match type of resArgsRefl with
-          | ?resFargs = _ => clear resArgsRefl; 
-            mkAppl rwLemSimpl resFargs rwAppl;
-            assRefl rwAppl as rwApplRefl;
-            match type of rwApplRefl with
-            | ?rwLemAppl = _ => clear rwApplRefl; 
-              rewrite rwLemAppl in h
-            end
-          end
+          rewrite -> rwAppl in h; clear rwAppl
         end
       end
     end
@@ -493,12 +502,12 @@ Ltac axProjTm exp :=
     set (⌊ @subsumptionCast A G H res p -⌋) as tempPr in *;
     simpl in tempPr;
     subst tempPr
-  (* We have a projection of a function application with the function being a ho argument *)
-  | ⌊ ?f ?argList -⌋ = _ => match goal with
+  (*(* We have a projection of a function application with the function being a ho argument *)
+  | ?f ?argList = _ => match goal with
     | [f_frel : (forall (args : ArgList ?argTps) (v : ?resTp), ⌊ f args -⌋ = v <->
       ?frel (prArgList args ?uargTps _) v) |- _] =>
-      idtac "call axHOAPPProjTm to fix things up!"
-    end
+      clear ResRefl; idtac "call axHOAPPProjTm to fix things up!"
+    end*)
   (* this is an optimization that detects if the found refined term is an application of a reflected function and otherwise aborts immediately *)
   | ?res = _ => clear ResRefl; 
     tryif (isFAppl res) then idtac else ((*idtac "Projection " res " is not an application of a previously defined reflected function (or local one), so not going to try to get rid of it here";*) fail);
@@ -1885,7 +1894,7 @@ Ltac f__f_rel_ih :=
       end;
       try apply h
       | _ => idtac "failure to solve goal: "; print_proof_state
-    end; try solve [solve_pi_unif_subgoal].
+    end; try solve [solve_pi_unif_subgoal]; try timeout 10 quicksolve.
 
 Ltac existence_lemma_pre f :=
   idtac "Starting proof of existence lemma for the reflected function " f ". ";
@@ -2065,6 +2074,7 @@ Ltac f__f_rel_ex_body :=
 
   (* solve/delay these variables *)
   repeat first [instantiate_goal | eager_instantiate_goal];
+  try timeout 2 quicksolve;
 
   (* try repeating those backwards reasoning steps *)
   repeat (

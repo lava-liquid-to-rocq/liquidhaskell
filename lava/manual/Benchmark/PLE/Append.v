@@ -1180,148 +1180,7 @@ Proof.
   simpl in *.
   Transparent concatMap.
   all: existence_lemma_quicksolve concatMap. 
-
-  { autounfold with lia_unfold in *;
-  simpl_proj;
-  (* fill in required witnesses in IHs *)
-  try (timeout 120 specialize_hyps); (* this may create a witness that doesn't match the one in the goal *)
-  strong_specialize_hyps;
-  (* rewrite the projection of the unfolded definition in the goal into a new variable axiomatized using a relation of a previously declared reflected function *)
-  repeat (timeout 120 axiomatize_next_term).
-
-  (* axiomatize_next_term. *)
-  match goal with
-  | |- concatMap_rel _ _ ⌊ ?g ?s ?t -⌋ => set (g s t) as Res in *
-  end.
-  axiomatize_term Res as tmv h.
-  (* applyRwLem tmp. *)
-
-  tryif (progress autorewrite with f_rel_funct_db in h) then idtac else (
-  let hTp := type of h in
-  match hTp with
-  | ?relAppl _ => isRelAppl relAppl; idtac
-  | ⌊ ?fAppl -⌋ = ?v => isVar v;
-    let fAppD := fresh "fAppD" in
-    destrApp fAppl fAppD;
-    let fAppRefl := fresh "fAppRefl" in
-    assRefl fAppD as fAppRefl;
-    match type of fAppRefl with
-    | ((?f _::_ _nil) _::_ ?ts) = _ => clear fAppRefl; 
-
-      tryif (hasRwLem f) then idtac else ((* idtac "No rwRelation known for function " f ". "; *) fail); 
-
-      (* idtac h " : " hTp; *)
-      
-      let rwLemResRefl := fresh "rwLemResRefl" in
-      getRwLemRefl f rwLemResRefl;
-
-      match type of rwLemResRefl with
-      | ?rwLemSimpl = _ => clear rwLemResRefl;
-        let rwLemTp := type of rwLemSimpl in
-        idtac "The rewrite lemma " rwLemSimpl ": " rwLemTp " that needs to be used to change axiomatization of a variable from the refined to the unrefined world. ";
-        match ts with
-        | _nil => 
-          rewrite (rwLemSimpl v) in h
-        | ((exist _ ?x1 ?x1p) _::_ _nil) => 
-          rewrite (rwLemSimpl x1 x1p v) in h
-        | ((exist _ ?x1 ?x1p) _::_ (exist _ ?x2 ?x2p) _::_ _nil) => 
-          rewrite (rwLemSimpl x1 x1p x2 x2p v) in h
-        | ((exist _ ?x1 ?x1p) _::_ (exist _ ?x2 ?x2p) _::_ (exist _ ?x3 ?x3p) _::_ _nil) => 
-          rewrite (rwLemSimpl x1 x1p x2 x2p x3 x3p v) in h
-        | ((exist _ ?x1 ?x1p) _::_ (exist _ ?x2 ?x2p) _::_ (exist _ ?x3 ?x3p) _::_ (exist _ ?x4 ?x4p) _::_ _nil) => 
-          rewrite (rwLemSimpl x1 x1p x2 x2p x3 x3p x4 x4p v) in h
-        | ((exist _ ?x1 ?x1p) _::_ (exist _ ?x2 ?x2p) _::_ (exist _ ?x3 ?x3p) _::_ (exist _ ?x4 ?x4p) _::_ (exist _ ?x5 ?x5p) _::_ _nil) => 
-          rewrite (rwLemSimpl x1 x1p x2 x2p x3 x3p x4 x4p x5 x5p v) in h
-        | _ => 
-          tryif (isVar h) then idtac else idtac "Global function " f " has arity >5 and arguments " ts ". ";
-          let remTs := fresh "remTs" in
-          let remTsRefl := fresh "remTsRefl" in
-          let resArgs := fresh "resArgs" in
-          let resArgsRefl := fresh "resArgsRefl" in
-          pose ts as remTs;
-          let rwAppl := fresh "rwAppl" in
-          let rwApplRefl := fresh "rwApplRefl" in
-          
-          pose proof rwLemSimpl as rwAppl;
-          repeat (
-            assRefl remTs as remTsRefl;
-            match type of remTsRefl with
-            | _nil = _ => clear remTsRefl;
-              specialize (rwAppl v);
-              fail
-            | ((exist _ ?x1 ?x1p) _::_ ?tl) = _ => clear remTsRefl; idtac x1 x1p;
-              pose tl as remTs;
-              specialize (rwAppl x1);
-              specialize (rwAppl x1p)
-            | (?rtm _::_ ?tl) = _ => clear remTsRefl; idtac rtm;
-              pose tl as remTs;
-              specialize (rwAppl ⌊ rtm -⌋);
-              specialize (rwAppl ⌈ rtm ⌉);
-              simpl_proj
-            end
-          ); 
-          try rewrite -> rwAppl in h
-        end
-      end
-    end
-  end).
-  let temp_r := fresh "temp_r" in
-  pose proof (f ((# x) ::R nilR)) as temp_r.
-  let temp := fresh "temp" in
-  let temp_p := fresh "temp_p" in
-  destruct temp_r as [temp temp_p].
-  specialize (rwAppl temp);
-  specialize (rwAppl temp_p).
-  clear temp temp_p.
-
-
-
-
-
-
-  let Res' := fresh "Res'" in
-  let ResRefl := fresh "ResRefl" in
-  pose Res as Res'; try unfold Res in Res';
-  assRefl Res' as ResRefl;
-  match type of ResRefl with
-  (* this is an optimization that detects if the found refined term is an application of a reflected function and otherwise aborts immediately *)
-  | ?res = _ => clear ResRefl; 
-    tryif (isFAppl res) then idtac else ((*idtac "Projection " res " is not an application of a previously defined reflected function (or local one), so not going to try to get rid of it here";*) fail);
-    match goal with
-    (* this optimization detects if we already have a hypothesis we can use to rewrite away the projection *)
-    | [rwH: ⌊ res -⌋ = ?v |- _] => isVar v; idtac "A variable axiomatizing the terms already exists. ";
-      progress autorewrite with rwH in *
-    | _ => 
-      (* idtac "Calling axiomatize_term Res as " tmv tmp " on "; print_res Res; *)
-      tryif (axiomatize_term Res as tmv tmp) then idtac else idtac "axiomatize_term failed on subexpression " res " of expression " exp;
-      try cleanup_subterms res
-    end
-  end.
-  match type of tmp with
-  | ?f_rel_ap ?w => revert tmp; idtac "ha"; match goal with
-    | [_:f_rel_ap ?v |- _] => intro tmp; idtac v; assert (w = v) as temp by (eauto with f_rel_funct_db); rewriteAll temp
-    | _ => intro tmp; isRelAppl f_rel_ap
-      (*; idtac "axProjTm produced a new axiomatized variable " w *)
-    | _ => 
-      (* idtac "axProjTm cannot axiomatize term (like " tmpTp1 " that isn't an application of a reflected definition, but " f_rel_ap "isn't the corresponding relation application. "; *)
-      fail
-    end
-  | ?t => (*idtac "axProjTm produced an ill-formed result" t; *) fail
-  end.
-  match goal with
-  | [eq: ⌊ ?Res -⌋ = ?v |- _] => repeat rewrite eq in *;
-    try (let tmp := fresh "temp" in
-    pose proof eq as tmp;
-    simpl in tmp;
-    revert tmp; intros <-)
-  end.
-
-
-
-  f__f_rel_ex_body. 
-  f_rel_finish.
-  simpl in *.
-  clear IH_xs.
+  f__f_rel_ex_body;
   f_rel_finish.
 Qed.
 
@@ -1804,9 +1663,9 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∀ length2_res,
-             length2_rel ⌊ l ⌋ length2_res
+             length2_rel (App2_u ds_d2zp l) length2_res
              → ∀ l2_pr1_res,
-               l2_pr1_rel ⌊ l ⌋ l2_pr1_res
+               l2_pr1_rel (App2_u ds_d2zp l) l2_pr1_res
                → ∀ length_res, length_rel l2_pr1_res length_res → length2_res == length_res)
             (IH_l ltac:(try clear IH_l; solver))
             ltac:(solver)).
@@ -1814,9 +1673,9 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∀ length2_res,
-             length2_rel ⌊ l ⌋ length2_res
+             length2_rel Emp2_u length2_res
              → ∀ l2_pr1_res,
-               l2_pr1_rel ⌊ l ⌋ l2_pr1_res
+               l2_pr1_rel Emp2_u l2_pr1_res
                → ∀ length_res, length_rel l2_pr1_res length_res → length2_res == length_res)
             (# unit)
             ltac:(solver)).
@@ -1839,9 +1698,9 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∀ length2_res,
-             length2_rel ⌊ l ⌋ length2_res
+             length2_rel (App2_u ds_d2zn l) length2_res
              → ∀ l2_pr2_res,
-               l2_pr2_rel ⌊ l ⌋ l2_pr2_res
+               l2_pr2_rel (App2_u ds_d2zn l) l2_pr2_res
                → ∀ length_res, length_rel l2_pr2_res length_res → length2_res == length_res)
             (IH_l ltac:(try clear IH_l; solver))
             ltac:(solver)).
@@ -1849,9 +1708,9 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∀ length2_res,
-             length2_rel ⌊ l ⌋ length2_res
+             length2_rel Emp2_u length2_res
              → ∀ l2_pr2_res,
-               l2_pr2_rel ⌊ l ⌋ l2_pr2_res
+               l2_pr2_rel Emp2_u l2_pr2_res
                → ∀ length_res, length_rel l2_pr2_res length_res → length2_res == length_res)
             (# unit)
             ltac:(solver)).
@@ -2082,20 +1941,20 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∀ map_res,
-             map_rel ⌊ f ⌋ ⌊ l ⌋ map_res
+             map_rel ⌊ f ⌋ (App_u x xs) map_res
              → ∀ length_res,
                length_rel map_res length_res
-               → ∀ length_res_2, length_rel ⌊ l ⌋ length_res_2 → length_res == length_res_2)
+               → ∀ length_res_2, length_rel (App_u x xs) length_res_2 → length_res == length_res_2)
             (IH_xs ltac:(try clear IH_xs; solver) f)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∀ map_res,
-             map_rel ⌊ f ⌋ ⌊ l ⌋ map_res
+             map_rel ⌊ f ⌋ Emp_u map_res
              → ∀ length_res,
                length_rel map_res length_res
-               → ∀ length_res_2, length_rel ⌊ l ⌋ length_res_2 → length_res == length_res_2)
+               → ∀ length_res_2, length_rel Emp_u length_res_2 → length_res == length_res_2)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -2240,24 +2099,24 @@ Proof.
   destruct l as [x xs|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ⌊ l ⌋ == Emp_u)
+            (λ (VV : Unit), (App_u x xs) == Emp_u)
             (append_nonempty_ys
              (reverse (exist (λ (VV : L_u), L_wf VV ∧ True) xs ltac:(solver)))
              (App (# x) Emp)
              (subsumptionCast
               Unit
               (λ (p : Unit),
-               ∀ append_res,
+               ∀ (append_res:L_u),
                append_rel
-               ⌊ reverse (exist (λ (VV : L_u), L_wf VV ∧ True) xs ltac:(solver)) ⌋
+               ⌊ reverse (exist (λ (VV : L_u), L_wf VV ∧ True) xs ltac:(solver)) -⌋
                (App_u x Emp_u)
                append_res
                → append_res == Emp_u)
               (exist (λ (p : Unit),
-                      ∀ reverse_res, reverse_rel ⌊ l ⌋ reverse_res → reverse_res == Emp_u) p ltac:(solver))
+                      ∀ reverse_res, reverse_rel (App_u x xs) reverse_res → reverse_res == Emp_u) p ltac:(solver))
               ltac:(solver)))
             ltac:(solver)).
-  - refine (subsumptionCast Unit (λ (VV : Unit), ⌊ l ⌋ == Emp_u) (# unit) ltac:(solver)).
+  - refine (subsumptionCast Unit (λ (VV : Unit), Emp_u == Emp_u) (# unit) ltac:(solver)).
 Qed.
 
 Definition take_spec (n : Nats) (l : L): Type :=
@@ -2442,12 +2301,12 @@ Proof.
   - destruct l as [x xs|].
     + refine (subsumptionCast
               Unit
-              (λ (VV : Unit), ∀ take_res, take_rel ⌊ n ⌋ ⌊ l ⌋ take_res → take_res == ⌊ l ⌋)
+              (λ (VV : Unit), ∀ take_res, take_rel n (App_u x xs) take_res → take_res == (App_u x xs))
               (IH_n ltac:(try clear IH_n; solver) xs ltac:(try clear IH_n; solver))
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
-              (λ (VV : Unit), ∀ take_res, take_rel ⌊ n ⌋ ⌊ l ⌋ take_res → take_res == ⌊ l ⌋)
+              (λ (VV : Unit), ∀ take_res, take_rel n Emp_u take_res → take_res == Emp_u)
               (# unit)
               ltac:(solver)).
   - destruct l as [lq_anf7205759403792803872 lq_anf7205759403792803873|].

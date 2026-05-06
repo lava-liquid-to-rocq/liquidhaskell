@@ -115,6 +115,7 @@ Ltac invertCrAppEq h :=
 (* very quick single-step tactic that matches on goal and tries to simplifies it, so other tactics can more easily solve it *)
 Ltac shape_based := match goal with
   | [h:?g |- ?g] => exact h
+  | |- ?s == ?s => reflexivity
   (* the following cases are used for proving the cases for dead branches 
      (translated using exfalso) in the existence lemata *)
   | |- ?f ⌊ False_rec _ ?z -⌋ => exfalso; exact z
