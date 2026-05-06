@@ -1,6 +1,6 @@
 Load LiquidPrelude.
 
-(*Set Universe Polymorphism.*)
+Set Universe Polymorphism.
 (* Needed to allow packs to occur as type arguments to other packs *)
 Class GeneralizedProjection {A A':Type} := {
   proj: A' -> A; (* the projection operator itself *)

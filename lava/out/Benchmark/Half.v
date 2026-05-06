@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Set Universe Polymorphism.
+Set Universe Polymorphism. 
 From Coq Require Import Unicode.Utf8.
 
 Inductive Nats_u: Type :=

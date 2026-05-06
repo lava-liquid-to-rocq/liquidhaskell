@@ -133,7 +133,7 @@ Ltac solver_loop :=
 
 Ltac solver := simpl in *; solve [
     solver_loop; progress saturate_context; solver_loop
-    | idtac ""; idtac "Falling back to saturating_solver"; saturating_solver].
+    | idtac ""; idtac "Falling back to saturating_solver"; fail (*saturating_solver*) ].
 #[global] Hint Extern 20 () => solver : solver_db. 
 
 Ltac unsaturating_solver := first [

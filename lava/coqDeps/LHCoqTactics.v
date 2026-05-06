@@ -258,6 +258,7 @@ Ltac applyRwLem h :=
   tryif (progress autorewrite with f_rel_funct_db in h) then idtac else (
   let hTp := type of h in
   match hTp with
+  | ?relAppl _ => isRelAppl relAppl; idtac
   | ⌊ ?fAppl -⌋ = ?v => isVar v;
     let fAppD := fresh "fAppD" in
     destrApp fAppl fAppD;
@@ -663,6 +664,7 @@ Ltac axiomatize_terms := tryif (repeat_or_fail axiomatize_next_term) then idtac 
   also do various other simpler unification steps to unify/remove redundant hypothesis *)
 Ltac simplify_hyp :=
   match goal with
+    | [h: ?s == ?t |- _] => rewrite <- generic_equalb_eq in h
     | [h: ?v = ?w |- _] => isVar v; isVar w;
       (*progress*) first [rewriteRLAll h | rewriteAll h (*| try rewrite <- h in *; clear w h | try rewrite h in *; clear v h *) (*| try rewrite <- h in *; clear w; try clear h*)]
     | [h: ?v = ?t |- _] => isVar v;
@@ -707,6 +709,12 @@ Ltac simplify_hyp :=
         let H := fresh "eq" in
         assert (v = w) as H by (unshelve eauto with f_rel_funct_db);
         try solve [discriminate H]; try solve [now injection H]
+      | [resEq: w = ?tm |- _] => isRelAppl f_rel_ap;
+        rewrite -> resEq in *;
+        try match w with
+        | ⌊ ?Res -⌋ => isVar Res; try clear Res resEq
+        | _ => isVar w; try clear w resEq
+        end
     end
     | [g: ?rel ?s ?t ?u |- _] => isRelAppl rel; match goal with
       | [h: ?rel ?s' ?t' ?v |- u = ?v] => tryif eq_fail u v then reflexivity else 
@@ -822,6 +830,7 @@ Ltac specialize_hyp h :=
             idtac "Axiomatization " g ": " gtp " of variable " v " is used to specialize " h ". ")
             (let hApplTp := type of (h v g) in
             idtac "Unable to specialize" h "with" v "and" g ":" hApplTp "!")
+        
         | _ => 
           let u := fresh "u" in
           let uRefl := fresh "uRefl" in
@@ -1141,7 +1150,10 @@ Tactic Notation "recreate_var" constr(relApp) ident(vRes) :=
     let pTp := type of v_p in
     tryif (applyRwLem v_p) then idtac else (idtac (* "Failed to rewrite " v_p ": " pTp " from an equality into the application of the graph relation. " *); fail);
     simpl_proj; 
-    pose v as vRes; try clear fAppl_res
+    match type of v_p with
+    | ?relAppl ?v => isRelAppl relAppl; 
+      pose v as append_res; try clear fAppl_res
+    end
   end.
 
 (* create variables to instantiate hypothesis *)
