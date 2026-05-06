@@ -243,6 +243,20 @@ popToBop PEq = Eq
 popToBop PLeq = Leq
 popToBop PGeq = Geq
 
+-- | Whether a refinement is a value: a local variable, a constructor applied to values, a literal or a projected value
+isValue :: Reft -> Bool
+isValue (Var _ _ Local; Var _ _ (Recursive {}); StringLit _; IntLit _; FloatLit _; DC _) = True
+isValue r@(App {}) =
+  case apps r of
+    (DC _, args) -> all isValue args
+    _ -> False
+isValue (QMark r _ _) = isValue r
+isValue (Pop _ _ r) = isValue r
+isValue (Sub r _ _) = isValue r
+isValue (Inj r _) = isValue r
+isValue (Proj r) = isValue r
+isValue (Var _ _ Global; Neg {}; Bop {}) = False
+
 -- | Harmonize the names of the variables bound by arrows:
 --
 -- > harmonizeBinderNames(x1:{x1':tp1 | r1} -> … -> xn:{xn':tpn | rn} -> {v:tp | rv})
