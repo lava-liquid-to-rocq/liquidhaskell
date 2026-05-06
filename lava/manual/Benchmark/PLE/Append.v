@@ -2299,21 +2299,22 @@ Proof.
   destruct l as [l l_p].
   try revert l_p; generalize dependent l; induction n as [n IH_n|]; intros.
   - destruct l as [x xs|].
-    + refine (subsumptionCast
+    + unfold take_all_spec in *.
+      refine (subsumptionCast
               Unit
-              (λ (VV : Unit), ∀ take_res, take_rel n (App_u x xs) take_res → take_res == (App_u x xs))
+              (λ (VV : Unit), ∀ take_res, take_rel (Suc_u n) (App_u x xs) take_res → take_res == (App_u x xs))
               (IH_n ltac:(try clear IH_n; solver) xs ltac:(try clear IH_n; solver))
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
-              (λ (VV : Unit), ∀ take_res, take_rel n Emp_u take_res → take_res == Emp_u)
+              (λ (VV : Unit), ∀ take_res, take_rel (Suc_u n) Emp_u take_res → take_res == Emp_u)
               (# unit)
               ltac:(solver)).
   - destruct l as [lq_anf7205759403792803872 lq_anf7205759403792803873|].
     + intros; exfalso; solver.
     + refine (subsumptionCast
               Unit
-              (λ (VV : Unit), ∀ take_res, take_rel ⌊ n ⌋ ⌊ l ⌋ take_res → take_res == ⌊ l ⌋)
+              (λ (VV : Unit), ∀ take_res, take_rel Zero_u Emp_u take_res → take_res == Emp_u)
               (# unit)
               ltac:(solver)).
 Qed.
@@ -2521,7 +2522,7 @@ Proof.
                  Unit
                  (λ (VV : Unit),
                   ∀ zip_res,
-                  zip_rel ⌊ l ⌋ ⌊ m ⌋ zip_res → ∀ length2_res, length2_rel zip_res length2_res → length2_res == ⌊ n ⌋)
+                  zip_rel (App_u x xs) (App_u y ys) zip_res → ∀ length2_res, length2_rel zip_res length2_res → length2_res == (Suc_u n))
                  (IH_n
                   ltac:(try clear IH_n; solver)
                   xs
@@ -2539,7 +2540,7 @@ Proof.
                  Unit
                  (λ (VV : Unit),
                   ∀ zip_res,
-                  zip_rel ⌊ l ⌋ ⌊ m ⌋ zip_res → ∀ length2_res, length2_rel zip_res length2_res → length2_res == ⌊ n ⌋)
+                  zip_rel Emp_u Emp_u zip_res → ∀ length2_res, length2_rel zip_res length2_res → length2_res == Zero_u)
                  (# unit)
                  ltac:(solver)).
 Qed.
@@ -2599,7 +2600,7 @@ Proof.
                  Unit
                  (λ (VV : Unit),
                   ∀ zip_res,
-                  zip_rel ⌊ l ⌋ ⌊ m ⌋ zip_res → ∀ length2_res, length2_rel zip_res length2_res → length2_res == ⌊ n ⌋)
+                  zip_rel (App_u x xs) (App_u y ys) zip_res → ∀ length2_res, length2_rel zip_res length2_res → length2_res == (Suc_u n))
                  (IH_n
                   ltac:(try clear IH_n; solver)
                   f
@@ -2618,7 +2619,7 @@ Proof.
                  Unit
                  (λ (VV : Unit),
                   ∀ zip_res,
-                  zip_rel ⌊ l ⌋ ⌊ m ⌋ zip_res → ∀ length2_res, length2_rel zip_res length2_res → length2_res == ⌊ n ⌋)
+                  zip_rel Emp_u Emp_u zip_res → ∀ length2_res, length2_rel zip_res length2_res → length2_res == Zero_u)
                  (# unit)
                  ltac:(solver)).
 Qed.
@@ -2925,15 +2926,15 @@ Proof.
               Unit
               (λ (VV : Unit),
                ∀ zip_res,
-               zip_rel ⌊ l ⌋ ⌊ m ⌋ zip_res
+               zip_rel (App_u lq_anf7205759403792803854 lq_anf7205759403792803855) (App_u lq_anf7205759403792803834 lq_anf7205759403792803835) zip_res
                → ∀ length_res,
-                 length_rel ⌊ l ⌋ length_res
+                 length_rel (App_u lq_anf7205759403792803854 lq_anf7205759403792803855) length_res
                  → ∀ take_res,
-                   take_rel length_res ⌊ m ⌋ take_res
+                   take_rel length_res (App_u lq_anf7205759403792803834 lq_anf7205759403792803835) take_res
                    → ∀ length_res_2,
-                     length_rel ⌊ m ⌋ length_res_2
+                     length_rel (App_u lq_anf7205759403792803834 lq_anf7205759403792803835) length_res_2
                      → ∀ take_res_2,
-                       take_rel length_res_2 ⌊ l ⌋ take_res_2
+                       take_rel length_res_2 (App_u lq_anf7205759403792803854 lq_anf7205759403792803855) take_res_2
                        → ∀ zip_res_2, zip_rel take_res_2 take_res zip_res_2 → zip_res == zip_res_2)
               (IH_lq_anf7205759403792803855
                ltac:(try clear IH_lq_anf7205759403792803855; solver)
@@ -2944,15 +2945,15 @@ Proof.
               Unit
               (λ (VV : Unit),
                ∀ zip_res,
-               zip_rel ⌊ l ⌋ ⌊ m ⌋ zip_res
+               zip_rel (App_u lq_anf7205759403792803854 lq_anf7205759403792803855) Emp_u zip_res
                → ∀ length_res,
-                 length_rel ⌊ l ⌋ length_res
+                 length_rel (App_u lq_anf7205759403792803854 lq_anf7205759403792803855) length_res
                  → ∀ take_res,
-                   take_rel length_res ⌊ m ⌋ take_res
+                   take_rel length_res Emp_u take_res
                    → ∀ length_res_2,
-                     length_rel ⌊ m ⌋ length_res_2
+                     length_rel Emp_u length_res_2
                      → ∀ take_res_2,
-                       take_rel length_res_2 ⌊ l ⌋ take_res_2
+                       take_rel length_res_2 (App_u lq_anf7205759403792803854 lq_anf7205759403792803855) take_res_2
                        → ∀ zip_res_2, zip_rel take_res_2 take_res zip_res_2 → zip_res == zip_res_2)
               (# unit)
               ltac:(solver)).
@@ -2960,15 +2961,15 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∀ zip_res,
-             zip_rel ⌊ l ⌋ ⌊ m ⌋ zip_res
+             zip_rel Emp_u Emp_u zip_res
              → ∀ length_res,
-               length_rel ⌊ l ⌋ length_res
+               length_rel Emp_u length_res
                → ∀ take_res,
-                 take_rel length_res ⌊ m ⌋ take_res
+                 take_rel length_res Emp_u take_res
                  → ∀ length_res_2,
-                   length_rel ⌊ m ⌋ length_res_2
+                   length_rel Emp_u length_res_2
                    → ∀ take_res_2,
-                     take_rel length_res_2 ⌊ l ⌋ take_res_2
+                     take_rel length_res_2 Emp_u take_res_2
                      → ∀ zip_res_2, zip_rel take_res_2 take_res zip_res_2 → zip_res == zip_res_2)
             (let _: (True
                      ∧ VV
