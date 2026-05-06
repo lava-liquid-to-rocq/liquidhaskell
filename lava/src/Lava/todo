@@ -1,3 +1,7 @@
+Do not use packs for theorems
+
+Formalize and implement construction with existentials
+
 Explicit substitution of matches for types in elaboration? (see for instance append_rec translated with Equations)
 
 Use type of constructor in case?

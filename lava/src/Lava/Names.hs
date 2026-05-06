@@ -44,9 +44,9 @@ preamble equations =
       scope "Z",
       scope "Int",
       text "Set Universe Polymorphism.",
-      text "From Coq Require Import Unicode.Utf8.",
+      text "From Coq Require Import Unicode.Utf8."
       -- For debugging
-      text "Ltac solver := quicksolve."
+      -- text "Ltac solver := quicksolve."
     ]
       ++ [text "From Equations Require Import Equations." | equations]
       ++ [text "#[local] Obligation Tactic := solver." | equations]
@@ -54,6 +54,8 @@ preamble equations =
     scope x = text "Open Scope" <+> text x <> text "_scope."
 
 {- ORMOLU_DISABLE -}
+specName :: Id -> Id
+specName def = def ++ "_spec"
 unrefinedTCName :: Id -> Id
 unrefinedTCName name = name ++ "_u"
 refinedConstrName :: Id -> Id
@@ -69,9 +71,11 @@ eqFunctionName name = name ++ "_rec"
 packName :: Id
 upackName :: Id
 projPackName :: Id
+funToPackName :: Id
 packName = "@Pack"
 upackName = "@uPack"
 projPackName = "packProj"
+funToPackName = "fun_to_pack"
 
 subsetWitnessNm :: Id -> Id
 subsetWitnessNm x = x ++ "_p"

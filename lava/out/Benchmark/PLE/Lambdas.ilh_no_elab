@@ -1,7 +1,0 @@
-
-
-def fvInLambda :: x: {Integer} -> {Integer} :=
-  let (f: y: {Integer} -> {v: Integer | v == x + y}) := x + y in f x
-
-def appId :: x: {Integer} -> {Integer} :=
-  let (f: y: {Integer} -> {v: Integer | v == y}) := y in f x

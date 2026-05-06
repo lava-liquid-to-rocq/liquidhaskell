@@ -38,7 +38,7 @@ trDecl equations (LH.Data tc alts) =
     -- For an unreflected definition, we only generate the refined definition,
     -- if the graph relation is needed, we generate it on the fly.
     -- For a reflected definition, we generate the graph relation, packs and other lemmas
-trDecl _         (LH.Import modName _) = [Coq.Load modName]
+trDecl _ (LH.Import modName _) = [Coq.Load modName]
 trDecl equations (LH.Definition f tpf e isRefl) =
   (if equations then trDefEquations fdata else trDefRefDef fdata) -- f  -- f
     ++ if isRefl
@@ -70,14 +70,18 @@ unrefTC tc = Coq.TC (unrefinedTCName tc) []
 unrefTCDecl :: Id -> [(Id, RefType)] -> Coq.Decl
 -- unrefTCDecl tc _ | traceTC "unrefTCDecl" tc = undefined
 unrefTCDecl tc alts =
-  CoqInductive (unrefinedTCName tc) [] (Sort SetSort) $ map trConstr alts
+  CoqInductive (unrefinedTCName tc) [] (Sort TypeSort) $ map trConstr alts
 
 -- ** Equality
 
 -- | Declarations related to the equality on unrefined constructors
 tcEqDecls :: Id -> [(Id, RefType)] -> [Coq.Decl]
 -- tcEqDecls tc _ | traceTC "tcEqDecls" tc = undefined
-tcEqDecls tc alts = eqDecl tc alts : eqReflLem tc ++ eqbEqLem tc ++ [eqbInstanceDecl tc]
+tcEqDecls tc alts =
+  if noHOConstr then eqDecl tc alts : eqReflLem tc ++ eqbEqLem tc ++ [eqbInstanceDecl tc] else []
+  where
+    -- NOTE: For now, kind of useless since we don't typecheck higher-order constructors
+    noHOConstr = any ((\case ArrType {} -> True; _ -> False) . snd) alts
 
 -- | Fixpoint definition of equality of two inductives
 --
@@ -115,7 +119,7 @@ eqReflLem tc =
       (FAType ("x", unrefTC tc) . Prop . mkIsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["x", "x"]))
       (ProofBody [Custom "eq_refl_rec"])
       Opaque,
-    AddHint ResolveHint (eqReflLemName tc) EqHintDb
+    AddHint ResolveHint (eqReflLemName tc) EqHintDB
   ]
 
 -- | Lemma TC_eqb_eq and hint:
@@ -138,7 +142,7 @@ eqbEqLem tc =
       )
       (ProofBody [Custom "eqb_eq_lem"])
       Opaque,
-    AddHint ResolveHint (eqEqbEqLemName tc) EqHintDb
+    AddHint ResolveHint (eqEqbEqLemName tc) EqHintDB
   ]
 
 -- | Instantiation of the equality typeclass for TC_u
@@ -175,7 +179,7 @@ wfDecl eq tc alts =
         argProp (x, tpArg) =
           case trRefType eq tpArg of
             Subset _ _ p -> p
-            Pack {} -> Coq.App (Def uPackWfName) [Coq.Var x] -- TODO: add required conditions
+            Pack argTps _ z _ p -> Coq.App (Def uPackWfName) [mkArgListT argTps, z, p, Coq.Var x] -- TODO: add required conditions
             _ -> PropLit True
 
 -- | Lemma TC_wf_ref:
@@ -288,8 +292,9 @@ data FuncData = FuncData
     -- | function body with the recursive variable marked as such
     body :: Expr,
     -- | function parameters (x_i: R_i)_{i ≤ n}
-    -- ret :: (Id, BaseType, Reft), -- ^ function return type
     args :: [(Id, RefType)],
+    -- | function return type
+    ret :: (Id, BaseType, Reft),
     -- | name of the return value of the function
     retName :: Id,
     -- | translation of the parameters
@@ -318,19 +323,20 @@ mkFuncData eq name tpf body =
       tpf,
       body,
       args,
+      ret,
       retName,
       argsT = map (second (trRefType eq)) args,
       argsUT = map (second utrRefType) args,
-      retT = trRefType eq ret,
-      retUT = utrRefType ret,
+      retT = trRefType eq ret',
+      retUT = utrRefType ret',
       paths = functionPaths body (tpArgsArLoc tpf),
       projArgs = map projArg args,
       injArgs = map injArg args,
       equations = eq
     }
   where
-    (args, ret0@(retName, _, _)) = arrs tpf
-    ret = mkRefType ret0
+    (args, ret@(retName, _, _)) = arrs tpf
+    ret' = mkRefType ret
     projArg (x, ArrType {}) = Project (Coq.Var x)
     projArg (x, _) = Coq.Var x
     injArg (x, ArrType {}) = Coq.Var x
@@ -440,17 +446,30 @@ groupArgPaths branches =
 -- ** Refined definition
 
 -- | Translation of a definition `f` to the refined definition `f` (with tactics)
+--
+-- > Definition f_spec (xi:Ai)_i : Type := {v:A|p}.
+-- > #[global] Hint Unfold f_spec : lia_unfold.
+-- > Definition f (xi:Ai)_i : f_spec (x_i)_i.
+-- > Proof. … Defined.
 trDefRefDef :: FuncData -> [Coq.Decl]
 -- trDefRefDef f | traceF "trDefRefDef" f = undefined
 trDefRefDef f =
-  [Coq.Definition (name f) (map (,False) (argsT f)) (retT f) (ProofBody tacs) Transparent]
+  [ Coq.Definition f_spec (map (,False) $ argsT f) (Sort TypeSort) (TypeBody $ retT f) Transparent,
+    AddHint UnfoldHint f_spec LiaUnfoldDB,
+    Coq.Definition (name f) (map (,False) (argsT f)) f_ret (ProofBody tacs) vis
+  ]
   where
+    f_spec = specName $ name f
+    f_ret = Prop $ Coq.App (Def f_spec) (map (Coq.Var . fst) (argsT f))
     tacs =
       let destructArgs = map (mkVarDestruct . fst) $ onlyFOArgs (args f)
        in destructArgs ++ trExprTacs (equations f) (body f)
     -- Filter arguments with a non-arrow refinement type (those that need to be destructed)
     onlyFOArgs :: [(Id, RefType)] -> [(Id, RefType)]
     onlyFOArgs = filter (\case (_, RefType {}) -> True; (_, ArrType {}) -> False)
+    vis = case ret f of
+      (_, u, _) | u == LH.unitTp -> Opaque
+      _ -> Transparent
 
 -- | Translation of a definition `f` to the refined definition `f` (with Equations)
 trDefEquations :: FuncData -> [Coq.Decl]
@@ -654,13 +673,19 @@ defExLemma f = [exLem, AddHint ResolveHint (exLemName $ name f) RelAxDB]
         (map (,False) $ fst (trRefTypeSplit (equations f) (tpf f)))
         (Prop $ Coq.App (Def . relDefName $ name f) (projArgs f ++ [mkProject $ mkApp (Def $ name f) (injArgs f)]))
         ( ProofBody
-            [ mkConcat
+            [ ChangeVis (name f) Opaque,
+              mkConcat
                 [ Custom $ "existence_lemma_pre " ++ name f,
                   mkIndSkel (equations f) (body f) True,
-                  Custom $ "existence_lemma_quicksolve " ++ name f,
-                  Custom "f__f_rel_ex_body",
-                  Custom "f_rel_finish"
-                ]
+                  Custom "simpl in *"
+                ],
+              ChangeVis (name f) Transparent,
+              All $
+                mkConcat
+                  [ Custom $ "existence_lemma_quicksolve " ++ name f,
+                    Custom "f__f_rel_ex_body",
+                    Custom "f_rel_finish"
+                  ]
             ]
         )
         Opaque
