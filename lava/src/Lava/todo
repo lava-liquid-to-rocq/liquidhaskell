@@ -1,6 +1,4 @@
-For the merge lava into paper:
-- CoqUtil.hs
-- TypedTranslation.hs
+Do not use packs for theorems
 
 Formalize and implement construction with existentials
 

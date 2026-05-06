@@ -233,6 +233,7 @@ trRefType eq (RefType x tp r) =
       (LH.Builtin {}) -> utrReftProp eq r
       _ | tp `elem` builtinTCs -> utrReftProp eq r
       (LH.TC tc) -> Coq.Bop (Binop Coq.And PropOp) (Coq.App (Def $ wfTCName tc) [Coq.Var x]) (utrReftProp eq r)
+-- TODO: I think if we have an arrtype of a unit type, we do not translate it to a pack
 trRefType eq tp@(ArrType {}) =
   Pack argTps uargTps (argListCorPrf argTps uargTps) tpx p_
   where
@@ -249,7 +250,8 @@ trRefType eq tp@(ArrType {}) =
     p = mkLam argsT (Lambda x tpx rx)
     argsNm = "x_" ++ hashName argTps
     v = "v_" ++ argsNm
-    p_ = Lambda argsNm (ArgumentList argTps) (Lambda v tpx (PrfTerm Hole (ByTac . Custom $ unwords ["flattenP", render $ parens (pPrint p), argsNm, v])))
+    p_ = Lambda argsNm (ArgumentList argTps) (Lambda v tpx pBody)
+    pBody = PrfTerm Hole (ByTac . Custom $ unwords ["flattenP", render $ parens (pPrint p), argsNm, v])
 
 -- | Translation of refinement types at top-level (with foralls)
 trRefTypeTop :: Bool -> LH.RefType -> RocqType
@@ -288,11 +290,16 @@ trReft eq (LH.Pop pop tm1 tm2) =
 trReft eq (LH.Sub tm from to) = Coq.SubCast (trRefType eq to) (trRefType eq from) (trReft eq tm) (if eq then ProofHole else ByTac Oracle)
 trReft eq (LH.Inj tm tp) = mkExist eq (trRefType eq tp) (trReft eq tm)
 trReft _ tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
+-- TODO: we do not use packs for theorems, maybe we need to change that
 trReft eq tm@(LH.App {}) = case apps tm of
+  -- recursive call
   (LH.Var f _ (Recursive indVar state), args) ->
     trRecCall (if eq then Right f else Left indVar) state args
+  -- apply local function
   (LH.Var f _ Local, args) -> Coq.App (packGetF (Coq.Var f)) (map (trReft eq) args)
+  -- apply global function
   (LH.Var f _ Global, args) -> Coq.App (Coq.Def f) (map (trReft eq) args)
+  -- other cases
   (hd, args) -> Coq.App (trReft eq hd) (map (trReft eq) args)
 
 -- | Translation of expressions as tactics
@@ -303,7 +310,8 @@ trExprTacs :: Bool -> LH.Expr -> [Tactic]
 trExprTacs eq (LH.Reft tm) =
   let refine = Refine $ trReft eq tm
    in if eq then [mkConcat [refine, Try Oracle]] else [refine]
-trExprTacs _ (LH.Let _ Nothing _ _) = error "Found let-binding with annotation while translating."
+trExprTacs _ (LH.Let _ Nothing _ _) = error "Found let-binding with no annotation while translating."
+-- TODO: maybe we need to do something special for let-bindings of a value of unit (return) type
 trExprTacs eq (LH.Let x (Just tpx@(RefType {})) e1 e2) =
   [ AssertTacs x' (trRefType eq tpx) (trExprTacs eq e1),
     DestructConj x' x (subsetWitnessNm x)

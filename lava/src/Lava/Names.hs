@@ -44,9 +44,9 @@ preamble equations =
       scope "Z",
       scope "Int",
       text "Set Universe Polymorphism.",
-      text "From Coq Require Import Unicode.Utf8.",
+      text "From Coq Require Import Unicode.Utf8."
       -- For debugging
-      text "Ltac solver := quicksolve."
+      -- text "Ltac solver := quicksolve."
     ]
       ++ [text "From Equations Require Import Equations." | equations]
       ++ [text "#[local] Obligation Tactic := solver." | equations]

@@ -293,6 +293,8 @@ data Tactic
   | Branches [Tactic]
   | Custom String
   | Exfalso
+  | ChangeVis Id Visibility
+  | All Tactic
   deriving (Data, Eq, Show)
 
 -- | Destruction patterns
@@ -461,6 +463,10 @@ instance Pretty CoqModule where
 instance Pretty CoqConstr where
   pPrint (Constr c tp) = text c <> colon <+> pPrint tp
 
+instance Pretty Visibility where
+  pPrint Transparent = "Transparent"
+  pPrint Opaque = "Opaque"
+
 instance Pretty Decl where
   pPrint (Definition f args ret body vis) =
     case body of
@@ -488,7 +494,7 @@ instance Pretty Decl where
   pPrint (CoqInductive f args ret constrs) =
     hang ("Inductive" <+> text f <+> pPrintArgs (map (,False) args) <> colon) identNb (pPrint ret <+> ":=")
       $$ nest identNb (sep (map (("|" <+>) . pPrint) constrs) <> dot)
-  pPrint (ChangeVisibility f vis) = "#[global]" <+> text (show vis) <+> text f <> dot
+  pPrint (ChangeVisibility f vis) = "#[global]" <+> pPrint vis <+> text f <> dot
   pPrint (AddHint kind ax db) =
     "#[global] Hint" <+> pPrint kind <+> text ax <> colon <+> pPrint db <> dot
   pPrint (Instance instName tp opDefs) =
@@ -831,6 +837,10 @@ instance Pretty Tactic where
   pPrintPrec l p (AssertTacs x tp tacs) =
     sep $ dotted p ("assert" <+> pPrintArg ((x, tp), False))
       : [lbrace <+> pPrintPrec l dotPrec (mkConcat tacs) <+> rbrace | not $ null tacs]
+  pPrintPrec _ p (ChangeVis x vis) =
+    dotted p (pPrint vis <+> text x)
+  pPrintPrec l p (All tac) =
+    dotted p ("all" <> colon <+> pPrintPrec l nodotPrec tac)
 
 -- | Pretty prints destruct or induct
 pPrintPrecMatch :: PrettyLevel -> Rational -> CoqTerm -> [(Id, (CoqDestrPat, [Tactic]))] -> Maybe [Id] -> Doc

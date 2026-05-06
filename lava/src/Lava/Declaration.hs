@@ -81,7 +81,7 @@ tcEqDecls tc alts =
   if noHOConstr then eqDecl tc alts : eqReflLem tc ++ eqbEqLem tc ++ [eqbInstanceDecl tc] else []
   where
     -- NOTE: For now, kind of useless since we don't typecheck higher-order constructors
-    noHOConstr = all ((\case RefType {} -> True; _ -> False) . snd) alts
+    noHOConstr = any ((\case ArrType {} -> True; _ -> False) . snd) alts
 
 -- | Fixpoint definition of equality of two inductives
 --
@@ -292,8 +292,9 @@ data FuncData = FuncData
     -- | function body with the recursive variable marked as such
     body :: Expr,
     -- | function parameters (x_i: R_i)_{i ≤ n}
-    -- ret :: (Id, BaseType, Reft), -- ^ function return type
     args :: [(Id, RefType)],
+    -- | function return type
+    ret :: (Id, BaseType, Reft),
     -- | name of the return value of the function
     retName :: Id,
     -- | translation of the parameters
@@ -322,19 +323,20 @@ mkFuncData eq name tpf body =
       tpf,
       body,
       args,
+      ret,
       retName,
       argsT = map (second (trRefType eq)) args,
       argsUT = map (second utrRefType) args,
-      retT = trRefType eq ret,
-      retUT = utrRefType ret,
+      retT = trRefType eq ret',
+      retUT = utrRefType ret',
       paths = functionPaths body (tpArgsArLoc tpf),
       projArgs = map projArg args,
       injArgs = map injArg args,
       equations = eq
     }
   where
-    (args, ret0@(retName, _, _)) = arrs tpf
-    ret = mkRefType ret0
+    (args, ret@(retName, _, _)) = arrs tpf
+    ret' = mkRefType ret
     projArg (x, ArrType {}) = Project (Coq.Var x)
     projArg (x, _) = Coq.Var x
     injArg (x, ArrType {}) = Coq.Var x
@@ -454,7 +456,7 @@ trDefRefDef :: FuncData -> [Coq.Decl]
 trDefRefDef f =
   [ Coq.Definition f_spec (map (,False) $ argsT f) (Sort TypeSort) (TypeBody $ retT f) Transparent,
     AddHint UnfoldHint f_spec LiaUnfoldDB,
-    Coq.Definition (name f) (map (,False) (argsT f)) f_ret (ProofBody tacs) Transparent
+    Coq.Definition (name f) (map (,False) (argsT f)) f_ret (ProofBody tacs) vis
   ]
   where
     f_spec = specName $ name f
@@ -465,6 +467,9 @@ trDefRefDef f =
     -- Filter arguments with a non-arrow refinement type (those that need to be destructed)
     onlyFOArgs :: [(Id, RefType)] -> [(Id, RefType)]
     onlyFOArgs = filter (\case (_, RefType {}) -> True; (_, ArrType {}) -> False)
+    vis = case ret f of
+      (_, u, _) | u == LH.unitTp -> Opaque
+      _ -> Transparent
 
 -- | Translation of a definition `f` to the refined definition `f` (with Equations)
 trDefEquations :: FuncData -> [Coq.Decl]
@@ -668,13 +673,19 @@ defExLemma f = [exLem, AddHint ResolveHint (exLemName $ name f) RelAxDB]
         (map (,False) $ fst (trRefTypeSplit (equations f) (tpf f)))
         (Prop $ Coq.App (Def . relDefName $ name f) (projArgs f ++ [mkProject $ mkApp (Def $ name f) (injArgs f)]))
         ( ProofBody
-            [ mkConcat
+            [ ChangeVis (name f) Opaque,
+              mkConcat
                 [ Custom $ "existence_lemma_pre " ++ name f,
                   mkIndSkel (equations f) (body f) True,
-                  Custom $ "existence_lemma_quicksolve " ++ name f,
-                  Custom "f__f_rel_ex_body",
-                  Custom "f_rel_finish"
-                ]
+                  Custom "simpl in *"
+                ],
+              ChangeVis (name f) Transparent,
+              All $
+                mkConcat
+                  [ Custom $ "existence_lemma_quicksolve " ++ name f,
+                    Custom "f__f_rel_ex_body",
+                    Custom "f_rel_finish"
+                  ]
             ]
         )
         Opaque
