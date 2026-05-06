@@ -1280,26 +1280,28 @@ Ltac hyps_of_tp tp already Res :=
     end).
 
 Global Ltac flattenP P args v :=
-  match P with
-  | (fun _ _ => ?tp) => exact tp
-  | (fun _ _ _ => ?tp) => exact tp
-  | (fun _ _ _ _ => ?tp) => exact tp
-  | (fun _ _ _ _ _ => ?tp) => exact tp
-  | (fun _ => (fun x => ?wf x /\ True)) => exact (wf v /\ True)
-  | (fun _ _ => (fun x => ?wf x /\ True)) => exact (wf v /\ True)
-  | (fun _ _ _ => (fun x => ?wf x /\ True)) => exact (wf v /\ True)
-  | (fun _ _ _ _ => (fun x => ?wf x /\ True)) => exact (wf v /\ True)
-  | (fun _ _ _ _ _ => (fun x => ?wf x /\ True)) => exact (wf v /\ True)
+  let PZRefl := fresh "PZRefl" in
+  pose proof (eq_refl P) as PZRefl; try unfold P in PZRefl;
+  match type of PZRefl with
+  | (fun _ _ => ?tp) = _ => exact tp
+  | (fun _ _ _ => ?tp) = _ => exact tp
+  | (fun _ _ _ _ => ?tp) = _ => exact tp
+  | (fun _ _ _ _ _ => ?tp) = _ => exact tp
+  | (fun _ => (fun x => ?wf x /\ True)) = _ => exact (wf v /\ True)
+  | (fun _ _ => (fun x => ?wf x /\ True)) = _ => exact (wf v /\ True)
+  | (fun _ _ _ => (fun x => ?wf x /\ True)) = _ => exact (wf v /\ True)
+  | (fun _ _ _ _ => (fun x => ?wf x /\ True)) = _ => exact (wf v /\ True)
+  | (fun _ _ _ _ _ => (fun x => ?wf x /\ True)) = _ => exact (wf v /\ True)
   | _ => try (
-  isVar P; 
-  match type of P with
-  | ?pTp => subst pTp
-  end);
-  let pz := fresh "pz" in
-  pose P as pz;
-  uncons_rw_app_all pz args;
-  exact (pz v)
-  end.
+    isVar P; 
+    match type of P with
+    | ?pTp => subst pTp
+    end);
+    let pz := fresh "pz" in
+    pose P as pz;
+    uncons_rw_app_all pz args;
+    exact (pz v)
+  end; clear PZRefl.
 
 Goal forall (X X':Type) (PX: X' ⤖ X) (Z:Type) (PZ: forall (x:X'), Z -> Prop) 
   (F: forall (x:X'), {v:Z|PZ x v}) (x1 x2: X'), Z -> Prop.
@@ -1309,7 +1311,7 @@ Proof.
   refine (let argTps : ArgListT := (X' ::RT (fun _ => nilRT)) in _).
   refine (let args: ArgList argTps := (x2 ::R nilR) in _).
   let pz := fresh "pz" in
-  pose PZ as pz.
+  pose PZ as pz;
   flattenP pz args v.
 Defined.
 
@@ -1485,6 +1487,7 @@ Global Ltac buildPackG_ F Rel F_Rel Funct :=
   let pack_rel := fresh "pack_rel" in
   let pack_cor := fresh "pack_cor" in
   let pack_funct := fresh "pack_funct" in
+
   refine (let uargTps: UArgListT := ltac:(buildUArgTps Rel) in _);
   refine (let argTps : ArgListT := ltac:(buildArgTps F) in _);
   refine (let z: projectsArgListT argTps uargTps := ltac:(mkProjectsArgListTG argTps uargTps) in _);
@@ -1492,12 +1495,25 @@ Global Ltac buildPackG_ F Rel F_Rel Funct :=
   refine (let PZ : PZTp := ltac:(subst PZTp; returnRef F) in _);
   refine (let Z: Type := ltac:(returnUTpPZTp PZTp) in _); simpl in *;
   refine (let p: forall (args: ArgList argTps), Z -> Prop := fun args v => ltac:(flattenP PZ args v) in _);
-  refine (let pack_f : forall (args:ArgList argTps), {v:Z | p args v} := 
-  ltac:(intros args; unfold p;
-  try clear F_Rel;
-  uncons_rw_app_all F args;
-  refine F
-  ) in _); 
+  simpl in p;
+  match goal with
+  | |- Pack ?argTps_ ?Z_ ?p_ => 
+    refine (let pack_f : forall (args:ArgList argTps_), {v:Z_ | p_ args v} := ltac:(intros args; unfold p;
+    try clear F_Rel;
+    let F' := fresh "FAppl" in
+    pose F as F';
+    uncons_rw_app_all F' args;
+    refine F'
+    ) in _)
+  | |- _ => refine (let pack_f : forall (args:ArgList argTps), {v:Z | p args v} := 
+    ltac:(intros args; unfold p;
+    try clear F_Rel;
+    let F' := fresh "FAppl" in
+    pose F as F';
+    uncons_rw_app_all F' args;
+    refine F'
+    ) in _)
+  end;
   refine (let pack_rel : forall (uargs:UArgList uargTps) (v:Z), Prop := fun uargs v => (ltac:(
     try unfold uargTps in *; 
     let rel := fresh "relAp" in
@@ -1664,6 +1680,7 @@ Global Ltac fun_to_rel F Z :=
   refine (let PZTp : Type := ltac:(returnRefTp F) in _); simpl in PZTp;
   refine (let PZ : PZTp := ltac:(subst PZTp; returnRef F) in _); simpl in *;
   refine (let p: forall (args: ArgList argTps), Z -> Prop := fun args v => ltac:(flattenP PZ args v) in _);
+  simpl in p;
   refine (let pack_f : forall (args:ArgList argTps), {v:Z | p args v} := 
   ltac:(intros args; unfold p;
   uncons_rw_app_all F args;
@@ -1692,6 +1709,7 @@ Global Ltac fun_to_pack F :=
   refine (let Z : Type := ltac:(returnUTpPZTp PZTp) in _);
   refine (let PZ : PZTp := ltac:(subst PZTp; returnRef F) in _); simpl in *;
   refine (let p: forall (args: ArgList argTps), Z -> Prop := fun args v => ltac:(flattenP PZ args v) in _);
+  simpl in p;
   refine (let pack_f : forall (args:ArgList argTps), {v:Z | p args v} := 
   ltac:(intros args; unfold p;
   let G := fresh "G" in
@@ -2200,6 +2218,51 @@ Global Ltac buildPackG F Rel F_Rel Funct :=
       now apply (buildPack4' F Rel F_Rel Funct) |
       now apply (buildPack4 F Rel F_Rel Funct) |
       assert (forall x1 x2 x3 x4 v, proj1_sig (f x1 x2 x3 x4) = v <-> rel (proj x1) (proj x2) (proj x3) (proj x4) v) as cor by
+      (apply F_Rel);
+    first [
+      apply (buildPack4'' F Rel cor Funct)
+    | apply (buildPack4' F Rel cor Funct)
+    | apply (buildPack4 F Rel cor Funct)]]
+
+  | forall x1 v, ⌊ ?f x1 ⌋ = v <-> ?rel _ v =>
+    first [
+      now apply (buildPack1'' F Rel F_Rel Funct) |
+      now apply (buildPack1' F Rel F_Rel Funct) |
+      now apply (buildPack1 F Rel F_Rel Funct) |
+      assert (forall x1 v, ⌊ f x1 -⌋ = v <-> rel (proj x1) v) as cor by
+        (apply F_Rel);
+      first [
+        apply (buildPack1'' F Rel cor Funct) | 
+        apply (buildPack1' F Rel cor Funct) | 
+        apply (buildPack1 F Rel cor Funct)]]
+  | forall x1 x2 v, ⌊ ?f x1 x2 ⌋ = v <-> ?rel _ _ v =>
+    first [
+      now apply (buildPack2'' F Rel F_Rel Funct) |
+      now apply (buildPack2' F Rel F_Rel Funct) |
+      now apply (buildPack2 F Rel F_Rel Funct) |
+      assert (forall x1 x2 v, ⌊ f x1 x2 -⌋ = v <-> rel (proj x1) (proj x2) v) as cor by
+      (apply F_Rel);
+    first [
+      apply (buildPack2'' F Rel cor Funct)
+    | apply (buildPack2' F Rel cor Funct)
+    | apply (buildPack2 F Rel cor Funct)]]
+  | forall x1 x2 x3 v, ⌊ ?f x1 x2 x3 ⌋ = v <-> ?rel _ _ _ v =>
+    first [
+      now apply (buildPack3'' F Rel F_Rel Funct) |
+      now apply (buildPack3' F Rel F_Rel Funct) |
+      now apply (buildPack3 F Rel F_Rel Funct) |
+      assert (forall x1 x2 x3 v, ⌊ f x1 x2 x3 -⌋ = v <-> rel (proj x1) (proj x2) (proj x3) v) as cor by
+      (apply F_Rel);
+    first [
+      apply (buildPack3'' F Rel cor Funct)
+    | apply (buildPack3' F Rel cor Funct)
+    | apply (buildPack3 F Rel cor Funct)]]
+  | forall x1 x2 x3 x4 v, ⌊ ?f x1 x2 x3 x4 ⌋ = v <-> ?rel _ _ _ _ v =>
+    first [
+      now apply (buildPack4'' F Rel F_Rel Funct) |
+      now apply (buildPack4' F Rel F_Rel Funct) |
+      now apply (buildPack4 F Rel F_Rel Funct) |
+      assert (forall x1 x2 x3 x4 v, ⌊ f x1 x2 x3 x4 -⌋ = v <-> rel (proj x1) (proj x2) (proj x3) (proj x4) v) as cor by
       (apply F_Rel);
     first [
       apply (buildPack4'' F Rel cor Funct)
