@@ -283,13 +283,13 @@ Ltac applyRwLem h :=
         | ((exist _ ?x1 ?x1p) _::_ _nil) => 
           rewrite (rwLemSimpl x1 x1p v) in h
         | ((exist _ ?x1 ?x1p) _::_ (exist _ ?x2 ?x2p) _::_ _nil) => 
-          rewrite (rwLemSimpl x1 x2 x1p x2p v) in h
+          rewrite (rwLemSimpl x1 x1p x2 x2p v) in h
         | ((exist _ ?x1 ?x1p) _::_ (exist _ ?x2 ?x2p) _::_ (exist _ ?x3 ?x3p) _::_ _nil) => 
-          rewrite (rwLemSimpl x1 x2 x3 x1p x2p x3p v) in h
+          rewrite (rwLemSimpl x1 x1p x2 x2p x3 x3p v) in h
         | ((exist _ ?x1 ?x1p) _::_ (exist _ ?x2 ?x2p) _::_ (exist _ ?x3 ?x3p) _::_ (exist _ ?x4 ?x4p) _::_ _nil) => 
-          rewrite (rwLemSimpl x1 x2 x3 x4 x1p x2p x3p x4p v) in h
+          rewrite (rwLemSimpl x1 x1p x2 x2p x3 x3p x4 x4p v) in h
         | ((exist _ ?x1 ?x1p) _::_ (exist _ ?x2 ?x2p) _::_ (exist _ ?x3 ?x3p) _::_ (exist _ ?x4 ?x4p) _::_ (exist _ ?x5 ?x5p) _::_ _nil) => 
-          rewrite (rwLemSimpl x1 x2 x3 x4 x5 x1p x2p x3p x4p x5p v) in h
+          rewrite (rwLemSimpl x1 x1p x2 x2p x3 x3p x4 x4p x5 x5p v) in h
         | _ => 
           tryif (isVar h) then idtac else idtac "Global function " f " has arity >5 and arguments " ts ". ";
           let remTs := fresh "remTs" in

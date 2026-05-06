@@ -24,7 +24,7 @@ Open Scope Z_scope.
 Open Scope Int_scope.
 Require Export Floats.
 
-Notation "# x" := (exist _ x I) (at level 60).
+Notation "# x" := (exist (fun _ => True) x I) (at level 60).
 Global Notation Bool := {_:bool | True}.
 Global Notation "⌊ x -⌋" := (proj1_sig x) (at level 1).
 

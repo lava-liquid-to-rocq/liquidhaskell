@@ -100,6 +100,18 @@ Ltac isVar tm :=
   | [h: _ |- _] => eq_fail h tm
   end.
 
+Ltac isConstrAppl t :=
+  tryif (isVar t) then fail else 
+  let temp := fresh "temp" in
+  match t with
+  | ?cApp _ => assert (forall x y, x <> y -> cApp x <> cApp y) as temp by (intros; injection; assumption)
+  end; clear temp.
+
+Ltac invertCrAppEq h :=
+  let hTp := type of h in
+  inversion h; clear h;
+  assert hTp as _ by (repeat (f_equal; try assumption)).
+
 (* very quick single-step tactic that matches on goal and tries to simplifies it, so other tactics can more easily solve it *)
 Ltac shape_based := match goal with
   | [h:?g |- ?g] => exact h
@@ -201,7 +213,6 @@ Ltac shape_based := match goal with
   | [ |- negb ?s = negb ?t] =>
       rewrite negb_inj
   | [ |- _ /\ _ ] => split
-  
 
   | [ h:(true = (?s ==? ?t)) |- _ ] => apply (pr2  (true_eqb s t)) in h
   | [ h: false = (?s ==? ?t) |- _] => apply (pr2 (false_eqb s t)) in h
@@ -373,6 +384,8 @@ Ltac shape_based := match goal with
   | [h: (?x ==? ?tm) = true |- _ ] => isVar x; rewrite <- eqb_true in h; first [subst x | rewrite h in *; rewrite generic_equalb_eq in h]
   | [h: (?s ==? ?t) = true |- _ ] => rewrite <- eqb_true in h
   | [h: ?x == ?tm |- _ ] => isVar x; rewrite <- generic_equalb_eq in h; first [subst x | rewrite h in *; rewrite generic_equalb_eq in h]
+  | [h: ?x == ?tm |- _ ] => isConstrAppl x; rewrite <- generic_equalb_eq in h; 
+    try invertCrAppEq h
   | [h: ?tm == ?x |- _ ] => isVar x; rewrite <- generic_equalb_eq in h; first [symmetry in h; subst x | rewrite h in *; rewrite generic_equalb_eq in h]| |- (?s ==? ?t) = true => rewrite <- eqb_true
   | |- (?s == ?t) => rewrite <- generic_equalb_eq
   | [h: ?tm <> ?tm |- False] => apply h; reflexivity
@@ -722,7 +735,7 @@ Ltac quick_cleanup := simpl_ref_constr;
   try (lia_simpl; simpl_proj).
 Ltac quick_simpl := quick_cleanup;  repeat shape_based.
 
-Ltac cleanup_hints := match goal with
+Ltac cleanup_hints := repeat match goal with
   | [hint: {_: Unit | ?r} |- _ ] => destruct hint as [_ hint]
   | [hint: {x: ?A | ?r} |- _ ] => 
     let hint_r := fresh "hint_r" in

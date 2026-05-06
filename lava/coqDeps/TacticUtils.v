@@ -322,13 +322,6 @@ Ltac getRwLemRefl f ReflRes :=
   assRefl res as ReflRes;
   simpl in ReflRes.
 
-Ltac isConstrAppl t :=
-  tryif (isVar t) then fail else 
-  let temp := fresh "temp" in
-  match t with
-  | ?cApp _ => assert (forall x y, x <> y -> cApp x <> cApp y) as temp by (intros; injection; assumption)
-  end; clear temp.
-
 Ltac isRelAppl fApplV :=
   let fAppl := fresh "fAppl" in
   pose fApplV as fAppl; try unfold fApplV in fAppl;
