@@ -1631,8 +1631,10 @@ pack_rel ?unfoldedUArgs v =>
     try (intros uargs v v' H K;
     try unfold uargTps in *;
     unfold pack_rel in *; simpl in *;
-    unucons_rw_app_all Funct uargs;
-    symmetry; apply Funct; now assumption).
+    let funct := fresh "funct" in
+    pose Funct as funct;
+    unucons_rw_app_all funct uargs;
+    symmetry; apply funct; now assumption).
 
 Ltac buildUPackG_spec Rel :=
   let Z := fresh "Z" in
@@ -1662,8 +1664,10 @@ Global Ltac buildUPackG Rel Funct :=
   intros uargs ? ? ? ?;
   try unfold uargTps in *;
   unfold pack_rel in *; simpl in *;
-  unucons_rw_app_all Funct uargs;
-  symmetry; apply Funct; now assumption.
+  let funct := fresh "funct" in
+  pose Funct as funct;
+  unucons_rw_app_all funct uargs;
+  symmetry; apply funct; now assumption.
 
 Global Ltac fun_to_rel F Z :=
   let z := fresh "z" in
@@ -1898,8 +1902,10 @@ Ltac buildSemiGenericPack F Rel F_Rel Funct :=
   unshelve refine {| f:=_; frel:=_; f_frel:=_; funct:=_ |};
   [ intros args; 
     try clear F_Rel;
-    uncons_rw_app_all F args;
-    refine F
+    let fApp := fresh "fApp" in
+    pose F as fApp;
+    uncons_rw_app_all fApp args;
+    refine fApp
   | intros uargs v;
     let rel := fresh "relAp" in
     pose Rel as rel;
@@ -1916,8 +1922,10 @@ Ltac buildSemiGenericPack F Rel F_Rel Funct :=
     end;
     now rewrite F_Rel
   | intros uargs v v' H K;
-    unucons_rw_app_all Funct uargs;
-    symmetry; apply Funct; now assumption].
+    let functApp := fresh "funct" in
+    pose Funct as funct;
+    unucons_rw_app_all funct uargs;
+    symmetry; apply funct; now assumption].
 
 Section SemiGenericTest1.
 (* Converting from a generic binary function with relation and properties to a Pack *)
@@ -2281,3 +2289,4 @@ Global Ltac buildPackG F Rel F_Rel Funct :=
       buildSemiGenericPack F_ Rel_ F_Rel_ Funct_ | 
       buildPackG_ F_ Rel_ F_Rel_ Funct_ ]
   end.
+
