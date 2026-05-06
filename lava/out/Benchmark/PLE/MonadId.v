@@ -1,6 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 Ltac solver := quicksolve.
 
@@ -12,7 +13,7 @@ Fixpoint Identity_eq (x y : Identity_u): bool :=
 
 Definition Identity_eq_refl : ∀ (x : Identity_u), is_true (Identity_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Identity_eq_refl: eq_hint_db.

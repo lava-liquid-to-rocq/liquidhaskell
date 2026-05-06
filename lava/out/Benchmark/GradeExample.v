@@ -1,6 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 Ltac solver := quicksolve.
 
@@ -17,7 +18,7 @@ Fixpoint Modifier_eq (x y : Modifier_u): bool :=
 
 Definition Modifier_eq_refl : ∀ (x : Modifier_u), is_true (Modifier_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Modifier_eq_refl: eq_hint_db.
@@ -96,7 +97,7 @@ Fixpoint Letter_eq (x y : Letter_u): bool :=
 
 Definition Letter_eq_refl : ∀ (x : Letter_u), is_true (Letter_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Letter_eq_refl: eq_hint_db.
@@ -345,7 +346,7 @@ Fixpoint Grades_eq (x y : Grades_u): bool :=
 
 Definition Grades_eq_refl : ∀ (x : Grades_u), is_true (Grades_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Grades_eq_refl: eq_hint_db.
@@ -879,7 +880,7 @@ Fixpoint Comparison_eq (x y : Comparison_u): bool :=
 
 Definition Comparison_eq_refl : ∀ (x : Comparison_u), is_true (Comparison_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Comparison_eq_refl: eq_hint_db.

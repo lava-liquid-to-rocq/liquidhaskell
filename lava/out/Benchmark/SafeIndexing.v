@@ -1,6 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 Ltac solver := quicksolve.
 
@@ -16,7 +17,7 @@ Fixpoint IList_eq (x y : IList_u): bool :=
 
 Definition IList_eq_refl : ∀ (x : IList_u), is_true (IList_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve IList_eq_refl: eq_hint_db.

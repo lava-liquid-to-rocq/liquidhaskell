@@ -1,6 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 Ltac solver := quicksolve.
 
@@ -204,7 +205,7 @@ Fixpoint Pair_eq (x y : Pair_u): bool :=
 
 Definition Pair_eq_refl : ∀ (x : Pair_u), is_true (Pair_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Pair_eq_refl: eq_hint_db.
@@ -259,7 +260,7 @@ Fixpoint Nats_eq (x y : Nats_u): bool :=
 
 Definition Nats_eq_refl : ∀ (x : Nats_u), is_true (Nats_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Nats_eq_refl: eq_hint_db.
@@ -481,7 +482,7 @@ Fixpoint L2_eq (x y : L2_u): bool :=
 
 Definition L2_eq_refl : ∀ (x : L2_u), is_true (L2_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve L2_eq_refl: eq_hint_db.
@@ -673,7 +674,7 @@ Fixpoint L_eq (x y : L_u): bool :=
 
 Definition L_eq_refl : ∀ (x : L_u), is_true (L_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve L_eq_refl: eq_hint_db.
@@ -743,7 +744,7 @@ Fixpoint PairL_eq (x y : PairL_u): bool :=
 
 Definition PairL_eq_refl : ∀ (x : PairL_u), is_true (PairL_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve PairL_eq_refl: eq_hint_db.

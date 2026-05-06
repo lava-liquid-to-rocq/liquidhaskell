@@ -1,6 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 Ltac solver := quicksolve.
 
@@ -17,7 +18,7 @@ Fixpoint RBin_eq (x y : RBin_u): bool :=
 
 Definition RBin_eq_refl : ∀ (x : RBin_u), is_true (RBin_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve RBin_eq_refl: eq_hint_db.
@@ -107,7 +108,7 @@ Fixpoint Bin_eq (x y : Bin_u): bool :=
 
 Definition Bin_eq_refl : ∀ (x : Bin_u), is_true (Bin_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Bin_eq_refl: eq_hint_db.

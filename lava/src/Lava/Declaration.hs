@@ -113,7 +113,7 @@ eqReflLem tc =
       (eqReflLemName tc)
       []
       (FAType ("x", unrefTC tc) . Prop . mkIsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["x", "x"]))
-      (ProofBody [Custom "eq_refl"])
+      (ProofBody [Custom "eq_refl_rec"])
       Opaque,
     AddHint ResolveHint (eqReflLemName tc) EqHintDb
   ]

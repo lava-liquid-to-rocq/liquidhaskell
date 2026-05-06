@@ -1,6 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 Ltac solver := quicksolve.
 
@@ -16,7 +17,7 @@ Fixpoint SFBool_eq (x y : SFBool_u): bool :=
 
 Definition SFBool_eq_refl : ∀ (x : SFBool_u), is_true (SFBool_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve SFBool_eq_refl: eq_hint_db.
@@ -1057,7 +1058,7 @@ Fixpoint SFBit_eq (x y : SFBit_u): bool :=
 
 Definition SFBit_eq_refl : ∀ (x : SFBit_u), is_true (SFBit_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve SFBit_eq_refl: eq_hint_db.
@@ -1123,7 +1124,7 @@ Fixpoint SFBin_eq (x y : SFBin_u): bool :=
 
 Definition SFBin_eq_refl : ∀ (x : SFBin_u), is_true (SFBin_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve SFBin_eq_refl: eq_hint_db.
@@ -1585,7 +1586,7 @@ Fixpoint RGB_eq (x y : RGB_u): bool :=
 
 Definition RGB_eq_refl : ∀ (x : RGB_u), is_true (RGB_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve RGB_eq_refl: eq_hint_db.
@@ -1660,7 +1661,7 @@ Fixpoint OtherNat_eq (x y : OtherNat_u): bool :=
 
 Definition OtherNat_eq_refl : ∀ (x : OtherNat_u), is_true (OtherNat_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve OtherNat_eq_refl: eq_hint_db.
@@ -1734,7 +1735,7 @@ Fixpoint Nibble_eq (x y : Nibble_u): bool :=
 
 Definition Nibble_eq_refl : ∀ (x : Nibble_u), is_true (Nibble_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Nibble_eq_refl: eq_hint_db.
@@ -1842,7 +1843,7 @@ Fixpoint MyNat_eq (x y : MyNat_u): bool :=
 
 Definition MyNat_eq_refl : ∀ (x : MyNat_u), is_true (MyNat_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve MyNat_eq_refl: eq_hint_db.
@@ -1910,7 +1911,7 @@ Fixpoint Natprod_eq (x y : Natprod_u): bool :=
 
 Definition Natprod_eq_refl : ∀ (x : Natprod_u), is_true (Natprod_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Natprod_eq_refl: eq_hint_db.
@@ -4962,7 +4963,7 @@ Fixpoint Modifier_eq (x y : Modifier_u): bool :=
 
 Definition Modifier_eq_refl : ∀ (x : Modifier_u), is_true (Modifier_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Modifier_eq_refl: eq_hint_db.
@@ -5041,7 +5042,7 @@ Fixpoint Letter_eq (x y : Letter_u): bool :=
 
 Definition Letter_eq_refl : ∀ (x : Letter_u), is_true (Letter_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Letter_eq_refl: eq_hint_db.
@@ -5290,7 +5291,7 @@ Fixpoint Grades_eq (x y : Grades_u): bool :=
 
 Definition Grades_eq_refl : ∀ (x : Grades_u), is_true (Grades_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Grades_eq_refl: eq_hint_db.
@@ -5841,7 +5842,7 @@ Fixpoint Day_eq (x y : Day_u): bool :=
 
 Definition Day_eq_refl : ∀ (x : Day_u), is_true (Day_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Day_eq_refl: eq_hint_db.
@@ -6156,7 +6157,7 @@ Fixpoint Comparison_eq (x y : Comparison_u): bool :=
 
 Definition Comparison_eq_refl : ∀ (x : Comparison_u), is_true (Comparison_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Comparison_eq_refl: eq_hint_db.
@@ -6946,7 +6947,7 @@ Fixpoint Color_eq (x y : Color_u): bool :=
 
 Definition Color_eq_refl : ∀ (x : Color_u), is_true (Color_eq x x).
 Proof.
-  eq_refl.
+  eq_refl_rec.
 Qed.
 
 #[global] Hint Resolve Color_eq_refl: eq_hint_db.
