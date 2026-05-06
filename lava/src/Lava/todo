@@ -1,4 +1,6 @@
 Do not use packs for theorems
+and automatically generate packs for unreflected functions when they are used in a refinement
+  -> do we have an example for that?
 
 Formalize and implement construction with existentials
 
@@ -15,7 +17,6 @@ Use type of constructor in case?
   -> not mentioned in the paper
 
 - cleanup Rocq grammar
-
 
 For Equations :
 - add missing branches
