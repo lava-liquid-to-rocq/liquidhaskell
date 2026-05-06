@@ -96,7 +96,10 @@ utrReft eq r0 = case r0 of
   LH.DC c -> Coq.Cr $ utrDC c
   LH.App r1 r2 -> Coq.App (utrReft eq r1) [utrReft eq r2]
   LH.Neg r -> Coq.Neg UnrefOp $ utrReft eq r
-  LH.Bop op r1 r2 -> Coq.Bop (Binop (trBop op) UnrefOp) (utrReft eq r1) (utrReft eq r2)
+  LH.Bop op r1 r2 ->
+    if op `elem` [LH.And, LH.Or, LH.Impl, LH.Iff] && not (isValue r1) && not (isValue r2)
+      then error $ "Refinement " ++ prettyShow r0 ++ "cannot be translated to a boolean type because of the presence of applications."
+      else Coq.Bop (Binop (trBop op) UnrefOp) (utrReft eq r1) (utrReft eq r2)
   LH.QMark r _ _ -> utrReft eq r
   LH.Pop _ _ r -> utrReft eq r
   LH.Sub r _ _ -> utrReft eq r
@@ -107,9 +110,16 @@ utrReft eq r0 = case r0 of
 --   Function RtoP (def 3.4) of the paper
 utrReftProp :: Bool -> LH.Reft -> Coq.CoqTerm
 -- utrReftProp r | traceFunc "utrReftProp" [pPrint r] = undefined
+-- TODO: add inlining optimization (maybe in mkIsTrue)
+{- utrReftProp eq (LH.Bop LH.Eq r1 r2) = -}
+-- Applying the extraction on both sides of logical connectives
+-- is necessary for the correct scoping of existentials
+utrReftProp eq (LH.Bop bop r1 r2)
+  | bop `elem` [LH.And, LH.Or, LH.Impl, LH.Iff] =
+      Coq.Bop (Binop (trBop bop) PropOp) (utrReftProp eq r1) (utrReftProp eq r2)
 utrReftProp eq r =
   let (rv, r') = extractApps r
-   in hypsRV eq rv True (mkIsTrue (utrReft eq r'))
+   in hypsRV eq rv False (mkIsTrue (utrReft eq r'))
 
 -- ** Utility functions for unrefined translations
 
@@ -186,7 +196,7 @@ extractApps r0 = go [] r0
 -- | Takes as first argument the map RV from applications to fresh variables and
 -- translates the hypothesis, placing them on top of the second argument
 -- The flag indicates if we want to use foralls and implications or exists with conjunctions.
--- The first case is for building the graph relation, the second the backward reasoning lemmas
+-- The first case is for building the graph relation, the second the backward reasoning lemmas and the translation of type refinements
 hypsRV :: Bool -> [(Reft, Id)] -> Bool -> CoqTerm -> CoqTerm
 hypsRV eq rv graphRel = \p -> foldr hyp p rv
   where
