@@ -460,6 +460,7 @@ Ltac shape_based := match goal with
         assert (d -> False) as temp by (intro; repeat shape_based; fast_done); left];
       clear temp
   (*| |- exists v, ?relAp v => solve [unshelve (eexists _; econstructor; assumption)]*)
+  | |- exists v, ?relAp v /\ v == ?t => exists t; split; [|reflexivity]
   | |- exists v, ?relAp v /\ v = ?t => exists t; split; [|reflexivity]
   | [h: (exists v, _) /\ ?t |- _] => destruct h as [? ?]
   | [h: ?s /\ (exists v, _) |- _] => destruct h as [? ?]

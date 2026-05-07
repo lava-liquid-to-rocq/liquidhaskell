@@ -428,12 +428,12 @@ Proof.
   induction xs as [x xs IH_xs|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ append_res, append_rel ⌊ xs ⌋ Emp_u append_res ∧ append_res == ⌊ xs ⌋)
+            (λ (VV : Unit), ∃ append_res, append_rel (C_u x xs) Emp_u append_res ∧ append_res == (C_u x xs))
             (IH_xs ltac:(try clear IH_xs; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ append_res, append_rel ⌊ xs ⌋ Emp_u append_res ∧ append_res == ⌊ xs ⌋)
+            (λ (VV : Unit), ∃ append_res, append_rel Emp_u Emp_u append_res ∧ append_res == Emp_u)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -576,11 +576,186 @@ Proof.
           Unit
           (λ (VV : Unit),
            ∃ retrn_res,
-           retrn_rel ⌊ x ⌋ retrn_res
+           retrn_rel x retrn_res
            ∧ ∃ bind_res,
-             bind_rel retrn_res ⌊ f ⌋ bind_res ∧ ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ bind_res == f_res)
+             bind_rel retrn_res ⌊ f ⌋ bind_res ∧ ∃ f_res, getPackRel f x f_res ∧ bind_res == f_res)
           (prop_append_neutral (getPackF f (# x)))
-          ltac:(solver)).
+          _).
+  preInstExist.
+  repeat instExistGoal.
+  try (specialize_hyps; try unify_vars).
+
+  (* forward reasoning *)
+  try cleanup_pack_stuff;
+  try quick_simple_cleanup_steps;
+  repeat reconstruct_ref.
+  (* backwards reasoning *)
+    (* backwards reasoning in hypotheses *)
+    try nonbranching_inversion_specialization.
+    (* backwards reasoning in goal *)
+    try (unshelve constructor; timeout 3 quicksolve). 
+    try (autorewrite with f_rel_back; autorewrite with int_rel_back).
+        (* forwards reasoning in goal *)
+    try (timeout 60 instExistGoal).
+
+    let vRefl := fresh "vRefl" in
+    pose proof (eq_refl lq_tmp2_res) as vRefl.
+    let pred := fresh "dom_ref" in
+    get_dom_ref append pred;
+    (* idtac "get_dom_ref" f dom_ref "returned"; *)
+
+    let wit_name := fresh "wit_" in
+    (*assert_wit lq_tmp2_res dom_ref wit_name.*)
+
+
+    tryif (
+    match lq_tmp2_res with
+    | ⌊ ?tm -⌋ => pose ⌈ tm ⌉ as wit_name
+    end) then idtac else (
+    tryif 
+      (match goal with
+      | [h:_ |- _] => assert (pred lq_tmp2_res) as wit_name by (subst pred; exact h); clear wit_name; pose h as wit_name
+      end) then idtac else (
+    idtac "assert_wit lq_tmp2_res" pred wit_name;
+    match goal with
+    | [h: ?f_rel_ap lq_tmp2_res |- _] => idtac h;
+      isRelAppl f_rel_ap; idtac h; (* idtac "case in assert_wit for unrefined variable axiomatized using the following application of a graph relation: " f_rel_ap; *)
+
+      (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
+      let f_ts := fresh "f_ts" in
+      get_f_ts f_rel_ap f_ts; 
+      
+      let tempEq := fresh "tempEq" in
+      assRefl f_ts as tempEq;
+      match type of tempEq with
+      | (?f, ?ts) = _ => clear tempEq;
+        let fApp := fresh "fApp" in
+        let fApp' := fresh "fApp'" in
+        let tl := fresh "tsTail" in
+        let tlEq := fresh "tsTailEq" in
+        pose f as fApp;
+        pose ts as tl;
+        (* recursively assert the refinements of the ts and apply f to them *)
+        repeat (
+          assRefl tl as tlEq; 
+          match type of tlEq with
+          | _nil = _ => fail
+          | ?t _::_ ?tail = _ => idtac "running main loop in assert_wit with tail " t " _::_ " tail; 
+            pose fApp as fApp'; subst fApp;
+            
+            let dom_ref := fresh "t_dom_ref" in
+            get_dom_ref fApp' dom_ref;
+            let arg_wit_name := fresh "arg_wit_name_" in
+
+            first [
+              assert_wit t dom_ref arg_wit_name
+            | let claim := fresh "claim" in
+              let claimRefl := fresh "claimRefl" in
+              pose (dom_ref t) as claim;
+              assRefl claim as claimRefl; 
+              unfold dom_ref in claimRefl; simpl in claimRefl; 
+              match type of claimRefl with
+              | ?tp = _ => clear claimRefl; idtac tp;
+                match tp with
+                | (?wf ?x /\ ?p) /\ ?q => 
+                  first [
+                    assert_wit x (fun x => wf x /\ p /\ q) arg_wit_name
+                  | match goal with
+                    | [h: ?relAp x |- _] => 
+                      isRelAppl relAp; (* idtac "case in assert_wit for unrefined variable axiomatized using the following application of a graph relation: " f_rel_ap; *)
+
+                      (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
+                      let g_ts := fresh "g_ts" in
+                      get_f_ts relAp g_ts; 
+                      let tempEq := fresh "tempEq" in
+                      assRefl g_ts as tempEq;
+                      let g := fresh "g" in
+                      match type of tempEq with
+                      | (?g, ?ts) = _ => clear tempEq;
+                        let gdomRef := fresh "gdomRef" in
+                        let x_wit := fresh "x_wit_" in
+                        get_dom_ref g gdomRef;
+                        assert_wit x gdomRef x_wit;
+                        assert tp as arg_wit_name by (try split_hyps; try unify_vars; quicksolve)
+                      end
+                    end
+                  ]
+                end
+              end
+            ];
+            let arg_wit_tp := type of arg_wit_name in
+            (* idtac "recursive call created witness " arg_wit_name " : " arg_wit_tp ". "; *)
+            pose (fApp' (exist _ t arg_wit_name)) as fApp;
+            try subst arg_wit_name; subst fApp'; simpl_proj;
+            pose tail as tl
+          end; clear tlEq
+        ); idtac "finish main loop"; clear tl;
+        (* we now have a fully applied version of f in fApp, we destruct it to get the refinement witness for it *)
+        let appl_wit := fresh "appl_wit_" in
+        pose proof (⌈ fApp ⌉) as appl_wit; subst fApp; simpl_proj; 
+        
+        let fApplTp := type of appl_wit in
+        try axProjTm fApplTp;
+        (* tryif destruct fApp as [_ appl_wit] then idtac else idtac "failed to extract the refinement witness from " fApp; *)
+        match type of h with
+        | f_rel_ap ?w => 
+        assert (pred w) as wit_name by (unfold pred; simpl; try 
+          first [clear pred | subst pred]; first [exact appl_wit; clear appl_wit | quick_wff_wit | 
+            quick_simpl; unify_vars; try split_hyps; try (specialize_hyps; try unify_vars); try quicksolve; (*print_proof_state;*) timeout 10 (unshelve eauto 50 with solver_db)])
+        end
+      end
+    end)); subst pred; try simpl in wit_name.
+
+    match type of vRefl with
+    | ?w = _ => clear vRefl;
+    (* idtac "assert_wit" v dom_ref wit_name "returned"; *)
+      pose (Res := (f (exist _ w wit_name))); try subst wit_name (*; simpl_proj*)
+    end 
+
+    let app1 := fresh "app1" in
+    let wff_lem := fresh "wit_" in
+    mk_ref_arg append lq_tmp2_res wff_lem app1.
+    mkRefAppl append (lq_tmp2_res _::_ Emp_u _::_ _nil) res.
+    recreate_var (append_rel lq_tmp2_res Emp_u) append_res'.
+    match goal with
+    | [ h: ?relAp ?w |- ?rel ?s ?t] => isRelAppl relAp;
+      tryif (eq_fail s w) then idtac else eq_fail t w;
+      non_branching_inversion h
+    | [ h: ?relAp ?w |- ?rel ?s ?t] => isRelAppl relAp;
+      tryif (eq_fail s w) then idtac else eq_fail t w;
+      idtac h ":" relAp w;
+      tryif (match goal with
+      | [def_rw: ⌊ ?Res -⌋ = w |- _] => idtac
+      end
+      ) then idtac "no need" else (
+        let v' := fresh "v'" in
+        recreate_var relAp v'; subst v'
+      );
+      match goal with
+      | [def_rw: ⌊ ?Res -⌋ = ?v |- _] => match goal with
+        | [k: relAp v |- _] => 
+          assert (v = w) as -> by (now try unify_vars);
+          rewrite <- def_rw
+        end
+      end;
+      timeout 30 quicksolve
+  end.
+
+
+
+try instantiate_goals.
+     try quick_simple_cleanup_steps
+    )); try simple_cleanup_steps.
+  inversion_cleanup.
+  solver.
+
+  mkRefAppl bind (v_ _::_ (packPr_proj {| f := f0; frel := frel; f_frel := f_frel; funct := funct |}) _::_ _nil) res.
+  mk_ref_arg bind v_ wff_lem temp_.
+  mk_ref_arg temp_ (packPr_proj {| f := f0; frel := frel; f_frel := f_frel; funct := funct |}) wff_lem2 temp_2.
+  subst temp_.
+
+  recreate_var (bind_rel v_ (packPr_proj {| f := f0; frel := frel; f_frel := f_frel; funct := funct |})) bind_res.
+  instExistGoal.*)
 Qed.
 
 Definition right_identity_spec (x : L): Type :=
