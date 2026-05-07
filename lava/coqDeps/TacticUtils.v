@@ -360,15 +360,21 @@ Ltac isFAppl fApplV :=
 Ltac is_no_rel_appl tm := tryif (isRelAppl tm) then fail else idtac.
 Ltac is_no_f_appl tm := tryif (isFAppl tm) then fail else idtac.
 
-(* quick heuristic to ensure we don't waste time trying to invert hypothesis that aren't applications of relations parameters that aren't all variables *)
-Ltac inversion_precheck h :=
-  match type of h with
+Ltac inversion_precheck_tm tp := match tp with
   | ?f_rel_ap ?v => isVar v; tryif (match f_rel_ap with
-    | ?rel ?x1 ?x2 ?x3 => is_no_rel_appl rel
-    | ?rel ?x1 ?x2 => is_no_rel_appl rel
-    | ?rel ?x => is_no_rel_appl rel
+    | ?rel _ _ _ _ _ => is_no_rel_appl rel
+    | ?rel _ _ _ _ => is_no_rel_appl rel
+    | ?rel _ _ _ => is_no_rel_appl rel
+    | ?rel _ _ => is_no_rel_appl rel
+    | ?rel _ => is_no_rel_appl rel
     end) then fail else isRelAppl f_rel_ap
   end.
+
+(* quick heuristic to ensure we don't waste time trying to invert hypothesis that aren't applications of relations to parameters that aren't all variables *)
+Ltac inversion_precheck h :=
+  let tp := type of h in
+  inversion_precheck_tm tp.
+
 Global Tactic Notation "non_branching_inversion" hyp(h) := first 
   [ do_nonbranching strong_inversion h 
   | inversion_precheck h; do_nonbranching (strong_inversion h; try (exfalso; timeout 1 quicksolve))].
@@ -604,6 +610,29 @@ Ltac destrFunc tp Res :=
     subst temp
   | _ => pose (unit, tp) as Res
   end.
+
+Ltac rassumption := 
+  match goal with
+  | [h: _ |- _] => apply h; first [rassumption | quicksolve]
+  end.
+
+Ltac rconstructor := first [
+    constructor; quicksolve |
+    unshelve (econstructor; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor; try (quick_simpl; reflexivity); try rassumption; quicksolve |
+    unshelve (econstructor 1; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 1; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 2; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 2; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 3; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 3; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 4; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 4; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 5; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 5; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 6; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 6; try (quick_simpl; reflexivity); try rassumption;  quicksolve
+  ].
 
 (*
 Ltac 
