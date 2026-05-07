@@ -849,7 +849,7 @@ mkIndSkel _ (Reft r) specIhs =
     findRecCalls (LH.Var _ _ (Recursive indVar state)) = [(indVar, state, [])]
     findRecCalls r'@(LH.App {}) =
       case apps r' of
-        (LH.Var _ _ (Recursive indVar state), args) -> [(indVar, state, args)]
+        (LH.Var _ _ (Recursive indVar state), args) -> (indVar, state, args) : concatMap findRecCalls args
         (_, args) -> concatMap findRecCalls args
     findRecCalls (LH.Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = []
     findRecCalls (LH.Neg r') = findRecCalls r'
