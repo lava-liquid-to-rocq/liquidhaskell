@@ -14,7 +14,8 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Lava.Calculus
 import Lava.Names (Id)
-import Lava.TypingEnvironment
+import Lava.TypingEnvironment hiding (delete)
+import qualified Lava.TypingEnvironment as Env
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding ((<>))
@@ -38,20 +39,23 @@ negType = ArrType "x" (RefType "x" boolTp ttTm) (RefType "VV" boolTp (Bop Eq (Va
 -- | Types of binary operators, with singleton return type
 bopTypes :: [(Bop, RefType)]
 bopTypes =
-  [ (Plus, mkBopType Plus (Builtin Integer) (Builtin Integer) ttTm (Builtin Integer)),
-    (Minus, mkBopType Minus (Builtin Integer) (Builtin Integer) ttTm (Builtin Integer)),
-    (Times, mkBopType Times (Builtin Integer) (Builtin Integer) ttTm (Builtin Integer)),
-    (Div, mkBopType Div (Builtin Integer) (Builtin Integer) (Bop Neq (Var "x_2" 0 Local) (IntLit 0)) (Builtin Integer)),
-    (Mod, mkBopType Mod (Builtin Integer) (Builtin Integer) (Bop Neq (Var "x_2" 0 Local) (IntLit 0)) (Builtin Integer)),
-    (Leq, mkBopType Leq (Builtin Integer) (Builtin Integer) ttTm boolTp),
-    (Geq, mkBopType Geq (Builtin Integer) (Builtin Integer) ttTm boolTp),
-    (Lt, mkBopType Lt (Builtin Integer) (Builtin Integer) ttTm boolTp),
-    (Gt, mkBopType Gt (Builtin Integer) (Builtin Integer) ttTm boolTp),
+  [ (Plus, mkBopType Plus intTp intTp ttTm intTp),
+    (Minus, mkBopType Minus intTp intTp ttTm intTp),
+    (Times, mkBopType Times intTp intTp ttTm intTp),
+    (Div, mkBopType Div intTp intTp x2NotZero intTp),
+    (Mod, mkBopType Mod intTp intTp x2NotZero intTp),
+    (Leq, mkBopType Leq intTp intTp ttTm boolTp),
+    (Geq, mkBopType Geq intTp intTp ttTm boolTp),
+    (Lt, mkBopType Lt intTp intTp ttTm boolTp),
+    (Gt, mkBopType Gt intTp intTp ttTm boolTp),
     (And, mkBopType And boolTp boolTp ttTm boolTp),
     (Or, mkBopType Or boolTp boolTp ttTm boolTp),
     (Impl, mkBopType Impl boolTp boolTp ttTm boolTp),
     (Iff, mkBopType Iff boolTp boolTp ttTm boolTp)
   ]
+  where
+    intTp = Builtin Integer
+    x2NotZero = Bop Neq (Var "x_2" 0 Local) (IntLit 0)
 
 -- | Type of the equality and inequality for any base type
 eqneqTypes :: BaseType -> [(Bop, RefType)]
@@ -206,9 +210,16 @@ wfDecls γ (Definition f tpf e isRefl : decls) = do
   tpf' <- inDecl $ wfRefType γ tpf
   let γf = insertRecVar (f, tpf') γ
   let (args, ret) = second mkRefType $ arrs tpf'
-  let γfargs = insertLocalVars args γf
+  -- We remove the projections around the parameters,
+  -- because the parameters are destructed and thus considered unrefined in the
+  -- elaboration of the body.
+  -- We do not do it for the type tpf' because it is the complete dependent
+  -- arrow that binds the parameters as refined
+  let γfargs = insertLocalVars (map (second removeFOArgProjs) args) γf
   let initBrPat = map (\(x, tpx) -> Param x (arity tpx)) args
-  e' <- inDecl $ checkExpr γfargs initBrPat (removeRedundantMatches e) ret
+  -- We remove the projections of parameters from ret, since parameters are
+  -- considered unrefined
+  e' <- inDecl $ checkExpr γfargs initBrPat (removeRedundantMatches e) (removeFOArgProjs ret)
   γf' <- inDecl $ changeRecToGlobal f γf
   decls' <- wfDecls γf' decls
   return $ Definition f tpf' e' isRefl : decls'
@@ -383,7 +394,7 @@ checkExpr γ state e0@(Case r branches _) tp = do
   (tpr, r') <- synReft γ r
   case tpr of
     RefType _ (TC _) _ -> do
-      (branches', indVars) <- second Set.unions <$> mapAndUnzipM checkBranch branches
+      (branches', indVars) <- second Set.unions <$> mapAndUnzipM (checkBranch r') branches
       let -- In an induct, we generalize the other parameters that have not been destructed already
           -- the set indVars being non empty tells us that we use induction rather than destruct
           genVars = if Set.null indVars then Nothing else Just $ reverse [z | (Param z _) <- state']
@@ -408,11 +419,11 @@ checkExpr γ state e0@(Case r branches _) tp = do
 
     -- Returns the elaborated branch and a boolean to indicate if a subterm uses
     -- an induction hypothesis one of the introduced variables
-    checkBranch :: ((Id, [(Id, Bool)]), Maybe Expr) -> Either TypeError (((Id, [(Id, Bool)]), Maybe Expr), Set Id)
+    checkBranch :: Reft -> ((Id, [(Id, Bool)]), Maybe Expr) -> Either TypeError (((Id, [(Id, Bool)]), Maybe Expr), Set Id)
     -- TODO: we should not use a variable name to translate from Core, we should not have this case
-    checkBranch (c, Just (Reft (Var "undefined" _ _))) = return ((c, Nothing), Set.empty)
-    checkBranch (c, Nothing) = return ((c, Nothing), Set.empty)
-    checkBranch ((c, ys), Just e) = do
+    checkBranch _ (c, Just (Reft (Var "undefined" _ _))) = return ((c, Nothing), Set.empty)
+    checkBranch _ (c, Nothing) = return ((c, Nothing), Set.empty)
+    checkBranch matched ((c, ys), Just e) = do
       tpc <- lookupDC c γ
       -- Replace the binders in tpc by the names of the match in ys
       let tpcRenamed = renameParams (map fst ys) tpc
@@ -423,7 +434,18 @@ checkExpr γ state e0@(Case r branches _) tp = do
           -- used as inductive variable and instantiate the head of those applications
           (e', indVars) = instRec potentialInductives e
           -- TODO: add additional type with z for occurence typing
-          γ' = insertLocalVars argsc γ
+          -- also, if we match on a variable, replace this variable in place
+          -- with the introduced ones
+          -- also, remove projections from the type refinements of the
+          -- introduced variables in the context
+          γ' = insertLocalVars (map (second removeFOArgProjs) argsc) $ case matched of
+            -- if we match on a variable xMatch, we replace the variable in the context
+            -- by the variables introduced by the pattern
+            -- and we substitute all occurences of xMatch by the pattern
+            Inj (Var xMatch 0 Local) _ ->
+              let pat = undefined
+               in {- subst -} undefined pat xMatch $ Env.delete xMatch γ
+            _ -> γ
       e'' <- checkExpr γ' state' e' tp
       return (((c, ys), Just e''), indVars)
       where

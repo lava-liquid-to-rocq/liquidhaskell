@@ -66,6 +66,9 @@ initial =
       (unitTpName, ΓTC [(unitTmName, defaultRef unitTp)])
     ]
 
+delete :: Id -> TypEnv -> TypEnv
+delete = Map.delete
+
 insertVar :: (Id, Localization, RefType) -> TypEnv -> TypEnv
 insertVar (x, loc, tp) = Map.insert x (ΓVar loc tp)
 
