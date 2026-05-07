@@ -338,11 +338,11 @@ Definition leftIdentity_spec
           (v_x_46517173 : Identity_u),
         ltac:(flattenP (λ (f : {VV: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_46517173 v_x_46517173))):
   Type :=
-  {{∀ retrn_res,
+  {{∃ retrn_res,
     retrn_rel ⌊ x ⌋ retrn_res
-    → ∀ compose_res,
+    ∧ ∃ compose_res,
       compose_rel retrn_res ⌊ f ⌋ compose_res
-      → ∀ f_res, getPackRel f ⌊ x ⌋ f_res → compose_res == f_res}}.
+      ∧ ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ compose_res == f_res}}.
 
 #[global] Hint Unfold leftIdentity_spec: lia_unfold.
 
@@ -362,16 +362,16 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∀ retrn_res,
+           ∃ retrn_res,
            retrn_rel ⌊ x ⌋ retrn_res
-           → ∀ compose_res,
-             compose_rel retrn_res ⌊ f ⌋ compose_res → ∀ f_res, getPackRel f ⌊ x ⌋ f_res → compose_res == f_res)
+           ∧ ∃ compose_res,
+             compose_rel retrn_res ⌊ f ⌋ compose_res ∧ ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ compose_res == f_res)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition rightIdentity_spec (x : Identity): Type :=
-  {{∀ compose_res, compose_rel ⌊ x ⌋ retrn_upack compose_res → compose_res == ⌊ x ⌋}}.
+  {{∃ compose_res, compose_rel ⌊ x ⌋ retrn_upack compose_res ∧ compose_res == ⌊ x ⌋}}.
 
 #[global] Hint Unfold rightIdentity_spec: lia_unfold.
 
@@ -381,7 +381,7 @@ Proof.
   destruct x as [x].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∀ compose_res, compose_rel ⌊ x ⌋ retrn_upack compose_res → compose_res == ⌊ x ⌋)
+            (λ (VV : Unit), ∃ compose_res, compose_rel ⌊ x ⌋ retrn_upack compose_res ∧ compose_res == ⌊ x ⌋)
             (# unit)
             ltac:(solver)).
 Qed.

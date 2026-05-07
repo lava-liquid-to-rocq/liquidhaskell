@@ -215,14 +215,14 @@ Proof.
 Defined.
 
 Definition mappend_assoc_spec (xs ys zs : L): Type :=
-  {{∀ mappend_res,
+  {{∃ mappend_res,
     mappend_rel ⌊ xs ⌋ ⌊ ys ⌋ mappend_res
-    → ∀ mappend_res_2,
+    ∧ ∃ mappend_res_2,
       mappend_rel mappend_res ⌊ zs ⌋ mappend_res_2
-      → ∀ mappend_res_3,
+      ∧ ∃ mappend_res_3,
         mappend_rel ⌊ ys ⌋ ⌊ zs ⌋ mappend_res_3
-        → ∀ mappend_res_4,
-          mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 → mappend_res_2 == mappend_res_4}}.
+        ∧ ∃ mappend_res_4,
+          mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4}}.
 
 #[global] Hint Unfold mappend_assoc_spec: lia_unfold.
 
@@ -237,13 +237,13 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ mappend_res,
+             ∃ mappend_res,
              mappend_rel ⌊ xs ⌋ ⌊ ys ⌋ mappend_res
-             → ∀ mappend_res_2,
+             ∧ ∃ mappend_res_2,
                mappend_rel mappend_res ⌊ zs ⌋ mappend_res_2
-               → ∀ mappend_res_3,
+               ∧ ∃ mappend_res_3,
                  mappend_rel ⌊ ys ⌋ ⌊ zs ⌋ mappend_res_3
-                 → ∀ mappend_res_4, mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 → mappend_res_2 == mappend_res_4)
+                 ∧ ∃ mappend_res_4, mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
             (IH_xs
              ltac:(try clear IH_xs; solver)
              ys
@@ -254,13 +254,13 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ mappend_res,
+             ∃ mappend_res,
              mappend_rel ⌊ xs ⌋ ⌊ ys ⌋ mappend_res
-             → ∀ mappend_res_2,
+             ∧ ∃ mappend_res_2,
                mappend_rel mappend_res ⌊ zs ⌋ mappend_res_2
-               → ∀ mappend_res_3,
+               ∧ ∃ mappend_res_3,
                  mappend_rel ⌊ ys ⌋ ⌊ zs ⌋ mappend_res_3
-                 → ∀ mappend_res_4, mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 → mappend_res_2 == mappend_res_4)
+                 ∧ ∃ mappend_res_4, mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -348,9 +348,9 @@ Qed.
 #[global] Hint Resolve mempty_rel_mk: f_rel_funct_db.
 
 Definition mempty_left_spec (x : L): Type :=
-  {{∀ mempty_res,
+  {{∃ mempty_res,
     mempty_rel mempty_res
-    → ∀ mappend_res, mappend_rel mempty_res ⌊ x ⌋ mappend_res → mappend_res == ⌊ x ⌋}}.
+    ∧ ∃ mappend_res, mappend_rel mempty_res ⌊ x ⌋ mappend_res ∧ mappend_res == ⌊ x ⌋}}.
 
 #[global] Hint Unfold mempty_left_spec: lia_unfold.
 
@@ -360,17 +360,17 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∀ mempty_res,
+           ∃ mempty_res,
            mempty_rel mempty_res
-           → ∀ mappend_res, mappend_rel mempty_res ⌊ x ⌋ mappend_res → mappend_res == ⌊ x ⌋)
+           ∧ ∃ mappend_res, mappend_rel mempty_res ⌊ x ⌋ mappend_res ∧ mappend_res == ⌊ x ⌋)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition mempty_right_spec (x : L): Type :=
-  {{∀ mempty_res,
+  {{∃ mempty_res,
     mempty_rel mempty_res
-    → ∀ mappend_res, mappend_rel ⌊ x ⌋ mempty_res mappend_res → mappend_res == ⌊ x ⌋}}.
+    ∧ ∃ mappend_res, mappend_rel ⌊ x ⌋ mempty_res mappend_res ∧ mappend_res == ⌊ x ⌋}}.
 
 #[global] Hint Unfold mempty_right_spec: lia_unfold.
 
@@ -381,17 +381,17 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ mempty_res,
+             ∃ mempty_res,
              mempty_rel mempty_res
-             → ∀ mappend_res, mappend_rel ⌊ x ⌋ mempty_res mappend_res → mappend_res == ⌊ x ⌋)
+             ∧ ∃ mappend_res, mappend_rel ⌊ x ⌋ mempty_res mappend_res ∧ mappend_res == ⌊ x ⌋)
             (IH_xs ltac:(try clear IH_xs; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ mempty_res,
+             ∃ mempty_res,
              mempty_rel mempty_res
-             → ∀ mappend_res, mappend_rel ⌊ x ⌋ mempty_res mappend_res → mappend_res == ⌊ x ⌋)
+             ∧ ∃ mappend_res, mappend_rel ⌊ x ⌋ mempty_res mappend_res ∧ mappend_res == ⌊ x ⌋)
             (# unit)
             ltac:(solver)).
 Qed.

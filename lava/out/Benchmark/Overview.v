@@ -85,7 +85,7 @@ Definition llen_spec (l : IList): Type :=
 Definition llen (l : IList): llen_spec l.
 Proof.
   destruct l as [l l_p].
-  induction l as [ds_d27I l' IH_l'|].
+  induction l as [ds_d27L l' IH_l'|].
   - refine (subsumptionCast
             Z
             (λ (v : Z), gebZ_rel v 0 true)
@@ -104,9 +104,9 @@ Proof.
 Defined.
 
 Inductive llen_rel: IList_u → Z → Prop :=
-  | llen_Cons: ∀ ds_d27I l' llen_res,
+  | llen_Cons: ∀ ds_d27L l' llen_res,
                llen_rel l' llen_res
-               → ∀ addZ_res, addZ_rel llen_res 1 addZ_res → llen_rel (Cons_u ds_d27I l') addZ_res
+               → ∀ addZ_res, addZ_rel llen_res 1 addZ_res → llen_rel (Cons_u ds_d27L l') addZ_res
   | llen_Nil: llen_rel Nil_u 0.
 
 #[global] Hint Constructors llen_rel: core_hint_db.
@@ -117,13 +117,13 @@ Inductive llen_rel: IList_u → Z → Prop :=
 
 Theorem llen_rel_funct [l : IList_u]: ∀ (v v' : Z), llen_rel l v → (llen_rel l v' → v = v').
 Proof.
-  induction l as [ds_d27I l' IH_l'|]; rel_functionhood_body.
+  induction l as [ds_d27L l' IH_l'|]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve llen_rel_funct: f_rel_funct_db.
 
-Theorem llen_Cons_lem ds_d27I l' llen_Cons_lem_res:
-  llen_rel (Cons_u ds_d27I l') llen_Cons_lem_res
+Theorem llen_Cons_lem ds_d27L l' llen_Cons_lem_res:
+  llen_rel (Cons_u ds_d27L l') llen_Cons_lem_res
   ↔ ∃ llen_res,
     llen_rel l' llen_res ∧ ∃ addZ_res, addZ_rel llen_res 1 addZ_res ∧ llen_Cons_lem_res == addZ_res.
 Proof.
@@ -143,7 +143,7 @@ Theorem llen_rel_ex (l : IList_u) (l_p : IList_wf l ∧ True): llen_rel l ⌊ ll
 Proof.
   Opaque llen.
   existence_lemma_pre llen;
-  induction l as [ds_d27I l' IH_l'|];
+  induction l as [ds_d27L l' IH_l'|];
   [fix_notations; pose proof (IH_l' ltac:(try clear IH_l'; solver)) as IH_91252151; try clear IH_l' |
    fix_notations];
   simpl in *.
@@ -211,13 +211,13 @@ Defined.
 
 Definition append_spec (xs ys : IList): Type :=
   {v: IList_u | IList_wf v
-                ∧ ∀ llen_res,
+                ∧ ∃ llen_res,
                   llen_rel v llen_res
-                  → ∀ llen_res_2,
+                  ∧ ∃ llen_res_2,
                     llen_rel ⌊ xs ⌋ llen_res_2
-                    → ∀ llen_res_3,
+                    ∧ ∃ llen_res_3,
                       llen_rel ⌊ ys ⌋ llen_res_3
-                      → ∀ addZ_res, addZ_rel llen_res_2 llen_res_3 addZ_res → llen_res == addZ_res}.
+                      ∧ ∃ addZ_res, addZ_rel llen_res_2 llen_res_3 addZ_res ∧ llen_res == addZ_res}.
 
 #[global] Hint Unfold append_spec: lia_unfold.
 
@@ -230,13 +230,13 @@ Proof.
             IList_u
             (λ (v : IList_u),
              IList_wf v
-             ∧ ∀ llen_res,
+             ∧ ∃ llen_res,
                llen_rel v llen_res
-               → ∀ llen_res_2,
+               ∧ ∃ llen_res_2,
                  llen_rel ⌊ xs ⌋ llen_res_2
-                 → ∀ llen_res_3,
+                 ∧ ∃ llen_res_3,
                    llen_rel ⌊ ys ⌋ llen_res_3
-                   → ∀ addZ_res, addZ_rel llen_res_2 llen_res_3 addZ_res → llen_res == addZ_res)
+                   ∧ ∃ addZ_res, addZ_rel llen_res_2 llen_res_3 addZ_res ∧ llen_res == addZ_res)
             (Cons
              (exist (λ (n : Z), ltbZ_rel 5 n true) x ltac:(solver))
              (subsumptionCast
@@ -249,13 +249,13 @@ Proof.
             IList_u
             (λ (v : IList_u),
              IList_wf v
-             ∧ ∀ llen_res,
+             ∧ ∃ llen_res,
                llen_rel v llen_res
-               → ∀ llen_res_2,
+               ∧ ∃ llen_res_2,
                  llen_rel ⌊ xs ⌋ llen_res_2
-                 → ∀ llen_res_3,
+                 ∧ ∃ llen_res_3,
                    llen_rel ⌊ ys ⌋ llen_res_3
-                   → ∀ addZ_res, addZ_rel llen_res_2 llen_res_3 addZ_res → llen_res == addZ_res)
+                   ∧ ∃ addZ_res, addZ_rel llen_res_2 llen_res_3 addZ_res ∧ llen_res == addZ_res)
             (exist (λ (ys : IList_u), IList_wf ys ∧ True) ys ltac:(solver))
             ltac:(solver)).
 Defined.
@@ -366,14 +366,14 @@ Qed.
      (v_x_62265989 : IList_u),
    ltac:(flattenP (λ (xs ys : IList) (v : IList_u),
  IList_wf v
- ∧ ∀ llen_res,
+ ∧ ∃ llen_res,
    llen_rel v llen_res
-   → ∀ llen_res_2,
+   ∧ ∃ llen_res_2,
      llen_rel ⌊ xs ⌋ llen_res_2
-     → ∀ llen_res_3,
+     ∧ ∃ llen_res_3,
        llen_rel ⌊ ys ⌋ llen_res_3
-       → ∀ addZ_res,
-         addZ_rel llen_res_2 llen_res_3 addZ_res → llen_res == addZ_res) x_62265989 v_x_62265989)).
+       ∧ ∃ addZ_res,
+         addZ_rel llen_res_2 llen_res_3 addZ_res ∧ llen_res == addZ_res) x_62265989 v_x_62265989)).
 Proof.
   buildPackG append append_rel append__append_rel append_rel_funct.
 Defined.
@@ -385,7 +385,7 @@ Defined.
 
 Definition get_spec
   (xs : IList)
-  (i : {i: Z | ∀ llen_res, llen_rel ⌊ xs ⌋ llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true}):
+  (i : {i: Z | lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true}):
   Type :=
   {v: Z | ltbZ_rel 5 v true}.
 
@@ -393,7 +393,7 @@ Definition get_spec
 
 Definition get
   (xs : IList)
-  (i : {i: Z | ∀ llen_res, llen_rel ⌊ xs ⌋ llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true}):
+  (i : {i: Z | lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true}):
   get_spec xs i.
 Proof.
   destruct xs as [xs xs_p].
@@ -445,7 +445,7 @@ Theorem get_rel_ex
   (xs : IList_u)
   (xs_p : IList_wf xs ∧ True)
   (i : Z)
-  (i_p : ∀ llen_res, llen_rel xs llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true):
+  (i_p : lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel xs llen_res ∧ ltbZ_rel i llen_res true):
   get_rel xs i ⌊ get (exist _ xs xs_p) (exist _ i i_p) ⌋.
 Proof.
   Opaque get.
@@ -472,7 +472,7 @@ Theorem get__get_rel_rw
   (xs : IList_u)
   (xs_p : IList_wf xs ∧ True)
   (i : Z)
-  (i_p : ∀ llen_res, llen_rel xs llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true)
+  (i_p : lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel xs llen_res ∧ ltbZ_rel i llen_res true)
   (v : Z):
   ⌊ get (exist _ xs xs_p) (exist _ i i_p) ⌋ = v ↔ get_rel xs i v.
 Proof.
@@ -487,7 +487,7 @@ Qed.
 
 Theorem get__get_rel
   (xs : IList)
-  (i : {i: Z | ∀ llen_res, llen_rel ⌊ xs ⌋ llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true})
+  (i : {i: Z | lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true})
   (v : Z):
   ⌊ get xs i ⌋ = v ↔ get_rel ⌊ xs ⌋ ⌊ i ⌋ v.
 Proof.
@@ -500,7 +500,7 @@ Theorem get__get_rel'
   (xs_u : IList_u)
   (i_u : Z)
   (xs : IList)
-  (i : {i: Z | ∀ llen_res, llen_rel ⌊ xs ⌋ llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true})
+  (i : {i: Z | lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true})
   (v : Z):
   xs_u = ⌊ xs ⌋ → (i_u = ⌊ i ⌋ → ⌊ get xs i ⌋ = v ↔ get_rel xs_u i_u v).
 Proof.
@@ -513,7 +513,7 @@ Theorem get_rel_mk
   (xs : IList_u)
   (xs_p : IList_wf xs ∧ True)
   (i : Z)
-  (i_p : ∀ llen_res, llen_rel xs llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true):
+  (i_p : lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel xs llen_res ∧ ltbZ_rel i llen_res true):
   {v: _ | get_rel xs i v}.
 Proof.
   intros;
@@ -528,36 +528,34 @@ Qed.
   @Pack
   (IList
    ::RT λ (xs : IList),
-        {i: Z | ∀ llen_res, llen_rel ⌊ xs ⌋ llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true}
-        ::RT λ (i : {i: Z | ∀ llen_res,
-                            llen_rel ⌊ xs ⌋ llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true}),
+        {i: Z | lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true}
+        ::RT λ (i : {i: Z | lebZ_rel 0 i true
+                            ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true}),
              nilRT)
   (IList_u ::UT (Z ::UT nilUT))
   ltac:(mkProjectsArgListTG ((IList
   ::RT λ (xs : IList),
-       {i: Z | ∀ llen_res,
-               llen_rel ⌊ xs ⌋ llen_res
-               → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true}
-       ::RT λ (i : {i: Z | ∀ llen_res,
-                           llen_rel ⌊ xs ⌋ llen_res
-                           → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true}),
+       {i: Z | lebZ_rel 0 i true
+               ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true}
+       ::RT λ (i : {i: Z | lebZ_rel 0 i true
+                           ∧ ∃ llen_res,
+                             llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true}),
             nilRT)) ((IList_u ::UT (Z ::UT nilUT))))
   Z
-  (λ (x_35545252 : ArgList (IList
+  (λ (x_20044467 : ArgList (IList
                             ::RT λ (xs : IList),
-                                 {i: Z | ∀ llen_res,
-                                         llen_rel ⌊ xs ⌋ llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true}
-                                 ::RT λ (i : {i: Z | ∀ llen_res,
-                                                     llen_rel ⌊ xs ⌋ llen_res
-                                                     → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true}),
+                                 {i: Z | lebZ_rel 0 i true
+                                         ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true}
+                                 ::RT λ (i : {i: Z | lebZ_rel 0 i true
+                                                     ∧ ∃ llen_res,
+                                                       llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true}),
                                       nilRT))
-     (v_x_35545252 : Z),
+     (v_x_20044467 : Z),
    ltac:(flattenP (λ (xs : IList)
-   (i : {i: Z | ∀ llen_res,
-                llen_rel ⌊ xs ⌋ llen_res
-                → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true})
+   (i : {i: Z | lebZ_rel 0 i true
+                ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true})
    (v : Z),
- ltbZ_rel 5 v true) x_35545252 v_x_35545252)).
+ ltbZ_rel 5 v true) x_20044467 v_x_20044467)).
 Proof.
   buildPackG get get_rel get__get_rel get_rel_funct.
 Defined.
@@ -575,9 +573,9 @@ Definition applyToFirst_spec
        Z
        (λ (x_46517173 : ArgList ({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT)) (v_x_46517173 : Z),
         ltac:(flattenP (λ (f : {VV: Z | True}) (y : Z), ltbZ_rel 5 y true) x_46517173 v_x_46517173)))
-  (xs : {xs: IList_u | IList_wf xs ∧ ∀ llen_res, llen_rel xs llen_res → llen_res ≠ 0}):
+  (xs : {xs: IList_u | IList_wf xs ∧ ∃ llen_res, llen_rel xs llen_res ∧ llen_res ≠ 0}):
   Type :=
-  {v: Z | ∀ get_res, get_rel ⌊ xs ⌋ 0 get_res → ∀ f_res, getPackRel f get_res f_res → v == f_res}.
+  {v: Z | ∃ get_res, get_rel ⌊ xs ⌋ 0 get_res ∧ ∃ f_res, getPackRel f get_res f_res ∧ v == f_res}.
 
 #[global] Hint Unfold applyToFirst_spec: lia_unfold.
 
@@ -589,14 +587,14 @@ Definition applyToFirst
        Z
        (λ (x_46517173 : ArgList ({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT)) (v_x_46517173 : Z),
         ltac:(flattenP (λ (f : {VV: Z | True}) (y : Z), ltbZ_rel 5 y true) x_46517173 v_x_46517173)))
-  (xs : {xs: IList_u | IList_wf xs ∧ ∀ llen_res, llen_rel xs llen_res → llen_res ≠ 0}):
+  (xs : {xs: IList_u | IList_wf xs ∧ ∃ llen_res, llen_rel xs llen_res ∧ llen_res ≠ 0}):
   applyToFirst_spec f xs.
 Proof.
   destruct xs as [xs xs_p].
   destruct xs as [x l'|].
   - refine (subsumptionCast
             Z
-            (λ (v : Z), ∀ get_res, get_rel ⌊ xs ⌋ 0 get_res → ∀ f_res, getPackRel f get_res f_res → v == f_res)
+            (λ (v : Z), ∃ get_res, get_rel ⌊ xs ⌋ 0 get_res ∧ ∃ f_res, getPackRel f get_res f_res ∧ v == f_res)
             (getPackF f
              (subsumptionCast
               Z
@@ -644,7 +642,7 @@ Theorem applyToFirst_rel_ex
        (λ (x_30423934 : ArgList ({f: Z | True} ::RT λ (f : {f: Z | True}), nilRT)) (v_x_30423934 : Z),
         ltac:(flattenP (λ (f : {f: Z | True}) (y : Z), ltbZ_rel 5 y true) x_30423934 v_x_30423934)))
   (xs : IList_u)
-  (xs_p : IList_wf xs ∧ ∀ llen_res, llen_rel xs llen_res → llen_res ≠ 0):
+  (xs_p : IList_wf xs ∧ ∃ llen_res, llen_rel xs llen_res ∧ llen_res ≠ 0):
   applyToFirst_rel ⌊ f ⌋ xs ⌊ applyToFirst f (exist _ xs xs_p) ⌋.
 Proof.
   Opaque applyToFirst.
@@ -669,7 +667,7 @@ Theorem applyToFirst__applyToFirst_rel_rw
        (λ (x_30423934 : ArgList ({f: Z | True} ::RT λ (f : {f: Z | True}), nilRT)) (v_x_30423934 : Z),
         ltac:(flattenP (λ (f : {f: Z | True}) (y : Z), ltbZ_rel 5 y true) x_30423934 v_x_30423934)))
   (xs : IList_u)
-  (xs_p : IList_wf xs ∧ ∀ llen_res, llen_rel xs llen_res → llen_res ≠ 0)
+  (xs_p : IList_wf xs ∧ ∃ llen_res, llen_rel xs llen_res ∧ llen_res ≠ 0)
   (v : Z):
   ⌊ applyToFirst f (exist _ xs xs_p) ⌋ = v ↔ applyToFirst_rel ⌊ f ⌋ xs v.
 Proof.
@@ -691,7 +689,7 @@ Theorem applyToFirst__applyToFirst_rel
        Z
        (λ (x_46517173 : ArgList ({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT)) (v_x_46517173 : Z),
         ltac:(flattenP (λ (f : {VV: Z | True}) (y : Z), ltbZ_rel 5 y true) x_46517173 v_x_46517173)))
-  (xs : {xs: IList_u | IList_wf xs ∧ ∀ llen_res, llen_rel xs llen_res → llen_res ≠ 0})
+  (xs : {xs: IList_u | IList_wf xs ∧ ∃ llen_res, llen_rel xs llen_res ∧ llen_res ≠ 0})
   (v : Z):
   ⌊ applyToFirst f xs ⌋ = v ↔ applyToFirst_rel ⌊ f ⌋ ⌊ xs ⌋ v.
 Proof.
@@ -710,7 +708,7 @@ Theorem applyToFirst__applyToFirst_rel'
        Z
        (λ (x_46517173 : ArgList ({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT)) (v_x_46517173 : Z),
         ltac:(flattenP (λ (f : {VV: Z | True}) (y : Z), ltbZ_rel 5 y true) x_46517173 v_x_46517173)))
-  (xs : {xs: IList_u | IList_wf xs ∧ ∀ llen_res, llen_rel xs llen_res → llen_res ≠ 0})
+  (xs : {xs: IList_u | IList_wf xs ∧ ∃ llen_res, llen_rel xs llen_res ∧ llen_res ≠ 0})
   (v : Z):
   f_u = ⌊ f ⌋ → (xs_u = ⌊ xs ⌋ → ⌊ applyToFirst f xs ⌋ = v ↔ applyToFirst_rel f_u xs_u v).
 Proof.
@@ -728,7 +726,7 @@ Theorem applyToFirst_rel_mk
        (λ (x_30423934 : ArgList ({f: Z | True} ::RT λ (f : {f: Z | True}), nilRT)) (v_x_30423934 : Z),
         ltac:(flattenP (λ (f : {f: Z | True}) (y : Z), ltbZ_rel 5 y true) x_30423934 v_x_30423934)))
   (xs : IList_u)
-  (xs_p : IList_wf xs ∧ ∀ llen_res, llen_rel xs llen_res → llen_res ≠ 0):
+  (xs_p : IList_wf xs ∧ ∃ llen_res, llen_rel xs llen_res ∧ llen_res ≠ 0):
   {v: _ | applyToFirst_rel (packProj f) xs v}.
 Proof.
   intros;
@@ -746,20 +744,20 @@ Qed.
 Definition thm1_spec
   (xs : IList)
   (x : {x: Z | ltbZ_rel 5 x true})
-  (i : {i: Z | ∀ llen_res, llen_rel ⌊ xs ⌋ llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true}):
+  (i : {i: Z | lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true}):
   Type :=
-  {{∀ get_res,
+  {{∃ get_res,
     get_rel ⌊ xs ⌋ ⌊ i ⌋ get_res
-    → ∀ addZ_res,
+    ∧ ∃ addZ_res,
       addZ_rel ⌊ i ⌋ 1 addZ_res
-      → ∀ get_res_2, get_rel (Cons_u ⌊ x ⌋ ⌊ xs ⌋) addZ_res get_res_2 → get_res == get_res_2}}.
+      ∧ ∃ get_res_2, get_rel (Cons_u ⌊ x ⌋ ⌊ xs ⌋) addZ_res get_res_2 ∧ get_res == get_res_2}}.
 
 #[global] Hint Unfold thm1_spec: lia_unfold.
 
 Theorem thm1
   (xs : IList)
   (x : {x: Z | ltbZ_rel 5 x true})
-  (i : {i: Z | ∀ llen_res, llen_rel ⌊ xs ⌋ llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true}):
+  (i : {i: Z | lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true}):
   thm1_spec xs x i.
 Proof.
   destruct xs as [xs xs_p].
@@ -768,34 +766,34 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∀ get_res,
+           ∃ get_res,
            get_rel ⌊ xs ⌋ ⌊ i ⌋ get_res
-           → ∀ addZ_res,
+           ∧ ∃ addZ_res,
              addZ_rel ⌊ i ⌋ 1 addZ_res
-             → ∀ get_res_2, get_rel (Cons_u ⌊ x ⌋ ⌊ xs ⌋) addZ_res get_res_2 → get_res == get_res_2)
+             ∧ ∃ get_res_2, get_rel (Cons_u ⌊ x ⌋ ⌊ xs ⌋) addZ_res get_res_2 ∧ get_res == get_res_2)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition thm2_spec
   (xs ys : IList)
-  (i : {i: Z | ∀ llen_res, llen_rel ⌊ xs ⌋ llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true}):
+  (i : {i: Z | lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true}):
   Type :=
-  {{∀ get_res,
+  {{∃ get_res,
     get_rel ⌊ xs ⌋ ⌊ i ⌋ get_res
-    → ∀ llen_res,
+    ∧ ∃ llen_res,
       llen_rel ⌊ ys ⌋ llen_res
-      → ∀ addZ_res,
+      ∧ ∃ addZ_res,
         addZ_rel ⌊ i ⌋ llen_res addZ_res
-        → ∀ append_res,
+        ∧ ∃ append_res,
           append_rel ⌊ ys ⌋ ⌊ xs ⌋ append_res
-          → ∀ get_res_2, get_rel append_res addZ_res get_res_2 → get_res == get_res_2}}.
+          ∧ ∃ get_res_2, get_rel append_res addZ_res get_res_2 ∧ get_res == get_res_2}}.
 
 #[global] Hint Unfold thm2_spec: lia_unfold.
 
 Theorem thm2
   (xs ys : IList)
-  (i : {i: Z | ∀ llen_res, llen_rel ⌊ xs ⌋ llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true}):
+  (i : {i: Z | lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true}):
   thm2_spec xs ys i.
 Proof.
   destruct xs as [xs xs_p].
@@ -807,25 +805,25 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ get_res,
+             ∃ get_res,
              get_rel ⌊ xs ⌋ ⌊ i ⌋ get_res
-             → ∀ llen_res,
+             ∧ ∃ llen_res,
                llen_rel ⌊ ys ⌋ llen_res
-               → ∀ addZ_res,
+               ∧ ∃ addZ_res,
                  addZ_rel ⌊ i ⌋ llen_res addZ_res
-                 → ∀ append_res,
+                 ∧ ∃ append_res,
                    append_rel ⌊ ys ⌋ ⌊ xs ⌋ append_res
-                   → ∀ get_res_2, get_rel append_res addZ_res get_res_2 → get_res == get_res_2)
-            (let _: ∀ get_res,
+                   ∧ ∃ get_res_2, get_rel append_res addZ_res get_res_2 ∧ get_res == get_res_2)
+            (let _: ∃ get_res,
                     get_rel
                     ⌊ append
                       (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver))
                       (exist (λ (xs : IList_u), IList_wf xs ∧ True) xs ltac:(solver)) ⌋
                     (i + ⌊ llen (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver)) ⌋)
                     get_res
-                    → ∀ addZ_res,
+                    ∧ ∃ addZ_res,
                       addZ_rel (i + ⌊ llen (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver)) ⌋) 1 addZ_res
-                      → ∀ get_res_2,
+                      ∧ ∃ get_res_2,
                         get_rel
                         (Cons_u y
                          ⌊ append
@@ -833,7 +831,7 @@ Proof.
                            (exist (λ (xs : IList_u), IList_wf xs ∧ True) xs ltac:(solver)) ⌋)
                         addZ_res
                         get_res_2
-                        → get_res == get_res_2 :=
+                        ∧ get_res == get_res_2 :=
              ⌈ thm1
                (subsumptionCast
                 IList_u
@@ -846,19 +844,20 @@ Proof.
                (subsumptionCast
                 Z
                 (λ (i : Z),
-                 ∀ llen_res,
-                 llen_rel
-                 ⌊ append
-                   (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver))
-                   (exist (λ (xs : IList_u), IList_wf xs ∧ True) xs ltac:(solver)) ⌋
-                 llen_res
-                 → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true)
+                 lebZ_rel 0 i true
+                 ∧ ∃ llen_res,
+                   llen_rel
+                   ⌊ append
+                     (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver))
+                     (exist (λ (xs : IList_u), IList_wf xs ∧ True) xs ltac:(solver)) ⌋
+                   llen_res
+                   ∧ ltbZ_rel i llen_res true)
                 (subsumptionCast
                  Z
                  (λ (x_1 : Z), True)
                  (exist (λ (i : Z),
-                         ∀ llen_res,
-                         llen_rel ⌊ xs ⌋ llen_res → lebZ_rel 0 i true ∧ ltbZ_rel i llen_res true) i ltac:(solver))
+                         lebZ_rel 0 i true
+                         ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true) i ltac:(solver))
                  ltac:(solver)
                  +Z subsumptionCast
                     Z
@@ -876,15 +875,15 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ get_res,
+             ∃ get_res,
              get_rel ⌊ xs ⌋ ⌊ i ⌋ get_res
-             → ∀ llen_res,
+             ∧ ∃ llen_res,
                llen_rel ⌊ ys ⌋ llen_res
-               → ∀ addZ_res,
+               ∧ ∃ addZ_res,
                  addZ_rel ⌊ i ⌋ llen_res addZ_res
-                 → ∀ append_res,
+                 ∧ ∃ append_res,
                    append_rel ⌊ ys ⌋ ⌊ xs ⌋ append_res
-                   → ∀ get_res_2, get_rel append_res addZ_res get_res_2 → get_res == get_res_2)
+                   ∧ ∃ get_res_2, get_rel append_res addZ_res get_res_2 ∧ get_res == get_res_2)
             (# unit)
             ltac:(solver)).
 Qed.

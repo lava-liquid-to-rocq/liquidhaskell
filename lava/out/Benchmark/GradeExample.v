@@ -276,7 +276,7 @@ Proof.
 Defined.
 
 Definition lowerLetterFIsF_spec : Type :=
-  {{∀ lowerLetter_res, lowerLetter_rel F_u lowerLetter_res → lowerLetter_res == F_u}}.
+  {{∃ lowerLetter_res, lowerLetter_rel F_u lowerLetter_res ∧ lowerLetter_res == F_u}}.
 
 #[global] Hint Unfold lowerLetterFIsF_spec: lia_unfold.
 
@@ -284,7 +284,7 @@ Theorem lowerLetterFIsF : lowerLetterFIsF_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∀ lowerLetter_res, lowerLetter_rel F_u lowerLetter_res → lowerLetter_res == F_u)
+          (λ (VV : Unit), ∃ lowerLetter_res, lowerLetter_rel F_u lowerLetter_res ∧ lowerLetter_res == F_u)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -757,8 +757,8 @@ Proof.
 Defined.
 
 Definition lowerGradeFMinus_spec : Type :=
-  {{∀ lowerGrade_res,
-    lowerGrade_rel (Grade_u F_u Minus_u) lowerGrade_res → lowerGrade_res == Grade_u F_u Minus_u}}.
+  {{∃ lowerGrade_res,
+    lowerGrade_rel (Grade_u F_u Minus_u) lowerGrade_res ∧ lowerGrade_res == Grade_u F_u Minus_u}}.
 
 #[global] Hint Unfold lowerGradeFMinus_spec: lia_unfold.
 
@@ -767,19 +767,19 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∀ lowerGrade_res,
-           lowerGrade_rel (Grade_u F_u Minus_u) lowerGrade_res → lowerGrade_res == Grade_u F_u Minus_u)
+           ∃ lowerGrade_res,
+           lowerGrade_rel (Grade_u F_u Minus_u) lowerGrade_res ∧ lowerGrade_res == Grade_u F_u Minus_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition lowerGradeThrice_spec : Type :=
-  {{∀ lowerGrade_res,
+  {{∃ lowerGrade_res,
     lowerGrade_rel (Grade_u B_u Minus_u) lowerGrade_res
-    → ∀ lowerGrade_res_2,
+    ∧ ∃ lowerGrade_res_2,
       lowerGrade_rel lowerGrade_res lowerGrade_res_2
-      → ∀ lowerGrade_res_3,
-        lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3 → lowerGrade_res_3 == Grade_u C_u Minus_u}}.
+      ∧ ∃ lowerGrade_res_3,
+        lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3 ∧ lowerGrade_res_3 == Grade_u C_u Minus_u}}.
 
 #[global] Hint Unfold lowerGradeThrice_spec: lia_unfold.
 
@@ -788,21 +788,21 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∀ lowerGrade_res,
+           ∃ lowerGrade_res,
            lowerGrade_rel (Grade_u B_u Minus_u) lowerGrade_res
-           → ∀ lowerGrade_res_2,
+           ∧ ∃ lowerGrade_res_2,
              lowerGrade_rel lowerGrade_res lowerGrade_res_2
-             → ∀ lowerGrade_res_3,
-               lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3 → lowerGrade_res_3 == Grade_u C_u Minus_u)
+             ∧ ∃ lowerGrade_res_3,
+               lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3 ∧ lowerGrade_res_3 == Grade_u C_u Minus_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition lowerGradeTwice_spec : Type :=
-  {{∀ lowerGrade_res,
+  {{∃ lowerGrade_res,
     lowerGrade_rel (Grade_u B_u Minus_u) lowerGrade_res
-    → ∀ lowerGrade_res_2,
-      lowerGrade_rel lowerGrade_res lowerGrade_res_2 → lowerGrade_res_2 == Grade_u C_u Natural_u}}.
+    ∧ ∃ lowerGrade_res_2,
+      lowerGrade_rel lowerGrade_res lowerGrade_res_2 ∧ lowerGrade_res_2 == Grade_u C_u Natural_u}}.
 
 #[global] Hint Unfold lowerGradeTwice_spec: lia_unfold.
 
@@ -811,10 +811,10 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∀ lowerGrade_res,
+           ∃ lowerGrade_res,
            lowerGrade_rel (Grade_u B_u Minus_u) lowerGrade_res
-           → ∀ lowerGrade_res_2,
-             lowerGrade_rel lowerGrade_res lowerGrade_res_2 → lowerGrade_res_2 == Grade_u C_u Natural_u)
+           ∧ ∃ lowerGrade_res_2,
+             lowerGrade_rel lowerGrade_res lowerGrade_res_2 ∧ lowerGrade_res_2 == Grade_u C_u Natural_u)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -822,8 +822,8 @@ Qed.
 Definition noPenaltyForMostlyOnTime_spec
   (lateDays : {lateDays: Z | True}) (g : Grades) (h : {{ltbZ_rel ⌊ lateDays ⌋ 9 true}}):
   Type :=
-  {{∀ applyLatePolicy_res,
-    applyLatePolicy_rel ⌊ lateDays ⌋ ⌊ g ⌋ applyLatePolicy_res → applyLatePolicy_res == ⌊ g ⌋}}.
+  {{∃ applyLatePolicy_res,
+    applyLatePolicy_rel ⌊ lateDays ⌋ ⌊ g ⌋ applyLatePolicy_res ∧ applyLatePolicy_res == ⌊ g ⌋}}.
 
 #[global] Hint Unfold noPenaltyForMostlyOnTime_spec: lia_unfold.
 
@@ -838,15 +838,15 @@ Proof.
   [refine (subsumptionCast
            Unit
            (λ (VV : Unit),
-            ∀ applyLatePolicy_res,
-            applyLatePolicy_rel ⌊ lateDays ⌋ ⌊ g ⌋ applyLatePolicy_res → applyLatePolicy_res == ⌊ g ⌋)
+            ∃ applyLatePolicy_res,
+            applyLatePolicy_rel ⌊ lateDays ⌋ ⌊ g ⌋ applyLatePolicy_res ∧ applyLatePolicy_res == ⌊ g ⌋)
            (exist (λ (h : Unit), ltbZ_rel ⌊ lateDays ⌋ 9 true) h ltac:(solver))
            ltac:(solver)) |
    refine (subsumptionCast
            Unit
            (λ (VV : Unit),
-            ∀ applyLatePolicy_res,
-            applyLatePolicy_rel ⌊ lateDays ⌋ ⌊ g ⌋ applyLatePolicy_res → applyLatePolicy_res == ⌊ g ⌋)
+            ∃ applyLatePolicy_res,
+            applyLatePolicy_rel ⌊ lateDays ⌋ ⌊ g ⌋ applyLatePolicy_res ∧ applyLatePolicy_res == ⌊ g ⌋)
            (# unit)
            ltac:(solver))].
 Qed.
@@ -1292,8 +1292,8 @@ Proof.
 Defined.
 
 Definition letterComparisonEq_spec (l : Letter): Type :=
-  {{∀ letterComparison_res,
-    letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res → letterComparison_res == Eq_u}}.
+  {{∃ letterComparison_res,
+    letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Eq_u}}.
 
 #[global] Hint Unfold letterComparisonEq_spec: lia_unfold.
 
@@ -1304,56 +1304,56 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ letterComparison_res,
-             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res → letterComparison_res == Eq_u)
+             ∃ letterComparison_res,
+             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ letterComparison_res,
-             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res → letterComparison_res == Eq_u)
+             ∃ letterComparison_res,
+             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ letterComparison_res,
-             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res → letterComparison_res == Eq_u)
+             ∃ letterComparison_res,
+             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ letterComparison_res,
-             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res → letterComparison_res == Eq_u)
+             ∃ letterComparison_res,
+             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ letterComparison_res,
-             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res → letterComparison_res == Eq_u)
+             ∃ letterComparison_res,
+             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
 Qed.
 
 Definition lowerLetterLowers_spec
   (l : Letter)
-  (p : {{∀ letterComparison_res,
-         letterComparison_rel F_u ⌊ l ⌋ letterComparison_res → letterComparison_res == Lt_u}}):
+  (p : {{∃ letterComparison_res,
+         letterComparison_rel F_u ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u}}):
   Type :=
-  {{∀ lowerLetter_res,
+  {{∃ lowerLetter_res,
     lowerLetter_rel ⌊ l ⌋ lowerLetter_res
-    → ∀ letterComparison_res,
-      letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res → letterComparison_res == Lt_u}}.
+    ∧ ∃ letterComparison_res,
+      letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u}}.
 
 #[global] Hint Unfold lowerLetterLowers_spec: lia_unfold.
 
 Theorem lowerLetterLowers
   (l : Letter)
-  (p : {{∀ letterComparison_res,
-         letterComparison_rel F_u ⌊ l ⌋ letterComparison_res → letterComparison_res == Lt_u}}):
+  (p : {{∃ letterComparison_res,
+         letterComparison_rel F_u ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u}}):
   lowerLetterLowers_spec l p.
 Proof.
   destruct l as [l l_p].
@@ -1362,49 +1362,49 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ lowerLetter_res,
+             ∃ lowerLetter_res,
              lowerLetter_rel ⌊ l ⌋ lowerLetter_res
-             → ∀ letterComparison_res,
-               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res → letterComparison_res == Lt_u)
+             ∧ ∃ letterComparison_res,
+               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ lowerLetter_res,
+             ∃ lowerLetter_res,
              lowerLetter_rel ⌊ l ⌋ lowerLetter_res
-             → ∀ letterComparison_res,
-               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res → letterComparison_res == Lt_u)
+             ∧ ∃ letterComparison_res,
+               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ lowerLetter_res,
+             ∃ lowerLetter_res,
              lowerLetter_rel ⌊ l ⌋ lowerLetter_res
-             → ∀ letterComparison_res,
-               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res → letterComparison_res == Lt_u)
+             ∧ ∃ letterComparison_res,
+               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ lowerLetter_res,
+             ∃ lowerLetter_res,
              lowerLetter_rel ⌊ l ⌋ lowerLetter_res
-             → ∀ letterComparison_res,
-               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res → letterComparison_res == Lt_u)
+             ∧ ∃ letterComparison_res,
+               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ lowerLetter_res,
+             ∃ lowerLetter_res,
              lowerLetter_rel ⌊ l ⌋ lowerLetter_res
-             → ∀ letterComparison_res,
-               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res → letterComparison_res == Lt_u)
+             ∧ ∃ letterComparison_res,
+               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u)
             (exist (λ (p : Unit),
-                    ∀ letterComparison_res,
-                    letterComparison_rel F_u ⌊ l ⌋ letterComparison_res → letterComparison_res == Lt_u) p ltac:(solver))
+                    ∃ letterComparison_res,
+                    letterComparison_rel F_u ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u) p ltac:(solver))
             ltac:(solver)).
 Qed.
 

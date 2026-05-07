@@ -834,21 +834,23 @@ mkIndSkel eq (LH.Let _ _ _ e) specIHs = mkIndSkel eq e specIHs
 mkIndSkel _ (Reft r) specIhs =
   mkConcat $
     if specIhs
-      then Custom "fix_notations" : [poseIHCall call | call <- ihCalls] ++ [Try $ Clear indhyp | indhyp <- allIHs]
+      then
+        Custom "fix_notations"
+          : [ProofPose ("IH_" ++ hashName ihCall) ihCall | ihCall <- ihCalls]
+          ++ [Try $ Clear indhyp | indhyp <- allIHs]
       else []
   where
     -- translation of recursive calls
     ihCalls = map (\(indVar, state, args) -> trRecCall (Left indVar) state args) $ findRecCalls r
     -- all induction hypotheses used
     allIHs = map (\(indVar, _, _) -> ihName indVar) $ findRecCalls r
-    poseIHCall ihCall = ProofPose ("IH_" ++ hashName ihCall) ihCall
 
     findRecCalls :: Reft -> [(Id, [DesState], [Reft])]
     findRecCalls (LH.Var _ _ (Recursive indVar state)) = [(indVar, state, [])]
     findRecCalls r'@(LH.App {}) =
       case apps r' of
         (LH.Var _ _ (Recursive indVar state), args) -> [(indVar, state, args)]
-        _ -> []
+        (_, args) -> concatMap findRecCalls args
     findRecCalls (LH.Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = []
     findRecCalls (LH.Neg r') = findRecCalls r'
     findRecCalls (LH.Bop _ r1 r2) = findRecCalls r1 `union` findRecCalls r2
