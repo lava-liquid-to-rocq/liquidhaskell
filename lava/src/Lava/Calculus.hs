@@ -297,7 +297,7 @@ removeFOArgProjs (ArrType x tpx tp) = ArrType x (removeFOArgProjs tpx) (removeFO
 removeFOArgProjs (RefType y a reft) = RefType y a (aux reft)
   where
     aux (Proj (Var x 0 Local)) = Var x 0 Local
-    aux (Proj x) = x
+    aux (Proj _) = error "Calculus.removeFOArgProjs should only be used at top-level, when projections are made only on local FO variable"
     aux r@(Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = r
     aux (App r1 r2) = App (aux r1) (aux r2)
     aux (Neg r) = Neg (aux r)
