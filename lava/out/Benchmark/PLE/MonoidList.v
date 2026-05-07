@@ -36,7 +36,7 @@ Qed.
 Fixpoint L_wf (x : L_u): Prop :=
   match x with | C_u VV VV_ => L_wf VV_ ∧ True | Emp_u => True end.
 
-Theorem L_wf_ref [p : L_u → Prop] (tm : {v: L_u | L_wf v ∧ p v}): L_wf ⌊ tm ⌋.
+Theorem L_wf_ref [p : L_u → Prop] (tm : {v: L_u | L_wf v ∧ p v}): L_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -129,12 +129,18 @@ Qed.
 
 Theorem mappend_rel_ex
   (lq_tmp0 : L_u) (lq_tmp0_p : L_wf lq_tmp0 ∧ True) (lq_tmp1 : L_u) (lq_tmp1_p : L_wf lq_tmp1 ∧ True):
-  mappend_rel lq_tmp0 lq_tmp1 ⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) ⌋.
+  mappend_rel lq_tmp0 lq_tmp1 ⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋.
 Proof.
   Opaque mappend.
   existence_lemma_pre mappend;
   try revert lq_tmp1_p; generalize dependent lq_tmp1; induction lq_tmp0 as [x xs IH_xs|]; intros;
-  [fix_notations | fix_notations];
+  [fix_notations;
+   pose proof (IH_xs
+               ltac:(try clear IH_xs; solver)
+               lq_tmp1
+               ltac:(try clear IH_xs; solver)) as IH_26846909;
+   try clear IH_xs |
+   fix_notations];
   simpl in *.
   Transparent mappend.
   all: existence_lemma_quicksolve mappend; f__f_rel_ex_body; f_rel_finish.
@@ -150,7 +156,7 @@ Theorem mappend__mappend_rel_rw
   (lq_tmp1 : L_u)
   (lq_tmp1_p : L_wf lq_tmp1 ∧ True)
   (VV : L_u):
-  ⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) ⌋ = VV
+  ⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋ = VV
   ↔ mappend_rel lq_tmp0 lq_tmp1 VV.
 Proof.
   f__f_rel_rw.
@@ -164,7 +170,7 @@ Qed.
     lookup' := mappend__mappend_rel_rw }.
 
 Theorem mappend__mappend_rel (lq_tmp0 lq_tmp1 : L) (VV : L_u):
-  ⌊ mappend lq_tmp0 lq_tmp1 ⌋ = VV ↔ mappend_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp1 ⌋ VV.
+  ⌊ mappend lq_tmp0 lq_tmp1 -⌋ = VV ↔ mappend_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp1 ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -173,7 +179,8 @@ Qed.
 
 Theorem mappend__mappend_rel' (lq_tmp0_u lq_tmp1_u : L_u) (lq_tmp0 lq_tmp1 : L) (VV : L_u):
   lq_tmp0_u = ⌊ lq_tmp0 ⌋
-  → (lq_tmp1_u = ⌊ lq_tmp1 ⌋ → ⌊ mappend lq_tmp0 lq_tmp1 ⌋ = VV ↔ mappend_rel lq_tmp0_u lq_tmp1_u VV).
+  → (lq_tmp1_u = ⌊ lq_tmp1 ⌋
+     → ⌊ mappend lq_tmp0 lq_tmp1 -⌋ = VV ↔ mappend_rel lq_tmp0_u lq_tmp1_u VV).
 Proof.
   intros -> ->. refine (mappend__mappend_rel lq_tmp0 lq_tmp1 VV).
 Qed.
@@ -215,14 +222,14 @@ Proof.
 Defined.
 
 Definition mappend_assoc_spec (xs ys zs : L): Type :=
-  {{∀ mappend_res,
+  {{∃ mappend_res,
     mappend_rel ⌊ xs ⌋ ⌊ ys ⌋ mappend_res
-    → ∀ mappend_res_2,
+    ∧ ∃ mappend_res_2,
       mappend_rel mappend_res ⌊ zs ⌋ mappend_res_2
-      → ∀ mappend_res_3,
+      ∧ ∃ mappend_res_3,
         mappend_rel ⌊ ys ⌋ ⌊ zs ⌋ mappend_res_3
-        → ∀ mappend_res_4,
-          mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 → mappend_res_2 == mappend_res_4}}.
+        ∧ ∃ mappend_res_4,
+          mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4}}.
 
 #[global] Hint Unfold mappend_assoc_spec: lia_unfold.
 
@@ -237,13 +244,13 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ mappend_res,
+             ∃ mappend_res,
              mappend_rel ⌊ xs ⌋ ⌊ ys ⌋ mappend_res
-             → ∀ mappend_res_2,
+             ∧ ∃ mappend_res_2,
                mappend_rel mappend_res ⌊ zs ⌋ mappend_res_2
-               → ∀ mappend_res_3,
+               ∧ ∃ mappend_res_3,
                  mappend_rel ⌊ ys ⌋ ⌊ zs ⌋ mappend_res_3
-                 → ∀ mappend_res_4, mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 → mappend_res_2 == mappend_res_4)
+                 ∧ ∃ mappend_res_4, mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
             (IH_xs
              ltac:(try clear IH_xs; solver)
              ys
@@ -254,13 +261,13 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ mappend_res,
+             ∃ mappend_res,
              mappend_rel ⌊ xs ⌋ ⌊ ys ⌋ mappend_res
-             → ∀ mappend_res_2,
+             ∧ ∃ mappend_res_2,
                mappend_rel mappend_res ⌊ zs ⌋ mappend_res_2
-               → ∀ mappend_res_3,
+               ∧ ∃ mappend_res_3,
                  mappend_rel ⌊ ys ⌋ ⌊ zs ⌋ mappend_res_3
-                 → ∀ mappend_res_4, mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 → mappend_res_2 == mappend_res_4)
+                 ∧ ∃ mappend_res_4, mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -299,7 +306,7 @@ Qed.
 
 #[global] Hint Rewrite mempty_inv_lem: f_rel_back.
 
-Theorem mempty_rel_ex : mempty_rel ⌊ mempty ⌋.
+Theorem mempty_rel_ex : mempty_rel ⌊ mempty -⌋.
 Proof.
   Opaque mempty.
   existence_lemma_pre mempty; fix_notations; simpl in *.
@@ -311,7 +318,7 @@ Qed.
 
 #[global] Opaque mempty.
 
-Theorem mempty__mempty_rel_rw (VV : L_u): ⌊ mempty ⌋ = VV ↔ mempty_rel VV.
+Theorem mempty__mempty_rel_rw (VV : L_u): ⌊ mempty -⌋ = VV ↔ mempty_rel VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -323,14 +330,14 @@ Qed.
 #[global] Instance mempty_lookup_rw: dictionary rwLem mempty := {
     lookup' := mempty__mempty_rel_rw }.
 
-Theorem mempty__mempty_rel (VV : L_u): ⌊ mempty ⌋ = VV ↔ mempty_rel VV.
+Theorem mempty__mempty_rel (VV : L_u): ⌊ mempty -⌋ = VV ↔ mempty_rel VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite mempty__mempty_rel: f_rel_funct_db.
 
-Theorem mempty__mempty_rel' (VV : L_u): ⌊ mempty ⌋ = VV ↔ mempty_rel VV.
+Theorem mempty__mempty_rel' (VV : L_u): ⌊ mempty -⌋ = VV ↔ mempty_rel VV.
 Proof.
   intros. refine (mempty__mempty_rel VV).
 Qed.
@@ -348,9 +355,9 @@ Qed.
 #[global] Hint Resolve mempty_rel_mk: f_rel_funct_db.
 
 Definition mempty_left_spec (x : L): Type :=
-  {{∀ mempty_res,
+  {{∃ mempty_res,
     mempty_rel mempty_res
-    → ∀ mappend_res, mappend_rel mempty_res ⌊ x ⌋ mappend_res → mappend_res == ⌊ x ⌋}}.
+    ∧ ∃ mappend_res, mappend_rel mempty_res ⌊ x ⌋ mappend_res ∧ mappend_res == ⌊ x ⌋}}.
 
 #[global] Hint Unfold mempty_left_spec: lia_unfold.
 
@@ -360,17 +367,17 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∀ mempty_res,
+           ∃ mempty_res,
            mempty_rel mempty_res
-           → ∀ mappend_res, mappend_rel mempty_res ⌊ x ⌋ mappend_res → mappend_res == ⌊ x ⌋)
+           ∧ ∃ mappend_res, mappend_rel mempty_res ⌊ x ⌋ mappend_res ∧ mappend_res == ⌊ x ⌋)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition mempty_right_spec (x : L): Type :=
-  {{∀ mempty_res,
+  {{∃ mempty_res,
     mempty_rel mempty_res
-    → ∀ mappend_res, mappend_rel ⌊ x ⌋ mempty_res mappend_res → mappend_res == ⌊ x ⌋}}.
+    ∧ ∃ mappend_res, mappend_rel ⌊ x ⌋ mempty_res mappend_res ∧ mappend_res == ⌊ x ⌋}}.
 
 #[global] Hint Unfold mempty_right_spec: lia_unfold.
 
@@ -381,17 +388,17 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ mempty_res,
+             ∃ mempty_res,
              mempty_rel mempty_res
-             → ∀ mappend_res, mappend_rel ⌊ x ⌋ mempty_res mappend_res → mappend_res == ⌊ x ⌋)
+             ∧ ∃ mappend_res, mappend_rel ⌊ x ⌋ mempty_res mappend_res ∧ mappend_res == ⌊ x ⌋)
             (IH_xs ltac:(try clear IH_xs; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∀ mempty_res,
+             ∃ mempty_res,
              mempty_rel mempty_res
-             → ∀ mappend_res, mappend_rel ⌊ x ⌋ mempty_res mappend_res → mappend_res == ⌊ x ⌋)
+             ∧ ∃ mappend_res, mappend_rel ⌊ x ⌋ mempty_res mappend_res ∧ mappend_res == ⌊ x ⌋)
             (# unit)
             ltac:(solver)).
 Qed.

@@ -215,8 +215,7 @@ data CoqTerm
   | FloatLiteral Double
   | App CoqTerm [CoqTerm]
   | Lambda Id RocqType CoqTerm
-  | Project CoqTerm
-  | Proj2sig CoqTerm
+  | Proj ProjKind CoqTerm
   | SubCast RocqType RocqType CoqTerm ProofTerm
   | Exist {cRefPred :: CoqTerm, cExistTerm :: CoqTerm, cExistPrf :: ProofTerm}
   | Match [CoqTerm] (Maybe Id) [([(Id, [Id])], CoqTerm)]
@@ -229,6 +228,11 @@ data CoqTerm
   | InlineInstance [(Id, CoqTerm)]
   | TypeArg RocqType
   deriving (Data, Eq, Show)
+
+-- | The different kinds of projections:
+-- `proj` from the generalized projections typeclass,
+-- Rocq's `proj1_sig1` and `proj2_sig`
+data ProjKind = GenProj | Sig1 | Sig2 deriving (Data, Eq, Show)
 
 data Binop = Binop BaseBop OpKind deriving (Data, Eq)
 
@@ -326,18 +330,21 @@ data CoqIntroPat = DestrPat CoqDestrPat | RewritePat RewriteDir deriving (Data, 
 mkConcat :: [Tactic] -> Tactic
 mkConcat = Concat . concatMap (\case Concat tacs' -> tacs'; tac -> [tac])
 
--- | Build Project and simplify the term, removing outer exists and subcasts or converting
+-- | Build projection and simplify the term, removing outer exists and subcasts or converting
 -- between refined and unrefined operations
-mkProject :: CoqTerm -> CoqTerm
-mkProject (Exist _ t _) = t
-mkProject (Bop (Binop bop RefOp) s t) = Bop (Binop bop UnrefOp) (mkProject s) (mkProject t)
-mkProject (Cr c) | unrefinedConstrName "" `isSuffixOf` c = Cr c
-mkProject (Cr c) = Cr $ unrefinedConstrName c
-mkProject (App (Cr c) args) = App (Cr c') (map mkProject args)
-  where
-    c' = if unrefinedConstrName "" `isSuffixOf` c then c else unrefinedConstrName c
-mkProject (SubCast _ _ t _) = mkProject t
-mkProject tm = Project tm
+mkProj :: ProjKind -> CoqTerm -> CoqTerm
+mkProj p tm = case p of
+  (GenProj; Sig1) -> case tm of
+    (Exist _ t _) -> t
+    (Bop (Binop bop RefOp) s t) -> Bop (Binop bop UnrefOp) (mkProj p s) (mkProj p t)
+    (Cr c) | unrefinedConstrName "" `isSuffixOf` c -> Cr c
+    (Cr c) -> Cr $ unrefinedConstrName c
+    (App (Cr c) args) -> App (Cr c') (map (mkProj p) args)
+      where
+        c' = if unrefinedConstrName "" `isSuffixOf` c then c else unrefinedConstrName c
+    (SubCast _ _ t _) -> mkProj p t
+    _ -> Proj p tm
+  Sig2 -> Proj Sig2 tm
 
 -- | Syntactic simplification of SubCast to exist
 simplifySubCast :: CoqTerm -> CoqTerm
@@ -649,8 +656,9 @@ instance Pretty CoqTerm where
   pPrintPrec _ p tm@(Lambda {}) =
     let (args, tm') = concatLambdas tm
      in maybeParens (p < 10) $ sep ["λ" <+> pPrintArgs (map (,False) args) <> comma, pPrint tm']
-  pPrintPrec _ _ (Project t) = char '⌊' <+> pPrint t <+> char '⌋'
-  pPrintPrec _ _ (Proj2sig t) = char '⌈' <+> pPrint t <+> char '⌉'
+  pPrintPrec _ _ (Proj GenProj t) = char '⌊' <+> pPrint t <+> char '⌋'
+  pPrintPrec _ _ (Proj Sig1 t) = char '⌊' <+> pPrint t <+> "-⌋"
+  pPrintPrec _ _ (Proj Sig2 t) = char '⌈' <+> pPrint t <+> char '⌉'
   pPrintPrec l p (SubCast to from t z) =
     maybeParens (p < appPrec) $ case (to, from) of
        (Hole, _) ->
@@ -840,7 +848,7 @@ instance Pretty Tactic where
   pPrintPrec _ p (ChangeVis x vis) =
     dotted p (pPrint vis <+> text x)
   pPrintPrec l p (All tac) =
-    dotted p ("all" <> colon <+> pPrintPrec l nodotPrec tac)
+    dotted p ("all" <> colon <+> parens (pPrintPrec l nodotPrec tac))
 
 -- | Pretty prints destruct or induct
 pPrintPrecMatch :: PrettyLevel -> Rational -> CoqTerm -> [(Id, (CoqDestrPat, [Tactic]))] -> Maybe [Id] -> Doc

@@ -37,7 +37,7 @@ Fixpoint MaybeInt_wf (x : MaybeInt_u): Prop :=
   match x with | Just_u VV => True | Nothing_u => True end.
 
 Theorem MaybeInt_wf_ref [p : MaybeInt_u → Prop] (tm : {v: MaybeInt_u | MaybeInt_wf v ∧ p v}):
-  MaybeInt_wf ⌊ tm ⌋.
+  MaybeInt_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -155,7 +155,7 @@ Theorem bind_rel_ex
                 (v_x_82647028 : MaybeInt_u),
               ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : MaybeInt_u),
  MaybeInt_wf VV ∧ True) x_82647028 v_x_82647028))):
-  bind_rel lq_tmp0 ⌊ lq_tmp2 ⌋ ⌊ bind (exist _ lq_tmp0 lq_tmp0_p) lq_tmp2 ⌋.
+  bind_rel lq_tmp0 ⌊ lq_tmp2 ⌋ ⌊ bind (exist _ lq_tmp0 lq_tmp0_p) lq_tmp2 -⌋.
 Proof.
   Opaque bind.
   existence_lemma_pre bind;
@@ -184,7 +184,7 @@ Theorem bind__bind_rel_rw
               ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : MaybeInt_u),
  MaybeInt_wf VV ∧ True) x_82647028 v_x_82647028)))
   (VV : MaybeInt_u):
-  ⌊ bind (exist _ lq_tmp0 lq_tmp0_p) lq_tmp2 ⌋ = VV ↔ bind_rel lq_tmp0 ⌊ lq_tmp2 ⌋ VV.
+  ⌊ bind (exist _ lq_tmp0 lq_tmp0_p) lq_tmp2 -⌋ = VV ↔ bind_rel lq_tmp0 ⌊ lq_tmp2 ⌋ VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -207,7 +207,7 @@ Theorem bind__bind_rel
               ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : MaybeInt_u),
  MaybeInt_wf VV ∧ True) x_10329927 v_x_10329927)))
   (VV : MaybeInt_u):
-  ⌊ bind lq_tmp0 lq_tmp2 ⌋ = VV ↔ bind_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp2 ⌋ VV.
+  ⌊ bind lq_tmp0 lq_tmp2 -⌋ = VV ↔ bind_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp2 ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -229,7 +229,7 @@ Theorem bind__bind_rel'
  MaybeInt_wf VV ∧ True) x_10329927 v_x_10329927)))
   (VV : MaybeInt_u):
   lq_tmp0_u = ⌊ lq_tmp0 ⌋
-  → (lq_tmp2_u = ⌊ lq_tmp2 ⌋ → ⌊ bind lq_tmp0 lq_tmp2 ⌋ = VV ↔ bind_rel lq_tmp0_u lq_tmp2_u VV).
+  → (lq_tmp2_u = ⌊ lq_tmp2 ⌋ → ⌊ bind lq_tmp0 lq_tmp2 -⌋ = VV ↔ bind_rel lq_tmp0_u lq_tmp2_u VV).
 Proof.
   intros -> ->. refine (bind__bind_rel lq_tmp0 lq_tmp2 VV).
 Qed.
@@ -299,7 +299,7 @@ Qed.
 #[global] Hint Rewrite retrn_inv_lem: f_rel_back.
 
 Theorem retrn_rel_ex (lq_tmp0 : Z) (lq_tmp0_p : True):
-  retrn_rel lq_tmp0 ⌊ retrn (exist _ lq_tmp0 lq_tmp0_p) ⌋.
+  retrn_rel lq_tmp0 ⌊ retrn (exist _ lq_tmp0 lq_tmp0_p) -⌋.
 Proof.
   Opaque retrn.
   existence_lemma_pre retrn; fix_notations; simpl in *.
@@ -312,7 +312,7 @@ Qed.
 #[global] Opaque retrn.
 
 Theorem retrn__retrn_rel_rw (lq_tmp0 : Z) (lq_tmp0_p : True) (VV : MaybeInt_u):
-  ⌊ retrn (exist _ lq_tmp0 lq_tmp0_p) ⌋ = VV ↔ retrn_rel lq_tmp0 VV.
+  ⌊ retrn (exist _ lq_tmp0 lq_tmp0_p) -⌋ = VV ↔ retrn_rel lq_tmp0 VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -324,7 +324,7 @@ Qed.
 #[global] Instance retrn_lookup_rw: dictionary rwLem retrn := { lookup' := retrn__retrn_rel_rw }.
 
 Theorem retrn__retrn_rel (lq_tmp0 : {lq_tmp0: Z | True}) (VV : MaybeInt_u):
-  ⌊ retrn lq_tmp0 ⌋ = VV ↔ retrn_rel ⌊ lq_tmp0 ⌋ VV.
+  ⌊ retrn lq_tmp0 -⌋ = VV ↔ retrn_rel ⌊ lq_tmp0 ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -332,7 +332,7 @@ Qed.
 #[global] Hint Rewrite retrn__retrn_rel: f_rel_funct_db.
 
 Theorem retrn__retrn_rel' (lq_tmp0_u : Z) (lq_tmp0 : {lq_tmp0: Z | True}) (VV : MaybeInt_u):
-  lq_tmp0_u = ⌊ lq_tmp0 ⌋ → ⌊ retrn lq_tmp0 ⌋ = VV ↔ retrn_rel lq_tmp0_u VV.
+  lq_tmp0_u = ⌊ lq_tmp0 ⌋ → ⌊ retrn lq_tmp0 -⌋ = VV ↔ retrn_rel lq_tmp0_u VV.
 Proof.
   intros ->. refine (retrn__retrn_rel lq_tmp0 VV).
 Qed.
@@ -380,10 +380,10 @@ Definition left_identity_spec
           (v_x_46517173 : MaybeInt_u),
         ltac:(flattenP (λ (f : {VV: Z | True}) (VV : MaybeInt_u), MaybeInt_wf VV ∧ True) x_46517173 v_x_46517173))):
   Type :=
-  {{∀ retrn_res,
+  {{∃ retrn_res,
     retrn_rel ⌊ x ⌋ retrn_res
-    → ∀ bind_res,
-      bind_rel retrn_res ⌊ f ⌋ bind_res → ∀ f_res, getPackRel f ⌊ x ⌋ f_res → bind_res == f_res}}.
+    ∧ ∃ bind_res,
+      bind_rel retrn_res ⌊ f ⌋ bind_res ∧ ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ bind_res == f_res}}.
 
 #[global] Hint Unfold left_identity_spec: lia_unfold.
 
@@ -403,16 +403,16 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∀ retrn_res,
+           ∃ retrn_res,
            retrn_rel ⌊ x ⌋ retrn_res
-           → ∀ bind_res,
-             bind_rel retrn_res ⌊ f ⌋ bind_res → ∀ f_res, getPackRel f ⌊ x ⌋ f_res → bind_res == f_res)
+           ∧ ∃ bind_res,
+             bind_rel retrn_res ⌊ f ⌋ bind_res ∧ ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ bind_res == f_res)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition right_identity_spec (x : MaybeInt): Type :=
-  {{∀ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res → bind_res == ⌊ x ⌋}}.
+  {{∃ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res ∧ bind_res == ⌊ x ⌋}}.
 
 #[global] Hint Unfold right_identity_spec: lia_unfold.
 
@@ -422,12 +422,12 @@ Proof.
   destruct x as [x|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∀ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res → bind_res == ⌊ x ⌋)
+            (λ (VV : Unit), ∃ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res ∧ bind_res == ⌊ x ⌋)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∀ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res → bind_res == ⌊ x ⌋)
+            (λ (VV : Unit), ∃ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res ∧ bind_res == ⌊ x ⌋)
             (# unit)
             ltac:(solver)).
 Qed.

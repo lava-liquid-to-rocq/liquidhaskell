@@ -33,7 +33,7 @@ Fixpoint Identity_wf (x : Identity_u): Prop :=
   match x with | Val_u n => True end.
 
 Theorem Identity_wf_ref [p : Identity_u → Prop] (tm : {v: Identity_u | Identity_wf v ∧ p v}):
-  Identity_wf ⌊ tm ⌋.
+  Identity_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -126,7 +126,7 @@ Theorem compose_rel_ex
        (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT))
           (v_x_11473763 : Identity_u),
         ltac:(flattenP (λ (x : {x: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_11473763 v_x_11473763))):
-  compose_rel vx ⌊ x ⌋ ⌊ compose (exist _ vx vx_p) x ⌋.
+  compose_rel vx ⌊ x ⌋ ⌊ compose (exist _ vx vx_p) x -⌋.
 Proof.
   Opaque compose.
   existence_lemma_pre compose;
@@ -153,7 +153,7 @@ Theorem compose__compose_rel_rw
           (v_x_11473763 : Identity_u),
         ltac:(flattenP (λ (x : {x: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_11473763 v_x_11473763)))
   (VV : Identity_u):
-  ⌊ compose (exist _ vx vx_p) x ⌋ = VV ↔ compose_rel vx ⌊ x ⌋ VV.
+  ⌊ compose (exist _ vx vx_p) x -⌋ = VV ↔ compose_rel vx ⌊ x ⌋ VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -176,7 +176,7 @@ Theorem compose__compose_rel
           (v_x_32508782 : Identity_u),
         ltac:(flattenP (λ (x : {VV: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_32508782 v_x_32508782)))
   (VV : Identity_u):
-  ⌊ compose vx x ⌋ = VV ↔ compose_rel ⌊ vx ⌋ ⌊ x ⌋ VV.
+  ⌊ compose vx x -⌋ = VV ↔ compose_rel ⌊ vx ⌋ ⌊ x ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -196,7 +196,7 @@ Theorem compose__compose_rel'
           (v_x_32508782 : Identity_u),
         ltac:(flattenP (λ (x : {VV: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_32508782 v_x_32508782)))
   (VV : Identity_u):
-  vx_u = ⌊ vx ⌋ → (x_u = ⌊ x ⌋ → ⌊ compose vx x ⌋ = VV ↔ compose_rel vx_u x_u VV).
+  vx_u = ⌊ vx ⌋ → (x_u = ⌊ x ⌋ → ⌊ compose vx x -⌋ = VV ↔ compose_rel vx_u x_u VV).
 Proof.
   intros -> ->. refine (compose__compose_rel vx x VV).
 Qed.
@@ -259,7 +259,7 @@ Qed.
 
 #[global] Hint Rewrite retrn_inv_lem: f_rel_back.
 
-Theorem retrn_rel_ex (v : Z) (v_p : True): retrn_rel v ⌊ retrn (exist _ v v_p) ⌋.
+Theorem retrn_rel_ex (v : Z) (v_p : True): retrn_rel v ⌊ retrn (exist _ v v_p) -⌋.
 Proof.
   Opaque retrn.
   existence_lemma_pre retrn; fix_notations; simpl in *.
@@ -272,7 +272,7 @@ Qed.
 #[global] Opaque retrn.
 
 Theorem retrn__retrn_rel_rw (v : Z) (v_p : True) (VV : Identity_u):
-  ⌊ retrn (exist _ v v_p) ⌋ = VV ↔ retrn_rel v VV.
+  ⌊ retrn (exist _ v v_p) -⌋ = VV ↔ retrn_rel v VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -284,7 +284,7 @@ Qed.
 #[global] Instance retrn_lookup_rw: dictionary rwLem retrn := { lookup' := retrn__retrn_rel_rw }.
 
 Theorem retrn__retrn_rel (v : {v: Z | True}) (VV : Identity_u):
-  ⌊ retrn v ⌋ = VV ↔ retrn_rel ⌊ v ⌋ VV.
+  ⌊ retrn v -⌋ = VV ↔ retrn_rel ⌊ v ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -292,7 +292,7 @@ Qed.
 #[global] Hint Rewrite retrn__retrn_rel: f_rel_funct_db.
 
 Theorem retrn__retrn_rel' (v_u : Z) (v : {v: Z | True}) (VV : Identity_u):
-  v_u = ⌊ v ⌋ → ⌊ retrn v ⌋ = VV ↔ retrn_rel v_u VV.
+  v_u = ⌊ v ⌋ → ⌊ retrn v -⌋ = VV ↔ retrn_rel v_u VV.
 Proof.
   intros ->. refine (retrn__retrn_rel v VV).
 Qed.
@@ -338,11 +338,11 @@ Definition leftIdentity_spec
           (v_x_46517173 : Identity_u),
         ltac:(flattenP (λ (f : {VV: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_46517173 v_x_46517173))):
   Type :=
-  {{∀ retrn_res,
+  {{∃ retrn_res,
     retrn_rel ⌊ x ⌋ retrn_res
-    → ∀ compose_res,
+    ∧ ∃ compose_res,
       compose_rel retrn_res ⌊ f ⌋ compose_res
-      → ∀ f_res, getPackRel f ⌊ x ⌋ f_res → compose_res == f_res}}.
+      ∧ ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ compose_res == f_res}}.
 
 #[global] Hint Unfold leftIdentity_spec: lia_unfold.
 
@@ -362,16 +362,16 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∀ retrn_res,
+           ∃ retrn_res,
            retrn_rel ⌊ x ⌋ retrn_res
-           → ∀ compose_res,
-             compose_rel retrn_res ⌊ f ⌋ compose_res → ∀ f_res, getPackRel f ⌊ x ⌋ f_res → compose_res == f_res)
+           ∧ ∃ compose_res,
+             compose_rel retrn_res ⌊ f ⌋ compose_res ∧ ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ compose_res == f_res)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition rightIdentity_spec (x : Identity): Type :=
-  {{∀ compose_res, compose_rel ⌊ x ⌋ retrn_upack compose_res → compose_res == ⌊ x ⌋}}.
+  {{∃ compose_res, compose_rel ⌊ x ⌋ retrn_upack compose_res ∧ compose_res == ⌊ x ⌋}}.
 
 #[global] Hint Unfold rightIdentity_spec: lia_unfold.
 
@@ -381,7 +381,7 @@ Proof.
   destruct x as [x].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∀ compose_res, compose_rel ⌊ x ⌋ retrn_upack compose_res → compose_res == ⌊ x ⌋)
+            (λ (VV : Unit), ∃ compose_res, compose_rel ⌊ x ⌋ retrn_upack compose_res ∧ compose_res == ⌊ x ⌋)
             (# unit)
             ltac:(solver)).
 Qed.

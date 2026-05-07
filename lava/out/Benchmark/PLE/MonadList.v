@@ -36,7 +36,7 @@ Qed.
 Fixpoint L_wf (x : L_u): Prop :=
   match x with | C_u VV VV_ => L_wf VV_ ∧ True | Emp_u => True end.
 
-Theorem L_wf_ref [p : L_u → Prop] (tm : {v: L_u | L_wf v ∧ p v}): L_wf ⌊ tm ⌋.
+Theorem L_wf_ref [p : L_u → Prop] (tm : {v: L_u | L_wf v ∧ p v}): L_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -129,12 +129,18 @@ Qed.
 
 Theorem append_rel_ex
   (lq_tmp0 : L_u) (lq_tmp0_p : L_wf lq_tmp0 ∧ True) (lq_tmp1 : L_u) (lq_tmp1_p : L_wf lq_tmp1 ∧ True):
-  append_rel lq_tmp0 lq_tmp1 ⌊ append (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) ⌋.
+  append_rel lq_tmp0 lq_tmp1 ⌊ append (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋.
 Proof.
   Opaque append.
   existence_lemma_pre append;
   try revert lq_tmp1_p; generalize dependent lq_tmp1; induction lq_tmp0 as [x xs IH_xs|]; intros;
-  [fix_notations | fix_notations];
+  [fix_notations;
+   pose proof (IH_xs
+               ltac:(try clear IH_xs; solver)
+               lq_tmp1
+               ltac:(try clear IH_xs; solver)) as IH_26846909;
+   try clear IH_xs |
+   fix_notations];
   simpl in *.
   Transparent append.
   all: existence_lemma_quicksolve append; f__f_rel_ex_body; f_rel_finish.
@@ -150,7 +156,7 @@ Theorem append__append_rel_rw
   (lq_tmp1 : L_u)
   (lq_tmp1_p : L_wf lq_tmp1 ∧ True)
   (VV : L_u):
-  ⌊ append (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) ⌋ = VV
+  ⌊ append (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋ = VV
   ↔ append_rel lq_tmp0 lq_tmp1 VV.
 Proof.
   f__f_rel_rw.
@@ -164,7 +170,7 @@ Qed.
     lookup' := append__append_rel_rw }.
 
 Theorem append__append_rel (lq_tmp0 lq_tmp1 : L) (VV : L_u):
-  ⌊ append lq_tmp0 lq_tmp1 ⌋ = VV ↔ append_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp1 ⌋ VV.
+  ⌊ append lq_tmp0 lq_tmp1 -⌋ = VV ↔ append_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp1 ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -173,7 +179,7 @@ Qed.
 
 Theorem append__append_rel' (lq_tmp0_u lq_tmp1_u : L_u) (lq_tmp0 lq_tmp1 : L) (VV : L_u):
   lq_tmp0_u = ⌊ lq_tmp0 ⌋
-  → (lq_tmp1_u = ⌊ lq_tmp1 ⌋ → ⌊ append lq_tmp0 lq_tmp1 ⌋ = VV ↔ append_rel lq_tmp0_u lq_tmp1_u VV).
+  → (lq_tmp1_u = ⌊ lq_tmp1 ⌋ → ⌊ append lq_tmp0 lq_tmp1 -⌋ = VV ↔ append_rel lq_tmp0_u lq_tmp1_u VV).
 Proof.
   intros -> ->. refine (append__append_rel lq_tmp0 lq_tmp1 VV).
 Qed.
@@ -304,12 +310,15 @@ Theorem bind_rel_ex
              (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
                 (v_x_82647028 : L_u),
               ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : L_u), L_wf VV ∧ True) x_82647028 v_x_82647028))):
-  bind_rel lq_tmp0 ⌊ lq_tmp2 ⌋ ⌊ bind (exist _ lq_tmp0 lq_tmp0_p) lq_tmp2 ⌋.
+  bind_rel lq_tmp0 ⌊ lq_tmp2 ⌋ ⌊ bind (exist _ lq_tmp0 lq_tmp0_p) lq_tmp2 -⌋.
 Proof.
   Opaque bind.
   existence_lemma_pre bind;
   try revert lq_tmp2_p; generalize dependent lq_tmp2; induction lq_tmp0 as [x xs IH_xs|]; intros;
-  [fix_notations | fix_notations];
+  [fix_notations;
+   pose proof (IH_xs ltac:(try clear IH_xs; solver) lq_tmp2) as IH_88514239;
+   try clear IH_xs |
+   fix_notations];
   simpl in *.
   Transparent bind.
   all: existence_lemma_quicksolve bind; f__f_rel_ex_body; f_rel_finish.
@@ -332,7 +341,7 @@ Theorem bind__bind_rel_rw
                 (v_x_82647028 : L_u),
               ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : L_u), L_wf VV ∧ True) x_82647028 v_x_82647028)))
   (VV : L_u):
-  ⌊ bind (exist _ lq_tmp0 lq_tmp0_p) lq_tmp2 ⌋ = VV ↔ bind_rel lq_tmp0 ⌊ lq_tmp2 ⌋ VV.
+  ⌊ bind (exist _ lq_tmp0 lq_tmp0_p) lq_tmp2 -⌋ = VV ↔ bind_rel lq_tmp0 ⌊ lq_tmp2 ⌋ VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -354,7 +363,7 @@ Theorem bind__bind_rel
                 (v_x_10329927 : L_u),
               ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : L_u), L_wf VV ∧ True) x_10329927 v_x_10329927)))
   (VV : L_u):
-  ⌊ bind lq_tmp0 lq_tmp2 ⌋ = VV ↔ bind_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp2 ⌋ VV.
+  ⌊ bind lq_tmp0 lq_tmp2 -⌋ = VV ↔ bind_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp2 ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -375,7 +384,7 @@ Theorem bind__bind_rel'
               ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : L_u), L_wf VV ∧ True) x_10329927 v_x_10329927)))
   (VV : L_u):
   lq_tmp0_u = ⌊ lq_tmp0 ⌋
-  → (lq_tmp2_u = ⌊ lq_tmp2 ⌋ → ⌊ bind lq_tmp0 lq_tmp2 ⌋ = VV ↔ bind_rel lq_tmp0_u lq_tmp2_u VV).
+  → (lq_tmp2_u = ⌊ lq_tmp2 ⌋ → ⌊ bind lq_tmp0 lq_tmp2 -⌋ = VV ↔ bind_rel lq_tmp0_u lq_tmp2_u VV).
 Proof.
   intros -> ->. refine (bind__bind_rel lq_tmp0 lq_tmp2 VV).
 Qed.
@@ -409,7 +418,7 @@ Qed.
 #[global] Hint Resolve bind_rel_mk: f_rel_funct_db.
 
 Definition prop_append_neutral_spec (xs : L): Type :=
-  {{∀ append_res, append_rel ⌊ xs ⌋ Emp_u append_res → append_res == ⌊ xs ⌋}}.
+  {{∃ append_res, append_rel ⌊ xs ⌋ Emp_u append_res ∧ append_res == ⌊ xs ⌋}}.
 
 #[global] Hint Unfold prop_append_neutral_spec: lia_unfold.
 
@@ -419,12 +428,12 @@ Proof.
   induction xs as [x xs IH_xs|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∀ append_res, append_rel ⌊ xs ⌋ Emp_u append_res → append_res == ⌊ xs ⌋)
+            (λ (VV : Unit), ∃ append_res, append_rel ⌊ xs ⌋ Emp_u append_res ∧ append_res == ⌊ xs ⌋)
             (IH_xs ltac:(try clear IH_xs; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∀ append_res, append_rel ⌊ xs ⌋ Emp_u append_res → append_res == ⌊ xs ⌋)
+            (λ (VV : Unit), ∃ append_res, append_rel ⌊ xs ⌋ Emp_u append_res ∧ append_res == ⌊ xs ⌋)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -465,7 +474,7 @@ Qed.
 #[global] Hint Rewrite retrn_inv_lem: f_rel_back.
 
 Theorem retrn_rel_ex (lq_tmp0 : Z) (lq_tmp0_p : True):
-  retrn_rel lq_tmp0 ⌊ retrn (exist _ lq_tmp0 lq_tmp0_p) ⌋.
+  retrn_rel lq_tmp0 ⌊ retrn (exist _ lq_tmp0 lq_tmp0_p) -⌋.
 Proof.
   Opaque retrn.
   existence_lemma_pre retrn; fix_notations; simpl in *.
@@ -478,7 +487,7 @@ Qed.
 #[global] Opaque retrn.
 
 Theorem retrn__retrn_rel_rw (lq_tmp0 : Z) (lq_tmp0_p : True) (VV : L_u):
-  ⌊ retrn (exist _ lq_tmp0 lq_tmp0_p) ⌋ = VV ↔ retrn_rel lq_tmp0 VV.
+  ⌊ retrn (exist _ lq_tmp0 lq_tmp0_p) -⌋ = VV ↔ retrn_rel lq_tmp0 VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -490,7 +499,7 @@ Qed.
 #[global] Instance retrn_lookup_rw: dictionary rwLem retrn := { lookup' := retrn__retrn_rel_rw }.
 
 Theorem retrn__retrn_rel (lq_tmp0 : {lq_tmp0: Z | True}) (VV : L_u):
-  ⌊ retrn lq_tmp0 ⌋ = VV ↔ retrn_rel ⌊ lq_tmp0 ⌋ VV.
+  ⌊ retrn lq_tmp0 -⌋ = VV ↔ retrn_rel ⌊ lq_tmp0 ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -498,7 +507,7 @@ Qed.
 #[global] Hint Rewrite retrn__retrn_rel: f_rel_funct_db.
 
 Theorem retrn__retrn_rel' (lq_tmp0_u : Z) (lq_tmp0 : {lq_tmp0: Z | True}) (VV : L_u):
-  lq_tmp0_u = ⌊ lq_tmp0 ⌋ → ⌊ retrn lq_tmp0 ⌋ = VV ↔ retrn_rel lq_tmp0_u VV.
+  lq_tmp0_u = ⌊ lq_tmp0 ⌋ → ⌊ retrn lq_tmp0 -⌋ = VV ↔ retrn_rel lq_tmp0_u VV.
 Proof.
   intros ->. refine (retrn__retrn_rel lq_tmp0 VV).
 Qed.
@@ -544,10 +553,10 @@ Definition left_identity_spec
        (λ (x_46517173 : ArgList ({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT)) (v_x_46517173 : L_u),
         ltac:(flattenP (λ (f : {VV: Z | True}) (VV : L_u), L_wf VV ∧ True) x_46517173 v_x_46517173))):
   Type :=
-  {{∀ retrn_res,
+  {{∃ retrn_res,
     retrn_rel ⌊ x ⌋ retrn_res
-    → ∀ bind_res,
-      bind_rel retrn_res ⌊ f ⌋ bind_res → ∀ f_res, getPackRel f ⌊ x ⌋ f_res → bind_res == f_res}}.
+    ∧ ∃ bind_res,
+      bind_rel retrn_res ⌊ f ⌋ bind_res ∧ ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ bind_res == f_res}}.
 
 #[global] Hint Unfold left_identity_spec: lia_unfold.
 
@@ -566,16 +575,16 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∀ retrn_res,
+           ∃ retrn_res,
            retrn_rel ⌊ x ⌋ retrn_res
-           → ∀ bind_res,
-             bind_rel retrn_res ⌊ f ⌋ bind_res → ∀ f_res, getPackRel f ⌊ x ⌋ f_res → bind_res == f_res)
+           ∧ ∃ bind_res,
+             bind_rel retrn_res ⌊ f ⌋ bind_res ∧ ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ bind_res == f_res)
           (prop_append_neutral (getPackF f (# x)))
           ltac:(solver)).
 Qed.
 
 Definition right_identity_spec (x : L): Type :=
-  {{∀ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res → bind_res == ⌊ x ⌋}}.
+  {{∃ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res ∧ bind_res == ⌊ x ⌋}}.
 
 #[global] Hint Unfold right_identity_spec: lia_unfold.
 
@@ -585,12 +594,12 @@ Proof.
   induction x as [x xs IH_xs|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∀ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res → bind_res == ⌊ x ⌋)
+            (λ (VV : Unit), ∃ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res ∧ bind_res == ⌊ x ⌋)
             (IH_xs ltac:(try clear IH_xs; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∀ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res → bind_res == ⌊ x ⌋)
+            (λ (VV : Unit), ∃ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res ∧ bind_res == ⌊ x ⌋)
             (# unit)
             ltac:(solver)).
 Qed.

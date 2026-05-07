@@ -36,7 +36,7 @@ Qed.
 Fixpoint Nats_wf (x : Nats_u): Prop :=
   match x with | Suc_u n => Nats_wf n ∧ True | Zero_u => True end.
 
-Theorem Nats_wf_ref [p : Nats_u → Prop] (tm : {v: Nats_u | Nats_wf v ∧ p v}): Nats_wf ⌊ tm ⌋.
+Theorem Nats_wf_ref [p : Nats_u → Prop] (tm : {v: Nats_u | Nats_wf v ∧ p v}): Nats_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -127,7 +127,7 @@ Qed.
 
 #[global] Hint Rewrite even_Suc_lem: f_rel_back.
 
-Theorem even_rel_ex (n : Nats_u) (n_p : Nats_wf n ∧ True): even_rel n ⌊ even (exist _ n n_p) ⌋.
+Theorem even_rel_ex (n : Nats_u) (n_p : Nats_wf n ∧ True): even_rel n ⌊ even (exist _ n n_p) -⌋.
 Proof.
   Opaque even.
   existence_lemma_pre even;
@@ -144,7 +144,7 @@ Qed.
 #[global] Opaque even.
 
 Theorem even__even_rel_rw (n : Nats_u) (n_p : Nats_wf n ∧ True) (VV : bool):
-  ⌊ even (exist _ n n_p) ⌋ = VV ↔ even_rel n VV.
+  ⌊ even (exist _ n n_p) -⌋ = VV ↔ even_rel n VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -155,7 +155,7 @@ Qed.
 
 #[global] Instance even_lookup_rw: dictionary rwLem even := { lookup' := even__even_rel_rw }.
 
-Theorem even__even_rel (n : Nats) (VV : bool): ⌊ even n ⌋ = VV ↔ even_rel ⌊ n ⌋ VV.
+Theorem even__even_rel (n : Nats) (VV : bool): ⌊ even n -⌋ = VV ↔ even_rel ⌊ n ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -163,7 +163,7 @@ Qed.
 #[global] Hint Rewrite even__even_rel: f_rel_funct_db.
 
 Theorem even__even_rel' (n_u : Nats_u) (n : Nats) (VV : bool):
-  n_u = ⌊ n ⌋ → ⌊ even n ⌋ = VV ↔ even_rel n_u VV.
+  n_u = ⌊ n ⌋ → ⌊ even n -⌋ = VV ↔ even_rel n_u VV.
 Proof.
   intros ->. refine (even__even_rel n VV).
 Qed.

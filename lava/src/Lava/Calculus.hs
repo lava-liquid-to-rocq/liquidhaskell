@@ -627,6 +627,9 @@ instance Pretty Localization where
   pPrint Global = char 'G'
   pPrint (Recursive indVar _) = char 'Y' <+> text indVar
 
+instance Pretty DesState where
+  pPrint = text . show
+
 instance Show Bop where
   show op = case op of
     Mod -> "`mod`"

@@ -190,7 +190,7 @@ wfLem tc =
   Coq.Definition
     (wfLemName tc)
     [(("p", Arrow (unrefTC tc) (Sort PropSort)), True), (tm, False)]
-    (Prop $ Coq.App (Def $ wfTCName tc) [Project $ Coq.Var "tm"])
+    (Prop $ Coq.App (Def $ wfTCName tc) [Coq.Proj Sig1 $ Coq.Var "tm"])
     (ProofBody [destructSubsetArg "tm", Oracle])
     Opaque
   where
@@ -221,7 +221,7 @@ mkPseudoConstr eq tc (c, tp) =
     argsT = map ((,False) . second (trRefType eq)) args
     retT = trRefType eq (mkRefType ret)
     -- C proj(x1) … proj(xn) (in LH), that translates to C_u proj1_sig(x1) … proj1_sig(x_n)
-    unrefCrApp = foldl LH.App (DC c) (map mkProj $ tpArgsArLoc tp)
+    unrefCrApp = foldl LH.App (DC c) (map LH.mkProj $ tpArgsArLoc tp)
     bodyLem = ProofBody [Custom "repeat first [split; solver]"]
     -- The translated refinement of the return type of C, where x is replaced by Cu proj1_sig(args)
     -- NOTE: instead of inlining the translation of the refinement of an
@@ -337,7 +337,7 @@ mkFuncData eq name tpf body =
   where
     (args, ret@(retName, _, _)) = arrs tpf
     ret' = mkRefType ret
-    projArg (x, ArrType {}) = Project (Coq.Var x)
+    projArg (x, ArrType {}) = Coq.Proj GenProj (Coq.Var x)
     projArg (x, _) = Coq.Var x
     injArg (x, ArrType {}) = Coq.Var x
     injArg (x, RefType {}) = Exist TermHole (Coq.Var x) (TermWitness $ Coq.Var (subsetWitnessNm x))
@@ -487,7 +487,7 @@ trDefEquations f =
       where
         -- Split a parameter x into ⌊x⌋ and ⌈x⌉ if x is of a simple refinement type
         splitParameter :: (Id, RocqType) -> [CoqTerm]
-        splitParameter (x, Coq.Subset {}) = [Project (Coq.Var x), Proj2sig (Coq.Var x)]
+        splitParameter (x, Coq.Subset {}) = [Coq.Proj Sig1 (Coq.Var x), Coq.Proj Sig2 (Coq.Var x)]
         splitParameter (x, _) = [Coq.Var x]
 
 -- | Translates a list of `FunctionPath` into a list of `EqBranch`
@@ -497,7 +497,7 @@ mkEquationsBranches eq paths = map trBranch $ factorizePaths paths
   where
     trBranch :: ([(Id, Reft)], [Reft], [([Maybe Reft], Reft)]) -> EqBranch
     trBranch (σxs, with, guards) =
-      (concatMap (trArgPattern . snd) σxs, map (mkProject . trReft eq) with, map trGuard guards)
+      (concatMap (trArgPattern . snd) σxs, map (Coq.mkProj Sig1 . trReft eq) with, map trGuard guards)
     -- Translate arguments patterns and change `pat` to `pat _` for FO parameters
     trArgPattern :: Reft -> [CoqTerm]
     trArgPattern pat@(LH.Var _ n _) | n > 0 = [utrReft eq pat]
@@ -671,7 +671,7 @@ defExLemma f = [exLem, AddHint ResolveHint (exLemName $ name f) RelAxDB]
       Coq.Definition
         (exLemName $ name f)
         (map (,False) $ fst (trRefTypeSplit (equations f) (tpf f)))
-        (Prop $ Coq.App (Def . relDefName $ name f) (projArgs f ++ [mkProject $ mkApp (Def $ name f) (injArgs f)]))
+        (Prop $ Coq.App (Def . relDefName $ name f) (projArgs f ++ [Coq.mkProj Sig1 $ mkApp (Def $ name f) (injArgs f)]))
         ( ProofBody
             [ ChangeVis (name f) Opaque,
               mkConcat
@@ -713,7 +713,7 @@ refRelRwLemma f =
         (ProofBody [Custom "f__f_rel_rw"])
         Opaque
     -- ⌊ f (exist _ args argsp) -⌋ = f_res
-    defEq = Coq.Bop (Binop Coq.RocqEq PropOp) (mkProject $ mkApp (Def $ name f) (injArgs f)) (Coq.Var $ retName f)
+    defEq = Coq.Bop (Binop Coq.RocqEq PropOp) (Coq.mkProj Sig1 $ mkApp (Def $ name f) (injArgs f)) (Coq.Var $ retName f)
     -- f_rel [exist _ args argsp] f_res
     relApp = Coq.App (Def . relDefName $ name f) (projArgs f ++ [Coq.Var $ retName f])
 
@@ -738,13 +738,13 @@ refUnrefLemmas f =
     equivalence fuArgs =
       Coq.Bop
         (Binop Coq.Equiv PropOp)
-        (Coq.Bop (Binop Coq.RocqEq PropOp) (mkProject $ Coq.App (Coq.Def $ name f) params) (Coq.Var $ retName f))
+        (Coq.Bop (Binop Coq.RocqEq PropOp) (Coq.mkProj Sig1 $ Coq.App (Coq.Def $ name f) params) (Coq.Var $ retName f))
         (Coq.App (Coq.Def (relDefName $ name f)) $ fuArgs ++ [Coq.Var $ retName f])
     refUnrefLemma =
       mkCoqTheorem
         (relDefThmName $ name f)
         (map (,False) $ argsT f ++ [(retName f, retUT f)])
-        (equivalence $ map mkProject params)
+        (equivalence $ map (Coq.mkProj GenProj) params)
         [Coq.Custom "f__f_rel"]
     refUnrefLemma' =
       Coq.Definition
@@ -760,7 +760,7 @@ refUnrefLemmas f =
       where
         paramsEq =
           zipWith
-            (\xiu xi -> Coq.Bop (Binop Coq.RocqEq PropOp) (Coq.Var xiu) (Project (Coq.Var xi)))
+            (\xiu xi -> Coq.Bop (Binop Coq.RocqEq PropOp) (Coq.Var xiu) (Coq.Proj GenProj (Coq.Var xi)))
             (map fst argsUT_u)
             (map fst $ argsT f)
         unrLemArgs = map (,False) $ argsUT_u ++ argsT f ++ [(retName f, retUT f)]
@@ -834,21 +834,23 @@ mkIndSkel eq (LH.Let _ _ _ e) specIHs = mkIndSkel eq e specIHs
 mkIndSkel _ (Reft r) specIhs =
   mkConcat $
     if specIhs
-      then Custom "fix_notations" : [poseIHCall call | call <- ihCalls] ++ [Try $ Clear indhyp | indhyp <- allIHs]
+      then
+        Custom "fix_notations"
+          : [ProofPose ("IH_" ++ hashName ihCall) ihCall | ihCall <- ihCalls]
+          ++ [Try $ Clear indhyp | indhyp <- allIHs]
       else []
   where
     -- translation of recursive calls
     ihCalls = map (\(indVar, state, args) -> trRecCall (Left indVar) state args) $ findRecCalls r
     -- all induction hypotheses used
     allIHs = map (\(indVar, _, _) -> ihName indVar) $ findRecCalls r
-    poseIHCall ihCall = ProofPose ("IH_" ++ hashName ihCall) ihCall
 
     findRecCalls :: Reft -> [(Id, [DesState], [Reft])]
     findRecCalls (LH.Var _ _ (Recursive indVar state)) = [(indVar, state, [])]
     findRecCalls r'@(LH.App {}) =
       case apps r' of
-        (LH.Var _ _ (Recursive indVar state), args) -> [(indVar, state, args)]
-        _ -> []
+        (LH.Var _ _ (Recursive indVar state), args) -> (indVar, state, args) : concatMap findRecCalls args
+        (_, args) -> concatMap findRecCalls args
     findRecCalls (LH.Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = []
     findRecCalls (LH.Neg r') = findRecCalls r'
     findRecCalls (LH.Bop _ r1 r2) = findRecCalls r1 `union` findRecCalls r2
@@ -856,4 +858,4 @@ mkIndSkel _ (Reft r) specIhs =
     findRecCalls (Pop _ r1 r2) = findRecCalls r1 `union` findRecCalls r2
     findRecCalls (Sub r' _ _) = findRecCalls r'
     findRecCalls (Inj r' _) = findRecCalls r'
-    findRecCalls (Proj r') = findRecCalls r'
+    findRecCalls (LH.Proj r') = findRecCalls r'
