@@ -848,7 +848,7 @@ instance Pretty Tactic where
   pPrintPrec _ p (ChangeVis x vis) =
     dotted p (pPrint vis <+> text x)
   pPrintPrec l p (All tac) =
-    dotted p ("all" <> colon <+> pPrintPrec l nodotPrec tac)
+    dotted p ("all" <> colon <+> parens (pPrintPrec l nodotPrec tac))
 
 -- | Pretty prints destruct or induct
 pPrintPrecMatch :: PrettyLevel -> Rational -> CoqTerm -> [(Id, (CoqDestrPat, [Tactic]))] -> Maybe [Id] -> Doc
