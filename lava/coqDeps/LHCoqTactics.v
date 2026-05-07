@@ -1896,20 +1896,6 @@ Ltac f__f_rel_ih :=
       | _ => idtac "failure to solve goal: "; print_proof_state
     end; try solve [solve_pi_unif_subgoal]; try timeout 10 quicksolve.
 
-Ltac existence_lemma_pre f :=
-  idtac "Starting proof of existence lemma for the reflected function " f ". ";
-  repeat cleanup_hints.
-
-Ltac existence_lemma_quicksolve f := 
-  intros; try unpack_all;
-  try timeout 3 quicksolve; (* try quicksolve; *)
-
-  (* unfold definition in goal *)
-  (* cbn; *) first [ timeout 4 cbn | unfold f; (*unfold subsumptionCast in *;*) repeat progress autorewrite with fix_notation_hints];
-  repeat axiomatize_ho_term;
-  repeat progress (simpl_proj; apply_ifs); try timeout 4 quicksolve.
-  
-
 Ltac existence_lemma_induction f indVars conds :=
   existence_lemma_pre f; 
   multivariable_induction indVars conds _nil; 
@@ -2021,17 +2007,6 @@ Ltac fill_ih_holes :=
     try rewrite <- f__f_rel1; try reflexivity
   end.
 
-Ltac f_rel_finish :=
-  repeat autounfold with get_rel_db in *;
-  tryif fill_ih_holes then idtac else (idtac "Failure to find hypothesis that exactly matches goal."; match goal with
-  | [ih: ?rel ?x _ _ |- ?rel ?x _ _] => idtac "The hypothesis that roughly matches the goal " ih
-  | [ih: ?rel _ ?y _ |- ?rel _ ?y _] => idtac "The hypothesis that roughly matches the goal " ih
-  | _ => print_proof_state; fail
-  end
-  );
-  (* unify the goal with an appropriate IH, apply the IH, then solve the proof obligations generated during unification using PI *)
-  try f__f_rel_ih; try finish; try cleanup; try finish.
-
 Ltac pack_goal_rewriting := 
   match goal with
   | [f_frel: forall (args: ArgList ?argTps) (v:?resTp), ⌊ ?f args -⌋ = v <->
@@ -2044,6 +2019,19 @@ Ltac goal_rewriting :=
   repeat destruct_disjs; repeat progress autorewrite with int_rel_back;
   try pack_goal_rewriting.
 
+Ltac existence_lemma_pre f :=
+  idtac "Starting proof of existence lemma for the reflected function " f ". ";
+  repeat cleanup_hints.
+
+Ltac existence_lemma_quicksolve f := 
+  intros; try unpack_all;
+  try timeout 3 quicksolve; (* try quicksolve; *)
+
+  (* unfold definition in goal *)
+  (* cbn; *) first [ timeout 4 cbn | unfold f; (*unfold subsumptionCast in *;*) repeat progress autorewrite with fix_notation_hints];
+  repeat axiomatize_ho_term;
+  repeat progress (simpl_proj; apply_ifs); try timeout 4 quicksolve.
+
 Ltac f__f_rel_ex_body :=
   autounfold with lia_unfold in *;
   simpl_proj;
@@ -2052,6 +2040,7 @@ Ltac f__f_rel_ex_body :=
   strong_specialize_hyps;
   (* rewrite the projection of the unfolded definition in the goal into a new variable axiomatized using a relation of a previously declared reflected function *)
   repeat (timeout 120 axiomatize_next_term);
+
   (* apply constructor of relation in goal, if now possible *)
   let resVal := fresh "res" in
   repeat destruct_disjs; repeat progress autorewrite with int_rel_back;
@@ -2095,6 +2084,17 @@ Ltac f__f_rel_ex_body :=
   simpl_proj; autounfold with lia_unfold in *; simpl_proj; (* cleanup integer arithmetic stuff *)
   repeat autounfold with get_rel_db in *;
   try pack_goal_rewriting.
+
+Ltac f_rel_finish :=
+  repeat autounfold with get_rel_db in *;
+  tryif fill_ih_holes then idtac else (idtac "Failure to find hypothesis that exactly matches goal."; match goal with
+  | [ih: ?rel ?x _ _ |- ?rel ?x _ _] => idtac "The hypothesis that roughly matches the goal " ih
+  | [ih: ?rel _ ?y _ |- ?rel _ ?y _] => idtac "The hypothesis that roughly matches the goal " ih
+  | _ => print_proof_state; fail
+  end
+  );
+  (* unify the goal with an appropriate IH, apply the IH, then solve the proof obligations generated during unification using PI *)
+  try f__f_rel_ih; try finish; try cleanup; try finish.
 
 (* tactic to prove the existence lemma *)
 Ltac f__f_rel_ex' indVars conds recCalls :=
