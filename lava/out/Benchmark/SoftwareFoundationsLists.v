@@ -33,7 +33,7 @@ Fixpoint Natprod_wf (x : Natprod_u): Prop :=
   match x with | Pair_u n1 n2 => (MyNat_wf n1 ∧ True) ∧ (MyNat_wf n2 ∧ True) end.
 
 Theorem Natprod_wf_ref [p : Natprod_u → Prop] (tm : {v: Natprod_u | Natprod_wf v ∧ p v}):
-  Natprod_wf ⌊ tm ⌋.
+  Natprod_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -108,7 +108,7 @@ Qed.
 #[global] Hint Rewrite fstSF_Pair_lem: f_rel_back.
 
 Theorem fstSF_rel_ex (p : Natprod_u) (p_p : Natprod_wf p ∧ True):
-  fstSF_rel p ⌊ fstSF (exist _ p p_p) ⌋.
+  fstSF_rel p ⌊ fstSF (exist _ p p_p) -⌋.
 Proof.
   Opaque fstSF.
   existence_lemma_pre fstSF;
@@ -124,7 +124,7 @@ Qed.
 #[global] Opaque fstSF.
 
 Theorem fstSF__fstSF_rel_rw (p : Natprod_u) (p_p : Natprod_wf p ∧ True) (VV : MyNat_u):
-  ⌊ fstSF (exist _ p p_p) ⌋ = VV ↔ fstSF_rel p VV.
+  ⌊ fstSF (exist _ p p_p) -⌋ = VV ↔ fstSF_rel p VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -135,7 +135,7 @@ Qed.
 
 #[global] Instance fstSF_lookup_rw: dictionary rwLem fstSF := { lookup' := fstSF__fstSF_rel_rw }.
 
-Theorem fstSF__fstSF_rel (p : Natprod) (VV : MyNat_u): ⌊ fstSF p ⌋ = VV ↔ fstSF_rel ⌊ p ⌋ VV.
+Theorem fstSF__fstSF_rel (p : Natprod) (VV : MyNat_u): ⌊ fstSF p -⌋ = VV ↔ fstSF_rel ⌊ p ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -143,7 +143,7 @@ Qed.
 #[global] Hint Rewrite fstSF__fstSF_rel: f_rel_funct_db.
 
 Theorem fstSF__fstSF_rel' (p_u : Natprod_u) (p : Natprod) (VV : MyNat_u):
-  p_u = ⌊ p ⌋ → ⌊ fstSF p ⌋ = VV ↔ fstSF_rel p_u VV.
+  p_u = ⌊ p ⌋ → ⌊ fstSF p -⌋ = VV ↔ fstSF_rel p_u VV.
 Proof.
   intros ->. refine (fstSF__fstSF_rel p VV).
 Qed.
@@ -215,7 +215,7 @@ Qed.
 #[global] Hint Rewrite sndSF_Pair_lem: f_rel_back.
 
 Theorem sndSF_rel_ex (p : Natprod_u) (p_p : Natprod_wf p ∧ True):
-  sndSF_rel p ⌊ sndSF (exist _ p p_p) ⌋.
+  sndSF_rel p ⌊ sndSF (exist _ p p_p) -⌋.
 Proof.
   Opaque sndSF.
   existence_lemma_pre sndSF;
@@ -231,7 +231,7 @@ Qed.
 #[global] Opaque sndSF.
 
 Theorem sndSF__sndSF_rel_rw (p : Natprod_u) (p_p : Natprod_wf p ∧ True) (VV : MyNat_u):
-  ⌊ sndSF (exist _ p p_p) ⌋ = VV ↔ sndSF_rel p VV.
+  ⌊ sndSF (exist _ p p_p) -⌋ = VV ↔ sndSF_rel p VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -242,7 +242,7 @@ Qed.
 
 #[global] Instance sndSF_lookup_rw: dictionary rwLem sndSF := { lookup' := sndSF__sndSF_rel_rw }.
 
-Theorem sndSF__sndSF_rel (p : Natprod) (VV : MyNat_u): ⌊ sndSF p ⌋ = VV ↔ sndSF_rel ⌊ p ⌋ VV.
+Theorem sndSF__sndSF_rel (p : Natprod) (VV : MyNat_u): ⌊ sndSF p -⌋ = VV ↔ sndSF_rel ⌊ p ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -250,7 +250,7 @@ Qed.
 #[global] Hint Rewrite sndSF__sndSF_rel: f_rel_funct_db.
 
 Theorem sndSF__sndSF_rel' (p_u : Natprod_u) (p : Natprod) (VV : MyNat_u):
-  p_u = ⌊ p ⌋ → ⌊ sndSF p ⌋ = VV ↔ sndSF_rel p_u VV.
+  p_u = ⌊ p ⌋ → ⌊ sndSF p -⌋ = VV ↔ sndSF_rel p_u VV.
 Proof.
   intros ->. refine (sndSF__sndSF_rel p VV).
 Qed.
@@ -368,7 +368,7 @@ Qed.
 #[global] Hint Rewrite swap_pair_Pair_lem: f_rel_back.
 
 Theorem swap_pair_rel_ex (p : Natprod_u) (p_p : Natprod_wf p ∧ True):
-  swap_pair_rel p ⌊ swap_pair (exist _ p p_p) ⌋.
+  swap_pair_rel p ⌊ swap_pair (exist _ p p_p) -⌋.
 Proof.
   Opaque swap_pair.
   existence_lemma_pre swap_pair;
@@ -384,7 +384,7 @@ Qed.
 #[global] Opaque swap_pair.
 
 Theorem swap_pair__swap_pair_rel_rw (p : Natprod_u) (p_p : Natprod_wf p ∧ True) (VV : Natprod_u):
-  ⌊ swap_pair (exist _ p p_p) ⌋ = VV ↔ swap_pair_rel p VV.
+  ⌊ swap_pair (exist _ p p_p) -⌋ = VV ↔ swap_pair_rel p VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -397,7 +397,7 @@ Qed.
     lookup' := swap_pair__swap_pair_rel_rw }.
 
 Theorem swap_pair__swap_pair_rel (p : Natprod) (VV : Natprod_u):
-  ⌊ swap_pair p ⌋ = VV ↔ swap_pair_rel ⌊ p ⌋ VV.
+  ⌊ swap_pair p -⌋ = VV ↔ swap_pair_rel ⌊ p ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -405,7 +405,7 @@ Qed.
 #[global] Hint Rewrite swap_pair__swap_pair_rel: f_rel_funct_db.
 
 Theorem swap_pair__swap_pair_rel' (p_u : Natprod_u) (p : Natprod) (VV : Natprod_u):
-  p_u = ⌊ p ⌋ → ⌊ swap_pair p ⌋ = VV ↔ swap_pair_rel p_u VV.
+  p_u = ⌊ p ⌋ → ⌊ swap_pair p -⌋ = VV ↔ swap_pair_rel p_u VV.
 Proof.
   intros ->. refine (swap_pair__swap_pair_rel p VV).
 Qed.

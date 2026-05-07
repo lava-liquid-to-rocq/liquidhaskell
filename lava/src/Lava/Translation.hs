@@ -104,7 +104,7 @@ utrReft eq r0 = case r0 of
   LH.Pop _ _ r -> utrReft eq r
   LH.Sub r _ _ -> utrReft eq r
   LH.Inj r _ -> utrReft eq r
-  LH.Proj r -> mkProject $ trReft eq r
+  LH.Proj r -> Coq.mkProj GenProj $ trReft eq r
 
 -- | Translation of refinements to propositions
 --   Function RtoP (def 3.4) of the paper
@@ -150,7 +150,7 @@ extractApps r0 = go [] r0
       (LH.Var {}; StringLit {}; FloatLit {}; IntLit {}; DC {}) -> (env, r)
       -- Inside Proj, we have a refined term, translated as refined and for
       -- which we must therefore not extract projections
-      Proj {} -> (env, r)
+      LH.Proj {} -> (env, r)
       LH.Neg r' -> second LH.Neg $ go env r'
       LH.Bop bop r1 r2 ->
         let (env1, r1') = go env r1
@@ -164,7 +164,7 @@ extractApps r0 = go [] r0
         -- but must use either the IH or the function itself
         -- (DC _; LH.Var _ _ (Recursive {})) -> extractInAppArgs
         DC _ -> extractInAppArgs
-        (LH.Var {}; Proj (LH.Var {})) -> extractApp
+        (LH.Var {}; LH.Proj (LH.Var {})) -> extractApp
         _ -> error . render $ text "LH application" <+> pPrint r <+> text "not starting with an identifier."
         where
           (hd, args) = apps r
@@ -220,7 +220,7 @@ hypsRV eq rv graphRel = \p -> foldr hyp p rv
           -- specifications uses the name of the function being defined
           LH.Var f _ (Recursive {}) -> Coq.Def $ relDefName f
           -- proj f -> getPackRelName f for local HO variables
-          Proj (LH.Var f n _) | n > 0 -> packGetRel (Coq.Def f)
+          LH.Proj (LH.Var f n _) | n > 0 -> packGetRel (Coq.Def f)
           _ -> error . render $ text "Unexpected extract term" <+> pPrint app <+> text "in Translation.hypsRV."
 
 -- * Refined translations
@@ -293,9 +293,9 @@ trReft _ (LH.DC c) = Cr (trDC c)
 trReft eq (LH.Neg tm) = Coq.Neg RefOp $ trReft eq tm
 trReft eq (LH.Bop op tm1 tm2) = Coq.Bop (Binop (trBop op) RefOp) (trReft eq tm1) (trReft eq tm2)
 trReft eq (LH.QMark tm hint prop) =
-  Coq.Let "_" (Just . Prop $ utrReftProp eq prop) (Proj2sig $ trReft eq hint) (trReft eq tm)
+  Coq.Let "_" (Just . Prop $ utrReftProp eq prop) (Coq.mkProj Sig2 $ trReft eq hint) (trReft eq tm)
 trReft eq (LH.Pop pop tm1 tm2) =
-  let popProp = Just . Prop $ Coq.Bop (Binop (trBop $ popToBop pop) PropOp) (mkProject $ trReft eq tm1) (mkProject $ trReft eq tm2)
+  let popProp = Just . Prop $ Coq.Bop (Binop (trBop $ popToBop pop) PropOp) (Coq.mkProj GenProj $ trReft eq tm1) (Coq.mkProj GenProj $ trReft eq tm2)
    in Coq.Let "_" popProp (PrfTerm Hole $ if eq then ProofHole else ByTac Oracle) (trReft eq tm2)
 trReft eq (LH.Sub tm from to) = Coq.SubCast (trRefType eq to) (trRefType eq from) (trReft eq tm) (if eq then ProofHole else ByTac Oracle)
 trReft eq (LH.Inj tm tp) = mkExist eq (trRefType eq tp) (trReft eq tm)
@@ -364,7 +364,7 @@ trExpr eq (LH.Let x tp ex e) =
     Just (RefType {}) -> Coq.LetDes (x, subsetWitnessNm x) (trExpr eq ex) (trExpr eq e)
     Nothing -> error "trExpr: found let-binding without type annotation."
 trExpr eq (Case tm alts _) =
-  Match [mkProject $ trReft eq tm] Nothing (map trAlt alts)
+  Match [Coq.mkProj Sig1 $ trReft eq tm] Nothing (map trAlt alts)
   where
     trAlt ((c, ys), e) = ([(c, map fst ys)],) $
       case e of
@@ -389,7 +389,7 @@ trRecCall (Left indVar) state args =
     trArg (ri, Param _ n) | n > 0 = [trReft False ri]
     -- a first-order argument must be decomposed either
     -- into its first projection and the witness (for which we use ltac:(oracle))
-    trArg (ri, Param _ _) = [mkProject $ trReft False ri, oracleTac]
+    trArg (ri, Param _ _) = [Coq.mkProj Sig1 $ trReft False ri, oracleTac]
     -- or into nothing if it is at the position of a destructed parameter
     trArg (_, Destructed) = []
 trRecCall (Right f) state args =
@@ -400,7 +400,7 @@ trRecCall (Right f) state args =
     trArg (ri, Param _ n) | n > 0 = [trReft True ri]
     -- while first-order ones must be decomposed into their first projection and
     -- a hole for the refinement
-    trArg (ri, _) = [mkProject $ trReft True ri, TermHole]
+    trArg (ri, _) = [Coq.mkProj Sig1 $ trReft True ri, TermHole]
 
 -- | Translation of a case expression as destruct or as induct
 -- An induct such that none of the introduced IHs are used is transformed to destruct
@@ -409,7 +409,7 @@ trRecCall (Right f) state args =
 mkMatching :: Bool -> (Maybe Expr -> [Tactic]) -> Reft -> [((Id, [(Id, Bool)]), Maybe Expr)] -> Maybe [Id] -> Tactic
 -- mkMatching _ tm alts genVars | traceFunc "mkMatching" [pPrint tm, pPrint alts, pPrint genVars] = undefined
 mkMatching eq trans tm alts genVars =
-  Coq.Destruct (mkProject $ trReft eq tm) (map trAlt alts) genVars
+  Coq.Destruct (Coq.mkProj Sig1 $ trReft eq tm) (map trAlt alts) genVars
   where
     -- Translation of the branches using the parametrized function
     trAlt ((c, ys), e) = (c, (ysDesPat ys e, trans e))

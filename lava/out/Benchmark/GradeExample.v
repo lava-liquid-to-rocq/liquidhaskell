@@ -11,7 +11,7 @@ Fixpoint Modifier_wf (x : Modifier_u): Prop :=
   match x with | Minus_u => True | Natural_u => True | Plus_u => True end.
 
 Theorem Modifier_wf_ref [p : Modifier_u → Prop] (tm : {v: Modifier_u | Modifier_wf v ∧ p v}):
-  Modifier_wf ⌊ tm ⌋.
+  Modifier_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -61,7 +61,7 @@ Fixpoint Letter_wf (x : Letter_u): Prop :=
   match x with | A_u => True | B_u => True | C_u => True | D_u => True | F_u => True end.
 
 Theorem Letter_wf_ref [p : Letter_u → Prop] (tm : {v: Letter_u | Letter_wf v ∧ p v}):
-  Letter_wf ⌊ tm ⌋.
+  Letter_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -203,7 +203,7 @@ Qed.
 #[global] Hint Rewrite lowerLetter_F_lem: f_rel_back.
 
 Theorem lowerLetter_rel_ex (l : Letter_u) (l_p : Letter_wf l ∧ True):
-  lowerLetter_rel l ⌊ lowerLetter (exist _ l l_p) ⌋.
+  lowerLetter_rel l ⌊ lowerLetter (exist _ l l_p) -⌋.
 Proof.
   Opaque lowerLetter.
   existence_lemma_pre lowerLetter;
@@ -219,7 +219,7 @@ Qed.
 #[global] Opaque lowerLetter.
 
 Theorem lowerLetter__lowerLetter_rel_rw (l : Letter_u) (l_p : Letter_wf l ∧ True) (VV : Letter_u):
-  ⌊ lowerLetter (exist _ l l_p) ⌋ = VV ↔ lowerLetter_rel l VV.
+  ⌊ lowerLetter (exist _ l l_p) -⌋ = VV ↔ lowerLetter_rel l VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -232,7 +232,7 @@ Qed.
     lookup' := lowerLetter__lowerLetter_rel_rw }.
 
 Theorem lowerLetter__lowerLetter_rel (l : Letter) (VV : Letter_u):
-  ⌊ lowerLetter l ⌋ = VV ↔ lowerLetter_rel ⌊ l ⌋ VV.
+  ⌊ lowerLetter l -⌋ = VV ↔ lowerLetter_rel ⌊ l ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -240,7 +240,7 @@ Qed.
 #[global] Hint Rewrite lowerLetter__lowerLetter_rel: f_rel_funct_db.
 
 Theorem lowerLetter__lowerLetter_rel' (l_u : Letter_u) (l : Letter) (VV : Letter_u):
-  l_u = ⌊ l ⌋ → ⌊ lowerLetter l ⌋ = VV ↔ lowerLetter_rel l_u VV.
+  l_u = ⌊ l ⌋ → ⌊ lowerLetter l -⌋ = VV ↔ lowerLetter_rel l_u VV.
 Proof.
   intros ->. refine (lowerLetter__lowerLetter_rel l VV).
 Qed.
@@ -320,7 +320,7 @@ Fixpoint Grades_wf (x : Grades_u): Prop :=
   match x with | Grade_u VV VV_ => (Letter_wf VV ∧ True) ∧ (Modifier_wf VV_ ∧ True) end.
 
 Theorem Grades_wf_ref [p : Grades_u → Prop] (tm : {v: Grades_u | Grades_wf v ∧ p v}):
-  Grades_wf ⌊ tm ⌋.
+  Grades_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -486,7 +486,7 @@ Qed.
 #[global] Hint Rewrite lowerGrade__Grade_F_Minus_lem: f_rel_back.
 
 Theorem lowerGrade_rel_ex (g : Grades_u) (g_p : Grades_wf g ∧ True):
-  lowerGrade_rel g ⌊ lowerGrade (exist _ g g_p) ⌋.
+  lowerGrade_rel g ⌊ lowerGrade (exist _ g g_p) -⌋.
 Proof.
   Opaque lowerGrade.
   existence_lemma_pre lowerGrade;
@@ -506,7 +506,7 @@ Qed.
 #[global] Opaque lowerGrade.
 
 Theorem lowerGrade__lowerGrade_rel_rw (g : Grades_u) (g_p : Grades_wf g ∧ True) (VV : Grades_u):
-  ⌊ lowerGrade (exist _ g g_p) ⌋ = VV ↔ lowerGrade_rel g VV.
+  ⌊ lowerGrade (exist _ g g_p) -⌋ = VV ↔ lowerGrade_rel g VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -519,7 +519,7 @@ Qed.
     lookup' := lowerGrade__lowerGrade_rel_rw }.
 
 Theorem lowerGrade__lowerGrade_rel (g : Grades) (VV : Grades_u):
-  ⌊ lowerGrade g ⌋ = VV ↔ lowerGrade_rel ⌊ g ⌋ VV.
+  ⌊ lowerGrade g -⌋ = VV ↔ lowerGrade_rel ⌊ g ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -527,7 +527,7 @@ Qed.
 #[global] Hint Rewrite lowerGrade__lowerGrade_rel: f_rel_funct_db.
 
 Theorem lowerGrade__lowerGrade_rel' (g_u : Grades_u) (g : Grades) (VV : Grades_u):
-  g_u = ⌊ g ⌋ → ⌊ lowerGrade g ⌋ = VV ↔ lowerGrade_rel g_u VV.
+  g_u = ⌊ g ⌋ → ⌊ lowerGrade g -⌋ = VV ↔ lowerGrade_rel g_u VV.
 Proof.
   intros ->. refine (lowerGrade__lowerGrade_rel g VV).
 Qed.
@@ -665,7 +665,7 @@ Qed.
 
 Theorem applyLatePolicy_rel_ex
   (lateDays : Z) (lateDays_p : True) (g : Grades_u) (g_p : Grades_wf g ∧ True):
-  applyLatePolicy_rel lateDays g ⌊ applyLatePolicy (exist _ lateDays lateDays_p) (exist _ g g_p) ⌋.
+  applyLatePolicy_rel lateDays g ⌊ applyLatePolicy (exist _ lateDays lateDays_p) (exist _ g g_p) -⌋.
 Proof.
   Opaque applyLatePolicy.
   existence_lemma_pre applyLatePolicy;
@@ -686,7 +686,7 @@ Qed.
 
 Theorem applyLatePolicy__applyLatePolicy_rel_rw
   (lateDays : Z) (lateDays_p : True) (g : Grades_u) (g_p : Grades_wf g ∧ True) (VV : Grades_u):
-  ⌊ applyLatePolicy (exist _ lateDays lateDays_p) (exist _ g g_p) ⌋ = VV
+  ⌊ applyLatePolicy (exist _ lateDays lateDays_p) (exist _ g g_p) -⌋ = VV
   ↔ applyLatePolicy_rel lateDays g VV.
 Proof.
   f__f_rel_rw.
@@ -701,7 +701,7 @@ Qed.
 
 Theorem applyLatePolicy__applyLatePolicy_rel
   (lateDays : {lateDays: Z | True}) (g : Grades) (VV : Grades_u):
-  ⌊ applyLatePolicy lateDays g ⌋ = VV ↔ applyLatePolicy_rel ⌊ lateDays ⌋ ⌊ g ⌋ VV.
+  ⌊ applyLatePolicy lateDays g -⌋ = VV ↔ applyLatePolicy_rel ⌊ lateDays ⌋ ⌊ g ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -711,7 +711,7 @@ Qed.
 Theorem applyLatePolicy__applyLatePolicy_rel'
   (lateDays_u : Z) (g_u : Grades_u) (lateDays : {lateDays: Z | True}) (g : Grades) (VV : Grades_u):
   lateDays_u = ⌊ lateDays ⌋
-  → (g_u = ⌊ g ⌋ → ⌊ applyLatePolicy lateDays g ⌋ = VV ↔ applyLatePolicy_rel lateDays_u g_u VV).
+  → (g_u = ⌊ g ⌋ → ⌊ applyLatePolicy lateDays g -⌋ = VV ↔ applyLatePolicy_rel lateDays_u g_u VV).
 Proof.
   intros -> ->. refine (applyLatePolicy__applyLatePolicy_rel lateDays g VV).
 Qed.
@@ -859,7 +859,7 @@ Fixpoint Comparison_wf (x : Comparison_u): Prop :=
 
 Theorem Comparison_wf_ref
   [p : Comparison_u → Prop] (tm : {v: Comparison_u | Comparison_wf v ∧ p v}):
-  Comparison_wf ⌊ tm ⌋.
+  Comparison_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -1196,7 +1196,7 @@ Qed.
 
 Theorem letterComparison_rel_ex
   (l1 : Letter_u) (l1_p : Letter_wf l1 ∧ True) (l2 : Letter_u) (l2_p : Letter_wf l2 ∧ True):
-  letterComparison_rel l1 l2 ⌊ letterComparison (exist _ l1 l1_p) (exist _ l2 l2_p) ⌋.
+  letterComparison_rel l1 l2 ⌊ letterComparison (exist _ l1 l1_p) (exist _ l2 l2_p) -⌋.
 Proof.
   Opaque letterComparison.
   existence_lemma_pre letterComparison;
@@ -1226,7 +1226,7 @@ Theorem letterComparison__letterComparison_rel_rw
   (l2 : Letter_u)
   (l2_p : Letter_wf l2 ∧ True)
   (VV : Comparison_u):
-  ⌊ letterComparison (exist _ l1 l1_p) (exist _ l2 l2_p) ⌋ = VV ↔ letterComparison_rel l1 l2 VV.
+  ⌊ letterComparison (exist _ l1 l1_p) (exist _ l2 l2_p) -⌋ = VV ↔ letterComparison_rel l1 l2 VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -1239,7 +1239,7 @@ Qed.
     lookup' := letterComparison__letterComparison_rel_rw }.
 
 Theorem letterComparison__letterComparison_rel (l1 l2 : Letter) (VV : Comparison_u):
-  ⌊ letterComparison l1 l2 ⌋ = VV ↔ letterComparison_rel ⌊ l1 ⌋ ⌊ l2 ⌋ VV.
+  ⌊ letterComparison l1 l2 -⌋ = VV ↔ letterComparison_rel ⌊ l1 ⌋ ⌊ l2 ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -1249,7 +1249,7 @@ Qed.
 Theorem letterComparison__letterComparison_rel'
   (l1_u l2_u : Letter_u) (l1 l2 : Letter) (VV : Comparison_u):
   l1_u = ⌊ l1 ⌋
-  → (l2_u = ⌊ l2 ⌋ → ⌊ letterComparison l1 l2 ⌋ = VV ↔ letterComparison_rel l1_u l2_u VV).
+  → (l2_u = ⌊ l2 ⌋ → ⌊ letterComparison l1 l2 -⌋ = VV ↔ letterComparison_rel l1_u l2_u VV).
 Proof.
   intros -> ->. refine (letterComparison__letterComparison_rel l1 l2 VV).
 Qed.
@@ -1545,7 +1545,7 @@ Qed.
 
 Theorem modifierComparison_rel_ex
   (m1 : Modifier_u) (m1_p : Modifier_wf m1 ∧ True) (m2 : Modifier_u) (m2_p : Modifier_wf m2 ∧ True):
-  modifierComparison_rel m1 m2 ⌊ modifierComparison (exist _ m1 m1_p) (exist _ m2 m2_p) ⌋.
+  modifierComparison_rel m1 m2 ⌊ modifierComparison (exist _ m1 m1_p) (exist _ m2 m2_p) -⌋.
 Proof.
   Opaque modifierComparison.
   existence_lemma_pre modifierComparison;
@@ -1571,7 +1571,7 @@ Theorem modifierComparison__modifierComparison_rel_rw
   (m2 : Modifier_u)
   (m2_p : Modifier_wf m2 ∧ True)
   (VV : Comparison_u):
-  ⌊ modifierComparison (exist _ m1 m1_p) (exist _ m2 m2_p) ⌋ = VV ↔ modifierComparison_rel m1 m2 VV.
+  ⌊ modifierComparison (exist _ m1 m1_p) (exist _ m2 m2_p) -⌋ = VV ↔ modifierComparison_rel m1 m2 VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -1584,7 +1584,7 @@ Qed.
     lookup' := modifierComparison__modifierComparison_rel_rw }.
 
 Theorem modifierComparison__modifierComparison_rel (m1 m2 : Modifier) (VV : Comparison_u):
-  ⌊ modifierComparison m1 m2 ⌋ = VV ↔ modifierComparison_rel ⌊ m1 ⌋ ⌊ m2 ⌋ VV.
+  ⌊ modifierComparison m1 m2 -⌋ = VV ↔ modifierComparison_rel ⌊ m1 ⌋ ⌊ m2 ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -1594,7 +1594,7 @@ Qed.
 Theorem modifierComparison__modifierComparison_rel'
   (m1_u m2_u : Modifier_u) (m1 m2 : Modifier) (VV : Comparison_u):
   m1_u = ⌊ m1 ⌋
-  → (m2_u = ⌊ m2 ⌋ → ⌊ modifierComparison m1 m2 ⌋ = VV ↔ modifierComparison_rel m1_u m2_u VV).
+  → (m2_u = ⌊ m2 ⌋ → ⌊ modifierComparison m1 m2 -⌋ = VV ↔ modifierComparison_rel m1_u m2_u VV).
 Proof.
   intros -> ->. refine (modifierComparison__modifierComparison_rel m1 m2 VV).
 Qed.

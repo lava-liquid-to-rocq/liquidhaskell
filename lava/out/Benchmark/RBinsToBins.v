@@ -37,7 +37,7 @@ Qed.
 Fixpoint RBin_wf (x : RBin_u): Prop :=
   match x with | RB0_u n => RBin_wf n ∧ n ≠ RZ_u | RB1_u n => RBin_wf n ∧ True | RZ_u => True end.
 
-Theorem RBin_wf_ref [p : RBin_u → Prop] (tm : {v: RBin_u | RBin_wf v ∧ p v}): RBin_wf ⌊ tm ⌋.
+Theorem RBin_wf_ref [p : RBin_u → Prop] (tm : {v: RBin_u | RBin_wf v ∧ p v}): RBin_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -127,7 +127,7 @@ Qed.
 Fixpoint Bin_wf (x : Bin_u): Prop :=
   match x with | B0_u n => Bin_wf n ∧ True | B1_u n => Bin_wf n ∧ True | Z_u => True end.
 
-Theorem Bin_wf_ref [p : Bin_u → Prop] (tm : {v: Bin_u | Bin_wf v ∧ p v}): Bin_wf ⌊ tm ⌋.
+Theorem Bin_wf_ref [p : Bin_u → Prop] (tm : {v: Bin_u | Bin_wf v ∧ p v}): Bin_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.

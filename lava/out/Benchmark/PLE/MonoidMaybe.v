@@ -37,7 +37,7 @@ Fixpoint MaybeInt_wf (x : MaybeInt_u): Prop :=
   match x with | Just_u VV => True | Nothing_u => True end.
 
 Theorem MaybeInt_wf_ref [p : MaybeInt_u → Prop] (tm : {v: MaybeInt_u | MaybeInt_wf v ∧ p v}):
-  MaybeInt_wf ⌊ tm ⌋.
+  MaybeInt_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -124,7 +124,7 @@ Theorem mappend_rel_ex
   (lq_tmp0_p : MaybeInt_wf lq_tmp0 ∧ True)
   (lq_tmp1 : MaybeInt_u)
   (lq_tmp1_p : MaybeInt_wf lq_tmp1 ∧ True):
-  mappend_rel lq_tmp0 lq_tmp1 ⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) ⌋.
+  mappend_rel lq_tmp0 lq_tmp1 ⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋.
 Proof.
   Opaque mappend.
   existence_lemma_pre mappend;
@@ -145,7 +145,7 @@ Theorem mappend__mappend_rel_rw
   (lq_tmp1 : MaybeInt_u)
   (lq_tmp1_p : MaybeInt_wf lq_tmp1 ∧ True)
   (VV : MaybeInt_u):
-  ⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) ⌋ = VV
+  ⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋ = VV
   ↔ mappend_rel lq_tmp0 lq_tmp1 VV.
 Proof.
   f__f_rel_rw.
@@ -159,7 +159,7 @@ Qed.
     lookup' := mappend__mappend_rel_rw }.
 
 Theorem mappend__mappend_rel (lq_tmp0 lq_tmp1 : MaybeInt) (VV : MaybeInt_u):
-  ⌊ mappend lq_tmp0 lq_tmp1 ⌋ = VV ↔ mappend_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp1 ⌋ VV.
+  ⌊ mappend lq_tmp0 lq_tmp1 -⌋ = VV ↔ mappend_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp1 ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -169,7 +169,8 @@ Qed.
 Theorem mappend__mappend_rel'
   (lq_tmp0_u lq_tmp1_u : MaybeInt_u) (lq_tmp0 lq_tmp1 : MaybeInt) (VV : MaybeInt_u):
   lq_tmp0_u = ⌊ lq_tmp0 ⌋
-  → (lq_tmp1_u = ⌊ lq_tmp1 ⌋ → ⌊ mappend lq_tmp0 lq_tmp1 ⌋ = VV ↔ mappend_rel lq_tmp0_u lq_tmp1_u VV).
+  → (lq_tmp1_u = ⌊ lq_tmp1 ⌋
+     → ⌊ mappend lq_tmp0 lq_tmp1 -⌋ = VV ↔ mappend_rel lq_tmp0_u lq_tmp1_u VV).
 Proof.
   intros -> ->. refine (mappend__mappend_rel lq_tmp0 lq_tmp1 VV).
 Qed.
@@ -308,7 +309,7 @@ Qed.
 
 #[global] Hint Rewrite mempty_inv_lem: f_rel_back.
 
-Theorem mempty_rel_ex : mempty_rel ⌊ mempty ⌋.
+Theorem mempty_rel_ex : mempty_rel ⌊ mempty -⌋.
 Proof.
   Opaque mempty.
   existence_lemma_pre mempty; fix_notations; simpl in *.
@@ -320,7 +321,7 @@ Qed.
 
 #[global] Opaque mempty.
 
-Theorem mempty__mempty_rel_rw (VV : MaybeInt_u): ⌊ mempty ⌋ = VV ↔ mempty_rel VV.
+Theorem mempty__mempty_rel_rw (VV : MaybeInt_u): ⌊ mempty -⌋ = VV ↔ mempty_rel VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -332,14 +333,14 @@ Qed.
 #[global] Instance mempty_lookup_rw: dictionary rwLem mempty := {
     lookup' := mempty__mempty_rel_rw }.
 
-Theorem mempty__mempty_rel (VV : MaybeInt_u): ⌊ mempty ⌋ = VV ↔ mempty_rel VV.
+Theorem mempty__mempty_rel (VV : MaybeInt_u): ⌊ mempty -⌋ = VV ↔ mempty_rel VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite mempty__mempty_rel: f_rel_funct_db.
 
-Theorem mempty__mempty_rel' (VV : MaybeInt_u): ⌊ mempty ⌋ = VV ↔ mempty_rel VV.
+Theorem mempty__mempty_rel' (VV : MaybeInt_u): ⌊ mempty -⌋ = VV ↔ mempty_rel VV.
 Proof.
   intros. refine (mempty__mempty_rel VV).
 Qed.

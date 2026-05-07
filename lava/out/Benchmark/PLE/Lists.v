@@ -36,7 +36,7 @@ Qed.
 Fixpoint L_wf (x : L_u): Prop :=
   match x with | C_u VV VV_ => L_wf VV_ ∧ True | Emp_u => True end.
 
-Theorem L_wf_ref [p : L_u → Prop] (tm : {v: L_u | L_wf v ∧ p v}): L_wf ⌊ tm ⌋.
+Theorem L_wf_ref [p : L_u → Prop] (tm : {v: L_u | L_wf v ∧ p v}): L_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -129,12 +129,18 @@ Qed.
 
 Theorem append_rel_ex
   (lq_tmp0 : L_u) (lq_tmp0_p : L_wf lq_tmp0 ∧ True) (lq_tmp1 : L_u) (lq_tmp1_p : L_wf lq_tmp1 ∧ True):
-  append_rel lq_tmp0 lq_tmp1 ⌊ append (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) ⌋.
+  append_rel lq_tmp0 lq_tmp1 ⌊ append (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋.
 Proof.
   Opaque append.
   existence_lemma_pre append;
   try revert lq_tmp1_p; generalize dependent lq_tmp1; induction lq_tmp0 as [x xs IH_xs|]; intros;
-  [fix_notations | fix_notations];
+  [fix_notations;
+   pose proof (IH_xs
+               ltac:(try clear IH_xs; solver)
+               lq_tmp1
+               ltac:(try clear IH_xs; solver)) as IH_26846909;
+   try clear IH_xs |
+   fix_notations];
   simpl in *.
   Transparent append.
   all: existence_lemma_quicksolve append; f__f_rel_ex_body; f_rel_finish.
@@ -150,7 +156,7 @@ Theorem append__append_rel_rw
   (lq_tmp1 : L_u)
   (lq_tmp1_p : L_wf lq_tmp1 ∧ True)
   (VV : L_u):
-  ⌊ append (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) ⌋ = VV
+  ⌊ append (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋ = VV
   ↔ append_rel lq_tmp0 lq_tmp1 VV.
 Proof.
   f__f_rel_rw.
@@ -164,7 +170,7 @@ Qed.
     lookup' := append__append_rel_rw }.
 
 Theorem append__append_rel (lq_tmp0 lq_tmp1 : L) (VV : L_u):
-  ⌊ append lq_tmp0 lq_tmp1 ⌋ = VV ↔ append_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp1 ⌋ VV.
+  ⌊ append lq_tmp0 lq_tmp1 -⌋ = VV ↔ append_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp1 ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -173,7 +179,7 @@ Qed.
 
 Theorem append__append_rel' (lq_tmp0_u lq_tmp1_u : L_u) (lq_tmp0 lq_tmp1 : L) (VV : L_u):
   lq_tmp0_u = ⌊ lq_tmp0 ⌋
-  → (lq_tmp1_u = ⌊ lq_tmp1 ⌋ → ⌊ append lq_tmp0 lq_tmp1 ⌋ = VV ↔ append_rel lq_tmp0_u lq_tmp1_u VV).
+  → (lq_tmp1_u = ⌊ lq_tmp1 ⌋ → ⌊ append lq_tmp0 lq_tmp1 -⌋ = VV ↔ append_rel lq_tmp0_u lq_tmp1_u VV).
 Proof.
   intros -> ->. refine (append__append_rel lq_tmp0 lq_tmp1 VV).
 Qed.
@@ -338,7 +344,7 @@ Qed.
 #[global] Hint Rewrite length_C_lem: f_rel_back.
 
 Theorem length_rel_ex (lq_tmp0 : L_u) (lq_tmp0_p : L_wf lq_tmp0 ∧ True):
-  length_rel lq_tmp0 ⌊ length (exist _ lq_tmp0 lq_tmp0_p) ⌋.
+  length_rel lq_tmp0 ⌊ length (exist _ lq_tmp0 lq_tmp0_p) -⌋.
 Proof.
   Opaque length.
   existence_lemma_pre length;
@@ -355,7 +361,7 @@ Qed.
 #[global] Opaque length.
 
 Theorem length__length_rel_rw (lq_tmp0 : L_u) (lq_tmp0_p : L_wf lq_tmp0 ∧ True) (VV : Z):
-  ⌊ length (exist _ lq_tmp0 lq_tmp0_p) ⌋ = VV ↔ length_rel lq_tmp0 VV.
+  ⌊ length (exist _ lq_tmp0 lq_tmp0_p) -⌋ = VV ↔ length_rel lq_tmp0 VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -368,7 +374,7 @@ Qed.
     lookup' := length__length_rel_rw }.
 
 Theorem length__length_rel (lq_tmp0 : L) (VV : Z):
-  ⌊ length lq_tmp0 ⌋ = VV ↔ length_rel ⌊ lq_tmp0 ⌋ VV.
+  ⌊ length lq_tmp0 -⌋ = VV ↔ length_rel ⌊ lq_tmp0 ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -376,7 +382,7 @@ Qed.
 #[global] Hint Rewrite length__length_rel: f_rel_funct_db.
 
 Theorem length__length_rel' (lq_tmp0_u : L_u) (lq_tmp0 : L) (VV : Z):
-  lq_tmp0_u = ⌊ lq_tmp0 ⌋ → ⌊ length lq_tmp0 ⌋ = VV ↔ length_rel lq_tmp0_u VV.
+  lq_tmp0_u = ⌊ lq_tmp0 ⌋ → ⌊ length lq_tmp0 -⌋ = VV ↔ length_rel lq_tmp0_u VV.
 Proof.
   intros ->. refine (length__length_rel lq_tmp0 VV).
 Qed.

@@ -36,7 +36,7 @@ Qed.
 Fixpoint IList_wf (x : IList_u): Prop :=
   match x with | Cons_u n l => ltbZ_rel 5 n true ∧ (IList_wf l ∧ True) | Nil_u => True end.
 
-Theorem IList_wf_ref [p : IList_u → Prop] (tm : {v: IList_u | IList_wf v ∧ p v}): IList_wf ⌊ tm ⌋.
+Theorem IList_wf_ref [p : IList_u → Prop] (tm : {v: IList_u | IList_wf v ∧ p v}): IList_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -139,7 +139,7 @@ Qed.
 
 #[global] Hint Rewrite llen_Nil_lem: f_rel_back.
 
-Theorem llen_rel_ex (l : IList_u) (l_p : IList_wf l ∧ True): llen_rel l ⌊ llen (exist _ l l_p) ⌋.
+Theorem llen_rel_ex (l : IList_u) (l_p : IList_wf l ∧ True): llen_rel l ⌊ llen (exist _ l l_p) -⌋.
 Proof.
   Opaque llen.
   existence_lemma_pre llen;
@@ -156,7 +156,7 @@ Qed.
 #[global] Opaque llen.
 
 Theorem llen__llen_rel_rw (l : IList_u) (l_p : IList_wf l ∧ True) (v : Z):
-  ⌊ llen (exist _ l l_p) ⌋ = v ↔ llen_rel l v.
+  ⌊ llen (exist _ l l_p) -⌋ = v ↔ llen_rel l v.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -167,7 +167,7 @@ Qed.
 
 #[global] Instance llen_lookup_rw: dictionary rwLem llen := { lookup' := llen__llen_rel_rw }.
 
-Theorem llen__llen_rel (l : IList) (v : Z): ⌊ llen l ⌋ = v ↔ llen_rel ⌊ l ⌋ v.
+Theorem llen__llen_rel (l : IList) (v : Z): ⌊ llen l -⌋ = v ↔ llen_rel ⌊ l ⌋ v.
 Proof.
   f__f_rel.
 Qed.
@@ -175,7 +175,7 @@ Qed.
 #[global] Hint Rewrite llen__llen_rel: f_rel_funct_db.
 
 Theorem llen__llen_rel' (l_u : IList_u) (l : IList) (v : Z):
-  l_u = ⌊ l ⌋ → ⌊ llen l ⌋ = v ↔ llen_rel l_u v.
+  l_u = ⌊ l ⌋ → ⌊ llen l -⌋ = v ↔ llen_rel l_u v.
 Proof.
   intros ->. refine (llen__llen_rel l v).
 Qed.
@@ -272,7 +272,7 @@ Theorem get_rel_ex
   (xs_p : IList_wf xs ∧ True)
   (i : Z)
   (i_p : lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel xs llen_res ∧ ltbZ_rel i llen_res true):
-  get_rel xs i ⌊ get (exist _ xs xs_p) (exist _ i i_p) ⌋.
+  get_rel xs i ⌊ get (exist _ xs xs_p) (exist _ i i_p) -⌋.
 Proof.
   Opaque get.
   existence_lemma_pre get;
@@ -300,7 +300,7 @@ Theorem get__get_rel_rw
   (i : Z)
   (i_p : lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel xs llen_res ∧ ltbZ_rel i llen_res true)
   (v : Z):
-  ⌊ get (exist _ xs xs_p) (exist _ i i_p) ⌋ = v ↔ get_rel xs i v.
+  ⌊ get (exist _ xs xs_p) (exist _ i i_p) -⌋ = v ↔ get_rel xs i v.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -315,7 +315,7 @@ Theorem get__get_rel
   (xs : IList)
   (i : {i: Z | lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true})
   (v : Z):
-  ⌊ get xs i ⌋ = v ↔ get_rel ⌊ xs ⌋ ⌊ i ⌋ v.
+  ⌊ get xs i -⌋ = v ↔ get_rel ⌊ xs ⌋ ⌊ i ⌋ v.
 Proof.
   f__f_rel.
 Qed.
@@ -328,7 +328,7 @@ Theorem get__get_rel'
   (xs : IList)
   (i : {i: Z | lebZ_rel 0 i true ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true})
   (v : Z):
-  xs_u = ⌊ xs ⌋ → (i_u = ⌊ i ⌋ → ⌊ get xs i ⌋ = v ↔ get_rel xs_u i_u v).
+  xs_u = ⌊ xs ⌋ → (i_u = ⌊ i ⌋ → ⌊ get xs i -⌋ = v ↔ get_rel xs_u i_u v).
 Proof.
   intros -> ->. refine (get__get_rel xs i v).
 Qed.
