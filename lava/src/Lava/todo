@@ -2,8 +2,6 @@ Do not use packs for theorems
 and automatically generate packs for unreflected functions when they are used in a refinement
   -> do we have an example for that?
 
-Explicit substitution of matches for types in elaboration? (see for instance append_rec translated with Equations)
-
 Use type of constructor in case?
 
 - bug with lq_tmp0 instead of HO parameter name

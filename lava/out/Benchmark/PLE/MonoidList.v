@@ -143,7 +143,7 @@ Proof.
    fix_notations];
   simpl in *.
   Transparent mappend.
-  all: existence_lemma_quicksolve mappend; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve mappend; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve mappend_rel_ex: rel_ax_db.
@@ -245,12 +245,12 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ mappend_res,
-             mappend_rel ⌊ xs ⌋ ⌊ ys ⌋ mappend_res
+             mappend_rel xs ys mappend_res
              ∧ ∃ mappend_res_2,
-               mappend_rel mappend_res ⌊ zs ⌋ mappend_res_2
+               mappend_rel mappend_res zs mappend_res_2
                ∧ ∃ mappend_res_3,
-                 mappend_rel ⌊ ys ⌋ ⌊ zs ⌋ mappend_res_3
-                 ∧ ∃ mappend_res_4, mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
+                 mappend_rel ys zs mappend_res_3
+                 ∧ ∃ mappend_res_4, mappend_rel xs mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
             (IH_xs
              ltac:(try clear IH_xs; solver)
              ys
@@ -262,12 +262,12 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ mappend_res,
-             mappend_rel ⌊ xs ⌋ ⌊ ys ⌋ mappend_res
+             mappend_rel xs ys mappend_res
              ∧ ∃ mappend_res_2,
-               mappend_rel mappend_res ⌊ zs ⌋ mappend_res_2
+               mappend_rel mappend_res zs mappend_res_2
                ∧ ∃ mappend_res_3,
-                 mappend_rel ⌊ ys ⌋ ⌊ zs ⌋ mappend_res_3
-                 ∧ ∃ mappend_res_4, mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
+                 mappend_rel ys zs mappend_res_3
+                 ∧ ∃ mappend_res_4, mappend_rel xs mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -311,7 +311,7 @@ Proof.
   Opaque mempty.
   existence_lemma_pre mempty; fix_notations; simpl in *.
   Transparent mempty.
-  all: existence_lemma_quicksolve mempty; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve mempty; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve mempty_rel_ex: rel_ax_db.
@@ -368,8 +368,7 @@ Proof.
           Unit
           (λ (VV : Unit),
            ∃ mempty_res,
-           mempty_rel mempty_res
-           ∧ ∃ mappend_res, mappend_rel mempty_res ⌊ x ⌋ mappend_res ∧ mappend_res == ⌊ x ⌋)
+           mempty_rel mempty_res ∧ ∃ mappend_res, mappend_rel mempty_res x mappend_res ∧ mappend_res == x)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -389,16 +388,14 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ mempty_res,
-             mempty_rel mempty_res
-             ∧ ∃ mappend_res, mappend_rel ⌊ x ⌋ mempty_res mappend_res ∧ mappend_res == ⌊ x ⌋)
+             mempty_rel mempty_res ∧ ∃ mappend_res, mappend_rel x mempty_res mappend_res ∧ mappend_res == x)
             (IH_xs ltac:(try clear IH_xs; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ mempty_res,
-             mempty_rel mempty_res
-             ∧ ∃ mappend_res, mappend_rel ⌊ x ⌋ mempty_res mappend_res ∧ mappend_res == ⌊ x ⌋)
+             mempty_rel mempty_res ∧ ∃ mappend_res, mappend_rel x mempty_res mappend_res ∧ mappend_res == x)
             (# unit)
             ltac:(solver)).
 Qed.

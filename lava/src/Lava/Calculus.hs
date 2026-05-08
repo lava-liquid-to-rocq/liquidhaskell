@@ -296,8 +296,9 @@ removeFOArgProjs :: RefType -> RefType
 removeFOArgProjs (ArrType x tpx tp) = ArrType x (removeFOArgProjs tpx) (removeFOArgProjs tp)
 removeFOArgProjs (RefType y a reft) = RefType y a (aux reft)
   where
-    aux (Proj (Var x 0 Local)) = Var x 0 Local
-    aux (Proj _) = error "Calculus.removeFOArgProjs should only be used at top-level, when projections are made only on local FO variable"
+    aux (Proj (Var x n Local)) = Var x n Local
+    aux p@(Proj _) =
+      error $ "Calculus.removeFOArgProjs should only be used at top-level, when projections are made only on local FO variable. Found term: " ++ prettyShow p
     aux r@(Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = r
     aux (App r1 r2) = App (aux r1) (aux r2)
     aux (Neg r) = Neg (aux r)

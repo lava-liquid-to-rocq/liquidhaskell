@@ -211,7 +211,7 @@ Proof.
   [fix_notations | fix_notations | fix_notations | fix_notations | fix_notations];
   simpl in *.
   Transparent lowerLetter.
-  all: existence_lemma_quicksolve lowerLetter; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve lowerLetter; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve lowerLetter_rel_ex: rel_ax_db.
@@ -498,7 +498,7 @@ Proof.
     fix_notations]];
   simpl in *.
   Transparent lowerGrade.
-  all: existence_lemma_quicksolve lowerGrade; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve lowerGrade; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve lowerGrade_rel_ex: rel_ax_db.
@@ -677,7 +677,7 @@ Proof.
    fix_notations];
   simpl in *.
   Transparent applyLatePolicy.
-  all: existence_lemma_quicksolve applyLatePolicy; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve applyLatePolicy; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve applyLatePolicy_rel_ex: rel_ax_db.
@@ -839,14 +839,14 @@ Proof.
            Unit
            (λ (VV : Unit),
             ∃ applyLatePolicy_res,
-            applyLatePolicy_rel ⌊ lateDays ⌋ ⌊ g ⌋ applyLatePolicy_res ∧ applyLatePolicy_res == ⌊ g ⌋)
-           (exist (λ (h : Unit), ltbZ_rel ⌊ lateDays ⌋ 9 true) h ltac:(solver))
+            applyLatePolicy_rel lateDays g applyLatePolicy_res ∧ applyLatePolicy_res == g)
+           (exist (λ (h : Unit), ltbZ_rel lateDays 9 true) h ltac:(solver))
            ltac:(solver)) |
    refine (subsumptionCast
            Unit
            (λ (VV : Unit),
             ∃ applyLatePolicy_res,
-            applyLatePolicy_rel ⌊ lateDays ⌋ ⌊ g ⌋ applyLatePolicy_res ∧ applyLatePolicy_res == ⌊ g ⌋)
+            applyLatePolicy_rel lateDays g applyLatePolicy_res ∧ applyLatePolicy_res == g)
            (# unit)
            ltac:(solver))].
 Qed.
@@ -1213,7 +1213,7 @@ Proof.
    [fix_notations | fix_notations | fix_notations | fix_notations | fix_notations]];
   simpl in *.
   Transparent letterComparison.
-  all: existence_lemma_quicksolve letterComparison; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve letterComparison; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve letterComparison_rel_ex: rel_ax_db.
@@ -1305,35 +1305,35 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ letterComparison_res,
-             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Eq_u)
+             letterComparison_rel l l letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ letterComparison_res,
-             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Eq_u)
+             letterComparison_rel l l letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ letterComparison_res,
-             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Eq_u)
+             letterComparison_rel l l letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ letterComparison_res,
-             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Eq_u)
+             letterComparison_rel l l letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ letterComparison_res,
-             letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Eq_u)
+             letterComparison_rel l l letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -1363,48 +1363,48 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ lowerLetter_res,
-             lowerLetter_rel ⌊ l ⌋ lowerLetter_res
+             lowerLetter_rel l lowerLetter_res
              ∧ ∃ letterComparison_res,
-               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u)
+               letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ lowerLetter_res,
-             lowerLetter_rel ⌊ l ⌋ lowerLetter_res
+             lowerLetter_rel l lowerLetter_res
              ∧ ∃ letterComparison_res,
-               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u)
+               letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ lowerLetter_res,
-             lowerLetter_rel ⌊ l ⌋ lowerLetter_res
+             lowerLetter_rel l lowerLetter_res
              ∧ ∃ letterComparison_res,
-               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u)
+               letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ lowerLetter_res,
-             lowerLetter_rel ⌊ l ⌋ lowerLetter_res
+             lowerLetter_rel l lowerLetter_res
              ∧ ∃ letterComparison_res,
-               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u)
+               letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ lowerLetter_res,
-             lowerLetter_rel ⌊ l ⌋ lowerLetter_res
+             lowerLetter_rel l lowerLetter_res
              ∧ ∃ letterComparison_res,
-               letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u)
+               letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
             (exist (λ (p : Unit),
                     ∃ letterComparison_res,
-                    letterComparison_rel F_u ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u) p ltac:(solver))
+                    letterComparison_rel F_u F_u letterComparison_res ∧ letterComparison_res == Lt_u) p ltac:(solver))
             ltac:(solver)).
 Qed.
 
@@ -1558,7 +1558,7 @@ Proof.
    [fix_notations | fix_notations | fix_notations]];
   simpl in *.
   Transparent modifierComparison.
-  all: existence_lemma_quicksolve modifierComparison; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve modifierComparison; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve modifierComparison_rel_ex: rel_ax_db.

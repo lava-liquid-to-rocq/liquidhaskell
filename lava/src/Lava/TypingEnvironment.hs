@@ -49,6 +49,9 @@ data Image
   = ΓVar Localization RefType
   | ΓTC [(Id, RefType)]
 
+-- | A type environment is a map from identifiers to image.
+-- While it is supposed to be a telescope, in this implementation,
+-- we do not care about order because the domain has a unique occurence of each identifier
 type TypEnv = Map Id Image
 
 empty :: TypEnv
@@ -138,3 +141,9 @@ member = Map.member
 
 notMember :: Id -> TypEnv -> Bool
 notMember = Map.notMember
+
+substInEnv :: Reft -> Id -> TypEnv -> TypEnv
+substInEnv r x = Map.map substInImage
+  where
+    substInImage tc@ΓTC {} = tc
+    substInImage (ΓVar loc tp) = ΓVar loc (subst r x tp)

@@ -85,7 +85,7 @@ Definition llen_spec (l : IList): Type :=
 Definition llen (l : IList): llen_spec l.
 Proof.
   destruct l as [l l_p].
-  induction l as [ds_d4Ws l' IH_l'|].
+  induction l as [ds_d44h l' IH_l'|].
   - refine (subsumptionCast
             Z
             (λ (v : Z), gebZ_rel v 0 true)
@@ -104,9 +104,9 @@ Proof.
 Defined.
 
 Inductive llen_rel: IList_u → Z → Prop :=
-  | llen_Cons: ∀ ds_d4Ws l' llen_res,
+  | llen_Cons: ∀ ds_d44h l' llen_res,
                llen_rel l' llen_res
-               → ∀ addZ_res, addZ_rel llen_res 1 addZ_res → llen_rel (Cons_u ds_d4Ws l') addZ_res
+               → ∀ addZ_res, addZ_rel llen_res 1 addZ_res → llen_rel (Cons_u ds_d44h l') addZ_res
   | llen_Nil: llen_rel Nil_u 0.
 
 #[global] Hint Constructors llen_rel: core_hint_db.
@@ -117,13 +117,13 @@ Inductive llen_rel: IList_u → Z → Prop :=
 
 Theorem llen_rel_funct [l : IList_u]: ∀ (v v' : Z), llen_rel l v → (llen_rel l v' → v = v').
 Proof.
-  induction l as [ds_d4Ws l' IH_l'|]; rel_functionhood_body.
+  induction l as [ds_d44h l' IH_l'|]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve llen_rel_funct: f_rel_funct_db.
 
-Theorem llen_Cons_lem ds_d4Ws l' llen_Cons_lem_res:
-  llen_rel (Cons_u ds_d4Ws l') llen_Cons_lem_res
+Theorem llen_Cons_lem ds_d44h l' llen_Cons_lem_res:
+  llen_rel (Cons_u ds_d44h l') llen_Cons_lem_res
   ↔ ∃ llen_res,
     llen_rel l' llen_res ∧ ∃ addZ_res, addZ_rel llen_res 1 addZ_res ∧ llen_Cons_lem_res == addZ_res.
 Proof.
@@ -143,12 +143,12 @@ Theorem llen_rel_ex (l : IList_u) (l_p : IList_wf l ∧ True): llen_rel l ⌊ ll
 Proof.
   Opaque llen.
   existence_lemma_pre llen;
-  induction l as [ds_d4Ws l' IH_l'|];
+  induction l as [ds_d44h l' IH_l'|];
   [fix_notations; pose proof (IH_l' ltac:(try clear IH_l'; solver)) as IH_91252151; try clear IH_l' |
    fix_notations];
   simpl in *.
   Transparent llen.
-  all: existence_lemma_quicksolve llen; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve llen; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve llen_rel_ex: rel_ax_db.
@@ -233,10 +233,9 @@ Proof.
              ∧ ∃ llen_res,
                llen_rel v llen_res
                ∧ ∃ llen_res_2,
-                 llen_rel ⌊ xs ⌋ llen_res_2
+                 llen_rel xs llen_res_2
                  ∧ ∃ llen_res_3,
-                   llen_rel ⌊ ys ⌋ llen_res_3
-                   ∧ ∃ addZ_res, addZ_rel llen_res_2 llen_res_3 addZ_res ∧ llen_res == addZ_res)
+                   llen_rel ys llen_res_3 ∧ ∃ addZ_res, addZ_rel llen_res_2 llen_res_3 addZ_res ∧ llen_res == addZ_res)
             (Cons
              (exist (λ (n : Z), ltbZ_rel 5 n true) x ltac:(solver))
              (subsumptionCast
@@ -252,10 +251,9 @@ Proof.
              ∧ ∃ llen_res,
                llen_rel v llen_res
                ∧ ∃ llen_res_2,
-                 llen_rel ⌊ xs ⌋ llen_res_2
+                 llen_rel xs llen_res_2
                  ∧ ∃ llen_res_3,
-                   llen_rel ⌊ ys ⌋ llen_res_3
-                   ∧ ∃ addZ_res, addZ_rel llen_res_2 llen_res_3 addZ_res ∧ llen_res == addZ_res)
+                   llen_rel ys llen_res_3 ∧ ∃ addZ_res, addZ_rel llen_res_2 llen_res_3 addZ_res ∧ llen_res == addZ_res)
             (exist (λ (ys : IList_u), IList_wf ys ∧ True) ys ltac:(solver))
             ltac:(solver)).
 Defined.
@@ -310,7 +308,7 @@ Proof.
    fix_notations];
   simpl in *.
   Transparent append.
-  all: existence_lemma_quicksolve append; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve append; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve append_rel_ex: rel_ax_db.
@@ -464,7 +462,7 @@ Proof.
     fix_notations] |];
   simpl in *.
   Transparent get.
-  all: existence_lemma_quicksolve get; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve get; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve get_rel_ex: rel_ax_db.
@@ -594,10 +592,10 @@ Proof.
           Unit
           (λ (VV : Unit),
            ∃ get_res,
-           get_rel ⌊ xs ⌋ ⌊ i ⌋ get_res
+           get_rel xs i get_res
            ∧ ∃ addZ_res,
-             addZ_rel ⌊ i ⌋ 1 addZ_res
-             ∧ ∃ get_res_2, get_rel (Cons_u ⌊ x ⌋ ⌊ xs ⌋) addZ_res get_res_2 ∧ get_res == get_res_2)
+             addZ_rel i 1 addZ_res
+             ∧ ∃ get_res_2, get_rel (Cons_u x xs) addZ_res get_res_2 ∧ get_res == get_res_2)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -633,13 +631,13 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ get_res,
-             get_rel ⌊ xs ⌋ ⌊ i ⌋ get_res
+             get_rel xs i get_res
              ∧ ∃ llen_res,
-               llen_rel ⌊ ys ⌋ llen_res
+               llen_rel ys llen_res
                ∧ ∃ addZ_res,
-                 addZ_rel ⌊ i ⌋ llen_res addZ_res
+                 addZ_rel i llen_res addZ_res
                  ∧ ∃ append_res,
-                   append_rel ⌊ ys ⌋ ⌊ xs ⌋ append_res
+                   append_rel ys xs append_res
                    ∧ ∃ get_res_2, get_rel append_res addZ_res get_res_2 ∧ get_res == get_res_2)
             (let _: ∃ get_res,
                     get_rel
@@ -684,7 +682,7 @@ Proof.
                  (λ (x_1 : Z), True)
                  (exist (λ (i : Z),
                          lebZ_rel 0 i true
-                         ∧ ∃ llen_res, llen_rel ⌊ xs ⌋ llen_res ∧ ltbZ_rel i llen_res true) i ltac:(solver))
+                         ∧ ∃ llen_res, llen_rel xs llen_res ∧ ltbZ_rel i llen_res true) i ltac:(solver))
                  ltac:(solver)
                  +Z subsumptionCast
                     Z
@@ -703,13 +701,13 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ get_res,
-             get_rel ⌊ xs ⌋ ⌊ i ⌋ get_res
+             get_rel xs i get_res
              ∧ ∃ llen_res,
-               llen_rel ⌊ ys ⌋ llen_res
+               llen_rel ys llen_res
                ∧ ∃ addZ_res,
-                 addZ_rel ⌊ i ⌋ llen_res addZ_res
+                 addZ_rel i llen_res addZ_res
                  ∧ ∃ append_res,
-                   append_rel ⌊ ys ⌋ ⌊ xs ⌋ append_res
+                   append_rel ys xs append_res
                    ∧ ∃ get_res_2, get_rel append_res addZ_res get_res_2 ∧ get_res == get_res_2)
             (# unit)
             ltac:(solver)).

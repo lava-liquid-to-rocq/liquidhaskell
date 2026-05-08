@@ -136,7 +136,7 @@ Proof.
    fix_notations];
   simpl in *.
   Transparent even.
-  all: existence_lemma_quicksolve even; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve even; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve even_rel_ex: rel_ax_db.

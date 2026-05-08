@@ -178,6 +178,7 @@ wfRefType γ (ArrType x tpx tp) = do
 -- * Well-formedness of declarations
 
 wfDecls :: TypEnv -> [Decl] -> Either TypeError [Decl]
+-- wfDecls _ (d : _) | traceFunc "wfDecls" [pPrint d] = undefined
 -- (WF-DTC)
 wfDecls γ (Data tc constrs : decls) = do
   -- We pre-populate the environment with all constructors using trivialized
@@ -369,6 +370,7 @@ checkReft γ r tp = do
     else Left . SubtypingErr $ "Synthesized type" <+> pPrint tp_r <+> "for" <+> pPrint r <+> "is not a subtype of type" <+> pPrint tp
 
 checkExpr :: TypEnv -> [DesState] -> Expr -> RefType -> Either TypeError Expr
+-- checkExpr _ _ e tp | traceFunc "checkExpr" [pPrint e, pPrint tp] = undefined
 -- (C-Syn)
 checkExpr γ _ (Reft r) tp = Reft <$> checkReft γ r tp
 -- (C-Let)
@@ -433,18 +435,18 @@ checkExpr γ state e0@(Case r branches _) tp = do
           -- We look for applications where one of the potentialInductives can be
           -- used as inductive variable and instantiate the head of those applications
           (e', indVars) = instRec potentialInductives e
-          -- TODO: add additional type with z for occurence typing
-          -- also, if we match on a variable, replace this variable in place
-          -- with the introduced ones
-          -- also, remove projections from the type refinements of the
-          -- introduced variables in the context
+          -- We remove projections from the types of the variables
+          -- introduced by the patterns, as these are considered unrefined
           γ' = insertLocalVars (map (second removeFOArgProjs) argsc) $ case matched of
             -- if we match on a variable xMatch, we replace the variable in the context
             -- by the variables introduced by the pattern
             -- and we substitute all occurences of xMatch by the pattern
             Inj (Var xMatch 0 Local) _ ->
-              let pat = undefined
-               in {- subst -} undefined pat xMatch $ Env.delete xMatch γ
+              let pat = foldl App (DC c) (map (mkVar . fst) ys)
+               in substInEnv pat xMatch $ Env.delete xMatch γ
+            -- If we match on an application or a constant, we keep the same context:
+            -- in particular, we do not add an equality between the matched term and the pattern:
+            -- this equality is useful for occurence typing when checking the VC, but will never appear in elaboration
             _ -> γ
       e'' <- checkExpr γ' state' e' tp
       return (((c, ys), Just e''), indVars)

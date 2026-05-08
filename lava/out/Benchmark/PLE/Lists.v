@@ -143,7 +143,7 @@ Proof.
    fix_notations];
   simpl in *.
   Transparent append.
-  all: existence_lemma_quicksolve append; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve append; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve append_rel_ex: rel_ax_db.
@@ -290,7 +290,7 @@ Definition length_spec (lq_tmp0 : L): Type :=
 Definition length (lq_tmp0 : L): length_spec lq_tmp0.
 Proof.
   destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
-  induction lq_tmp0 as [ds_d3vW xs IH_xs|].
+  induction lq_tmp0 as [ds_d2PE xs IH_xs|].
   - refine (subsumptionCast
             Z
             (λ (VV : Z), gebZ_rel VV 0 true)
@@ -306,9 +306,9 @@ Defined.
 
 Inductive length_rel: L_u → Z → Prop :=
   | length_Emp: length_rel Emp_u 0
-  | length_C: ∀ ds_d3vW xs length_res,
+  | length_C: ∀ ds_d2PE xs length_res,
               length_rel xs length_res
-              → ∀ addZ_res, addZ_rel 1 length_res addZ_res → length_rel (C_u ds_d3vW xs) addZ_res.
+              → ∀ addZ_res, addZ_rel 1 length_res addZ_res → length_rel (C_u ds_d2PE xs) addZ_res.
 
 #[global] Hint Constructors length_rel: core_hint_db.
 
@@ -319,7 +319,7 @@ Inductive length_rel: L_u → Z → Prop :=
 Theorem length_rel_funct [lq_tmp0 : L_u]:
   ∀ (VV VV' : Z), length_rel lq_tmp0 VV → (length_rel lq_tmp0 VV' → VV = VV').
 Proof.
-  induction lq_tmp0 as [ds_d3vW xs IH_xs|]; rel_functionhood_body.
+  induction lq_tmp0 as [ds_d2PE xs IH_xs|]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve length_rel_funct: f_rel_funct_db.
@@ -332,8 +332,8 @@ Qed.
 
 #[global] Hint Rewrite length_Emp_lem: f_rel_back.
 
-Theorem length_C_lem ds_d3vW xs length_C_lem_res:
-  length_rel (C_u ds_d3vW xs) length_C_lem_res
+Theorem length_C_lem ds_d2PE xs length_C_lem_res:
+  length_rel (C_u ds_d2PE xs) length_C_lem_res
   ↔ ∃ length_res,
     length_rel xs length_res
     ∧ ∃ addZ_res, addZ_rel 1 length_res addZ_res ∧ length_C_lem_res == addZ_res.
@@ -348,12 +348,12 @@ Theorem length_rel_ex (lq_tmp0 : L_u) (lq_tmp0_p : L_wf lq_tmp0 ∧ True):
 Proof.
   Opaque length.
   existence_lemma_pre length;
-  induction lq_tmp0 as [ds_d3vW xs IH_xs|];
+  induction lq_tmp0 as [ds_d2PE xs IH_xs|];
   [fix_notations; pose proof (IH_xs ltac:(try clear IH_xs; solver)) as IH_67415571; try clear IH_xs |
    fix_notations];
   simpl in *.
   Transparent length.
-  all: existence_lemma_quicksolve length; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve length; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve length_rel_ex: rel_ax_db.
@@ -439,13 +439,12 @@ Proof.
           Unit
           (λ (VV : Unit),
            ∃ append_res,
-           append_rel (C_u ⌊ x ⌋ ⌊ xs ⌋) ⌊ ys ⌋ append_res
+           append_rel (C_u x xs) ys append_res
            ∧ ∃ append_res_2,
-             append_rel append_res ⌊ zs ⌋ append_res_2
+             append_rel append_res zs append_res_2
              ∧ ∃ append_res_3,
-               append_rel ⌊ xs ⌋ ⌊ ys ⌋ append_res_3
-               ∧ ∃ append_res_4,
-                 append_rel append_res_3 ⌊ zs ⌋ append_res_4 ∧ append_res_2 == C_u ⌊ x ⌋ append_res_4)
+               append_rel xs ys append_res_3
+               ∧ ∃ append_res_4, append_rel append_res_3 zs append_res_4 ∧ append_res_2 == C_u x append_res_4)
           (# unit)
           ltac:(solver)).
 Qed.
