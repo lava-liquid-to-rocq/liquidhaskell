@@ -1998,11 +1998,11 @@ Definition allzero_spec (lq_tmp0 : Nibble): Type :=
 Definition allzero (lq_tmp0 : Nibble): allzero_spec lq_tmp0.
 Proof.
   destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
-  destruct lq_tmp0 as [ds_d7WB ds_d7WC ds_d7WD ds_d7WE].
-  - destruct ds_d7WB as [|].
-    + destruct ds_d7WC as [|].
-      ** destruct ds_d7WD as [|].
-         ** destruct ds_d7WE as [|].
+  destruct lq_tmp0 as [ds_d7Wy ds_d7Wz ds_d7WA ds_d7WB].
+  - destruct ds_d7Wy as [|].
+    + destruct ds_d7Wz as [|].
+      ** destruct ds_d7WA as [|].
+         ** destruct ds_d7WB as [|].
             ** refine SFTrue.
             ** refine SFFalse.
          ** refine SFFalse.
@@ -2532,18 +2532,18 @@ Definition minus (n m : MyNat): minus_spec n m.
 Proof.
   destruct n as [n n_p].
   destruct m as [m m_p].
-  try revert m_p; generalize dependent m; induction n as [| ds_d7W8 IH_ds_d7W8]; intros.
+  try revert m_p; generalize dependent m; induction n as [| ds_d7W5 IH_ds_d7W5]; intros.
   - refine O.
   - destruct m as [| m'].
-    + refine (S (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) ds_d7W8 ltac:(solver))).
-    + refine (IH_ds_d7W8 ltac:(try clear IH_ds_d7W8; solver) m' ltac:(try clear IH_ds_d7W8; solver)).
+    + refine (S (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) ds_d7W5 ltac:(solver))).
+    + refine (IH_ds_d7W5 ltac:(try clear IH_ds_d7W5; solver) m' ltac:(try clear IH_ds_d7W5; solver)).
 Defined.
 
 Inductive minus_rel: MyNat_u → MyNat_u → MyNat_u → Prop :=
   | minus_O_x: ∀ m, minus_rel O_u m O_u
-  | minus_S_O: ∀ ds_d7W8, minus_rel (S_u ds_d7W8) O_u (S_u ds_d7W8)
-  | minus_S_S: ∀ ds_d7W8 m' minus_res,
-               minus_rel ds_d7W8 m' minus_res → minus_rel (S_u ds_d7W8) (S_u m') minus_res.
+  | minus_S_O: ∀ ds_d7W5, minus_rel (S_u ds_d7W5) O_u (S_u ds_d7W5)
+  | minus_S_S: ∀ ds_d7W5 m' minus_res,
+               minus_rel ds_d7W5 m' minus_res → minus_rel (S_u ds_d7W5) (S_u m') minus_res.
 
 #[global] Hint Constructors minus_rel: core_hint_db.
 
@@ -2554,7 +2554,7 @@ Inductive minus_rel: MyNat_u → MyNat_u → MyNat_u → Prop :=
 Theorem minus_rel_funct [n m : MyNat_u]:
   ∀ (VV VV' : MyNat_u), minus_rel n m VV → (minus_rel n m VV' → VV = VV').
 Proof.
-  try revert m_p; generalize dependent m; induction n as [| ds_d7W8 IH_ds_d7W8]; intros;
+  try revert m_p; generalize dependent m; induction n as [| ds_d7W5 IH_ds_d7W5]; intros;
   [ | destruct m as [| m']];
   rel_functionhood_body.
 Qed.
@@ -2569,17 +2569,17 @@ Qed.
 
 #[global] Hint Rewrite minus_O_x_lem: f_rel_back.
 
-Theorem minus_S_O_lem ds_d7W8 minus_S_O_lem_res:
-  minus_rel (S_u ds_d7W8) O_u minus_S_O_lem_res ↔ minus_S_O_lem_res == S_u ds_d7W8.
+Theorem minus_S_O_lem ds_d7W5 minus_S_O_lem_res:
+  minus_rel (S_u ds_d7W5) O_u minus_S_O_lem_res ↔ minus_S_O_lem_res == S_u ds_d7W5.
 Proof.
   rel_back' _nil.
 Qed.
 
 #[global] Hint Rewrite minus_S_O_lem: f_rel_back.
 
-Theorem minus_S_S_lem ds_d7W8 m' minus_S_S_lem_res:
-  minus_rel (S_u ds_d7W8) (S_u m') minus_S_S_lem_res
-  ↔ ∃ minus_res, minus_rel ds_d7W8 m' minus_res ∧ minus_S_S_lem_res == minus_res.
+Theorem minus_S_S_lem ds_d7W5 m' minus_S_S_lem_res:
+  minus_rel (S_u ds_d7W5) (S_u m') minus_S_S_lem_res
+  ↔ ∃ minus_res, minus_rel ds_d7W5 m' minus_res ∧ minus_S_S_lem_res == minus_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -2592,16 +2592,16 @@ Theorem minus_rel_ex
 Proof.
   Opaque minus.
   existence_lemma_pre minus;
-  try revert m_p; generalize dependent m; induction n as [| ds_d7W8 IH_ds_d7W8]; intros;
+  try revert m_p; generalize dependent m; induction n as [| ds_d7W5 IH_ds_d7W5]; intros;
   [fix_notations |
    destruct m as [| m'];
    [fix_notations |
     fix_notations;
-    pose proof (IH_ds_d7W8
-                ltac:(try clear IH_ds_d7W8; solver)
+    pose proof (IH_ds_d7W5
+                ltac:(try clear IH_ds_d7W5; solver)
                 m'
-                ltac:(try clear IH_ds_d7W8; solver)) as IH_54139653;
-    try clear IH_ds_d7W8]];
+                ltac:(try clear IH_ds_d7W5; solver)) as IH_84082064;
+    try clear IH_ds_d7W5]];
   simpl in *.
   Transparent minus.
   all: (existence_lemma_quicksolve minus; f__f_rel_ex_body; f_rel_finish).
@@ -2678,9 +2678,9 @@ Definition minustwo_spec (lq_tmp0 : MyNat): Type :=
 Definition minustwo (lq_tmp0 : MyNat): minustwo_spec lq_tmp0.
 Proof.
   destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
-  destruct lq_tmp0 as [| ds_d7Wy].
+  destruct lq_tmp0 as [| ds_d7Wv].
   - refine O.
-  - destruct ds_d7Wy as [| n'].
+  - destruct ds_d7Wv as [| n'].
     + refine O.
     + refine (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)).
 Defined.
@@ -3393,7 +3393,7 @@ Definition plus_1_neq_0_spec (n : MyNat): Type :=
 Theorem plus_1_neq_0 (n : MyNat): plus_1_neq_0_spec n.
 Proof.
   destruct n as [n n_p].
-  destruct n as [| ds_d7VT].
+  destruct n as [| ds_d7VQ].
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
@@ -6958,9 +6958,9 @@ Definition isred_spec (c : Color): Type :=
 Definition isred (c : Color): isred_spec c.
 Proof.
   destruct c as [c c_p].
-  destruct c as [| ds_d7WK|].
+  destruct c as [| ds_d7WH|].
   - refine SFFalse.
-  - destruct ds_d7WK as [| |].
+  - destruct ds_d7WH as [| |].
     + refine SFFalse.
     + refine SFFalse.
     + refine SFTrue.

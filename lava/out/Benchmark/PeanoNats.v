@@ -384,14 +384,14 @@ Proof.
   - destruct n as [n|].
     + refine (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver)).
     + refine (# false).
-  - destruct n as [lq_anf7205759403792810467|].
+  - destruct n as [lq_anf7205759403792810464|].
     + refine (# false).
     + refine (# true).
 Defined.
 
 Inductive eqN_rel: Nats_u → Nats_u → bool → Prop :=
   | eqN_Zero_Zero: eqN_rel Zero_u Zero_u true
-  | eqN_Zero_Suc: ∀ lq_anf7205759403792810467, eqN_rel Zero_u (Suc_u lq_anf7205759403792810467) false
+  | eqN_Zero_Suc: ∀ lq_anf7205759403792810464, eqN_rel Zero_u (Suc_u lq_anf7205759403792810464) false
   | eqN_Suc_Zero: ∀ m, eqN_rel (Suc_u m) Zero_u false
   | eqN_Suc_Suc: ∀ m n eqN_res, eqN_rel m n eqN_res → eqN_rel (Suc_u m) (Suc_u n) eqN_res.
 
@@ -405,7 +405,7 @@ Theorem eqN_rel_funct [m n : Nats_u]:
   ∀ (VV VV' : bool), eqN_rel m n VV → (eqN_rel m n VV' → VV = VV').
 Proof.
   try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros;
-  [destruct n as [n|] | destruct n as [lq_anf7205759403792810467|]];
+  [destruct n as [n|] | destruct n as [lq_anf7205759403792810464|]];
   rel_functionhood_body.
 Qed.
 
@@ -419,8 +419,8 @@ Qed.
 
 #[global] Hint Rewrite eqN_Zero_Zero_lem: f_rel_back.
 
-Theorem eqN_Zero_Suc_lem lq_anf7205759403792810467 eqN_Zero_Suc_lem_res:
-  eqN_rel Zero_u (Suc_u lq_anf7205759403792810467) eqN_Zero_Suc_lem_res
+Theorem eqN_Zero_Suc_lem lq_anf7205759403792810464 eqN_Zero_Suc_lem_res:
+  eqN_rel Zero_u (Suc_u lq_anf7205759403792810464) eqN_Zero_Suc_lem_res
   ↔ eqN_Zero_Suc_lem_res == false.
 Proof.
   rel_back' _nil.
@@ -456,7 +456,7 @@ Proof.
     pose proof (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver)) as IH_14792487;
     try clear IH_m |
     fix_notations] |
-   destruct n as [lq_anf7205759403792810467|];
+   destruct n as [lq_anf7205759403792810464|];
    [fix_notations | fix_notations]];
   simpl in *.
   Transparent eqN.
@@ -562,24 +562,24 @@ Proof.
   destruct m as [m m_p].
   destruct n as [n n_p].
   try revert m_p; generalize dependent m;
-  induction n as [lq_anf7205759403792810464 IH_lq_anf7205759403792810464|];
+  induction n as [lq_anf7205759403792810461 IH_lq_anf7205759403792810461|];
   intros.
   - destruct m as [m|].
-    + refine (IH_lq_anf7205759403792810464
-              ltac:(try clear IH_lq_anf7205759403792810464; solver)
+    + refine (IH_lq_anf7205759403792810461
+              ltac:(try clear IH_lq_anf7205759403792810461; solver)
               m
-              ltac:(try clear IH_lq_anf7205759403792810464; solver)).
+              ltac:(try clear IH_lq_anf7205759403792810461; solver)).
     + refine (# false).
   - refine (# true).
 Defined.
 
 Inductive geqN_rel: Nats_u → Nats_u → bool → Prop :=
   | geqN_x_Zero: ∀ m, geqN_rel m Zero_u true
-  | geqN_Zero_Suc: ∀ lq_anf7205759403792810464,
-                   geqN_rel Zero_u (Suc_u lq_anf7205759403792810464) false
-  | geqN_Suc_Suc: ∀ m lq_anf7205759403792810464 geqN_res,
-                  geqN_rel m lq_anf7205759403792810464 geqN_res
-                  → geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792810464) geqN_res.
+  | geqN_Zero_Suc: ∀ lq_anf7205759403792810461,
+                   geqN_rel Zero_u (Suc_u lq_anf7205759403792810461) false
+  | geqN_Suc_Suc: ∀ m lq_anf7205759403792810461 geqN_res,
+                  geqN_rel m lq_anf7205759403792810461 geqN_res
+                  → geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792810461) geqN_res.
 
 #[global] Hint Constructors geqN_rel: core_hint_db.
 
@@ -591,7 +591,7 @@ Theorem geqN_rel_funct [m n : Nats_u]:
   ∀ (VV VV' : bool), geqN_rel m n VV → (geqN_rel m n VV' → VV = VV').
 Proof.
   try revert m_p; generalize dependent m;
-  induction n as [lq_anf7205759403792810464 IH_lq_anf7205759403792810464|];
+  induction n as [lq_anf7205759403792810461 IH_lq_anf7205759403792810461|];
   intros;
   [destruct m as [m|] |];
   rel_functionhood_body.
@@ -607,8 +607,8 @@ Qed.
 
 #[global] Hint Rewrite geqN_x_Zero_lem: f_rel_back.
 
-Theorem geqN_Zero_Suc_lem lq_anf7205759403792810464 geqN_Zero_Suc_lem_res:
-  geqN_rel Zero_u (Suc_u lq_anf7205759403792810464) geqN_Zero_Suc_lem_res
+Theorem geqN_Zero_Suc_lem lq_anf7205759403792810461 geqN_Zero_Suc_lem_res:
+  geqN_rel Zero_u (Suc_u lq_anf7205759403792810461) geqN_Zero_Suc_lem_res
   ↔ geqN_Zero_Suc_lem_res == false.
 Proof.
   rel_back' _nil.
@@ -616,9 +616,9 @@ Qed.
 
 #[global] Hint Rewrite geqN_Zero_Suc_lem: f_rel_back.
 
-Theorem geqN_Suc_Suc_lem lq_anf7205759403792810464 m geqN_Suc_Suc_lem_res:
-  geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792810464) geqN_Suc_Suc_lem_res
-  ↔ ∃ geqN_res, geqN_rel m lq_anf7205759403792810464 geqN_res ∧ geqN_Suc_Suc_lem_res == geqN_res.
+Theorem geqN_Suc_Suc_lem lq_anf7205759403792810461 m geqN_Suc_Suc_lem_res:
+  geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792810461) geqN_Suc_Suc_lem_res
+  ↔ ∃ geqN_res, geqN_rel m lq_anf7205759403792810461 geqN_res ∧ geqN_Suc_Suc_lem_res == geqN_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -631,15 +631,15 @@ Proof.
   Opaque geqN.
   existence_lemma_pre geqN;
   try revert m_p; generalize dependent m;
-  induction n as [lq_anf7205759403792810464 IH_lq_anf7205759403792810464|];
+  induction n as [lq_anf7205759403792810461 IH_lq_anf7205759403792810461|];
   intros;
   [destruct m as [m|];
    [fix_notations;
-    pose proof (IH_lq_anf7205759403792810464
-                ltac:(try clear IH_lq_anf7205759403792810464; solver)
+    pose proof (IH_lq_anf7205759403792810461
+                ltac:(try clear IH_lq_anf7205759403792810461; solver)
                 m
-                ltac:(try clear IH_lq_anf7205759403792810464; solver)) as IH_47961826;
-    try clear IH_lq_anf7205759403792810464 |
+                ltac:(try clear IH_lq_anf7205759403792810461; solver)) as IH_28387485;
+    try clear IH_lq_anf7205759403792810461 |
     fix_notations] |
    fix_notations];
   simpl in *.
@@ -1024,7 +1024,7 @@ Proof.
               (λ (o : Nats_u), Nats_wf o ∧ (o ≠ Zero_u ↔ m ≠ n))
               (Suc (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver)))
               ltac:(solver)).
-  - destruct n as [lq_anf7205759403792810483|].
+  - destruct n as [lq_anf7205759403792810480|].
     + intros; exfalso; solver.
     + refine (subsumptionCast
               Nats_u
@@ -1047,7 +1047,7 @@ Inductive sub_rel: Nats_u → Nats_u → Nats_u → Prop :=
 Theorem sub_rel_funct [m n : Nats_u]: ∀ (o o' : Nats_u), sub_rel m n o → (sub_rel m n o' → o = o').
 Proof.
   try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros;
-  [destruct n as [n|] | destruct n as [lq_anf7205759403792810483|]];
+  [destruct n as [n|] | destruct n as [lq_anf7205759403792810480|]];
   rel_functionhood_body.
 Qed.
 
@@ -1093,7 +1093,7 @@ Proof.
     pose proof (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver)) as IH_14792487;
     try clear IH_m |
     fix_notations] |
-   destruct n as [lq_anf7205759403792810483|];
+   destruct n as [lq_anf7205759403792810480|];
    [ | fix_notations]];
   simpl in *.
   Transparent sub.
@@ -1207,18 +1207,18 @@ Proof.
   destruct m as [m m_p].
   destruct n as [n n_p].
   destruct m as [m|].
-  - induction n as [lq_anf7205759403792810453 IH_lq_anf7205759403792810453|].
+  - induction n as [lq_anf7205759403792810450 IH_lq_anf7205759403792810450|].
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
                ∃ add_res, add_rel m n add_res ∧ ∃ sub_res, sub_rel add_res n sub_res ∧ sub_res == m)
               (let _: ∃ add_res,
-                      add_rel (Suc_u m) lq_anf7205759403792810453 add_res
-                      ∧ ∃ sub_res, sub_rel add_res lq_anf7205759403792810453 sub_res ∧ sub_res == Suc_u m :=
-               ⌈ IH_lq_anf7205759403792810453 ltac:(try clear IH_lq_anf7205759403792810453; solver) ⌉ in
+                      add_rel (Suc_u m) lq_anf7205759403792810450 add_res
+                      ∧ ∃ sub_res, sub_rel add_res lq_anf7205759403792810450 sub_res ∧ sub_res == Suc_u m :=
+               ⌈ IH_lq_anf7205759403792810450 ltac:(try clear IH_lq_anf7205759403792810450; solver) ⌉ in
                add_suc_r
                (Suc (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver)))
-               (exist (λ (n : Nats_u), Nats_wf n ∧ True) lq_anf7205759403792810453 ltac:(solver)))
+               (exist (λ (n : Nats_u), Nats_wf n ∧ True) lq_anf7205759403792810450 ltac:(solver)))
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
@@ -1226,16 +1226,16 @@ Proof.
                ∃ add_res, add_rel m n add_res ∧ ∃ sub_res, sub_rel add_res n sub_res ∧ sub_res == m)
               (add_zero_r (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver)))
               ltac:(solver)).
-  - induction n as [lq_anf7205759403792810445 IH_lq_anf7205759403792810445|].
+  - induction n as [lq_anf7205759403792810442 IH_lq_anf7205759403792810442|].
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
                ∃ add_res, add_rel m n add_res ∧ ∃ sub_res, sub_rel add_res n sub_res ∧ sub_res == m)
               (let _: ∃ add_res,
-                      add_rel Zero_u lq_anf7205759403792810445 add_res
-                      ∧ ∃ sub_res, sub_rel add_res lq_anf7205759403792810445 sub_res ∧ sub_res == Zero_u :=
-               ⌈ IH_lq_anf7205759403792810445 ltac:(try clear IH_lq_anf7205759403792810445; solver) ⌉ in
-               add_suc_r Zero (exist (λ (n : Nats_u), Nats_wf n ∧ True) lq_anf7205759403792810445 ltac:(solver)))
+                      add_rel Zero_u lq_anf7205759403792810442 add_res
+                      ∧ ∃ sub_res, sub_rel add_res lq_anf7205759403792810442 sub_res ∧ sub_res == Zero_u :=
+               ⌈ IH_lq_anf7205759403792810442 ltac:(try clear IH_lq_anf7205759403792810442; solver) ⌉ in
+               add_suc_r Zero (exist (λ (n : Nats_u), Nats_wf n ∧ True) lq_anf7205759403792810442 ltac:(solver)))
               ltac:(solver)).
     + refine (subsumptionCast
               Unit

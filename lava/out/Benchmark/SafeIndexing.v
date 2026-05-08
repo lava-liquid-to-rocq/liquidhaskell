@@ -85,7 +85,7 @@ Definition llen_spec (l : IList): Type :=
 Definition llen (l : IList): llen_spec l.
 Proof.
   destruct l as [l l_p].
-  induction l as [ds_d4Ws l' IH_l'|].
+  induction l as [ds_d4Wp l' IH_l'|].
   - refine (subsumptionCast
             Z
             (λ (v : Z), gebZ_rel v 0 true)
@@ -104,9 +104,9 @@ Proof.
 Defined.
 
 Inductive llen_rel: IList_u → Z → Prop :=
-  | llen_Cons: ∀ ds_d4Ws l' llen_res,
+  | llen_Cons: ∀ ds_d4Wp l' llen_res,
                llen_rel l' llen_res
-               → ∀ addZ_res, addZ_rel llen_res 1 addZ_res → llen_rel (Cons_u ds_d4Ws l') addZ_res
+               → ∀ addZ_res, addZ_rel llen_res 1 addZ_res → llen_rel (Cons_u ds_d4Wp l') addZ_res
   | llen_Nil: llen_rel Nil_u 0.
 
 #[global] Hint Constructors llen_rel: core_hint_db.
@@ -117,13 +117,13 @@ Inductive llen_rel: IList_u → Z → Prop :=
 
 Theorem llen_rel_funct [l : IList_u]: ∀ (v v' : Z), llen_rel l v → (llen_rel l v' → v = v').
 Proof.
-  induction l as [ds_d4Ws l' IH_l'|]; rel_functionhood_body.
+  induction l as [ds_d4Wp l' IH_l'|]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve llen_rel_funct: f_rel_funct_db.
 
-Theorem llen_Cons_lem ds_d4Ws l' llen_Cons_lem_res:
-  llen_rel (Cons_u ds_d4Ws l') llen_Cons_lem_res
+Theorem llen_Cons_lem ds_d4Wp l' llen_Cons_lem_res:
+  llen_rel (Cons_u ds_d4Wp l') llen_Cons_lem_res
   ↔ ∃ llen_res,
     llen_rel l' llen_res ∧ ∃ addZ_res, addZ_rel llen_res 1 addZ_res ∧ llen_Cons_lem_res == addZ_res.
 Proof.
@@ -143,7 +143,7 @@ Theorem llen_rel_ex (l : IList_u) (l_p : IList_wf l ∧ True): llen_rel l ⌊ ll
 Proof.
   Opaque llen.
   existence_lemma_pre llen;
-  induction l as [ds_d4Ws l' IH_l'|];
+  induction l as [ds_d4Wp l' IH_l'|];
   [fix_notations; pose proof (IH_l' ltac:(try clear IH_l'; solver)) as IH_91252151; try clear IH_l' |
    fix_notations];
   simpl in *.
