@@ -134,7 +134,7 @@ Proof.
   [fix_notations];
   simpl in *.
   Transparent compose.
-  all: existence_lemma_quicksolve compose; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve compose; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve compose_rel_ex: rel_ax_db.
@@ -264,7 +264,7 @@ Proof.
   Opaque retrn.
   existence_lemma_pre retrn; fix_notations; simpl in *.
   Transparent retrn.
-  all: existence_lemma_quicksolve retrn; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve retrn; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve retrn_rel_ex: rel_ax_db.
@@ -363,9 +363,9 @@ Proof.
           Unit
           (λ (VV : Unit),
            ∃ retrn_res,
-           retrn_rel ⌊ x ⌋ retrn_res
+           retrn_rel x retrn_res
            ∧ ∃ compose_res,
-             compose_rel retrn_res ⌊ f ⌋ compose_res ∧ ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ compose_res == f_res)
+             compose_rel retrn_res f compose_res ∧ ∃ f_res, getUPackRel f x f_res ∧ compose_res == f_res)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -381,7 +381,7 @@ Proof.
   destruct x as [x].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ compose_res, compose_rel ⌊ x ⌋ retrn_upack compose_res ∧ compose_res == ⌊ x ⌋)
+            (λ (VV : Unit), ∃ compose_res, compose_rel x retrn_upack compose_res ∧ compose_res == x)
             (# unit)
             ltac:(solver)).
 Qed.

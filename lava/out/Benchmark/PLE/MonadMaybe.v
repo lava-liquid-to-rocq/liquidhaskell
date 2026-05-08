@@ -163,7 +163,7 @@ Proof.
   [fix_notations | fix_notations];
   simpl in *.
   Transparent bind.
-  all: existence_lemma_quicksolve bind; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve bind; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve bind_rel_ex: rel_ax_db.
@@ -304,7 +304,7 @@ Proof.
   Opaque retrn.
   existence_lemma_pre retrn; fix_notations; simpl in *.
   Transparent retrn.
-  all: existence_lemma_quicksolve retrn; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve retrn; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve retrn_rel_ex: rel_ax_db.
@@ -404,9 +404,8 @@ Proof.
           Unit
           (λ (VV : Unit),
            ∃ retrn_res,
-           retrn_rel ⌊ x ⌋ retrn_res
-           ∧ ∃ bind_res,
-             bind_rel retrn_res ⌊ f ⌋ bind_res ∧ ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ bind_res == f_res)
+           retrn_rel x retrn_res
+           ∧ ∃ bind_res, bind_rel retrn_res f bind_res ∧ ∃ f_res, getUPackRel f x f_res ∧ bind_res == f_res)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -422,12 +421,12 @@ Proof.
   destruct x as [x|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res ∧ bind_res == ⌊ x ⌋)
+            (λ (VV : Unit), ∃ bind_res, bind_rel x retrn_upack bind_res ∧ bind_res == x)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res ∧ bind_res == ⌊ x ⌋)
+            (λ (VV : Unit), ∃ bind_res, bind_rel x retrn_upack bind_res ∧ bind_res == x)
             (# unit)
             ltac:(solver)).
 Qed.

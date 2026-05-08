@@ -116,7 +116,7 @@ Proof.
   [fix_notations];
   simpl in *.
   Transparent fstSF.
-  all: existence_lemma_quicksolve fstSF; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve fstSF; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve fstSF_rel_ex: rel_ax_db.
@@ -223,7 +223,7 @@ Proof.
   [fix_notations];
   simpl in *.
   Transparent sndSF.
-  all: existence_lemma_quicksolve sndSF; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve sndSF; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve sndSF_rel_ex: rel_ax_db.
@@ -300,9 +300,8 @@ Proof.
           Unit
           (λ (VV : Unit),
            ∃ sndSF_res,
-           sndSF_rel (Pair_u ⌊ n ⌋ ⌊ m ⌋) sndSF_res
-           ∧ ∃ fstSF_res,
-             fstSF_rel (Pair_u ⌊ n ⌋ ⌊ m ⌋) fstSF_res ∧ Pair_u ⌊ n ⌋ ⌊ m ⌋ == Pair_u fstSF_res sndSF_res)
+           sndSF_rel (Pair_u n m) sndSF_res
+           ∧ ∃ fstSF_res, fstSF_rel (Pair_u n m) fstSF_res ∧ Pair_u n m == Pair_u fstSF_res sndSF_res)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -322,8 +321,7 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ sndSF_res,
-             sndSF_rel ⌊ p ⌋ sndSF_res
-             ∧ ∃ fstSF_res, fstSF_rel ⌊ p ⌋ fstSF_res ∧ ⌊ p ⌋ == Pair_u fstSF_res sndSF_res)
+             sndSF_rel p sndSF_res ∧ ∃ fstSF_res, fstSF_rel p fstSF_res ∧ p == Pair_u fstSF_res sndSF_res)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -376,7 +374,7 @@ Proof.
   [fix_notations];
   simpl in *.
   Transparent swap_pair.
-  all: existence_lemma_quicksolve swap_pair; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve swap_pair; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve swap_pair_rel_ex: rel_ax_db.

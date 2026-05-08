@@ -7,6 +7,33 @@ From Coq Require Import Unicode.Utf8.
 Inductive Modifier_u: Type :=
   | Minus_u: Modifier_u | Natural_u: Modifier_u | Plus_u: Modifier_u.
 
+Fixpoint Modifier_eq (x y : Modifier_u): bool :=
+  match (x, y) with
+  | (Minus_u, Minus_u) => true
+  | (Natural_u, Natural_u) => true
+  | (Plus_u, Plus_u) => true
+  | (_, _) => false
+  end.
+
+Theorem Modifier_eq_refl : ∀ (x : Modifier_u), is_true (Modifier_eq x x).
+Proof.
+  eq_refl_rec.
+Qed.
+
+#[global] Hint Resolve Modifier_eq_refl: eq_hint_db.
+
+Theorem Modifier_eqb_eq : ∀ (s t : Modifier_u), is_true (Modifier_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Modifier_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Modifier: LeibnitzEqB := {
+    equalB' := Modifier_eq;
+    refl' := Modifier_eq_refl;
+    eqb_eq' := Modifier_eqb_eq }.
+
 Fixpoint Modifier_wf (x : Modifier_u): Prop :=
   match x with | Minus_u => True | Natural_u => True | Plus_u => True end.
 
@@ -56,6 +83,35 @@ Definition Plus : Modifier :=
 
 Inductive Letter_u: Type :=
   | A_u: Letter_u | B_u: Letter_u | C_u: Letter_u | D_u: Letter_u | F_u: Letter_u.
+
+Fixpoint Letter_eq (x y : Letter_u): bool :=
+  match (x, y) with
+  | (A_u, A_u) => true
+  | (B_u, B_u) => true
+  | (C_u, C_u) => true
+  | (D_u, D_u) => true
+  | (F_u, F_u) => true
+  | (_, _) => false
+  end.
+
+Theorem Letter_eq_refl : ∀ (x : Letter_u), is_true (Letter_eq x x).
+Proof.
+  eq_refl_rec.
+Qed.
+
+#[global] Hint Resolve Letter_eq_refl: eq_hint_db.
+
+Theorem Letter_eqb_eq : ∀ (s t : Letter_u), is_true (Letter_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Letter_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Letter: LeibnitzEqB := {
+    equalB' := Letter_eq;
+    refl' := Letter_eq_refl;
+    eqb_eq' := Letter_eqb_eq }.
 
 Fixpoint Letter_wf (x : Letter_u): Prop :=
   match x with | A_u => True | B_u => True | C_u => True | D_u => True | F_u => True end.
@@ -853,6 +909,33 @@ Qed.
 
 Inductive Comparison_u: Type :=
   | Eq_u: Comparison_u | Gt_u: Comparison_u | Lt_u: Comparison_u.
+
+Fixpoint Comparison_eq (x y : Comparison_u): bool :=
+  match (x, y) with
+  | (Eq_u, Eq_u) => true
+  | (Gt_u, Gt_u) => true
+  | (Lt_u, Lt_u) => true
+  | (_, _) => false
+  end.
+
+Theorem Comparison_eq_refl : ∀ (x : Comparison_u), is_true (Comparison_eq x x).
+Proof.
+  eq_refl_rec.
+Qed.
+
+#[global] Hint Resolve Comparison_eq_refl: eq_hint_db.
+
+Theorem Comparison_eqb_eq : ∀ (s t : Comparison_u), is_true (Comparison_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Comparison_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Comparison: LeibnitzEqB := {
+    equalB' := Comparison_eq;
+    refl' := Comparison_eq_refl;
+    eqb_eq' := Comparison_eqb_eq }.
 
 Fixpoint Comparison_wf (x : Comparison_u): Prop :=
   match x with | Eq_u => True | Gt_u => True | Lt_u => True end.

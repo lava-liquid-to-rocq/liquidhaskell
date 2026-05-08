@@ -18,16 +18,14 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ plus_res,
-             plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
-             ∧ ∃ plus_res_2, plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res_2 ∧ S_u plus_res == plus_res_2)
+             plus_rel n m plus_res ∧ ∃ plus_res_2, plus_rel n (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ plus_res,
-             plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
-             ∧ ∃ plus_res_2, plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res_2 ∧ S_u plus_res == plus_res_2)
+             plus_rel n m plus_res ∧ ∃ plus_res_2, plus_rel n (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
             (IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -43,12 +41,12 @@ Proof.
   induction n as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ mult_res, mult_rel ⌊ n ⌋ O_u mult_res ∧ mult_res == O_u)
+            (λ (VV : Unit), ∃ mult_res, mult_rel n O_u mult_res ∧ mult_res == O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ mult_res, mult_rel ⌊ n ⌋ O_u mult_res ∧ mult_res == O_u)
+            (λ (VV : Unit), ∃ mult_res, mult_rel n O_u mult_res ∧ mult_res == O_u)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -64,12 +62,12 @@ Proof.
   induction n as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ minus_res, minus_rel ⌊ n ⌋ ⌊ n ⌋ minus_res ∧ minus_res == O_u)
+            (λ (VV : Unit), ∃ minus_res, minus_rel n n minus_res ∧ minus_res == O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ minus_res, minus_rel ⌊ n ⌋ ⌊ n ⌋ minus_res ∧ minus_res == O_u)
+            (λ (VV : Unit), ∃ minus_res, minus_rel n n minus_res ∧ minus_res == O_u)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -85,12 +83,12 @@ Proof.
   induction n as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ plus_res, plus_rel ⌊ n ⌋ O_u plus_res ∧ plus_res == ⌊ n ⌋)
+            (λ (VV : Unit), ∃ plus_res, plus_rel n O_u plus_res ∧ plus_res == n)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ plus_res, plus_rel ⌊ n ⌋ O_u plus_res ∧ plus_res == ⌊ n ⌋)
+            (λ (VV : Unit), ∃ plus_res, plus_rel n O_u plus_res ∧ plus_res == n)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -110,17 +108,13 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ plus_res,
-             plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
-             ∧ ∃ plus_res_2, plus_rel ⌊ m ⌋ ⌊ n ⌋ plus_res_2 ∧ plus_res == plus_res_2)
+             ∃ plus_res, plus_rel n m plus_res ∧ ∃ plus_res_2, plus_rel m n plus_res_2 ∧ plus_res == plus_res_2)
             (add_0_r (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver)))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ plus_res,
-             plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
-             ∧ ∃ plus_res_2, plus_rel ⌊ m ⌋ ⌊ n ⌋ plus_res_2 ∧ plus_res == plus_res_2)
+             ∃ plus_res, plus_rel n m plus_res ∧ ∃ plus_res_2, plus_rel m n plus_res_2 ∧ plus_res == plus_res_2)
             (let _: ∃ plus_res,
                     plus_rel n' m plus_res ∧ ∃ plus_res_2, plus_rel m n' plus_res_2 ∧ plus_res == plus_res_2 :=
              ⌈ IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver) ⌉ in

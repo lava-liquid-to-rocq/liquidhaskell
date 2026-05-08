@@ -7,6 +7,32 @@ From Coq Require Import Unicode.Utf8.
 Inductive SFBool_u: Type :=
   | SFFalse_u: SFBool_u | SFTrue_u: SFBool_u.
 
+Fixpoint SFBool_eq (x y : SFBool_u): bool :=
+  match (x, y) with
+  | (SFFalse_u, SFFalse_u) => true
+  | (SFTrue_u, SFTrue_u) => true
+  | (_, _) => false
+  end.
+
+Theorem SFBool_eq_refl : ∀ (x : SFBool_u), is_true (SFBool_eq x x).
+Proof.
+  eq_refl_rec.
+Qed.
+
+#[global] Hint Resolve SFBool_eq_refl: eq_hint_db.
+
+Theorem SFBool_eqb_eq : ∀ (s t : SFBool_u), is_true (SFBool_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve SFBool_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_SFBool: LeibnitzEqB := {
+    equalB' := SFBool_eq;
+    refl' := SFBool_eq_refl;
+    eqb_eq' := SFBool_eqb_eq }.
+
 Fixpoint SFBool_wf (x : SFBool_u): Prop :=
   match x with | SFFalse_u => True | SFTrue_u => True end.
 
@@ -102,7 +128,7 @@ Proof.
   [fix_notations | fix_notations];
   simpl in *.
   Transparent andb.
-  all: existence_lemma_quicksolve andb; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve andb; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve andb_rel_ex: rel_ax_db.
@@ -282,7 +308,7 @@ Proof.
     [fix_notations | fix_notations]]];
   simpl in *.
   Transparent andb3.
-  all: existence_lemma_quicksolve andb3; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve andb3; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve andb3_rel_ex: rel_ax_db.
@@ -443,34 +469,26 @@ Proof.
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ andb_res,
-               andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res
-               ∧ ∃ andb_res_2, andb_rel ⌊ c ⌋ ⌊ b ⌋ andb_res_2 ∧ andb_res == andb_res_2)
+               ∃ andb_res, andb_rel b c andb_res ∧ ∃ andb_res_2, andb_rel c b andb_res_2 ∧ andb_res == andb_res_2)
               (# unit)
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ andb_res,
-               andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res
-               ∧ ∃ andb_res_2, andb_rel ⌊ c ⌋ ⌊ b ⌋ andb_res_2 ∧ andb_res == andb_res_2)
+               ∃ andb_res, andb_rel b c andb_res ∧ ∃ andb_res_2, andb_rel c b andb_res_2 ∧ andb_res == andb_res_2)
               (# unit)
               ltac:(solver)).
   - destruct c as [|].
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ andb_res,
-               andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res
-               ∧ ∃ andb_res_2, andb_rel ⌊ c ⌋ ⌊ b ⌋ andb_res_2 ∧ andb_res == andb_res_2)
+               ∃ andb_res, andb_rel b c andb_res ∧ ∃ andb_res_2, andb_rel c b andb_res_2 ∧ andb_res == andb_res_2)
               (# unit)
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ andb_res,
-               andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res
-               ∧ ∃ andb_res_2, andb_rel ⌊ c ⌋ ⌊ b ⌋ andb_res_2 ∧ andb_res == andb_res_2)
+               ∃ andb_res, andb_rel b c andb_res ∧ ∃ andb_res_2, andb_rel c b andb_res_2 ∧ andb_res == andb_res_2)
               (# unit)
               ltac:(solver)).
 Qed.
@@ -491,11 +509,11 @@ Proof.
   destruct p as [p p_p].
   destruct b as [|].
   - destruct c as [|].
-    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ c ⌋ == SFTrue_u) (# unit) ltac:(solver)).
-    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ c ⌋ == SFTrue_u) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), c == SFTrue_u) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), c == SFTrue_u) (# unit) ltac:(solver)).
   - destruct c as [|].
-    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ c ⌋ == SFTrue_u) (# unit) ltac:(solver)).
-    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ c ⌋ == SFTrue_u) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), c == SFTrue_u) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), c == SFTrue_u) (# unit) ltac:(solver)).
 Qed.
 
 Definition identity_fn_applied_twice_spec
@@ -543,14 +561,14 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ f_res, getPackRel f ⌊ b ⌋ f_res ∧ ∃ f_res_2, getPackRel f f_res f_res_2 ∧ f_res_2 == ⌊ b ⌋)
+           ∃ f_res, getUPackRel f b f_res ∧ ∃ f_res_2, getUPackRel f f_res f_res_2 ∧ f_res_2 == b)
           (let _: True :=
            ⌈ # unit ⌉ in
            let _: (True ∧ VV == ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋)
                   ∧ VV
                     == ⌊ getPackF f (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌋ :=
            ⌈ let _: True :=
-             ⌈ let _: ∃ f_res, getPackRel f b f_res ∧ f_res == b :=
+             ⌈ let _: ∃ f_res, getUPackRel f b f_res ∧ f_res == b :=
                ⌈ getPackF x (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌉ in
                let _: ⌊ getPackF x (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌋
                       == b :=
@@ -645,7 +663,7 @@ Proof.
    [fix_notations | fix_notations]];
   simpl in *.
   Transparent nandb.
-  all: existence_lemma_quicksolve nandb; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve nandb; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve nandb_rel_ex: rel_ax_db.
@@ -826,7 +844,7 @@ Proof.
   [fix_notations | fix_notations];
   simpl in *.
   Transparent negb.
-  all: existence_lemma_quicksolve negb; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve negb; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve negb_rel_ex: rel_ax_db.
@@ -915,15 +933,13 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ negb_res,
-             negb_rel ⌊ b ⌋ negb_res ∧ ∃ negb_res_2, negb_rel negb_res negb_res_2 ∧ negb_res_2 == ⌊ b ⌋)
+             ∃ negb_res, negb_rel b negb_res ∧ ∃ negb_res_2, negb_rel negb_res negb_res_2 ∧ negb_res_2 == b)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ negb_res,
-             negb_rel ⌊ b ⌋ negb_res ∧ ∃ negb_res_2, negb_rel negb_res negb_res_2 ∧ negb_res_2 == ⌊ b ⌋)
+             ∃ negb_res, negb_rel b negb_res ∧ ∃ negb_res_2, negb_rel negb_res negb_res_2 ∧ negb_res_2 == b)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -985,7 +1001,7 @@ Proof.
   [fix_notations | fix_notations];
   simpl in *.
   Transparent orb.
-  all: existence_lemma_quicksolve orb; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve orb; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve orb_rel_ex: rel_ax_db.
@@ -1075,11 +1091,11 @@ Proof.
   destruct h as [h h_p].
   destruct b as [|].
   - destruct c as [|].
-    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ b ⌋ == ⌊ c ⌋) (# unit) ltac:(solver)).
-    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ b ⌋ == ⌊ c ⌋) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), b == c) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), b == c) (# unit) ltac:(solver)).
   - destruct c as [|].
-    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ b ⌋ == ⌊ c ⌋) (# unit) ltac:(solver)).
-    + refine (subsumptionCast Unit (λ (VV : Unit), ⌊ b ⌋ == ⌊ c ⌋) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), b == c) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), b == c) (# unit) ltac:(solver)).
 Qed.
 
 Definition test_orb1_spec : Type :=
@@ -1172,6 +1188,28 @@ Defined.
 
 Inductive SFBit_u: Type :=
   | B0_u: SFBit_u | B1_u: SFBit_u.
+
+Fixpoint SFBit_eq (x y : SFBit_u): bool :=
+  match (x, y) with | (B0_u, B0_u) => true | (B1_u, B1_u) => true | (_, _) => false end.
+
+Theorem SFBit_eq_refl : ∀ (x : SFBit_u), is_true (SFBit_eq x x).
+Proof.
+  eq_refl_rec.
+Qed.
+
+#[global] Hint Resolve SFBit_eq_refl: eq_hint_db.
+
+Theorem SFBit_eqb_eq : ∀ (s t : SFBit_u), is_true (SFBit_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve SFBit_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_SFBit: LeibnitzEqB := {
+    equalB' := SFBit_eq;
+    refl' := SFBit_eq_refl;
+    eqb_eq' := SFBit_eqb_eq }.
 
 Fixpoint SFBit_wf (x : SFBit_u): Prop :=
   match x with | B0_u => True | B1_u => True end.
@@ -1401,7 +1439,7 @@ Proof.
    fix_notations];
   simpl in *.
   Transparent bin_to_nat.
-  all: existence_lemma_quicksolve bin_to_nat; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve bin_to_nat; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve bin_to_nat_rel_ex: rel_ax_db.
@@ -1546,7 +1584,7 @@ Proof.
    fix_notations];
   simpl in *.
   Transparent incr.
-  all: existence_lemma_quicksolve incr; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve incr; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve incr_rel_ex: rel_ax_db.
@@ -1711,6 +1749,33 @@ Qed.
 
 Inductive RGB_u: Type :=
   | Blue_u: RGB_u | Green_u: RGB_u | Red_u: RGB_u.
+
+Fixpoint RGB_eq (x y : RGB_u): bool :=
+  match (x, y) with
+  | (Blue_u, Blue_u) => true
+  | (Green_u, Green_u) => true
+  | (Red_u, Red_u) => true
+  | (_, _) => false
+  end.
+
+Theorem RGB_eq_refl : ∀ (x : RGB_u), is_true (RGB_eq x x).
+Proof.
+  eq_refl_rec.
+Qed.
+
+#[global] Hint Resolve RGB_eq_refl: eq_hint_db.
+
+Theorem RGB_eqb_eq : ∀ (s t : RGB_u), is_true (RGB_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve RGB_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_RGB: LeibnitzEqB := {
+    equalB' := RGB_eq;
+    refl' := RGB_eq_refl;
+    eqb_eq' := RGB_eqb_eq }.
 
 Fixpoint RGB_wf (x : RGB_u): Prop :=
   match x with | Blue_u => True | Green_u => True | Red_u => True end.
@@ -2131,7 +2196,7 @@ Proof.
   [fix_notations];
   simpl in *.
   Transparent swap_pair.
-  all: existence_lemma_quicksolve swap_pair; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve swap_pair; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve swap_pair_rel_ex: rel_ax_db.
@@ -2281,7 +2346,7 @@ Proof.
     try clear IH_n']];
   simpl in *.
   Transparent eqb.
-  all: existence_lemma_quicksolve eqb; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve eqb; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve eqb_rel_ex: rel_ax_db.
@@ -2391,7 +2456,7 @@ Proof.
   [fix_notations];
   simpl in *.
   Transparent fstSF.
-  all: existence_lemma_quicksolve fstSF; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve fstSF; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve fstSF_rel_ex: rel_ax_db.
@@ -2527,7 +2592,7 @@ Proof.
     try clear IH_n']];
   simpl in *.
   Transparent leb.
-  all: existence_lemma_quicksolve leb; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve leb; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve leb_rel_ex: rel_ax_db.
@@ -2678,7 +2743,7 @@ Proof.
     try clear IH_n']];
   simpl in *.
   Transparent ltb.
-  all: existence_lemma_quicksolve ltb; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve ltb; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve ltb_rel_ex: rel_ax_db.
@@ -2823,7 +2888,7 @@ Proof.
     try clear IH_ds_d5Tq]];
   simpl in *.
   Transparent minus.
-  all: existence_lemma_quicksolve minus; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve minus; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve minus_rel_ex: rel_ax_db.
@@ -2900,12 +2965,12 @@ Proof.
   induction n as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ minus_res, minus_rel ⌊ n ⌋ ⌊ n ⌋ minus_res ∧ minus_res == O_u)
+            (λ (VV : Unit), ∃ minus_res, minus_rel n n minus_res ∧ minus_res == O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ minus_res, minus_rel ⌊ n ⌋ ⌊ n ⌋ minus_res ∧ minus_res == O_u)
+            (λ (VV : Unit), ∃ minus_res, minus_rel n n minus_res ∧ minus_res == O_u)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -2963,7 +3028,7 @@ Proof.
   Opaque one.
   existence_lemma_pre one; fix_notations; simpl in *.
   Transparent one.
-  all: existence_lemma_quicksolve one; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve one; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve one_rel_ex: rel_ax_db.
@@ -3062,7 +3127,7 @@ Proof.
    try clear IH_n'];
   simpl in *.
   Transparent plus.
-  all: existence_lemma_quicksolve plus; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve plus; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve plus_rel_ex: rel_ax_db.
@@ -3137,12 +3202,12 @@ Proof.
   induction n as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ plus_res, plus_rel ⌊ n ⌋ O_u plus_res ∧ plus_res == ⌊ n ⌋)
+            (λ (VV : Unit), ∃ plus_res, plus_rel n O_u plus_res ∧ plus_res == n)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ plus_res, plus_rel ⌊ n ⌋ O_u plus_res ∧ plus_res == ⌊ n ⌋)
+            (λ (VV : Unit), ∃ plus_res, plus_rel n O_u plus_res ∧ plus_res == n)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -3170,24 +3235,22 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ plus_res,
-             plus_rel ⌊ m ⌋ ⌊ p ⌋ plus_res
+             plus_rel m p plus_res
              ∧ ∃ plus_res_2,
-               plus_rel ⌊ n ⌋ plus_res plus_res_2
+               plus_rel n plus_res plus_res_2
                ∧ ∃ plus_res_3,
-                 plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res_3
-                 ∧ ∃ plus_res_4, plus_rel plus_res_3 ⌊ p ⌋ plus_res_4 ∧ plus_res_2 == plus_res_4)
+                 plus_rel n m plus_res_3 ∧ ∃ plus_res_4, plus_rel plus_res_3 p plus_res_4 ∧ plus_res_2 == plus_res_4)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ plus_res,
-             plus_rel ⌊ m ⌋ ⌊ p ⌋ plus_res
+             plus_rel m p plus_res
              ∧ ∃ plus_res_2,
-               plus_rel ⌊ n ⌋ plus_res plus_res_2
+               plus_rel n plus_res plus_res_2
                ∧ ∃ plus_res_3,
-                 plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res_3
-                 ∧ ∃ plus_res_4, plus_rel plus_res_3 ⌊ p ⌋ plus_res_4 ∧ plus_res_2 == plus_res_4)
+                 plus_rel n m plus_res_3 ∧ ∃ plus_res_4, plus_rel plus_res_3 p plus_res_4 ∧ plus_res_2 == plus_res_4)
             (IH_n'
              ltac:(try clear IH_n'; solver)
              m
@@ -3213,16 +3276,14 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ plus_res,
-             plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res
-             ∧ ∃ plus_res_2, plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res_2 ∧ plus_res == S_u plus_res_2)
+             plus_rel n (S_u m) plus_res ∧ ∃ plus_res_2, plus_rel n m plus_res_2 ∧ plus_res == S_u plus_res_2)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ plus_res,
-             plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res
-             ∧ ∃ plus_res_2, plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res_2 ∧ plus_res == S_u plus_res_2)
+             plus_rel n (S_u m) plus_res ∧ ∃ plus_res_2, plus_rel n m plus_res_2 ∧ plus_res == S_u plus_res_2)
             (IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -3291,7 +3352,7 @@ Proof.
    try clear IH_n'];
   simpl in *.
   Transparent mult.
-  all: existence_lemma_quicksolve mult; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve mult; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve mult_rel_ex: rel_ax_db.
@@ -3419,7 +3480,7 @@ Proof.
    fix_notations; pose proof (IH_n' ltac:(try clear IH_n'; solver)) as IH_36186333; try clear IH_n'];
   simpl in *.
   Transparent factorial.
-  all: existence_lemma_quicksolve factorial; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve factorial; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve factorial_rel_ex: rel_ax_db.
@@ -3499,12 +3560,12 @@ Proof.
   induction n as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ mult_res, mult_rel ⌊ n ⌋ O_u mult_res ∧ mult_res == O_u)
+            (λ (VV : Unit), ∃ mult_res, mult_rel n O_u mult_res ∧ mult_res == O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ mult_res, mult_rel ⌊ n ⌋ O_u mult_res ∧ mult_res == O_u)
+            (λ (VV : Unit), ∃ mult_res, mult_rel n O_u mult_res ∧ mult_res == O_u)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -3519,7 +3580,7 @@ Proof.
   destruct n as [n n_p].
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ mult_res, mult_rel O_u ⌊ n ⌋ mult_res ∧ mult_res == O_u)
+          (λ (VV : Unit), ∃ mult_res, mult_rel O_u n mult_res ∧ mult_res == O_u)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -3535,12 +3596,12 @@ Proof.
   induction n as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ mult_res, mult_rel ⌊ n ⌋ O_u mult_res ∧ O_u == mult_res)
+            (λ (VV : Unit), ∃ mult_res, mult_rel n O_u mult_res ∧ O_u == mult_res)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ mult_res, mult_rel ⌊ n ⌋ O_u mult_res ∧ O_u == mult_res)
+            (λ (VV : Unit), ∃ mult_res, mult_rel n O_u mult_res ∧ O_u == mult_res)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -3562,9 +3623,9 @@ Proof.
           Unit
           (λ (VV : Unit),
            ∃ mult_res,
-           mult_rel ⌊ q ⌋ O_u mult_res
+           mult_rel q O_u mult_res
            ∧ ∃ mult_res_2,
-             mult_rel ⌊ p ⌋ O_u mult_res_2 ∧ ∃ plus_res, plus_rel mult_res_2 mult_res plus_res ∧ plus_res == O_u)
+             mult_rel p O_u mult_res_2 ∧ ∃ plus_res, plus_rel mult_res_2 mult_res plus_res ∧ plus_res == O_u)
           (let _: ∃ mult_res, mult_rel q O_u mult_res ∧ O_u == mult_res :=
            ⌈ mult_n_O (exist (λ (q : MyNat_u), MyNat_wf q ∧ True) q ltac:(solver)) ⌉ in
            mult_n_O (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)))
@@ -3589,20 +3650,18 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ mult_res,
-             mult_rel ⌊ n ⌋ ⌊ m ⌋ mult_res
+             mult_rel n m mult_res
              ∧ ∃ plus_res,
-               plus_rel mult_res ⌊ n ⌋ plus_res
-               ∧ ∃ mult_res_2, mult_rel ⌊ n ⌋ (S_u ⌊ m ⌋) mult_res_2 ∧ plus_res == mult_res_2)
+               plus_rel mult_res n plus_res ∧ ∃ mult_res_2, mult_rel n (S_u m) mult_res_2 ∧ plus_res == mult_res_2)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ mult_res,
-             mult_rel ⌊ n ⌋ ⌊ m ⌋ mult_res
+             mult_rel n m mult_res
              ∧ ∃ plus_res,
-               plus_rel mult_res ⌊ n ⌋ plus_res
-               ∧ ∃ mult_res_2, mult_rel ⌊ n ⌋ (S_u ⌊ m ⌋) mult_res_2 ∧ plus_res == mult_res_2)
+               plus_rel mult_res n plus_res ∧ ∃ mult_res_2, mult_rel n (S_u m) mult_res_2 ∧ plus_res == mult_res_2)
             (let _: ∃ plus_res,
                     plus_rel
                     ⌊ plus
@@ -3649,7 +3708,7 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ one_res, one_rel one_res ∧ ∃ mult_res, mult_rel ⌊ p ⌋ one_res mult_res ∧ mult_res == ⌊ p ⌋)
+           ∃ one_res, one_rel one_res ∧ ∃ mult_res, mult_rel p one_res mult_res ∧ mult_res == p)
           (let _: ∃ mult_res, mult_rel p O_u mult_res ∧ O_u == mult_res :=
            ⌈ mult_n_O (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)) ⌉ in
            mult_n_Sm (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)) O)
@@ -3668,7 +3727,7 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ one_res, one_rel one_res ∧ ∃ plus_res, plus_rel one_res ⌊ n ⌋ plus_res ∧ plus_res == S_u ⌊ n ⌋)
+           ∃ one_res, one_rel one_res ∧ ∃ plus_res, plus_rel one_res n plus_res ∧ plus_res == S_u n)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -3685,13 +3744,13 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ one_res, one_rel one_res ∧ ∃ plus_res, plus_rel ⌊ n ⌋ one_res plus_res ∧ plus_res ≠ O_u)
+             ∃ one_res, one_rel one_res ∧ ∃ plus_res, plus_rel n one_res plus_res ∧ plus_res ≠ O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ one_res, one_rel one_res ∧ ∃ plus_res, plus_rel ⌊ n ⌋ one_res plus_res ∧ plus_res ≠ O_u)
+             ∃ one_res, one_rel one_res ∧ ∃ plus_res, plus_rel n one_res plus_res ∧ plus_res ≠ O_u)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -3706,7 +3765,7 @@ Proof.
   destruct n as [n n_p].
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ plus_res, plus_rel O_u ⌊ n ⌋ plus_res ∧ plus_res == ⌊ n ⌋)
+          (λ (VV : Unit), ∃ plus_res, plus_rel O_u n plus_res ∧ plus_res == n)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -3726,9 +3785,7 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ plus_res,
-           plus_rel ⌊ n ⌋ ⌊ n ⌋ plus_res
-           ∧ ∃ plus_res_2, plus_rel ⌊ m ⌋ ⌊ m ⌋ plus_res_2 ∧ plus_res == plus_res_2)
+           ∃ plus_res, plus_rel n n plus_res ∧ ∃ plus_res_2, plus_rel m m plus_res_2 ∧ plus_res == plus_res_2)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -3752,9 +3809,7 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ plus_res,
-           plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
-           ∧ ∃ plus_res_2, plus_rel ⌊ m ⌋ ⌊ o ⌋ plus_res_2 ∧ plus_res == plus_res_2)
+           ∃ plus_res, plus_rel n m plus_res ∧ ∃ plus_res_2, plus_rel m o plus_res_2 ∧ plus_res == plus_res_2)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -3775,16 +3830,14 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ plus_res,
-             plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
-             ∧ ∃ plus_res_2, plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res_2 ∧ S_u plus_res == plus_res_2)
+             plus_rel n m plus_res ∧ ∃ plus_res_2, plus_rel n (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ plus_res,
-             plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
-             ∧ ∃ plus_res_2, plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res_2 ∧ S_u plus_res == plus_res_2)
+             plus_rel n m plus_res ∧ ∃ plus_res_2, plus_rel n (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
             (IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -3804,17 +3857,13 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ plus_res,
-             plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
-             ∧ ∃ plus_res_2, plus_rel ⌊ m ⌋ ⌊ n ⌋ plus_res_2 ∧ plus_res == plus_res_2)
+             ∃ plus_res, plus_rel n m plus_res ∧ ∃ plus_res_2, plus_rel m n plus_res_2 ∧ plus_res == plus_res_2)
             (add_0_r (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver)))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ plus_res,
-             plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
-             ∧ ∃ plus_res_2, plus_rel ⌊ m ⌋ ⌊ n ⌋ plus_res_2 ∧ plus_res == plus_res_2)
+             ∃ plus_res, plus_rel n m plus_res ∧ ∃ plus_res_2, plus_rel m n plus_res_2 ∧ plus_res == plus_res_2)
             (let _: ∃ plus_res,
                     plus_rel n' m plus_res ∧ ∃ plus_res_2, plus_rel m n' plus_res_2 ∧ plus_res == plus_res_2 :=
              ⌈ IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver) ⌉ in
@@ -3877,7 +3926,7 @@ Proof.
   [fix_notations | fix_notations];
   simpl in *.
   Transparent pred.
-  all: existence_lemma_quicksolve pred; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve pred; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve pred_rel_ex: rel_ax_db.
@@ -4012,7 +4061,7 @@ Proof.
    try clear IH_p];
   simpl in *.
   Transparent sf_exp.
-  all: existence_lemma_quicksolve sf_exp; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve sf_exp; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve sf_exp_rel_ex: rel_ax_db.
@@ -4138,7 +4187,7 @@ Proof.
   [fix_notations];
   simpl in *.
   Transparent sndSF.
-  all: existence_lemma_quicksolve sndSF; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve sndSF; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve sndSF_rel_ex: rel_ax_db.
@@ -4214,8 +4263,7 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ sndSF_res,
-             sndSF_rel ⌊ p ⌋ sndSF_res
-             ∧ ∃ fstSF_res, fstSF_rel ⌊ p ⌋ fstSF_res ∧ ⌊ p ⌋ == Pair_u fstSF_res sndSF_res)
+             sndSF_rel p sndSF_res ∧ ∃ fstSF_res, fstSF_rel p fstSF_res ∧ p == Pair_u fstSF_res sndSF_res)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -4236,9 +4284,8 @@ Proof.
           Unit
           (λ (VV : Unit),
            ∃ sndSF_res,
-           sndSF_rel (Pair_u ⌊ n ⌋ ⌊ m ⌋) sndSF_res
-           ∧ ∃ fstSF_res,
-             fstSF_rel (Pair_u ⌊ n ⌋ ⌊ m ⌋) fstSF_res ∧ Pair_u ⌊ n ⌋ ⌊ m ⌋ == Pair_u fstSF_res sndSF_res)
+           sndSF_rel (Pair_u n m) sndSF_res
+           ∧ ∃ fstSF_res, fstSF_rel (Pair_u n m) fstSF_res ∧ Pair_u n m == Pair_u fstSF_res sndSF_res)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -4282,7 +4329,7 @@ Proof.
   Opaque two.
   existence_lemma_pre two; fix_notations; simpl in *.
   Transparent two.
-  all: existence_lemma_quicksolve two; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve two; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve two_rel_ex: rel_ax_db.
@@ -4390,7 +4437,7 @@ Proof.
   Opaque three.
   existence_lemma_pre three; fix_notations; simpl in *.
   Transparent three.
-  all: existence_lemma_quicksolve three; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve three; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve three_rel_ex: rel_ax_db.
@@ -4471,7 +4518,7 @@ Proof.
   Opaque four.
   existence_lemma_pre four; fix_notations; simpl in *.
   Transparent four.
-  all: existence_lemma_quicksolve four; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve four; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve four_rel_ex: rel_ax_db.
@@ -4552,7 +4599,7 @@ Proof.
   Opaque five.
   existence_lemma_pre five; fix_notations; simpl in *.
   Transparent five.
-  all: existence_lemma_quicksolve five; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve five; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve five_rel_ex: rel_ax_db.
@@ -4633,7 +4680,7 @@ Proof.
   Opaque six.
   existence_lemma_pre six; fix_notations; simpl in *.
   Transparent six.
-  all: existence_lemma_quicksolve six; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve six; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve six_rel_ex: rel_ax_db.
@@ -4711,7 +4758,7 @@ Proof.
   Opaque seven.
   existence_lemma_pre seven; fix_notations; simpl in *.
   Transparent seven.
-  all: existence_lemma_quicksolve seven; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve seven; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve seven_rel_ex: rel_ax_db.
@@ -4792,7 +4839,7 @@ Proof.
   Opaque eight.
   existence_lemma_pre eight; fix_notations; simpl in *.
   Transparent eight.
-  all: existence_lemma_quicksolve eight; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve eight; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve eight_rel_ex: rel_ax_db.
@@ -4873,7 +4920,7 @@ Proof.
   Opaque nine.
   existence_lemma_pre nine; fix_notations; simpl in *.
   Transparent nine.
-  all: existence_lemma_quicksolve nine; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve nine; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve nine_rel_ex: rel_ax_db.
@@ -4954,7 +5001,7 @@ Proof.
   Opaque ten.
   existence_lemma_pre ten; fix_notations; simpl in *.
   Transparent ten.
-  all: existence_lemma_quicksolve ten; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve ten; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve ten_rel_ex: rel_ax_db.
@@ -5032,7 +5079,7 @@ Proof.
   Opaque eleven.
   existence_lemma_pre eleven; fix_notations; simpl in *.
   Transparent eleven.
-  all: existence_lemma_quicksolve eleven; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve eleven; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve eleven_rel_ex: rel_ax_db.
@@ -5115,7 +5162,7 @@ Proof.
   Opaque twelve.
   existence_lemma_pre twelve; fix_notations; simpl in *.
   Transparent twelve.
-  all: existence_lemma_quicksolve twelve; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve twelve; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve twelve_rel_ex: rel_ax_db.
@@ -5298,7 +5345,7 @@ Proof.
              ∃ one_res,
              one_rel one_res
              ∧ ∃ plus_res,
-               plus_rel ⌊ n ⌋ one_res plus_res ∧ ∃ eqb_res, eqb_rel O_u plus_res eqb_res ∧ eqb_res == SFFalse_u)
+               plus_rel n one_res plus_res ∧ ∃ eqb_res, eqb_rel O_u plus_res eqb_res ∧ eqb_res == SFFalse_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
@@ -5307,13 +5354,40 @@ Proof.
              ∃ one_res,
              one_rel one_res
              ∧ ∃ plus_res,
-               plus_rel ⌊ n ⌋ one_res plus_res ∧ ∃ eqb_res, eqb_rel O_u plus_res eqb_res ∧ eqb_res == SFFalse_u)
+               plus_rel n one_res plus_res ∧ ∃ eqb_res, eqb_rel O_u plus_res eqb_res ∧ eqb_res == SFFalse_u)
             (# unit)
             ltac:(solver)).
 Qed.
 
 Inductive Modifier_u: Type :=
   | Minus_u: Modifier_u | Natural_u: Modifier_u | Plus_u: Modifier_u.
+
+Fixpoint Modifier_eq (x y : Modifier_u): bool :=
+  match (x, y) with
+  | (Minus_u, Minus_u) => true
+  | (Natural_u, Natural_u) => true
+  | (Plus_u, Plus_u) => true
+  | (_, _) => false
+  end.
+
+Theorem Modifier_eq_refl : ∀ (x : Modifier_u), is_true (Modifier_eq x x).
+Proof.
+  eq_refl_rec.
+Qed.
+
+#[global] Hint Resolve Modifier_eq_refl: eq_hint_db.
+
+Theorem Modifier_eqb_eq : ∀ (s t : Modifier_u), is_true (Modifier_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Modifier_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Modifier: LeibnitzEqB := {
+    equalB' := Modifier_eq;
+    refl' := Modifier_eq_refl;
+    eqb_eq' := Modifier_eqb_eq }.
 
 Fixpoint Modifier_wf (x : Modifier_u): Prop :=
   match x with | Minus_u => True | Natural_u => True | Plus_u => True end.
@@ -5364,6 +5438,35 @@ Definition Plus : Modifier :=
 
 Inductive Letter_u: Type :=
   | A_u: Letter_u | B_u: Letter_u | C_u: Letter_u | D_u: Letter_u | F_u: Letter_u.
+
+Fixpoint Letter_eq (x y : Letter_u): bool :=
+  match (x, y) with
+  | (A_u, A_u) => true
+  | (B_u, B_u) => true
+  | (C_u, C_u) => true
+  | (D_u, D_u) => true
+  | (F_u, F_u) => true
+  | (_, _) => false
+  end.
+
+Theorem Letter_eq_refl : ∀ (x : Letter_u), is_true (Letter_eq x x).
+Proof.
+  eq_refl_rec.
+Qed.
+
+#[global] Hint Resolve Letter_eq_refl: eq_hint_db.
+
+Theorem Letter_eqb_eq : ∀ (s t : Letter_u), is_true (Letter_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Letter_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Letter: LeibnitzEqB := {
+    equalB' := Letter_eq;
+    refl' := Letter_eq_refl;
+    eqb_eq' := Letter_eqb_eq }.
 
 Fixpoint Letter_wf (x : Letter_u): Prop :=
   match x with | A_u => True | B_u => True | C_u => True | D_u => True | F_u => True end.
@@ -5519,7 +5622,7 @@ Proof.
   [fix_notations | fix_notations | fix_notations | fix_notations | fix_notations];
   simpl in *.
   Transparent lower_letter.
-  all: existence_lemma_quicksolve lower_letter; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve lower_letter; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve lower_letter_rel_ex: rel_ax_db.
@@ -5806,7 +5909,7 @@ Proof.
     fix_notations]];
   simpl in *.
   Transparent lower_grade.
-  all: existence_lemma_quicksolve lower_grade; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve lower_grade; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve lower_grade_rel_ex: rel_ax_db.
@@ -5990,7 +6093,7 @@ Proof.
    fix_notations];
   simpl in *.
   Transparent apply_late_policy.
-  all: existence_lemma_quicksolve apply_late_policy; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve apply_late_policy; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve apply_late_policy_rel_ex: rel_ax_db.
@@ -6156,14 +6259,14 @@ Proof.
            Unit
            (λ (VV : Unit),
             ∃ apply_late_policy_res,
-            apply_late_policy_rel ⌊ late_days ⌋ ⌊ g ⌋ apply_late_policy_res ∧ apply_late_policy_res == ⌊ g ⌋)
-           (exist (λ (h : Unit), ltbZ_rel ⌊ late_days ⌋ 9 true) h ltac:(solver))
+            apply_late_policy_rel late_days g apply_late_policy_res ∧ apply_late_policy_res == g)
+           (exist (λ (h : Unit), ltbZ_rel late_days 9 true) h ltac:(solver))
            ltac:(solver)) |
    refine (subsumptionCast
            Unit
            (λ (VV : Unit),
             ∃ apply_late_policy_res,
-            apply_late_policy_rel ⌊ late_days ⌋ ⌊ g ⌋ apply_late_policy_res ∧ apply_late_policy_res == ⌊ g ⌋)
+            apply_late_policy_rel late_days g apply_late_policy_res ∧ apply_late_policy_res == g)
            (# unit)
            ltac:(solver))].
 Qed.
@@ -6176,6 +6279,37 @@ Inductive Day_u: Type :=
   | Thursday_u: Day_u
   | Tuesday_u: Day_u
   | Wednesday_u: Day_u.
+
+Fixpoint Day_eq (x y : Day_u): bool :=
+  match (x, y) with
+  | (Friday_u, Friday_u) => true
+  | (Monday_u, Monday_u) => true
+  | (Saturday_u, Saturday_u) => true
+  | (Sunday_u, Sunday_u) => true
+  | (Thursday_u, Thursday_u) => true
+  | (Tuesday_u, Tuesday_u) => true
+  | (Wednesday_u, Wednesday_u) => true
+  | (_, _) => false
+  end.
+
+Theorem Day_eq_refl : ∀ (x : Day_u), is_true (Day_eq x x).
+Proof.
+  eq_refl_rec.
+Qed.
+
+#[global] Hint Resolve Day_eq_refl: eq_hint_db.
+
+Theorem Day_eqb_eq : ∀ (s t : Day_u), is_true (Day_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Day_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Day: LeibnitzEqB := {
+    equalB' := Day_eq;
+    refl' := Day_eq_refl;
+    eqb_eq' := Day_eqb_eq }.
 
 Fixpoint Day_wf (x : Day_u): Prop :=
   match x with
@@ -6388,7 +6522,7 @@ Proof.
    fix_notations];
   simpl in *.
   Transparent next_weekday.
-  all: existence_lemma_quicksolve next_weekday; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve next_weekday; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve next_weekday_rel_ex: rel_ax_db.
@@ -6474,6 +6608,33 @@ Qed.
 
 Inductive Comparison_u: Type :=
   | Eq_u: Comparison_u | Gt_u: Comparison_u | Lt_u: Comparison_u.
+
+Fixpoint Comparison_eq (x y : Comparison_u): bool :=
+  match (x, y) with
+  | (Eq_u, Eq_u) => true
+  | (Gt_u, Gt_u) => true
+  | (Lt_u, Lt_u) => true
+  | (_, _) => false
+  end.
+
+Theorem Comparison_eq_refl : ∀ (x : Comparison_u), is_true (Comparison_eq x x).
+Proof.
+  eq_refl_rec.
+Qed.
+
+#[global] Hint Resolve Comparison_eq_refl: eq_hint_db.
+
+Theorem Comparison_eqb_eq : ∀ (s t : Comparison_u), is_true (Comparison_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve Comparison_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_Comparison: LeibnitzEqB := {
+    equalB' := Comparison_eq;
+    refl' := Comparison_eq_refl;
+    eqb_eq' := Comparison_eqb_eq }.
 
 Fixpoint Comparison_wf (x : Comparison_u): Prop :=
   match x with | Eq_u => True | Gt_u => True | Lt_u => True end.
@@ -6834,7 +6995,7 @@ Proof.
    [fix_notations | fix_notations | fix_notations | fix_notations | fix_notations]];
   simpl in *.
   Transparent letter_comparison.
-  all: existence_lemma_quicksolve letter_comparison; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve letter_comparison; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve letter_comparison_rel_ex: rel_ax_db.
@@ -6926,35 +7087,35 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ letter_comparison_res,
-             letter_comparison_rel ⌊ l ⌋ ⌊ l ⌋ letter_comparison_res ∧ letter_comparison_res == Eq_u)
+             letter_comparison_rel l l letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ letter_comparison_res,
-             letter_comparison_rel ⌊ l ⌋ ⌊ l ⌋ letter_comparison_res ∧ letter_comparison_res == Eq_u)
+             letter_comparison_rel l l letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ letter_comparison_res,
-             letter_comparison_rel ⌊ l ⌋ ⌊ l ⌋ letter_comparison_res ∧ letter_comparison_res == Eq_u)
+             letter_comparison_rel l l letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ letter_comparison_res,
-             letter_comparison_rel ⌊ l ⌋ ⌊ l ⌋ letter_comparison_res ∧ letter_comparison_res == Eq_u)
+             letter_comparison_rel l l letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ letter_comparison_res,
-             letter_comparison_rel ⌊ l ⌋ ⌊ l ⌋ letter_comparison_res ∧ letter_comparison_res == Eq_u)
+             letter_comparison_rel l l letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -6985,48 +7146,48 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ lower_letter_res,
-             lower_letter_rel ⌊ l ⌋ lower_letter_res
+             lower_letter_rel l lower_letter_res
              ∧ ∃ letter_comparison_res,
-               letter_comparison_rel lower_letter_res ⌊ l ⌋ letter_comparison_res ∧ letter_comparison_res == Lt_u)
+               letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ lower_letter_res,
-             lower_letter_rel ⌊ l ⌋ lower_letter_res
+             lower_letter_rel l lower_letter_res
              ∧ ∃ letter_comparison_res,
-               letter_comparison_rel lower_letter_res ⌊ l ⌋ letter_comparison_res ∧ letter_comparison_res == Lt_u)
+               letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ lower_letter_res,
-             lower_letter_rel ⌊ l ⌋ lower_letter_res
+             lower_letter_rel l lower_letter_res
              ∧ ∃ letter_comparison_res,
-               letter_comparison_rel lower_letter_res ⌊ l ⌋ letter_comparison_res ∧ letter_comparison_res == Lt_u)
+               letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ lower_letter_res,
-             lower_letter_rel ⌊ l ⌋ lower_letter_res
+             lower_letter_rel l lower_letter_res
              ∧ ∃ letter_comparison_res,
-               letter_comparison_rel lower_letter_res ⌊ l ⌋ letter_comparison_res ∧ letter_comparison_res == Lt_u)
+               letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ lower_letter_res,
-             lower_letter_rel ⌊ l ⌋ lower_letter_res
+             lower_letter_rel l lower_letter_res
              ∧ ∃ letter_comparison_res,
-               letter_comparison_rel lower_letter_res ⌊ l ⌋ letter_comparison_res ∧ letter_comparison_res == Lt_u)
+               letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (exist (λ (p : Unit),
                     ∃ letter_comparison_res,
-                    letter_comparison_rel F_u ⌊ l ⌋ letter_comparison_res
+                    letter_comparison_rel F_u F_u letter_comparison_res
                     ∧ letter_comparison_res == Lt_u) p ltac:(solver))
             ltac:(solver)).
 Qed.
@@ -7181,7 +7342,7 @@ Proof.
    [fix_notations | fix_notations | fix_notations]];
   simpl in *.
   Transparent modifier_comparison.
-  all: existence_lemma_quicksolve modifier_comparison; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve modifier_comparison; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve modifier_comparison_rel_ex: rel_ax_db.
@@ -7428,7 +7589,7 @@ Proof.
   [fix_notations | fix_notations | fix_notations];
   simpl in *.
   Transparent monochrome.
-  all: existence_lemma_quicksolve monochrome; f__f_rel_ex_body; f_rel_finish.
+  all: (existence_lemma_quicksolve monochrome; f__f_rel_ex_body; f_rel_finish).
 Qed.
 
 #[global] Hint Resolve monochrome_rel_ex: rel_ax_db.

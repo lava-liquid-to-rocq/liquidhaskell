@@ -77,11 +77,7 @@ unrefTCDecl tc alts =
 -- | Declarations related to the equality on unrefined constructors
 tcEqDecls :: Id -> [(Id, RefType)] -> [Coq.Decl]
 -- tcEqDecls tc _ | traceTC "tcEqDecls" tc = undefined
-tcEqDecls tc alts =
-  if noHOConstr then eqDecl tc alts : eqReflLem tc ++ eqbEqLem tc ++ [eqbInstanceDecl tc] else []
-  where
-    -- NOTE: For now, kind of useless since we don't typecheck higher-order constructors
-    noHOConstr = any ((\case ArrType {} -> True; _ -> False) . snd) alts
+tcEqDecls tc alts = eqDecl tc alts : eqReflLem tc ++ eqbEqLem tc ++ [eqbInstanceDecl tc]
 
 -- | Fixpoint definition of equality of two inductives
 --
