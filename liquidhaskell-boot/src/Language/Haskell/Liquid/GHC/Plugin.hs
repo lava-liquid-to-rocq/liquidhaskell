@@ -426,7 +426,8 @@ mkSrcInfo lhContext targetInfo infTypes =
     { s_moduleName = moduleName $ ms_mod $ lhModuleSummary lhContext,
       s_summary = lhModuleSummary lhContext,
       s_targetInfo = targetInfo,
-      s_infTypes = infTypes
+      s_infTypes = infTypes,
+      s_imports = lhRelevantModules lhContext
     }
 
 checkLiquidHaskellContext :: LiquidHaskellContext -> TcM (Either LiquidCheckException LiquidLib)

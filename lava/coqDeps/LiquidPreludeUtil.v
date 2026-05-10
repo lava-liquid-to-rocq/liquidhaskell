@@ -101,7 +101,7 @@ Ltac preprocessor_ b :=
 
 Ltac preprocessor := preprocessor_ True.
 
-Ltac saturating_solver := first [
+Ltac saturating_solver := simpl in *; first [
   quick_wff_wit
   | lia_preprocessor; lia 
   | repeat unshelve cleanup_hints; 
@@ -124,15 +124,16 @@ Ltac solver := repeat first [
 Ltac solver_loop :=
   repeat_or_fail concat_either (quick_wff_wit) (
     concat_either (quicksolve) (
-      concat_either (cleanup_after_hints) (lia_preprocessor
+      progress concat_either (simpl in *; timeout 1200 cleanup_after_hints) (
+        lia_preprocessor
         (*concat_either (lia_preprocessor) (split_hyps)*)
       )
     )
   ); intros.
 
-Ltac solver := solve [
+Ltac solver := simpl in *; solve [
     solver_loop; progress saturate_context; solver_loop
-    | idtac ""; idtac "Falling back to saturating_solver"; saturating_solver].
+    | idtac ""; idtac "Falling back to saturating_solver"; fail (*saturating_solver*) ].
 #[global] Hint Extern 20 () => solver : solver_db. 
 
 Ltac unsaturating_solver := first [
@@ -167,3 +168,16 @@ Notation " ↼ tm" := (injref tm (ltac:(solver))) (at level 1).
 Ltac f__f_rel_mk := unfold proj; unfold refinement_proj; 
   (*unfold packProj; unfold packPr; *)
   first [ intros; now autorewrite with f_rel_funct_db | solver].
+
+Ltac preInstExist :=
+  simpl in *;
+  cleanup_hints;
+  quick_simpl;
+  repeat progress autounfold with lia_unfold in *;
+  simpl_proj; 
+  try cleanup_pack_stuff; try unpack_all; try cleanup_pack_stuff;
+  try remove_refined;
+  quick_simpl; 
+  repeat unfold rel_u in *;
+  simpl_proj; 
+  try unify_vars.

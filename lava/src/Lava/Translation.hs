@@ -90,7 +90,11 @@ utrRefTypeTopProp eq (LH.FAType α tp) = Coq.FAType (α, Sort TypeSort) (utrRefT
 utrReft :: Bool -> LH.Reft -> Coq.CoqTerm
 -- utrReft r | traceFunc "utrReft" [pPrint r] = undefined
 utrReft eq r0 = case r0 of
-  LH.Var x n Global | n > 0 -> Coq.Var $ upackInstanceName x
+  -- global function -> f_pack
+  LH.Var x (Just _) Global -> Coq.Var $ upackInstanceName x
+  -- global constant -> proj1_sig f
+  LH.Var x Nothing Global -> Coq.Proj Sig1 (Coq.Def x)
+  -- local or recursive variable -> x
   LH.Var x _ _ -> Coq.Var x
   LH.StringLit s -> Coq.StringLiteral s
   LH.IntLit n -> Coq.IntLiteral n
@@ -99,20 +103,30 @@ utrReft eq r0 = case r0 of
   LH.App r1 r2 -> Coq.App (utrReft eq r1) [utrReft eq r2]
   LH.TyApp r tp -> Coq.TyApp (utrReft eq r) (utrRefType eq tp)
   LH.Neg r -> Coq.Neg UnrefOp $ utrReft eq r
-  LH.Bop op r1 r2 -> Coq.Bop (Binop (trBop op) UnrefOp) (utrReft eq r1) (utrReft eq r2)
+  LH.Bop op r1 r2 ->
+    if op `elem` [LH.And, LH.Or, LH.Impl, LH.Iff] && not (isValue r1) && not (isValue r2)
+      then error $ "Refinement " ++ prettyShow r0 ++ "cannot be translated to a boolean type because of the presence of applications."
+      else Coq.Bop (Binop (trBop op) UnrefOp) (utrReft eq r1) (utrReft eq r2)
   LH.QMark r _ _ -> utrReft eq r
   LH.Pop _ _ r -> utrReft eq r
   LH.Sub r _ _ -> utrReft eq r
   LH.Inj r _ -> utrReft eq r
-  LH.Proj r -> mkProject $ trReft eq r
+  LH.Proj r -> Coq.mkProj GenProj $ trReft eq r
 
 -- | Translation of refinements to propositions
 --   Function RtoP (def 3.4) of the paper
 utrReftProp :: Bool -> LH.Reft -> Coq.CoqTerm
 -- utrReftProp r | traceFunc "utrReftProp" [pPrint r] = undefined
+-- TODO: add inlining optimization (maybe in mkIsTrue)
+{- utrReftProp eq (LH.Bop LH.Eq r1 r2) = -}
+-- Applying the extraction on both sides of logical connectives
+-- is necessary for the correct scoping of existentials
+utrReftProp eq (LH.Bop bop r1 r2)
+  | bop `elem` [LH.And, LH.Or, LH.Impl, LH.Iff] =
+      Coq.Bop (Binop (trBop bop) PropOp) (utrReftProp eq r1) (utrReftProp eq r2)
 utrReftProp eq r =
   let (rv, r') = extractApps r
-   in hypsRV eq rv True (mkIsTrue (utrReft eq r'))
+   in hypsRV eq rv False (mkIsTrue (utrReft eq r'))
 
 -- ** Utility functions for unrefined translations
 
@@ -121,11 +135,11 @@ utrReftProp eq r =
 -- In the paper, this is everything except = and ≠
 operatorsWithGraph :: [(LH.Bop, Reft)]
 operatorsWithGraph =
-  [ (LH.Plus, LH.Var "addZ" 2 Global),
-    (LH.Minus, LH.Var "subZ" 2 Global),
-    (LH.Times, LH.Var "multZ" 2 Global),
-    (LH.Div, LH.Var "divZ" 2 Global),
-    (LH.Mod, LH.Var "modZ" 2 Global)
+  [ (LH.Plus, LH.Var "addZ" (Just (LH.Builtin Integer)) Global),
+    (LH.Minus, LH.Var "subZ" (Just (LH.Builtin Integer)) Global),
+    (LH.Times, LH.Var "multZ" (Just (LH.Builtin Integer)) Global),
+    (LH.Div, LH.Var "divZ" (Just (LH.Builtin Integer)) Global),
+    (LH.Mod, LH.Var "modZ" (Just (LH.Builtin Integer)) Global)
   ]
 
 -- | Returns an association of each application in the input to a fresh variable and the term where replacements of the applications by the associated variable have been done.
@@ -138,12 +152,10 @@ extractApps r0 = go [] r0
   where
     go :: [(Reft, Id)] -> Reft -> ([(Reft, Id)], Reft)
     go env r = case r of
-      -- top-level constant
-      LH.Var _ 0 Global -> updateEnv env r
       (LH.Var {}; StringLit {}; FloatLit {}; IntLit {}; DC {}) -> (env, r)
       -- Inside Proj, we have a refined term, translated as refined and for
       -- which we must therefore not extract projections
-      Proj {} -> (env, r)
+      LH.Proj {} -> (env, r)
       LH.Neg r' -> second LH.Neg $ go env r'
       LH.Bop bop r1 r2 ->
         let (env1, r1') = go env r1
@@ -157,7 +169,7 @@ extractApps r0 = go [] r0
         -- but must use either the IH or the function itself
         -- (DC _; LH.Var _ _ (Recursive {})) -> extractInAppArgs
         DC _ -> extractInAppArgs
-        (LH.Var {}; Proj (LH.Var {})) -> extractApp
+        (LH.Var {}; LH.Proj (LH.Var {})) -> extractApp
         _ -> error . render $ text "LH application" <+> pPrint r <+> text "not starting with an identifier."
         where
           (hd, args) = apps r
@@ -176,10 +188,10 @@ extractApps r0 = go [] r0
         -- If r is in env, returns its associated variable,
         -- otherwise creates a fresh variable, update env and returns the variable
         updateEnv env' r' = case lookup r' env' of
-          Just z -> (env', LH.Var z 0 Local)
+          Just z -> (env', LH.Var z Nothing Local)
           Nothing ->
             let z = freshName (fromMaybe "z" (headVar r')) env'
-             in (env' ++ [(r', z)], LH.Var z 0 Local)
+             in (env' ++ [(r', z)], LH.Var z Nothing Local)
         -- f_res, f_res_2, f_res_3 etc
         freshName f env' =
           let isF r' = case headVar r' of Just f' -> f == f'; Nothing -> False
@@ -189,31 +201,31 @@ extractApps r0 = go [] r0
 -- | Takes as first argument the map RV from applications to fresh variables and
 -- translates the hypothesis, placing them on top of the second argument
 -- The flag indicates if we want to use foralls and implications or exists with conjunctions.
--- The first case is for building the graph relation, the second the backward reasoning lemmas
+-- The first case is for building the graph relation, the second the backward reasoning lemmas and the translation of type refinements
 hypsRV :: Bool -> [(Reft, Id)] -> Bool -> CoqTerm -> CoqTerm
 hypsRV eq rv graphRel = \p -> foldr hyp p rv
   where
     -- hyp(f r1 … rn, z) p = forall z, (f_rel/get(U)PackRelName f) RtoU(r1) … RtoU(rn) z -> p
     hyp :: (Reft, Id) -> CoqTerm -> CoqTerm
     hyp (app, z) p =
-      quantifier [(z, Hole)] $
+      quantifier [(z, trBaseType eq tpz)] $
         link (Coq.App hdT (map (utrReft eq) args ++ [Coq.Var z])) p
       where
         (quantifier, link) =
           if graphRel then (Forall, Coq.Bop (Binop Coq.Impl PropOp)) else (Exists, Coq.Bop (Binop Coq.And PropOp))
         (hd, args) = apps app
-        hdT = case hd of
-          -- f -> f_rel for global FO/HO variables (includes operators in `operatorsWithGraph`)
-          LH.Var f _ Global -> Coq.Def $ relDefName f
+        (hdT, tpz) = case hd of
+          -- f -> f_rel for global functions (includes operators in `operatorsWithGraph`)
+          LH.Var f (Just tp) Global -> (Coq.Def $ relDefName f, tp)
           -- f -> getUPackRelName f for local HO variables
-          LH.Var f n Local | n > 0 -> upackGetRel (Coq.Def f)
+          LH.Var f (Just tp) Local -> (upackGetRel $ Coq.Def f, tp)
           -- TODO: this is not correct, but is a placeholder that does not
           -- prevent translation since this only appears in places that are not
           -- printed in Rocq (inside casts) or inside specifications, but no
           -- specifications uses the name of the function being defined
-          LH.Var f _ (Recursive {}) -> Coq.Def $ relDefName f
+          LH.Var f (Just tp) (Recursive {}) -> (Coq.Def $ relDefName f, tp)
           -- proj f -> getPackRelName f for local HO variables
-          Proj (LH.Var f n _) | n > 0 -> packGetRel (Coq.Def f)
+          LH.Proj (LH.Var f (Just tp) _) -> (packGetRel (Coq.Def f), tp)
           _ -> error . render $ text "Unexpected extract term" <+> pPrint app <+> text "in Translation.hypsRV."
 
 -- * Refined translations
@@ -238,6 +250,7 @@ trRefType eq (RefType x tp r) =
       -- TODO:
       (LH.TC tc αs) -> Coq.Bop (Binop Coq.And PropOp) (Coq.App (Def $ wfTCName tc) [Coq.Var x]) (utrReftProp eq r)
       (LH.TyVar α) -> undefined
+-- TODO: I think if we have an arrtype of a unit type, we do not translate it to a pack
 trRefType eq tp@(ArrType {}) =
   Pack argTps uargTps (argListCorPrf argTps uargTps) tpx p_
   where
@@ -254,7 +267,8 @@ trRefType eq tp@(ArrType {}) =
     p = mkLam argsT (Lambda x tpx rx)
     argsNm = "x_" ++ hashName argTps
     v = "v_" ++ argsNm
-    p_ = Lambda argsNm (ArgumentList argTps) (Lambda v tpx (PrfTerm Hole (ByTac . Custom $ unwords ["flattenP", render $ parens (pPrint p), argsNm, v])))
+    p_ = Lambda argsNm (ArgumentList argTps) (Lambda v tpx pBody)
+    pBody = PrfTerm Hole (ByTac . Custom $ unwords ["flattenP", render $ parens (pPrint p), argsNm, v])
 trRefType eq tp@(LH.FAType {}) = undefined
 
 -- | Translation of refinement types at top-level (with foralls)
@@ -278,7 +292,7 @@ trRefTypeSplit eq tp =
 -- | Translation of refinements
 --   Function RtoR (def 3.8) of the paper
 trReft :: Bool -> LH.Reft -> Coq.CoqTerm
-trReft _ (LH.Var x ar Global) | ar > 0 = Coq.Def $ packInstanceName x
+trReft _ (LH.Var x (Just _) Global) = Coq.Def $ packInstanceName x
 trReft _ (LH.Var x _ _) = Coq.Var x
 trReft _ (LH.StringLit s) = Coq.StringLiteral s
 trReft _ (LH.IntLit n) = Coq.IntLiteral n
@@ -287,18 +301,23 @@ trReft _ (LH.DC c) = Cr (trDC c)
 trReft eq (LH.Neg tm) = Coq.Neg RefOp $ trReft eq tm
 trReft eq (LH.Bop op tm1 tm2) = Coq.Bop (Binop (trBop op) RefOp) (trReft eq tm1) (trReft eq tm2)
 trReft eq (LH.QMark tm hint prop) =
-  Coq.Let "_" (Just . Prop $ utrReftProp eq prop) (Proj2sig $ trReft eq hint) (trReft eq tm)
+  Coq.Let "_" (Just . Prop $ utrReftProp eq prop) (Coq.mkProj Sig2 $ trReft eq hint) (trReft eq tm)
 trReft eq (LH.Pop pop tm1 tm2) =
-  let popProp = Just . Prop $ Coq.Bop (Binop (trBop $ popToBop pop) PropOp) (mkProject $ trReft eq tm1) (mkProject $ trReft eq tm2)
+  let popProp = Just . Prop $ Coq.Bop (Binop (trBop $ popToBop pop) PropOp) (Coq.mkProj GenProj $ trReft eq tm1) (Coq.mkProj GenProj $ trReft eq tm2)
    in Coq.Let "_" popProp (PrfTerm Hole $ if eq then ProofHole else ByTac Oracle) (trReft eq tm2)
 trReft eq (LH.Sub tm from to) = Coq.SubCast (trRefType eq to) (trRefType eq from) (trReft eq tm) (if eq then ProofHole else ByTac Oracle)
 trReft eq (LH.Inj tm tp) = mkExist eq (trRefType eq tp) (trReft eq tm)
 trReft _ tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
+-- TODO: we do not use packs for theorems, maybe we need to change that
 trReft eq tm@(LH.App {}) = case apps tm of
+  -- recursive call
   (LH.Var f _ (Recursive indVar state), args) ->
     trRecCall (if eq then Right f else Left indVar) state args
+  -- apply local function
   (LH.Var f _ Local, args) -> Coq.App (packGetF (Coq.Var f)) (map (trReft eq) args)
+  -- apply global function
   (LH.Var f _ Global, args) -> Coq.App (Coq.Def f) (map (trReft eq) args)
+  -- other cases
   (hd, args) -> Coq.App (trReft eq hd) (map (trReft eq) args)
 
 -- | Translation of expressions as tactics
@@ -309,7 +328,8 @@ trExprTacs :: Bool -> LH.Expr -> [Tactic]
 trExprTacs eq (LH.Reft tm) =
   let refine = Refine $ trReft eq tm
    in if eq then [mkConcat [refine, Try Oracle]] else [refine]
-trExprTacs _ (LH.Let _ Nothing _ _) = error "Found let-binding with annotation while translating."
+trExprTacs _ (LH.Let _ Nothing _ _) = error "Found let-binding with no annotation while translating."
+-- TODO: maybe we need to do something special for let-bindings of a value of unit (return) type
 trExprTacs eq (LH.Let x (Just tpx@(RefType {})) e1 e2) =
   [ AssertTacs x' (trRefType eq tpx) (trExprTacs eq e1),
     DestructConj x' x (subsetWitnessNm x)
@@ -327,7 +347,16 @@ trExprTacs eq (LH.Let x (Just tpx@(ArrType {})) e1 e2) =
     intros = Intros $ map (\(xi, _) -> DestrPat $ ConjDestrPat [SingleIdPat xi, SingleIdPat $ subsetWitnessNm xi]) args
     tpxT = trRefTypeTop eq tpx
     x' = "f_" ++ hashName tpxT
-    assertF = Custom $ "unshelve refine (let " ++ x ++ " : ltac:(buildPackG_spec " ++ x' ++ ") := (ltac:(fun_to_pack " ++ x' ++ ")) in _)"
+    assertF =
+      Custom . render $
+        text "unshelve refine"
+          <+> (parens . pPrint)
+            ( Coq.Let
+                x
+                (Just . Prop . PrfTerm Hole . ByTac . Custom $ "buildPackG_spec " ++ x')
+                (PrfTerm Hole . ByTac . Custom $ funToPackName ++ " " ++ x')
+                TermHole
+            )
 trExprTacs eq (Case tm alts genVars) =
   let -- translation of an unreachable branch as intros; exfalso; oracle.
       trAltBody Nothing = [mkConcat $ [Intros [], Exfalso] ++ [Oracle | not eq]]
@@ -343,7 +372,7 @@ trExpr eq (LH.Let x tp ex e) =
     Just (RefType {}) -> Coq.LetDes (x, subsetWitnessNm x) (trExpr eq ex) (trExpr eq e)
     Nothing -> error "trExpr: found let-binding without type annotation."
 trExpr eq (Case tm alts _) =
-  Match [mkProject $ trReft eq tm] Nothing (map trAlt alts)
+  Match [Coq.mkProj Sig1 $ trReft eq tm] Nothing (map trAlt alts)
   where
     trAlt ((c, ys), e) = ([(c, map fst ys)],) $
       case e of
@@ -368,7 +397,7 @@ trRecCall (Left indVar) state args =
     trArg (ri, Param _ n) | n > 0 = [trReft False ri]
     -- a first-order argument must be decomposed either
     -- into its first projection and the witness (for which we use ltac:(oracle))
-    trArg (ri, Param _ _) = [mkProject $ trReft False ri, oracleTac]
+    trArg (ri, Param _ _) = [Coq.mkProj Sig1 $ trReft False ri, oracleTac]
     -- or into nothing if it is at the position of a destructed parameter
     trArg (_, Destructed) = []
 trRecCall (Right f) state args =
@@ -379,7 +408,7 @@ trRecCall (Right f) state args =
     trArg (ri, Param _ n) | n > 0 = [trReft True ri]
     -- while first-order ones must be decomposed into their first projection and
     -- a hole for the refinement
-    trArg (ri, _) = [mkProject $ trReft True ri, TermHole]
+    trArg (ri, _) = [Coq.mkProj Sig1 $ trReft True ri, TermHole]
 
 -- | Translation of a case expression as destruct or as induct
 -- An induct such that none of the introduced IHs are used is transformed to destruct
@@ -388,7 +417,7 @@ trRecCall (Right f) state args =
 mkMatching :: Bool -> (Maybe Expr -> [Tactic]) -> Reft -> [((Id, [(Id, Bool)]), Maybe Expr)] -> Maybe [Id] -> Tactic
 -- mkMatching _ tm alts genVars | traceFunc "mkMatching" [pPrint tm, pPrint alts, pPrint genVars] = undefined
 mkMatching eq trans tm alts genVars =
-  Coq.Destruct (mkProject $ trReft eq tm) (map trAlt alts) genVars
+  Coq.Destruct (Coq.mkProj Sig1 $ trReft eq tm) (map trAlt alts) genVars
   where
     -- Translation of the branches using the parametrized function
     trAlt ((c, ys), e) = (c, (ysDesPat ys e, trans e))
@@ -404,4 +433,4 @@ mkMatching eq trans tm alts genVars =
            in SingleIdPat y : [ihy | isInd]
         -- Whether y is used as an inductive variable, by checking the
         -- information contained in the localization of the recursive variables
-        isIndVar y = any (\case (_, (_, Recursive y' _)) -> y == y'; _ -> False) (freeVarsArLoc e)
+        isIndVar y = any (\case (_, Recursive y' _) -> y == y'; _ -> False) (freeVarsAnnot e)

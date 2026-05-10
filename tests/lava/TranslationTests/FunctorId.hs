@@ -50,10 +50,22 @@ fmap_id :: Identity -> Proof
 fmap_id (Val x) =
   trivial
 
+{-@ reflect distrib_left_hand @-}
+{-@ distrib_left_hand:: f:(Int -> Int) -> g:(Int -> Int) -> xs:Identity
+               -> Identity @-}
+distrib_left_hand :: (Int->Int) -> (Int->Int) -> Identity -> Identity       
+distrib_left_hand f g xs = fmap (compose f g) xs
+
+{-@ reflect distrib_right_hand @-}
+{-@ distrib_right_hand:: f:(Int -> Int) -> g:(Int -> Int) -> xs:Identity
+               -> Identity @-}
+distrib_right_hand :: (Int->Int) -> (Int->Int) -> Identity -> Identity
+distrib_right_hand f g xs = composeI (fmap f) (fmap g) xs
+
 {-@ fmap_distrib :: f:(Int -> Int) -> g:(Int -> Int) -> xs:Identity
-               -> { fmap  (compose f g) xs == (composeI (fmap f) (fmap g)) (xs) } @-}
+               -> { distrib_left_hand f g xs == distrib_right_hand f g xs } @-}
 fmap_distrib :: (Int -> Int) -> (Int -> Int) -> Identity -> Proof
 fmap_distrib f g (Val x) =
   trivial
 
--- 34 SLOC
+-- 44 SLOC

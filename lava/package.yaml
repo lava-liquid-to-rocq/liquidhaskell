@@ -2,8 +2,7 @@ name: lava
 version: 0.9.12.2.1
 synopsis: Translate Liquid Haskell files to Rocq
 license: BSD-3-Clause # Same as LH (https://github.com/ucsd-progsys/liquidhaskell/blob/develop/LICENSE)
-author: "Colin Rothgang, Loïc Peyrot"
-maintainer: "colin.rothgang@imdea.org"
+author: "Anonymous"
 github: lava-liquid-to-rocq/liquidhaskell
 
 verbatim:

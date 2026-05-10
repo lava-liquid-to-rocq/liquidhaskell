@@ -1,10 +1,5 @@
 opam-version: "2.0"
-maintainer: "colin.rothgang@imdea.org"
 version: "main"
-
-homepage: "https://github.com/lava-liquid-to-rocq/lava"
-dev-repo: "git+https://github.com/lava-liquid-to-rocq/lava.git"
-bug-reports: "https://github.com/lava-liquid-to-rocq/lava/issues"
 
 synopsis: "A translation from a fragment of Liquid Haskell to Rocq"
 description: """
@@ -26,5 +21,5 @@ tags: [
   "logpath:lava"
 ]
 authors: [
-  "Colin Rothgang"
+  "Anonymous"
 ]

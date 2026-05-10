@@ -54,13 +54,10 @@ Ltac fast_done :=
     quick_wff_wit (* automatically apply the wff lemmas *)
     | unshelve eassumption
     | symmetry; unshelve eassumption
-    | reflexivity
     | destruct_unit
     | lia (* solve integer arithmetic goals *)
     | congruence (* solve goals in theory of equality and uninterpreted functions *)
     | unshelve intuition (* simplify and apply tauto, a decision procedure for constructive propositional logic *)
-    | autounfold with wff_constr_db get_rel_db (* automatically unfold the wff definitions *)
-    (* | solve [unshelve econstructor; fast_done] *)
     | easy  
   ].
 
@@ -103,8 +100,22 @@ Ltac isVar tm :=
   | [h: _ |- _] => eq_fail h tm
   end.
 
+Ltac isConstrAppl t :=
+  tryif (isVar t) then fail else 
+  let temp := fresh "temp" in
+  match t with
+  | ?cApp _ => assert (forall x y, x <> y -> cApp x <> cApp y) as temp by (intros; injection; assumption)
+  end; clear temp.
+
+Ltac invertCrAppEq h :=
+  let hTp := type of h in
+  inversion h; clear h;
+  assert hTp as _ by (repeat (f_equal; try assumption)).
+
 (* very quick single-step tactic that matches on goal and tries to simplifies it, so other tactics can more easily solve it *)
 Ltac shape_based := match goal with
+  | [h:?g |- ?g] => exact h
+  | |- ?s == ?s => reflexivity
   (* the following cases are used for proving the cases for dead branches 
      (translated using exfalso) in the existence lemata *)
   | |- ?f ⌊ False_rec _ ?z -⌋ => exfalso; exact z
@@ -203,7 +214,6 @@ Ltac shape_based := match goal with
   | [ |- negb ?s = negb ?t] =>
       rewrite negb_inj
   | [ |- _ /\ _ ] => split
-  
 
   | [ h:(true = (?s ==? ?t)) |- _ ] => apply (pr2  (true_eqb s t)) in h
   | [ h: false = (?s ==? ?t) |- _] => apply (pr2 (false_eqb s t)) in h
@@ -277,6 +287,22 @@ Ltac shape_based := match goal with
     specialize (h (s =? t));
     specialize (h (ltac:(constructor)))
 
+  (*| [h: ?wf ⌊ ?ih ?z1 _ _ _ _ -⌋ |- _] =>
+    tryif (isVar z1) then fail else idtac;
+    let prf := fresh "z" in
+    pose proof z1 as prf;
+    progress replace z1 with prf in * by (auto with pi_db)
+  | [h: ?wf ⌊ ?ih ?z1 _ _ -⌋ |- _] =>
+    tryif (isVar z1) then fail else idtac;
+    let prf := fresh "z" in
+    pose proof z1 as prf;
+    progress replace z1 with prf in * by (auto with pi_db)
+  | [h: ?wf ⌊ ?ih ?z -⌋ |- _] =>
+    tryif (isVar z) then fail else idtac;
+    let prf := fresh "z" in
+    pose proof z as prf;
+    progress replace z with prf in * by (auto with pi_db)*)
+
   | [ h: ⌊ ?ih ?p -⌋ < ?t |- _] => 
     let pTp := type of p in
     let pKind := type of pTp in
@@ -311,18 +337,29 @@ Ltac shape_based := match goal with
     | [g: a |- _] => specialize (h g)
   end
   | [h: ?a <-> ?c |- _] => destruct h
+  | [h: ?x <> ?y |- ?c ?x <> ?c ?y] =>
+    injection; now apply h
+  | [h: ?x = ?y |- ?c ?x = ?c ?y] =>
+    injection; now apply h
   | [ h: ?c ?s = ?c ?t |- _] => 
-    tryif ( (* test whether c is a constructor of an inductive data type *)
-      let v := fresh "v" in
-      let v' := fresh "v'" in
-      let H := fresh "temp" in
-      let H0 := fresh "ante" in
-      assert (forall v v', c v = c v' -> v = v') as H by (intros v v' H0; injection H0; intros; assumption);
-      clear H
-    ) then (
+      assert (forall v v', c v = c v' -> v = v') as _ by (intros ? ?; injection 1; intros; assumption);
       injection h as ?
-    ) else fail
+  | [ h: ?c ?s <> ?c ?t |- _] => 
+    assert (forall v v', c v = c v' -> v = v') as _ by (intros ? ?; injection 1; intros; assumption);
+    assert (s <> t) by (intros ->; now apply h); clear h
+  | [ h: ?c ?s = ?c ?t -> False |- _] => 
+    assert (forall v v', c v = c v' -> v = v') as _ by (intros ? ?; injection 1; intros; assumption);
+    assert (s <> t) by (intros ->; now apply h); clear h
+  | [h: forall (_:?tp) (_:?p), False |- False] => match goal with
+    | [h2: p |- _] => specialize h with (2 := h2)
+    end
+  | [h: (?s = ?t -> False) -> _ |- _] => match goal with
+    | [h2: s <> t |- _] => specialize (h h2)
+    end
   | [ |- ?H <-> ?K] => split
+  | [h1: ?s <> ?t |- _] => match goal with
+    | [h2: s = t |- _] => apply h1 in h2
+    end
   (* if we have to synthesize a term of singleton type *)
   | [ |- {x: ?A | x = ?t} ] => exact (exist _ t eq_refl)
   | [ |- {x: ?A | ?t = x} ] => exact (exist _ t eq_refl)
@@ -335,10 +372,10 @@ Ltac shape_based := match goal with
   | [ |- {_: Unit | _} ] => refine (exist _ unit _)
   | [ |- True -> ?p ] => intros _
   | [h: ?t = ?t /\ _ |- _] => destruct h as [_ h]
-  | [h: false = true /\ _ \/ _ |- _] => destruct h as [h | h]; [exfalso; destruct h; unshelve intuition|]
-  | [h: true = false /\ _ \/ _ |- _] => destruct h as [h | h]; [exfalso; destruct h; unshelve intuition|]
-  | [h: _ \/ false = true /\ _ |- _] => destruct h as [h | h]; [|exfalso; destruct h; unshelve intuition]
-  | [h: _ \/ true = false /\ _ |- _] => destruct h as [h | h]; [|exfalso; destruct h; unshelve intuition]
+  | [h: false = true /\ _ \/ _ |- _] => destruct h as [h | h]; [exfalso; destruct h; now unshelve intuition|]
+  | [h: true = false /\ _ \/ _ |- _] => destruct h as [h | h]; [exfalso; destruct h; now unshelve intuition|]
+  | [h: _ \/ false = true /\ _ |- _] => destruct h as [h | h]; [|exfalso; destruct h; now unshelve intuition]
+  | [h: _ \/ true = false /\ _ |- _] => destruct h as [h | h]; [|exfalso; destruct h; now unshelve intuition]
 
   | |- (?l && ?r) = true => rewrite andb_true
   | [h: (?l && ?r) = true |- _] => rewrite andb_true in h
@@ -348,6 +385,8 @@ Ltac shape_based := match goal with
   | [h: (?x ==? ?tm) = true |- _ ] => isVar x; rewrite <- eqb_true in h; first [subst x | rewrite h in *; rewrite generic_equalb_eq in h]
   | [h: (?s ==? ?t) = true |- _ ] => rewrite <- eqb_true in h
   | [h: ?x == ?tm |- _ ] => isVar x; rewrite <- generic_equalb_eq in h; first [subst x | rewrite h in *; rewrite generic_equalb_eq in h]
+  | [h: ?x == ?tm |- _ ] => isConstrAppl x; rewrite <- generic_equalb_eq in h; 
+    try invertCrAppEq h
   | [h: ?tm == ?x |- _ ] => isVar x; rewrite <- generic_equalb_eq in h; first [symmetry in h; subst x | rewrite h in *; rewrite generic_equalb_eq in h]| |- (?s ==? ?t) = true => rewrite <- eqb_true
   | |- (?s == ?t) => rewrite <- generic_equalb_eq
   | [h: ?tm <> ?tm |- False] => apply h; reflexivity
@@ -410,9 +449,9 @@ Ltac shape_based := match goal with
       let temp := fresh "H" in
       first [
         assert (c -> False) as temp by (fast_done); destruct h;
-        [exfalso; apply temp in h; apply h|] |
+        [exfalso; apply temp in h; now apply h|] |
         assert (d -> False) as temp by (fast_done); destruct h;
-        [|exfalso; apply temp in h; apply h]
+        [|exfalso; apply temp in h; now apply h]
       ]
   | |- ?c \/ ?d => 
       let temp := fresh "H" in
@@ -420,7 +459,12 @@ Ltac shape_based := match goal with
         assert (c -> False) as temp by (intro; repeat shape_based; fast_done); right |
         assert (d -> False) as temp by (intro; repeat shape_based; fast_done); left];
       clear temp
-  | _ => intro
+  (*| |- exists v, ?relAp v => solve [unshelve (eexists _; econstructor; assumption)]*)
+  | |- exists v, ?relAp v /\ v == ?t => exists t; split; [|reflexivity]
+  | |- exists v, ?relAp v /\ v = ?t => exists t; split; [|reflexivity]
+  | [h: (exists v, _) /\ ?t |- _] => destruct h as [? ?]
+  | [h: ?s /\ (exists v, _) |- _] => destruct h as [? ?]
+  | |- _ => intro
   end.
 
 Ltac simpl_exists tm := 
@@ -452,9 +496,29 @@ Ltac instantiates_lia_goal := repeat progress instantiate_lia_goal.
 
 Ltac final_shape_based := match goal with
   | |- {_: Unit | _} => unshelve refine (exist _ unit _)
+  | [e: ⌊ ?ihAppl -⌋ = ?uterm |- _] => match ihAppl with
+    | _ _ => 
+      let term := fresh "term" in
+      let termWf := fresh "termWf" in
+      set ihAppl as term in *;
+      pose proof ⌈ ihAppl ⌉ as termWf;
+      rewrite e in termWf;
+      unfold term in termWf;
+      simpl in termWf;
+      let termWfTp := type of termWf in
+      tryif (match goal with
+      | [wf2: ?tp |- _] => eq_fail tp termWfTp; eq_fail wf2 termWfTp
+      end) then fail else idtac
+    end
+  | [h: ?s == ?t |- _] => solve [exfalso; rewrite <- eqb_eq in h; 
+    let ineq := fresh "ineq" in
+    assert (s <> t) as ineq by fast_done;
+    exact (ineq h)]
+  (*
   (* here we have to synthesize a refined term, there is no way we can generically manage that (let alone choose the right term), 
   however this should only ever show up in the translation in branches that are anyways impossible, so we might as well use exfalso *)
-  | [ |- {_: _ | _} ] => exfalso
+  | [ |- {_: _ | _} ] => idtac "We need to synthesize a refined term, but it's unclear which term to pick, giving up and trying to prove a contradiction!"; exfalso
+  *)
   end.
 
 Create HintDb fix_notation_hints.
@@ -484,6 +548,10 @@ Local Lemma proj_ex' [A: Type] [P : A -> Prop] (tm : A) (z:P tm): ⌊ exist P tm
 Proof.
   reflexivity.
 Qed.
+Lemma proj_ex'' [A: Type] [P : A -> Prop] (tm : A) (z:P tm): ⌊ exist P tm z -⌋ = tm.
+Proof.
+  reflexivity.
+Qed.
 
 Local Lemma ex_proj [A: Type] [P : A -> Prop] (tm : {v:A | P v}): (exist P ⌊ tm -⌋ ⌈ tm ⌉) = tm.
 Proof.
@@ -492,6 +560,7 @@ Qed.
 #[global] Hint Rewrite ex_proj:fix_notation_hints. 
 #[global] Hint Rewrite proj_ex:fix_notation_hints.
 #[global] Hint Rewrite proj_ex':fix_notation_hints.
+#[global] Hint Rewrite proj_ex'':fix_notation_hints.
 Local Lemma ex_proj' [A: Type] [P : A -> Prop] (tm : {v:A | P v}): (exist P ⌊ tm _⌋ ⌈ tm ⌉) = tm.
 Proof.
   destruct tm as [v wit]. reflexivity.
@@ -573,9 +642,9 @@ Ltac apply_ifs :=
 
 Ltac fix_notations := repeat progress autorewrite with fix_notation_hints in *.
 
-Ltac simpl_proj := try (fix_notations; 
+Ltac simpl_proj := try fix_notations; (* (fix_notations; 
   unfold proj1_sig in *; fold proj1_sig in *; unfold False_rec in *;
-  cbv beta delta [proj1_sig] in *; autorewrite with fix_notation_hints in *);
+  cbv beta delta [proj1_sig] in *; autorewrite with fix_notation_hints in * ); *)
   try (repeat progress autounfold with ref_constr_db in *; progress (autorewrite with fix_notation_hints in * )).
 
 (* Linear arithmetic rewrites *)
@@ -669,11 +738,13 @@ Ltac lia_simpl_step := first [progress autounfold with lia_unfold get_rel_db in 
 Ltac lia_simpl := repeat lia_simpl_step.
 Ltac quick_cleanup := simpl_ref_constr; 
   simpl_proj; apply_ifs; 
-  tryif lia_simpl then (lia_simpl; simpl_proj) else idtac.
+  try (lia_simpl; simpl_proj).
 Ltac quick_simpl := quick_cleanup;  repeat shape_based.
 
-Ltac cleanup_hints := match goal with
+Ltac cleanup_hints := repeat match goal with
   | [hint: {_: Unit | ?r} |- _ ] => destruct hint as [_ hint]
+  | [h: (exists v, _) /\ ?t |- _] => destruct h as [? ?]
+  | [h: ?s /\ (exists v, _) |- _] => destruct h as [? ?]
   | [hint: {x: ?A | ?r} |- _ ] => 
     let hint_r := fresh "hint_r" in
     destruct hint as [hint hint_r]
@@ -689,14 +760,13 @@ Ltac simpl_loop :=
     [ fast_done
     | f_equal_ind
     | progress unshelve eauto with wff_constr_db
-    | solve [shape_based; unshelve intuition; fast_done]
+    | solve [progress unshelve intuition; fast_done]
     | solve [trivial]
     | progress shape_based
-    | solve [symmetry; trivial]
+    | solve [symmetry; fast_done]
     | discriminate
     | contradiction
-    | unshelve intuition discriminate
-    | congruence
+    | progress unshelve intuition discriminate
     | progress subst
     | progress simpl
     | simpl_hyp
@@ -709,10 +779,10 @@ Ltac simpl_loop :=
     | right; simpl_loop
     ].
 
-Ltac quicksolve := try unshelve intuition; 
+Ltac quicksolve := (* try (progress unshelve intuition; timeout 1 quicksolve); *)
   solve [ 
     quick_wff_wit 
-    | quick_simpl; first [simpl_loop | final_shape_based; quick_simpl; subst; simpl_loop]
+    | quick_simpl; try (final_shape_based; repeat final_shape_based; subst; quick_simpl); subst; simpl_loop
   ].
 #[global] Hint Extern 20 () => quicksolve : quicksolve_db. 
 

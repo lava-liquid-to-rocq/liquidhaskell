@@ -55,11 +55,23 @@ fmap_id (Just _) = trivial
 
 -- | Distribution
 
+{-@ reflect distrib_left_hand @-}
+{-@ distrib_left_hand:: f:(Int -> Int) -> g:(Int -> Int) -> xs:MaybeInt
+               -> MaybeInt @-}
+distrib_left_hand :: (Int->Int) -> (Int->Int) -> MaybeInt -> MaybeInt      
+distrib_left_hand f g xs = fmap (compose f g) xs
+
+{-@ reflect distrib_right_hand @-}
+{-@ distrib_right_hand:: f:(Int -> Int) -> g:(Int -> Int) -> xs:MaybeInt
+               -> MaybeInt @-}
+distrib_right_hand :: (Int->Int) -> (Int->Int) -> MaybeInt -> MaybeInt
+distrib_right_hand f g xs = (composeM (fmap f) (fmap g)) xs
+
 {-@ fmap_distrib :: f:(Int -> Int) -> g:(Int -> Int) -> xs:MaybeInt
-               -> {v:Proof | fmap  (compose f g) xs == (composeM (fmap f) (fmap g)) (xs) } @-}
+               -> {v:Proof | distrib_left_hand f g xs == distrib_right_hand f g xs } @-}
 fmap_distrib :: (Int -> Int) -> (Int -> Int) -> MaybeInt -> Proof
 fmap_distrib _ _ Nothing = trivial
 fmap_distrib f g (Just x) = trivial
 
--- 37 SLOC
+-- 47 SLOC
 

@@ -7,16 +7,8 @@ cabal-version: 2.4
 name:           lava
 version:        0.9.12.2.1
 synopsis:       Translate Liquid Haskell files to Rocq
-homepage:       https://github.com/lava-liquid-to-rocq/lava#readme
-bug-reports:    https://github.com/lava-liquid-to-rocq/lava/issues
-author:         Colin Rothgang, Loïc Peyrot
-maintainer:     colin.rothgang@imdea.org
 license:        BSD-3-Clause
 build-type:     Simple
-
-source-repository head
-  type: git
-  location: https://github.com/lava-liquid-to-rocq/lava
 
 library
   exposed-modules:

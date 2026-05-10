@@ -15,7 +15,8 @@ import qualified Data.Set as Set
 import Lava.Calculus
 import Lava.Names (Id)
 import Lava.SystemF
-import Lava.TypingEnvironment
+import Lava.TypingEnvironment hiding (delete)
+import qualified Lava.TypingEnvironment as Env
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding ((<>))
@@ -58,7 +59,7 @@ wfRefType γ (ArrType x tpx tp) = do
   tpx' <- wfRefType γ tpx
   let γ' = insertLocalVar (x, tpx') γ
   tp' <- wfRefType γ' tp
-  return $ ArrType x tpx' (subst (Proj (Var x (arity tpx') Local)) x tp')
+  return $ ArrType x tpx' (subst (Proj (mkVarWithAnnot x tpx' Local)) x tp')
 -- (E-TFA)
 wfRefType γ (FAType α tp) =
   if lookupTyVar α γ
@@ -68,6 +69,7 @@ wfRefType γ (FAType α tp) =
 -- * Well-formedness of declarations
 
 wfDecls :: TypEnv -> [Decl] -> Either TypeError [Decl]
+-- wfDecls _ (d : _) | traceFunc "wfDecls" [pPrint d] = undefined
 -- (WF-DTC)
 wfDecls γ (Data tc αs constrs : decls) = do
   -- We pre-populate the environment with all constructors using trivialized
@@ -101,14 +103,36 @@ wfDecls γ (Definition f tpf e isRefl : decls) = do
   tpf' <- inDecl $ wfRefType γ tpf
   let γf = insertRecVar (f, tpf') γ
   let (args, ret) = second mkRefType $ arrs tpf'
-  let γfargs = insertLocalVars args γf
+  -- We remove the projections around the parameters,
+  -- because the parameters are destructed and thus considered unrefined in the
+  -- elaboration of the body.
+  -- We do not do it for the type tpf' because it is the complete dependent
+  -- arrow that binds the parameters as refined
+  let γfargs = insertLocalVars (map (second removeFOArgProjs) args) γf
   let initBrPat = map (\(x, tpx) -> Param x (arity tpx)) args
-  e' <- inDecl $ checkExpr γfargs initBrPat (removeRedundantMatches e) ret
+  -- We remove the projections of parameters from ret, since parameters are
+  -- considered unrefined
+  e' <- inDecl $ checkExpr γfargs initBrPat (removeRedundantMatches e) (removeFOArgProjs ret)
   γf' <- inDecl $ changeRecToGlobal f γf
   decls' <- wfDecls γf' decls
   return $ Definition f tpf' e' isRefl : decls'
   where
     inDecl = first (annotateErr f)
+-- doesn't exist in the paper, could be called WF-DImp
+wfDecls γ (Import modName decls : rest) = do
+  -- Trust imported declarations and insert their types into the environment.
+  -- We do not re-elaborate imported decls (they are elaborated in their own module).
+  let γ' = populateFromImport γ decls
+  decls' <- wfDecls γ' rest
+  return $ Import modName decls : decls'
+  where
+    populateFromImport env [] = env
+    populateFromImport env (Data tc constrs : ds) =
+      populateFromImport (insertTC (tc, constrs) env) ds
+    populateFromImport env (Definition f tp _ _ : ds) =
+      populateFromImport (insertGlobalVar (f, tp) env) ds
+    populateFromImport env (Import _ innerDecls : ds) =
+      populateFromImport (populateFromImport env innerDecls) ds
 wfDecls _ [] = return []
 
 -- Remove matches on a constructor and inline let x := tm in if tm then … else …
@@ -144,16 +168,16 @@ synReft γ (Var x _ locx) = do
   (locγ, tp) <- lookupVar x γ
   case (arity tp, locγ) of
     -- (S-VarL)
-    (0, Local) -> return (tp, Inj (Var x 0 Local) tp)
+    (0, Local) -> return (tp, Inj (mkVarWithAnnot x tp Local) tp)
     -- For recursive variables, the localization must be instantiated when
     -- elaborating matches.
     -- If not, we have not been able to find an inductive variable for this occurence of the application
-    (ar, Recursive {}) ->
+    (_, Recursive {}) ->
       case locx of
-        Recursive {} -> return (tp, Var x ar locx)
+        Recursive {} -> return (tp, mkVarWithAnnot x tp locx)
         _ -> Left . SynErr $ "Impossible to build induction for an occurence of the function" <+> text x <> ". Found locx =" <+> pPrint locx
     -- (S-Var)
-    (ar, _) -> return (tp, Var x ar locγ)
+    _ -> return (tp, mkVarWithAnnot x tp locγ)
 -- (S-Lit)
 synReft _ r@(StringLit _) = let tp = litType String r in return (tp, Inj r tp)
 synReft _ r@(IntLit _) = let tp = litType Integer r in return (tp, Inj r tp)
@@ -217,7 +241,7 @@ synReft γ r@(Pop pop r1 r2) = do
           (tp2, r2') <- synReft γ r2
           return (tp2, Pop pop r1' r2')
       | otherwise -> do
-          let xvar = Var x 0 Local
+          let xvar = Var x Nothing Local
               reft2 = Bop And reft1 (Bop (popToBop pop) xvar (mkProj r1'))
           r2' <- checkReft γ r2 (RefType x a reft2)
           let reft3' = Bop And reft1 (Bop Eq xvar (mkProj r2'))
@@ -238,6 +262,7 @@ checkReft γ r tp = do
     else Left . SubtypingErr $ "Synthesized type" <+> pPrint tp_r <+> "for" <+> pPrint r <+> "is not a subtype of type" <+> pPrint tp
 
 checkExpr :: TypEnv -> [DesState] -> Expr -> RefType -> Either TypeError Expr
+-- checkExpr _ _ e tp | traceFunc "checkExpr" [pPrint e, pPrint tp] = undefined
 -- (C-Syn)
 checkExpr γ _ (Reft r) tp = Reft <$> checkReft γ r tp
 -- (C-Let)
@@ -263,7 +288,7 @@ checkExpr γ state e0@(Case r branches _) tp = do
   (tpr, r') <- synReft γ r
   case tpr of
     RefType _ (TC _ tps) _ -> do
-      (branches', indVars) <- second Set.unions <$> mapAndUnzipM checkBranch branches
+      (branches', indVars) <- second Set.unions <$> mapAndUnzipM (checkBranch r') branches
       let -- In an induct, we generalize the other parameters that have not been destructed already
           -- the set indVars being non empty tells us that we use induction rather than destruct
           genVars = if Set.null indVars then Nothing else Just $ reverse [z | (Param z _) <- state']
@@ -288,11 +313,11 @@ checkExpr γ state e0@(Case r branches _) tp = do
 
     -- Returns the elaborated branch and a boolean to indicate if a subterm uses
     -- an induction hypothesis one of the introduced variables
-    checkBranch :: ((Id, [(Id, Bool)]), Maybe Expr) -> Either TypeError (((Id, [(Id, Bool)]), Maybe Expr), Set Id)
+    checkBranch :: Reft -> ((Id, [(Id, Bool)]), Maybe Expr) -> Either TypeError (((Id, [(Id, Bool)]), Maybe Expr), Set Id)
     -- TODO: we should not use a variable name to translate from Core, we should not have this case
-    checkBranch (c, Just (Reft (Var "undefined" _ _))) = return ((c, Nothing), Set.empty)
-    checkBranch (c, Nothing) = return ((c, Nothing), Set.empty)
-    checkBranch ((c, ys), Just e) = do
+    checkBranch _ (c, Just (Reft (Var "undefined" _ _))) = return ((c, Nothing), Set.empty)
+    checkBranch _ (c, Nothing) = return ((c, Nothing), Set.empty)
+    checkBranch matched ((c, ys), Just e) = do
       tpc <- lookupDC c γ
       -- Replace the binders in tpc by the names of the match in ys
       let tpcRenamed = renameParams (map fst ys) tpc
@@ -302,8 +327,19 @@ checkExpr γ state e0@(Case r branches _) tp = do
           -- We look for applications where one of the potentialInductives can be
           -- used as inductive variable and instantiate the head of those applications
           (e', indVars) = instRec potentialInductives e
-          -- TODO: add additional type with z for occurence typing
-          γ' = insertLocalVars argsc γ
+          -- We remove projections from the types of the variables
+          -- introduced by the patterns, as these are considered unrefined
+          γ' = insertLocalVars (map (second removeFOArgProjs) argsc) $ case matched of
+            -- if we match on a variable xMatch, we replace the variable in the context
+            -- by the variables introduced by the pattern
+            -- and we substitute all occurences of xMatch by the pattern
+            Inj (Var xMatch Nothing Local) _ ->
+              let pat = foldl App (DC c) (map (mkVar . fst) ys)
+               in substInEnv pat xMatch $ Env.delete xMatch γ
+            -- If we match on an application or a constant, we keep the same context:
+            -- in particular, we do not add an equality between the matched term and the pattern:
+            -- this equality is useful for occurence typing when checking the VC, but will never appear in elaboration
+            _ -> γ
       e'' <- checkExpr γ' state' e' tp
       return (((c, ys), Just e''), indVars)
       where

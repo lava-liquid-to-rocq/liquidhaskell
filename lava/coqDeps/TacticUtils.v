@@ -1,71 +1,9 @@
-Load QuickTacs.
+Load GetRelFlattening.
 
 Ltac in_all_hyps tac :=
     repeat match goal with
            | [ H : _ |- _ ] => progress tac H
            end.
-
-Tactic Notation "do_nonbranching" tactic(t) :=
-  let n := numgoals in
-  tryif t; let m := numgoals in guard m = n then idtac else fail "Tactic " t " produces additional subgoals".
-
-Ltac protectEqnHyps :=
-  repeat (
-    match goal with
-    | [ h: ?v = ?t |- _ ] => 
-      let h' := fresh "temp" in
-      assert (True -> v = t) as h' by (intros; exact h);
-      first [clear h | rewrite h with (h' I) in * by (auto with pi_db); clear h];
-      assert (True -> v = t) as h by (exact h');
-      first [clear h' | rewrite (h' I) with (h I) in * by (auto with pi_db); clear h']
-    end
-  ).
-Ltac restoreEqnHyps :=
-  repeat (
-    match goal with
-    | [ h: True -> ?v = ?t |- _ ] => 
-      let h' := fresh "temp" in
-      assert (v = t) as h' by (exact (h I));
-      first [clear h | rewrite (h I) with h' by (auto with pi_db); clear h];
-      assert (v = t) as h by (apply h');
-      first [clear h' | rewrite h' with h by (auto with pi_db); clear h']
-    end
-  ).
-
-Ltac propKinded tm :=
-  let tmTp := type of tm in
-  let tmKind := type of tmTp in
-  eq_fail tmKind Prop (*tryif (eq_fail tmKind Prop) then idtac else (idtac "term " tm " isn't Prop-kinded"; fail)*).
-Ltac typeKinded tm :=
-  let tmTp := type of tm in
-  let tmKind := type of tmTp in
-  eq_fail tmKind Type (*tryif (eq_fail tmKind Prop) then idtac else (idtac "term " tm " isn't Prop-kinded"; fail)*).
-
-
-Global Tactic Notation "cleanup_inversion" tactic(invTac) hyp(h) := 
-  protectEqnHyps; invTac; 
-  repeat (match goal with
-  | [eqV: ?tp = ?v |- _] => typeKinded tp; apply eq_sym in eqV; subst
-  | [existEq: @existT Type ?P ?X ?p = @existT Type ?P ?X ?q |- _] => fail 
-  end); restoreEqnHyps; clear h.
-
-Global Tactic Notation "clean_inversion" tactic(invTac) hyp(h) := 
-  match type of h with
-  | ?f_rel_ap ?v => protectEqnHyps; invTac; 
-    match goal with
-    | [eqV: ?tm = v |- _] => apply eq_sym in eqV; subst; clear h
-    | _ => (* idtac "Cannot find final generated equality of inversion tactic to switch. "; *) subst; clear h
-    end; restoreEqnHyps
-  | ?tp => fail "Hypothesis to invert is not of expected shape, but has shape " tp 
-  end.
-
-Global Ltac strong_inversion h := first [clean_inversion (inversion h) h | clean_inversion (dependent inversion h) h].
-Ltac intro_inv := 
-  let h := fresh "H" in
-  intros h; strong_inversion h.
-
-Global Tactic Notation "assRefl" constr(x) "as" ident(Res) :=
-  assert (x = x) as Res by reflexivity; subst x.
 
 Ltac generalize_dependents genVars :=
   match genVars with
@@ -200,10 +138,7 @@ Ltac specializes recCalls :=
   | _nil => idtac
   | ?recCall _::_ _nil => intros; specialize (recCall)
   | ?recCall _::_ ?tl => intros; try pose proof (recCall); specializes tl
-  end.
-
-Tactic Notation "repeat_or_fail" tactic(tac) := tryif tac then repeat tac else fail. 
-Local Tactic Notation "first_sucessful" tactic(t) tactic(t') := tryif t then idtac else t'. 
+  end. 
 
 Ltac split_hyps := repeat_or_fail split_hyp.
 
@@ -239,28 +174,6 @@ Global Tactic Notation "make_opaque" hyp(h) :=
   destruct temp as [temp ->];
   pose proof (exist _ temp eq_refl) as h; 
   destruct h as [h ->]; clear temp.
-
-(* find a subexpression satisfying tactic P in exp and pose in as Res *)
-Ltac findSubExpr Res P exp :=
-  (* idtac "Calling findSubExpr on term " exp; *)
-  tryif P exp then 
-      return Res exp
-      else 
-  (match exp with
-    | ?f ?t => first_sucessful (findSubExpr Res P f) (findSubExpr Res P t)
-    | ?a -> ?c => first_sucessful (findSubExpr Res P a) (findSubExpr Res P c)
-    | forall (v:_), ?b => findSubExpr Res P b
-    | forall (v:_), ?rel v -> ?b => first [findSubExpr Res P rel | findSubExpr Res P b]
-    | forall (v:?aT), ?b => first_sucessful (findSubExpr Res P aT) (findSubExpr Res P b)
-    | fun (_:?aT) => ?b => first_sucessful (findSubExpr Res P aT) (findSubExpr Res P b)
-    | ?s = ?t => first_sucessful (findSubExpr Res P s) (findSubExpr Res P t)
-    | ?s <-> ?t => first_sucessful (findSubExpr Res P s) (findSubExpr Res P t)
-    | ?s /\ ?t => first_sucessful (findSubExpr Res P s) (findSubExpr Res P t)
-    | ?s \/ ?t => first_sucessful (findSubExpr Res P s) (findSubExpr Res P t)
-    | _ => fail (* "term doesn't have a matching subterm" exp *)
-  end)
-  (*; idtac "Finished computing findSubExpr " exp Res;
-  print_res Res *).
 
 Ltac isApplOf t f :=
   let Res := fresh "Res" in
@@ -302,8 +215,16 @@ Ltac rewriteAll h :=
   match type of h with
   | ?v = ?t => tryif (isVar v) then 
     first [subst v | 
-      first [progress rewrite h in *; clear h | revert h; intros ->]; 
-    clear v] else first [rewrite h in *; clear h | revert h; intros ->]
+      first [
+        progress rewrite h in *; clear h | 
+        revert h; intros -> |
+        let temp := fresh "temp" in
+        match type of h with
+        | ?term = _ => set term as temp in *;
+          revert h; intros ->; try subst temp
+        end
+      ]; 
+    try clear v] else first [rewrite h in *; clear h | revert h; intros ->]
   end.
 
 Global Tactic Notation "rewriteRLAll" hyp(h) := 
@@ -347,62 +268,14 @@ Ltac test_term tm :=
   pose tm as temp;
   clear temp.
 
-Ltac localLookupRel1 f Res :=
-  match type of f with
-  | forall (x:?A'), ?B' x =>
-    match goal with
-    | [rel: ?A -> ?B -> Prop |- _] =>
-      match goal with
-      | [projA: A' ⤖ A |- _] => 
-        match goal with
-        | [projB: forall (a:A'), (B' a) ⤖ B |- _] => 
-          pose rel as Res
-        end
-      end
-    end
-  end.
-
-Ltac localLookupRel2 f Res :=
-  match type of f with
-  | forall (x1:?X1') (x2:?X2' x1), ?T' x1 x2 =>
-    match goal with
-    | [rel: ?X1 -> ?X2 -> ?T -> Prop |- _] =>
-      match goal with
-      | [proj1: X1' ⤖ X1 |- _] => 
-        match goal with
-        | [proj2: forall (x1:X1'), (X2' x1) ⤖ X2 |- _] => 
-          match goal with
-          | [projT: forall (x1:X1') (x2:X2' x1), (T' x1 x2) ⤖ T |- _] => 
-            pose rel as Res
-          end
-        end
-      end
-    end
-  end.
-
-Ltac localLookupRel3 f Res :=
-  match type of f with
-  | forall (x1:?X1') (x2:?X2' x1) (x3:?X3' x1 x2), ?T' x1 x2 x3 =>
-    match goal with
-    | [rel: ?X1 -> ?X2 -> ?X3 -> ?T -> Prop |- _] =>
-      match goal with
-      | [proj1: X1' ⤖ X1 |- _] => 
-        match goal with
-        | [proj2: forall (x1:X1'), (X2' x1) ⤖ X2 |- _] => 
-          match goal with
-          | [proj3: forall (x1:X1') (x2:X2' x1), (X3' x1 x2) ⤖ X3 |- _] => 
-            match goal with
-            | [projT: forall (x1:X1') (x2:X2' x1) (x3:X3' x1 x2), (T' x1 x2 x3) ⤖ T |- _] => 
-              pose rel as Res
-            end
-          end
-        end
-      end
-    end
-  end.
-
 Ltac localLookupRel f Res :=
-  first [localLookupRel1 f Res | localLookupRel2 f Res | localLookupRel3 f Res].
+  match type of f with
+  | forall (args:ArgList ?argTps), ?rTp =>
+    match goal with
+    | [f_frel: forall (args: ArgList argTps) v, ⌊ f args -⌋ = v <-> ?frel _ v |- _] =>
+      pose frel as Res
+    end
+  end.
 
 Ltac hasLocalRel f :=
   let res := fresh "res" in
@@ -413,61 +286,14 @@ Ltac has_rel f := first [test_term (lookup rel f) | hasLocalRel f].
 Ltac has_no_rel f := tryif (has_rel f) then fail else idtac.
 
 
-Ltac localLookupFunc1 rel Res :=
-  match type of rel with
-  | ?A -> ?B -> Prop =>
-    match goal with
-    | [f: forall (x:?A'), ?B' x |- _] =>
-      match goal with
-      | [projA: A' ⤖ A |- _] => 
-        match goal with
-        | [projB: forall (a:A'), (B' a) ⤖ B |- _] => 
-          pose f as Res
-        end
-      end
-    end
-  end.
-
-Ltac localLookupFunc2 rel Res :=
-  match type of rel with
-  | ?X1 -> ?X2 -> ?T -> Prop =>
-    match goal with
-    | [f: forall (x1:?X1') (x2:?X2' x1), ?T' x1 x2 |- _] =>
-      match goal with
-      | [proj1: X1' ⤖ X1 |- _] => 
-        match goal with
-        | [proj2: forall (x1:X1'), (X2' x1) ⤖ X2 |- _] => 
-          match goal with
-          | [projT: forall (x1:X1') (x2:X2' x1), (T' x1 x2) ⤖ T |- _] => 
-            pose f as Res
-          end
-        end
-      end
-    end
-  end.
-
-Ltac localLookupFunc3 rel Res :=
-  match type of rel with
-  | ?X1 -> ?X2 -> ?X3 -> ?T -> Prop =>
-    match goal with
-    | [f: forall (x1:?X1') (x2:?X2' x1) (x3:?X3' x1 x2), ?T' x1 x2 x3 |- _] =>
-      match goal with
-      | [proj1: X1' ⤖ X1 |- _] => 
-        match goal with
-        | [proj2: forall (x1:X1'), (X2' x1) ⤖ X2 |- _] => 
-          match goal with
-          | [proj3: forall (x1:X1') (x2:X2' x1), (X3' x1 x2) ⤖ X3 |- _] => 
-            match goal with
-            | [projT: forall (x1:X1') (x2:X2' x1) (x3:X3' x1 x2), (T' x1 x2 x3) ⤖ T |- _] => 
-              pose f as Res
-            end
-          end
-        end
-      end
-    end
-  end.
 Ltac localLookupFunc rel Res :=
-  first [localLookupFunc1 rel Res | localLookupFunc2 rel Res | localLookupFunc3 rel Res].
+  match type of rel with
+  | forall (_:UArgList ?uargTps) (_:?T), Prop =>
+    match goal with
+    | [f_frel: forall (args: ArgList ?argTps) (v: T), ⌊ ?f args -⌋ = v <-> rel _ v |- _] =>
+      pose f as Res
+    end
+  end.
 Ltac localIsRel rel :=
   let res := fresh "res" in
   localLookupFunc rel res;
@@ -476,71 +302,14 @@ Ltac localIsRel rel :=
 Ltac is_rel f_rel := first [test_term (getF f_rel) | localIsRel f_rel].
 Ltac is_no_rel f_rel := tryif (test_term (getF f_rel)) then fail else idtac.
 
-Ltac localLookupRwLem1 f Res :=
-  match type of f with
-  | forall (x:?A'), ?B' x =>
-    match goal with
-    | [rel: ?A -> ?B -> Prop |- _] =>
-      match goal with
-      | [projA: A' ⤖ A |- _] => 
-        match goal with
-        | [projB: forall (a:A'), (B' a) ⤖ B |- _] => 
-          match goal with
-          | [rwLem: forall (x:A') (v:B), (projB x).(proj) (f x) = v <-> rel (projA.(proj) x) v |- _] =>
-            pose rwLem as Res
-          end
-        end
-      end
-    end
-  end.
-
-Ltac localLookupRwLem2 f Res :=
-  match type of f with
-  | forall (x1:?X1') (x2:?X2' x1), ?T' x1 x2 =>
-    match goal with
-    | [rel: ?X1 -> ?X2 -> ?T -> Prop |- _] =>
-      match goal with
-      | [pr1: X1' ⤖ X1 |- _] => 
-        match goal with
-        | [pr2: forall (x1:X1'), (X2' x1) ⤖ X2 |- _] => 
-          match goal with
-          | [prT: forall (x1:X1') (x2:X2' x1), (T' x1 x2) ⤖ T |- _] => 
-            match goal with
-              | [rwLem: forall (x1:X1') (x2:X2' x1) (v:T), (prT x1 x2).(proj) (f x1 x2) = v <-> rel (pr1.(proj) x1) ((pr2 x1).(proj) x2) v |- _] =>
-                pose rwLem as Res
-              end
-          end
-        end
-      end
-    end
-  end.
-
-Ltac localLookupRwLem3 f Res :=
-  match type of f with
-  | forall (x1:?X1') (x2:?X2' x1) (x3:?X3' x1 x2), ?T' x1 x2 x3 =>
-    match goal with
-    | [rel: ?X1 -> ?X2 -> ?X3 -> ?T -> Prop |- _] =>
-      match goal with
-      | [proj1: X1' ⤖ X1 |- _] => 
-        match goal with
-        | [pr2: forall (x1:X1'), (X2' x1) ⤖ X2 |- _] => 
-          match goal with
-          | [pr3: forall (x1:X1') (x2:X2' x1), (X3' x1 x2) ⤖ X3 |- _] => 
-            match goal with
-            | [prT: forall (x1:X1') (x2:X2' x1) (x3:X3' x1 x2), (T' x1 x2 x3) ⤖ T |- _] => 
-              match goal with
-              | [rwLem: forall (x1:X1') (x2:X2' x1) (x3:X3' x1 x2) (v:T), (prT x1 x2 x3).(proj) (f x1 x2 x3) = v <-> rel (pr1.(proj) x1) ((pr2 x1).(proj) x2) ((pr3 x1 x2).(proj) x3) v |- _] =>
-                pose rwLem as Res
-              end
-            end
-          end
-        end
-      end
-    end
-  end.
-
 Ltac localLookupRwLem f Res :=
-  first [localLookupRwLem1 f Res | localLookupRwLem2 f Res | localLookupRwLem3 f Res].
+  match type of f with
+  | forall (args:ArgList ?argTps), ?rTp =>
+    match goal with
+    | [f_frel: forall (args: ArgList argTps) v, ⌊ f args -⌋ = v <-> ?rel _ v |- _ ] =>
+      pose f_frel as Res
+    end
+  end.
 Ltac localHasRwLem f :=
   let res := fresh "res" in
   localLookupRwLem f res;
@@ -552,13 +321,6 @@ Ltac getRwLemRefl f ReflRes :=
   lookupRwLem f res;
   assRefl res as ReflRes;
   simpl in ReflRes.
-
-Ltac isConstrAppl t :=
-  tryif (isVar t) then fail else 
-  let temp := fresh "temp" in
-  match t with
-  | ?cApp _ => assert (forall x y, x <> y -> cApp x <> cApp y) as temp by (intros; injection; assumption)
-  end; clear temp.
 
 Ltac isRelAppl fApplV :=
   let fAppl := fresh "fAppl" in
@@ -598,15 +360,21 @@ Ltac isFAppl fApplV :=
 Ltac is_no_rel_appl tm := tryif (isRelAppl tm) then fail else idtac.
 Ltac is_no_f_appl tm := tryif (isFAppl tm) then fail else idtac.
 
-(* quick heuristic to ensure we don't waste time trying to invert hypothesis that aren't applications of relations parameters that aren't all variables *)
-Ltac inversion_precheck h :=
-  match type of h with
+Ltac inversion_precheck_tm tp := match tp with
   | ?f_rel_ap ?v => isVar v; tryif (match f_rel_ap with
-    | ?rel ?x1 ?x2 ?x3 => is_no_rel_appl rel
-    | ?rel ?x1 ?x2 => is_no_rel_appl rel
-    | ?rel ?x => is_no_rel_appl rel
+    | ?rel _ _ _ _ _ => is_no_rel_appl rel
+    | ?rel _ _ _ _ => is_no_rel_appl rel
+    | ?rel _ _ _ => is_no_rel_appl rel
+    | ?rel _ _ => is_no_rel_appl rel
+    | ?rel _ => is_no_rel_appl rel
     end) then fail else isRelAppl f_rel_ap
   end.
+
+(* quick heuristic to ensure we don't waste time trying to invert hypothesis that aren't applications of relations to parameters that aren't all variables *)
+Ltac inversion_precheck h :=
+  let tp := type of h in
+  inversion_precheck_tm tp.
+
 Global Tactic Notation "non_branching_inversion" hyp(h) := first 
   [ do_nonbranching strong_inversion h 
   | inversion_precheck h; do_nonbranching (strong_inversion h; try (exfalso; timeout 1 quicksolve))].
@@ -842,6 +610,29 @@ Ltac destrFunc tp Res :=
     subst temp
   | _ => pose (unit, tp) as Res
   end.
+
+Ltac rassumption := 
+  match goal with
+  | [h: _ |- _] => apply h; first [rassumption | quicksolve]
+  end.
+
+Ltac rconstructor := first [
+    constructor; quicksolve |
+    unshelve (econstructor; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor; try (quick_simpl; reflexivity); try rassumption; quicksolve |
+    unshelve (econstructor 1; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 1; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 2; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 2; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 3; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 3; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 4; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 4; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 5; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 5; try (quick_simpl; reflexivity); try rassumption;  quicksolve |
+    unshelve (econstructor 6; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
+    unshelve econstructor 6; try (quick_simpl; reflexivity); try rassumption;  quicksolve
+  ].
 
 (*
 Ltac 

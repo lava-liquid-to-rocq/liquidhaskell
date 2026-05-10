@@ -75,6 +75,7 @@ lava/coqDeps/*.vo
 lava/coqDeps/*.vok
 lava/coqDeps/*.vos
 lava/.CoqMakefile.d
+lava/CoqMakefile.conf
 lava/out/Todo
 lava/out/PLE
 lava/out/*/*.ilh
@@ -89,4 +90,4 @@ lava/out/**/*.timing
 lava/out/TranslationTests
 tests/lava/**/.lia.cache
 
-lava/out/TranslationTests/PLE/*.v
+lava/out/**

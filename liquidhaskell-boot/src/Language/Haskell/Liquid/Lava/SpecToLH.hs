@@ -64,12 +64,13 @@ getFuncArgName modId symb = go sym
             ["db", "", num] -> n ++ num
             _ -> n ++ s'
       _ -> error "Impossible case"
+    go s | length (filter ('$' ==) s) > 1 = (Nothing, "")
     go s = case split '#' s of
       [n, "", func] -> (Just (stripLegalName modId n), stripLegalName modId func)
       [func] -> (Nothing, stripLegalName modId func)
       [_, "", n, "", func] -> (Just (stripLegalName modId n), stripLegalName modId func)
       other | length other > 6 -> (Nothing, "") -- go . concat . drop 2 $ split '#' s
-      _ -> unsupported $ "getFuncArgName: " ++ sym
+      _ -> (Nothing, "")
     sym = F.showpp symb
 
 transVarName :: (PPrint a) => Id -> a -> String
@@ -84,7 +85,7 @@ parseConstrPred :: (PPrint a) => Id -> a -> (Maybe Id, Id)
 parseConstrPred modId symb = case split '$' $ F.showpp symb of
   [n, func] -> (Just (stripLegalName modId n), stripLegalName modId func)
   [func] -> (Nothing, stripLegalName modId func)
-  _ -> unsupported $ "parseConstrPred: " ++ F.showpp symb
+  _ -> (Nothing, F.showpp symb)
 
 -- | Translation of a LH SpecType to a refined argument {x: A | r}
 --

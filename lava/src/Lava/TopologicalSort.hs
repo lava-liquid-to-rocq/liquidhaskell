@@ -58,6 +58,8 @@ instance Dependencies LH.Decl where
     n == name || (name `notElem` αs && any (\(c, tp) -> c == name || dependsOn tp name) constrs)
   dependsOn (LH.Definition f tp expr _) name =
     f == name || dependsOn tp name || dependsOn expr name
+  dependsOn (LH.Import _ decls) name =
+    any (`dependsOn` name) decls
 
 class Binder a where
   bindName :: a -> Id
@@ -65,6 +67,7 @@ class Binder a where
 instance Binder LH.Decl where
   bindName (LH.Data n _ _) = n
   bindName (LH.Definition n _ _ _) = n
+  bindName (LH.Import n _) = n
 
 instance Binder Coq.Decl where
   bindName d = case d of

@@ -1,5 +1,4 @@
 File							LH sloc		Rocq sloc		translation time
-Append						37				375					0.18
 ApplicativeId			87				1059				0.14
 ApplicativeMaybe	109				1185				0.19
 ApplicativeList		242				2214				0.13
@@ -7,5 +6,4 @@ FoldrUniversal		37				237					0.18
 FunctorId					34				405					0.12
 FunctorList				41				438					0.15
 FunctorMaybe			37				428					0.13
-MonadList					37				345					0.12
-Total							661				6686				1.34
+Total							593				5966				1.04

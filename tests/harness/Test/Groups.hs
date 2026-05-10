@@ -82,6 +82,7 @@ lavaTestGroups :: [Text]
 lavaTestGroups =
   [ "benchmark-lava"
   , "benchmark-lava-ple"
+  , "import-lava"
   ]
 
 -- | Update this when you add new "classes" of test groups

@@ -51,6 +51,9 @@ data Image
   | ΓTyVar
   | ΓTC [Id] [(Id, RefType)]
 
+-- | A type environment is a map from identifiers to image.
+-- While it is supposed to be a telescope, in this implementation,
+-- we do not care about order because the domain has a unique occurence of each identifier
 type TypEnv = Map Id Image
 
 empty :: TypEnv
@@ -77,6 +80,9 @@ initial =
     ]
   where
     listαRef = defaultRef (listTp . defaultRef $ TyVar "α")
+
+delete :: Id -> TypEnv -> TypEnv
+delete = Map.delete
 
 insertVar :: (Id, Localization, RefType) -> TypEnv -> TypEnv
 insertVar (x, loc, tp) = Map.insert x (ΓVar loc tp)
@@ -155,15 +161,22 @@ member = Map.member
 notMember :: Id -> TypEnv -> Bool
 notMember = Map.notMember
 
+substInEnv :: Reft -> Id -> TypEnv -> TypEnv
+substInEnv r x = Map.map substInImage
+  where
+    substInImage tc@ΓTC {} = tc
+    substInImage (ΓVar loc tp) = ΓVar loc (subst r x tp)
+    substInImage ΓTyVar = ΓTyVar
+
 -- * Types of primitives
 
 -- | Singleton type of a literal
 litType :: Builtin -> Reft -> RefType
-litType tp l = RefType "VV" (Builtin tp) (Bop Eq (Var "VV" 0 Local) l)
+litType tp l = RefType "VV" (Builtin tp) (Bop Eq (Var "VV" Nothing Local) l)
 
 -- | Type of negation, with singleton return type
 negType :: RefType
-negType = ArrType "x" (RefType "x" boolTp ttTm) (RefType "VV" boolTp (Bop Eq (Var "VV" 0 Local) (Neg . Proj $ Var "x" 0 Local)))
+negType = ArrType "x" (RefType "x" boolTp ttTm) (RefType "VV" boolTp (Bop Eq (Var "VV" Nothing Local) (Neg . Proj $ Var "x" Nothing Local)))
 
 -- | Types of binary operators, with singleton return type
 bopTypes :: [(Bop, RefType)]
@@ -171,8 +184,8 @@ bopTypes =
   [ (Plus, mkBopType Plus (Builtin Integer) (Builtin Integer) ttTm (Builtin Integer)),
     (Minus, mkBopType Minus (Builtin Integer) (Builtin Integer) ttTm (Builtin Integer)),
     (Times, mkBopType Times (Builtin Integer) (Builtin Integer) ttTm (Builtin Integer)),
-    (Div, mkBopType Div (Builtin Integer) (Builtin Integer) (Bop Neq (Var "x_2" 0 Local) (IntLit 0)) (Builtin Integer)),
-    (Mod, mkBopType Mod (Builtin Integer) (Builtin Integer) (Bop Neq (Var "x_2" 0 Local) (IntLit 0)) (Builtin Integer)),
+    (Div, mkBopType Div (Builtin Integer) (Builtin Integer) (Bop Neq (Var "x_2" Nothing Local) (IntLit 0)) (Builtin Integer)),
+    (Mod, mkBopType Mod (Builtin Integer) (Builtin Integer) (Bop Neq (Var "x_2" Nothing Local) (IntLit 0)) (Builtin Integer)),
     (Leq, mkBopType Leq (Builtin Integer) (Builtin Integer) ttTm boolTp),
     (Geq, mkBopType Geq (Builtin Integer) (Builtin Integer) ttTm boolTp),
     (Lt, mkBopType Lt (Builtin Integer) (Builtin Integer) ttTm boolTp),
@@ -192,4 +205,4 @@ mkBopType :: Bop -> BaseType -> BaseType -> Reft -> BaseType -> RefType
 mkBopType bop a1 a2 r2 a3 =
   ArrType "x_1" (RefType "x_1" a1 ttTm) $
     ArrType "x_2" (RefType "x_2" a2 r2) $
-      RefType "VV" a3 (Bop Eq (Var "VV" 0 Local) (Bop bop (Proj $ Var "x_1" 0 Local) (Proj $ Var "x_2" 0 Local)))
+      RefType "VV" a3 (Bop Eq (Var "VV" Nothing Local) (Bop bop (Proj $ Var "x_1" Nothing Local) (Proj $ Var "x_2" Nothing Local)))

@@ -28,8 +28,8 @@ import Text.PrettyPrint.HughesPJClass hiding (first)
 --   The boolean is True to use Equations
 trDecl :: Bool -> LH.Decl -> [Coq.Decl]
 -- An inductive data type gives an unrefined data type, a well-formedness predicate, some utility definitions and pseudo-constructors
--- trDecl decl | trace (render $ text "Translating" <+> pPrint decl) False = undefined
-trDecl equations (LH.Data tc αs alts) =
+-- trDecl _ decl | trace (render $ text "Translating" <+> pPrint decl) False = undefined
+trDecl equations (LH.Data αs tc alts) =
   unrefTCDecl equations tc alts --                     TC_u: unrefined datatype declaration
     : tcEqDecls tc alts --                   TC_eq: equality for TC_u and associated declarations
     ++ tcRefDecls equations tc alts --                 TC_wf and TC: Well-formedness and type alias
@@ -39,9 +39,10 @@ trDecl equations (LH.Data tc αs alts) =
     -- For an unreflected definition, we only generate the refined definition,
     -- if the graph relation is needed, we generate it on the fly.
     -- For a reflected definition, we generate the graph relation, packs and other lemmas
+trDecl _ (LH.Import modName _) = [Coq.Load modName]
 trDecl equations (LH.Definition f tpf e isRefl) =
   (if equations then trDefEquations fdata else trDefRefDef fdata) -- f  -- f
-    ++ if isRefl
+    ++ if isRefl && (case tpf of ArrType {} -> True; RefType {} -> False)
       then
         defGraphRelAndHints fdata --       f_rel
           ++ relFunctionhoodLemma fdata -- f_rel_funct
@@ -70,7 +71,7 @@ unrefTC tc = Coq.TC (unrefinedTCName tc) []
 unrefTCDecl :: Bool -> Id -> [(Id, RefType)] -> Coq.Decl
 -- unrefTCDecl tc _ | traceTC "unrefTCDecl" tc = undefined
 unrefTCDecl eq tc alts =
-  CoqInductive (unrefinedTCName tc) [] (Sort SetSort) $ map (trConstr eq) alts
+  CoqInductive (unrefinedTCName tc) [] (Sort TypeSort) $ map (trConstr eq) alts
 
 -- ** Equality
 
@@ -114,9 +115,9 @@ eqReflLem tc =
       (eqReflLemName tc)
       []
       (Coq.FAType ("x", unrefTC tc) . Prop . mkIsTrue $ Coq.App (Def $ tcEqName tc) (map Coq.Var ["x", "x"]))
-      (ProofBody [Custom "eq_refl"])
+      (ProofBody [Custom "eq_refl_rec"])
       Opaque,
-    AddHint ResolveHint (eqReflLemName tc) EqHintDb
+    AddHint ResolveHint (eqReflLemName tc) EqHintDB
   ]
 
 -- | Lemma TC_eqb_eq and hint:
@@ -139,7 +140,7 @@ eqbEqLem tc =
       )
       (ProofBody [Custom "eqb_eq_lem"])
       Opaque,
-    AddHint ResolveHint (eqEqbEqLemName tc) EqHintDb
+    AddHint ResolveHint (eqEqbEqLemName tc) EqHintDB
   ]
 
 -- | Instantiation of the equality typeclass for TC_u
@@ -176,7 +177,7 @@ wfDecl eq tc alts =
         argProp (x, tpArg) =
           case trRefType eq tpArg of
             Subset _ _ p -> p
-            Pack {} -> Coq.App (Def uPackWfName) [Coq.Var x] -- TODO: add required conditions
+            Pack argTps _ z _ p -> Coq.App (Def uPackWfName) [mkArgListT argTps, z, p, Coq.Var x] -- TODO: add required conditions
             _ -> PropLit True
 
 -- | Lemma TC_wf_ref:
@@ -187,7 +188,7 @@ wfLem tc =
   Coq.Definition
     (wfLemName tc)
     [(("p", Arrow (unrefTC tc) (Sort PropSort)), True), (tm, False)]
-    (Prop $ Coq.App (Def $ wfTCName tc) [Project $ Coq.Var "tm"])
+    (Prop $ Coq.App (Def $ wfTCName tc) [Coq.Proj Sig1 $ Coq.Var "tm"])
     (ProofBody [destructSubsetArg "tm", Oracle])
     Opaque
   where
@@ -218,7 +219,7 @@ mkPseudoConstr eq tc (c, tp) =
     argsT = map ((,False) . second (trRefType eq)) args
     retT = trRefType eq (mkRefType ret)
     -- C proj(x1) … proj(xn) (in LH), that translates to C_u proj1_sig(x1) … proj1_sig(x_n)
-    unrefCrApp = foldl LH.App (DC c) (map mkProj $ tpArgsArLoc tp)
+    unrefCrApp = foldl LH.App (DC c) (map LH.mkProj $ tpArgsArLoc tp)
     bodyLem = ProofBody [Custom "repeat first [split; solver]"]
     -- The translated refinement of the return type of C, where x is replaced by Cu proj1_sig(args)
     -- NOTE: instead of inlining the translation of the refinement of an
@@ -290,8 +291,9 @@ data FuncData = FuncData
     -- | function body with the recursive variable marked as such
     body :: Expr,
     -- | function parameters (x_i: R_i)_{i ≤ n}
-    -- ret :: (Id, BaseType, Reft), -- ^ function return type
     args :: [(Id, RefType)],
+    -- | function return type
+    ret :: (Id, BaseType, Reft),
     -- | name of the return value of the function
     retName :: Id,
     -- | translation of the parameters
@@ -320,20 +322,21 @@ mkFuncData eq name tpf body =
       tpf,
       body,
       args,
+      ret,
       retName,
       argsT = map (second (trRefType eq)) args,
       argsUT = map (second (utrRefType eq)) args,
-      retT = trRefType eq ret,
-      retUT = utrRefType eq ret,
+      retT = trRefType eq ret',
+      retUT = utrRefType eq ret',
       paths = functionPaths body (tpArgsArLoc tpf),
       projArgs = map projArg args,
       injArgs = map injArg args,
       equations = eq
     }
   where
-    (αs, args, ret0@(retName, _, _)) = arrs tpf
-    ret = mkRefType ret0
-    projArg (x, ArrType {}) = Project (Coq.Var x)
+    (αs, args, ret@(retName, _, _)) = arrs tpf
+    ret' = mkRefType ret
+    projArg (x, ArrType {}) = Coq.Proj GenProj (Coq.Var x)
     projArg (x, _) = Coq.Var x
     injArg (x, ArrType {}) = Coq.Var x
     injArg (x, RefType {}) = Exist TermHole (Coq.Var x) (TermWitness $ Coq.Var (subsetWitnessNm x))
@@ -379,9 +382,9 @@ separateBranches σxs σp (Case r branches _) =
       -- if r is an applied constructor
       (DC c, rs) -> maybe [] (separateBranches σxs σp) $ matchBranch (c, rs) cleanBranches
       -- if r is a first-order local variable (always injected)
-      (Inj (LH.Var x 0 _) _, []) -> concatMap (varRecCall x) cleanBranches
+      (Inj (LH.Var x Nothing _) _, []) -> concatMap (varRecCall x) cleanBranches
       -- if r is a first-order global variable
-      (LH.Var x 0 _, []) -> concatMap (varRecCall x) cleanBranches
+      (LH.Var x Nothing _, []) -> concatMap (varRecCall x) cleanBranches
       -- if r is an application or top-level constant
       _ -> concatMap (\(pat, e) -> separateBranches σxs (σp ++ [(r, matchToApp pat)]) e) cleanBranches
     Just _ -> error "Error in creation of function paths"
@@ -391,8 +394,8 @@ separateBranches σxs σp (Case r branches _) =
     -- Returns the pattern to which r is matched if it is already
     alreadyMatched =
       apps <$> case r of
-        Inj (LH.Var x 0 _) _ -> case lookup x σxs of Just (LH.Var {}) -> Nothing; pat -> pat
-        LH.Var x 0 _ -> case lookup x σxs of Just (LH.Var {}) -> Nothing; pat -> pat
+        Inj (LH.Var x Nothing _) _ -> case lookup x σxs of Just (LH.Var {}) -> Nothing; pat -> pat
+        LH.Var x Nothing _ -> case lookup x σxs of Just (LH.Var {}) -> Nothing; pat -> pat
         _ -> lookup r σp
     -- Recursive calls for the variable case, substituting the variable everywhere
     varRecCall :: Id -> ((Id, [(Id, Bool)]), Expr) -> [FunctionPath]
@@ -405,7 +408,7 @@ separateBranches σxs σp (Case r branches _) =
     -- Returns the application corresponding to the pattern of a case
     -- Since we do not have higher-order constructors, all variables are of arity 0
     matchToApp :: (Id, [(Id, Bool)]) -> Reft
-    matchToApp (c, ys) = foldl LH.App (DC c) (map (\(y, _) -> LH.Var y 0 Local) ys)
+    matchToApp (c, ys) = foldl LH.App (DC c) (map (\(y, _) -> LH.Var y Nothing Local) ys)
     -- Given a pattern and a branch, returns the corresponding branch instantiated
     -- with respect to the arguments of the constructor.
     -- There should be at most one corresponding branch, so we return only one
@@ -442,17 +445,30 @@ groupArgPaths branches =
 -- ** Refined definition
 
 -- | Translation of a definition `f` to the refined definition `f` (with tactics)
+--
+-- > Definition f_spec (xi:Ai)_i : Type := {v:A|p}.
+-- > #[global] Hint Unfold f_spec : lia_unfold.
+-- > Definition f (xi:Ai)_i : f_spec (x_i)_i.
+-- > Proof. … Defined.
 trDefRefDef :: FuncData -> [Coq.Decl]
 -- trDefRefDef f | traceF "trDefRefDef" f = undefined
 trDefRefDef f =
-  [Coq.Definition (name f) (map (,False) (argsT f)) (retT f) (ProofBody tacs) Transparent]
+  [ Coq.Definition f_spec (map (,False) $ argsT f) (Sort TypeSort) (TypeBody $ retT f) Transparent,
+    AddHint UnfoldHint f_spec LiaUnfoldDB,
+    Coq.Definition (name f) (map (,False) (argsT f)) f_ret (ProofBody tacs) vis
+  ]
   where
+    f_spec = specName $ name f
+    f_ret = Prop $ Coq.App (Def f_spec) (map (Coq.Var . fst) (argsT f))
     tacs =
       let destructArgs = map (mkVarDestruct . fst) $ onlyFOArgs (args f)
        in destructArgs ++ trExprTacs (equations f) (body f)
     -- Filter arguments with a non-arrow refinement type (those that need to be destructed)
     onlyFOArgs :: [(Id, RefType)] -> [(Id, RefType)]
     onlyFOArgs = filter (\case (_, RefType {}) -> True; (_, ArrType {}) -> False)
+    vis = case ret f of
+      (_, u, _) | u == LH.unitTp -> Opaque
+      _ -> Transparent
 
 -- | Translation of a definition `f` to the refined definition `f` (with Equations)
 trDefEquations :: FuncData -> [Coq.Decl]
@@ -470,7 +486,7 @@ trDefEquations f =
       where
         -- Split a parameter x into ⌊x⌋ and ⌈x⌉ if x is of a simple refinement type
         splitParameter :: (Id, RocqType) -> [CoqTerm]
-        splitParameter (x, Coq.Subset {}) = [Project (Coq.Var x), Proj2sig (Coq.Var x)]
+        splitParameter (x, Coq.Subset {}) = [Coq.Proj Sig1 (Coq.Var x), Coq.Proj Sig2 (Coq.Var x)]
         splitParameter (x, _) = [Coq.Var x]
 
 -- | Translates a list of `FunctionPath` into a list of `EqBranch`
@@ -480,10 +496,10 @@ mkEquationsBranches eq paths = map trBranch $ factorizePaths paths
   where
     trBranch :: ([(Id, Reft)], [Reft], [([Maybe Reft], Reft)]) -> EqBranch
     trBranch (σxs, with, guards) =
-      (concatMap (trArgPattern . snd) σxs, map (mkProject . trReft eq) with, map trGuard guards)
+      (concatMap (trArgPattern . snd) σxs, map (Coq.mkProj Sig1 . trReft eq) with, map trGuard guards)
     -- Translate arguments patterns and change `pat` to `pat _` for FO parameters
     trArgPattern :: Reft -> [CoqTerm]
-    trArgPattern pat@(LH.Var _ n _) | n > 0 = [utrReft eq pat]
+    trArgPattern pat@(LH.Var _ (Just _) _) = [utrReft eq pat]
     trArgPattern pat = [utrReft eq pat, TermHole]
     -- Translate guards patterns and the branch term
     -- We add holes as patterns for guards that are not involved in the branch
@@ -532,7 +548,7 @@ trPathToConstr eq f argsUT p@(σxs, _, _) =
   where
     -- Variables introduced by destructing the arguments
     argsVarsWithTypes = concat $ zipWith patVars σxs argsUT
-    patVars (x, LH.Var x' n Local) tp | x == x' && n > 0 = [(x, tp)]
+    patVars (x, LH.Var x' (Just _) Local) tp | x == x' = [(x, tp)]
     patVars (_, pat) _ = map (,Hole) . Set.toList $ LH.freeVars pat
 
 -- | Auxiliary function for `trPathToConstr` and `inversionLemma`
@@ -654,15 +670,21 @@ defExLemma f = [exLem, AddHint ResolveHint (exLemName $ name f) RelAxDB]
       Coq.Definition
         (exLemName $ name f)
         (map (,False) $ fst (trRefTypeSplit (equations f) (tpf f)))
-        (Prop $ Coq.App (Def . relDefName $ name f) (projArgs f ++ [mkProject $ mkApp (Def $ name f) (injArgs f)]))
+        (Prop $ Coq.App (Def . relDefName $ name f) (projArgs f ++ [Coq.mkProj Sig1 $ mkApp (Def $ name f) (injArgs f)]))
         ( ProofBody
-            [ mkConcat
+            [ ChangeVis (name f) Opaque,
+              mkConcat
                 [ Custom $ "existence_lemma_pre " ++ name f,
                   mkIndSkel (equations f) (body f) True,
-                  Custom $ "existence_lemma_quicksolve " ++ name f,
-                  Custom "f__f_rel_ex_body",
-                  Custom "f_rel_finish"
-                ]
+                  Custom "simpl in *"
+                ],
+              ChangeVis (name f) Transparent,
+              All $
+                mkConcat
+                  [ Custom $ "existence_lemma_quicksolve " ++ name f,
+                    Custom "f__f_rel_ex_body",
+                    Custom "f_rel_finish"
+                  ]
             ]
         )
         Opaque
@@ -690,7 +712,7 @@ refRelRwLemma f =
         (ProofBody [Custom "f__f_rel_rw"])
         Opaque
     -- ⌊ f (exist _ args argsp) -⌋ = f_res
-    defEq = Coq.Bop (Binop Coq.RocqEq PropOp) (mkProject $ mkApp (Def $ name f) (injArgs f)) (Coq.Var $ retName f)
+    defEq = Coq.Bop (Binop Coq.RocqEq PropOp) (Coq.mkProj Sig1 $ mkApp (Def $ name f) (injArgs f)) (Coq.Var $ retName f)
     -- f_rel [exist _ args argsp] f_res
     relApp = Coq.App (Def . relDefName $ name f) (projArgs f ++ [Coq.Var $ retName f])
 
@@ -715,13 +737,13 @@ refUnrefLemmas f =
     equivalence fuArgs =
       Coq.Bop
         (Binop Coq.Equiv PropOp)
-        (Coq.Bop (Binop Coq.RocqEq PropOp) (mkProject $ Coq.App (Coq.Def $ name f) params) (Coq.Var $ retName f))
+        (Coq.Bop (Binop Coq.RocqEq PropOp) (Coq.mkProj Sig1 $ Coq.App (Coq.Def $ name f) params) (Coq.Var $ retName f))
         (Coq.App (Coq.Def (relDefName $ name f)) $ fuArgs ++ [Coq.Var $ retName f])
     refUnrefLemma =
       mkCoqTheorem
         (relDefThmName $ name f)
         (map (,False) $ argsT f ++ [(retName f, retUT f)])
-        (equivalence $ map mkProject params)
+        (equivalence $ map (Coq.mkProj GenProj) params)
         [Coq.Custom "f__f_rel"]
     refUnrefLemma' =
       Coq.Definition
@@ -737,7 +759,7 @@ refUnrefLemmas f =
       where
         paramsEq =
           zipWith
-            (\xiu xi -> Coq.Bop (Binop Coq.RocqEq PropOp) (Coq.Var xiu) (Project (Coq.Var xi)))
+            (\xiu xi -> Coq.Bop (Binop Coq.RocqEq PropOp) (Coq.Var xiu) (Coq.Proj GenProj (Coq.Var xi)))
             (map fst argsUT_u)
             (map fst $ argsT f)
         unrLemArgs = map (,False) $ argsUT_u ++ argsT f ++ [(retName f, retUT f)]
@@ -811,21 +833,23 @@ mkIndSkel eq (LH.Let _ _ _ e) specIHs = mkIndSkel eq e specIHs
 mkIndSkel _ (Reft r) specIhs =
   mkConcat $
     if specIhs
-      then Custom "fix_notations" : [poseIHCall call | call <- ihCalls] ++ [Try $ Clear indhyp | indhyp <- allIHs]
+      then
+        Custom "fix_notations"
+          : [ProofPose ("IH_" ++ hashName ihCall) ihCall | ihCall <- ihCalls]
+          ++ [Try $ Clear indhyp | indhyp <- allIHs]
       else []
   where
     -- translation of recursive calls
     ihCalls = map (\(indVar, state, args) -> trRecCall (Left indVar) state args) $ findRecCalls r
     -- all induction hypotheses used
     allIHs = map (\(indVar, _, _) -> ihName indVar) $ findRecCalls r
-    poseIHCall ihCall = ProofPose ("IH_" ++ hashName ihCall) ihCall
 
     findRecCalls :: Reft -> [(Id, [DesState], [Reft])]
     findRecCalls (LH.Var _ _ (Recursive indVar state)) = [(indVar, state, [])]
     findRecCalls r'@(LH.App {}) =
       case apps r' of
-        (LH.Var _ _ (Recursive indVar state), args) -> [(indVar, state, args)]
-        _ -> []
+        (LH.Var _ _ (Recursive indVar state), args) -> (indVar, state, args) : concatMap findRecCalls args
+        (_, args) -> concatMap findRecCalls args
     findRecCalls (LH.Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = []
     findRecCalls (LH.Neg r') = findRecCalls r'
     findRecCalls (LH.Bop _ r1 r2) = findRecCalls r1 `union` findRecCalls r2
@@ -833,4 +857,4 @@ mkIndSkel _ (Reft r) specIhs =
     findRecCalls (Pop _ r1 r2) = findRecCalls r1 `union` findRecCalls r2
     findRecCalls (Sub r' _ _) = findRecCalls r'
     findRecCalls (Inj r' _) = findRecCalls r'
-    findRecCalls (Proj r') = findRecCalls r'
+    findRecCalls (LH.Proj r') = findRecCalls r'
