@@ -95,7 +95,7 @@ Defined.
 
 Inductive even_rel: Nats_u → bool → Prop :=
   | even_Zero: even_rel Zero_u true
-  | even_Suc: ∀ n even_res, even_rel n even_res → even_rel (Suc_u n) (negb even_res).
+  | even_Suc: ∀ n (even_res : bool), even_rel n even_res → even_rel (Suc_u n) (negb even_res).
 
 #[global] Hint Constructors even_rel: core_hint_db.
 
@@ -120,7 +120,7 @@ Qed.
 
 Theorem even_Suc_lem n even_Suc_lem_res:
   even_rel (Suc_u n) even_Suc_lem_res
-  ↔ ∃ even_res, even_rel n even_res ∧ even_Suc_lem_res == negb even_res.
+  ↔ ∃ (even_res : bool), even_rel n even_res ∧ even_Suc_lem_res == negb even_res.
 Proof.
   rel_back' _nil.
 Qed.
