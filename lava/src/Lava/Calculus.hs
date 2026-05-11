@@ -189,6 +189,12 @@ mkVarWithAnnot x tpx loc =
           (_, (_, retTp, _)) -> Just retTp
    in Var x typeAnnot loc
 
+-- | Wrapper for And, defined as TT for empty conjuncts list
+mkAnd :: [Reft] -> Reft
+mkAnd args = if null args' then ttTm else foldl1 (Bop And) args'
+  where
+    args' = filter (/= ttTm) args
+
 -- | mkSub(r, from, to) makes a subsumption cast unless tp1 = tp2
 --   Should we collapse casts? Would it hide intermediate properties needed for automation?
 mkSub :: Reft -> RefType -> RefType -> Reft
