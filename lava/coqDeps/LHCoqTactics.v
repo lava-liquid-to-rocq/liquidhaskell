@@ -2467,6 +2467,7 @@ Ltac f__f_rel_ih :=
       end;
       try apply h
       | _ => idtac "failure to solve goal: "; print_proof_state
+    | |- ?s = ?t => idtac
     end; try solve [solve_pi_unif_subgoal]; try timeout 10 quicksolve.
 
 Ltac eager_instantiate_goal :=
@@ -2666,10 +2667,13 @@ Ltac f__f_rel_ex_body :=
   try pack_goal_rewriting.
 
 Ltac f_rel_finish :=
+  try rewrite <- generic_equalb_eq;
   repeat autounfold with get_rel_db in *;
-  tryif fill_ih_holes then idtac else (idtac "Failure to find hypothesis that exactly matches goal."; match goal with
+  tryif fill_ih_holes then idtac else (idtac "Failure to find hypothesis that exactly matches goal."; 
+  match goal with
   | [ih: ?rel ?x _ _ |- ?rel ?x _ _] => idtac "The hypothesis that roughly matches the goal " ih
   | [ih: ?rel _ ?y _ |- ?rel _ ?y _] => idtac "The hypothesis that roughly matches the goal " ih
+  | |- ?s = ?t => idtac
   | _ => print_proof_state; fail
   end
   );
