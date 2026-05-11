@@ -395,7 +395,8 @@ Proof.
 Defined.
 
 Definition test_andb31_spec : Type :=
-  {{∃ andb3_res, andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3_res ∧ andb3_res == SFTrue_u}}.
+  {{∃ (andb3_res : SFBool_u),
+    andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3_res ∧ andb3_res == SFTrue_u}}.
 
 #[global] Hint Unfold test_andb31_spec: lia_unfold.
 
@@ -403,13 +404,15 @@ Theorem test_andb31 : test_andb31_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ andb3_res, andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3_res ∧ andb3_res == SFTrue_u)
+          (λ (VV : Unit),
+           ∃ (andb3_res : SFBool_u), andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3_res ∧ andb3_res == SFTrue_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_andb32_spec : Type :=
-  {{∃ andb3_res, andb3_rel SFFalse_u SFTrue_u SFTrue_u andb3_res ∧ andb3_res == SFFalse_u}}.
+  {{∃ (andb3_res : SFBool_u),
+    andb3_rel SFFalse_u SFTrue_u SFTrue_u andb3_res ∧ andb3_res == SFFalse_u}}.
 
 #[global] Hint Unfold test_andb32_spec: lia_unfold.
 
@@ -418,13 +421,14 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ andb3_res, andb3_rel SFFalse_u SFTrue_u SFTrue_u andb3_res ∧ andb3_res == SFFalse_u)
+           ∃ (andb3_res : SFBool_u), andb3_rel SFFalse_u SFTrue_u SFTrue_u andb3_res ∧ andb3_res == SFFalse_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_andb33_spec : Type :=
-  {{∃ andb3_res, andb3_rel SFTrue_u SFFalse_u SFTrue_u andb3_res ∧ andb3_res == SFFalse_u}}.
+  {{∃ (andb3_res : SFBool_u),
+    andb3_rel SFTrue_u SFFalse_u SFTrue_u andb3_res ∧ andb3_res == SFFalse_u}}.
 
 #[global] Hint Unfold test_andb33_spec: lia_unfold.
 
@@ -433,13 +437,14 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ andb3_res, andb3_rel SFTrue_u SFFalse_u SFTrue_u andb3_res ∧ andb3_res == SFFalse_u)
+           ∃ (andb3_res : SFBool_u), andb3_rel SFTrue_u SFFalse_u SFTrue_u andb3_res ∧ andb3_res == SFFalse_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_andb34_spec : Type :=
-  {{∃ andb3_res, andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3_res ∧ andb3_res == SFFalse_u}}.
+  {{∃ (andb3_res : SFBool_u),
+    andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3_res ∧ andb3_res == SFFalse_u}}.
 
 #[global] Hint Unfold test_andb34_spec: lia_unfold.
 
@@ -448,15 +453,15 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ andb3_res, andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3_res ∧ andb3_res == SFFalse_u)
+           ∃ (andb3_res : SFBool_u), andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3_res ∧ andb3_res == SFFalse_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition andb_commutative_spec (b c : SFBool): Type :=
-  {{∃ andb_res,
+  {{∃ (andb_res : SFBool_u),
     andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res
-    ∧ ∃ andb_res_2, andb_rel ⌊ c ⌋ ⌊ b ⌋ andb_res_2 ∧ andb_res == andb_res_2}}.
+    ∧ ∃ (andb_res_2 : SFBool_u), andb_rel ⌊ c ⌋ ⌊ b ⌋ andb_res_2 ∧ andb_res == andb_res_2}}.
 
 #[global] Hint Unfold andb_commutative_spec: lia_unfold.
 
@@ -469,39 +474,45 @@ Proof.
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ andb_res, andb_rel b c andb_res ∧ ∃ andb_res_2, andb_rel c b andb_res_2 ∧ andb_res == andb_res_2)
+               ∃ (andb_res : SFBool_u),
+               andb_rel b c andb_res ∧ ∃ (andb_res_2 : SFBool_u), andb_rel c b andb_res_2 ∧ andb_res == andb_res_2)
               (# unit)
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ andb_res, andb_rel b c andb_res ∧ ∃ andb_res_2, andb_rel c b andb_res_2 ∧ andb_res == andb_res_2)
+               ∃ (andb_res : SFBool_u),
+               andb_rel b c andb_res ∧ ∃ (andb_res_2 : SFBool_u), andb_rel c b andb_res_2 ∧ andb_res == andb_res_2)
               (# unit)
               ltac:(solver)).
   - destruct c as [|].
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ andb_res, andb_rel b c andb_res ∧ ∃ andb_res_2, andb_rel c b andb_res_2 ∧ andb_res == andb_res_2)
+               ∃ (andb_res : SFBool_u),
+               andb_rel b c andb_res ∧ ∃ (andb_res_2 : SFBool_u), andb_rel c b andb_res_2 ∧ andb_res == andb_res_2)
               (# unit)
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ andb_res, andb_rel b c andb_res ∧ ∃ andb_res_2, andb_rel c b andb_res_2 ∧ andb_res == andb_res_2)
+               ∃ (andb_res : SFBool_u),
+               andb_rel b c andb_res ∧ ∃ (andb_res_2 : SFBool_u), andb_rel c b andb_res_2 ∧ andb_res == andb_res_2)
               (# unit)
               ltac:(solver)).
 Qed.
 
 Definition andb_true_elim2_spec
-  (b c : SFBool) (p : {{∃ andb_res, andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res ∧ andb_res == SFTrue_u}}):
+  (b c : SFBool)
+  (p : {{∃ (andb_res : SFBool_u), andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res ∧ andb_res == SFTrue_u}}):
   Type :=
   {{⌊ c ⌋ == SFTrue_u}}.
 
 #[global] Hint Unfold andb_true_elim2_spec: lia_unfold.
 
 Theorem andb_true_elim2
-  (b c : SFBool) (p : {{∃ andb_res, andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res ∧ andb_res == SFTrue_u}}):
+  (b c : SFBool)
+  (p : {{∃ (andb_res : SFBool_u), andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res ∧ andb_res == SFTrue_u}}):
   andb_true_elim2_spec b c p.
 Proof.
   destruct b as [b b_p].
@@ -531,10 +542,11 @@ Definition identity_fn_applied_twice_spec
        Unit
        (λ (x_44180694 : ArgList (SFBool ::RT λ (x : SFBool), nilRT)) (v_x_44180694 : Unit),
         ltac:(flattenP (λ (x : SFBool) (VV : Unit),
- ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ f_res == ⌊ x ⌋) x_44180694 v_x_44180694)))
+ ∃ (f_res : SFBool_u), getPackRel f ⌊ x ⌋ f_res ∧ f_res == ⌊ x ⌋) x_44180694 v_x_44180694)))
   (b : SFBool):
   Type :=
-  {{∃ f_res, getPackRel f ⌊ b ⌋ f_res ∧ ∃ f_res_2, getPackRel f f_res f_res_2 ∧ f_res_2 == ⌊ b ⌋}}.
+  {{∃ (f_res : SFBool_u),
+    getPackRel f ⌊ b ⌋ f_res ∧ ∃ (f_res_2 : SFBool_u), getPackRel f f_res f_res_2 ∧ f_res_2 == ⌊ b ⌋}}.
 
 #[global] Hint Unfold identity_fn_applied_twice_spec: lia_unfold.
 
@@ -553,7 +565,7 @@ Theorem identity_fn_applied_twice
        Unit
        (λ (x_44180694 : ArgList (SFBool ::RT λ (x : SFBool), nilRT)) (v_x_44180694 : Unit),
         ltac:(flattenP (λ (x : SFBool) (VV : Unit),
- ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ f_res == ⌊ x ⌋) x_44180694 v_x_44180694)))
+ ∃ (f_res : SFBool_u), getPackRel f ⌊ x ⌋ f_res ∧ f_res == ⌊ x ⌋) x_44180694 v_x_44180694)))
   (b : SFBool):
   identity_fn_applied_twice_spec f x b.
 Proof.
@@ -561,14 +573,15 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ f_res, getUPackRel f b f_res ∧ ∃ f_res_2, getUPackRel f f_res f_res_2 ∧ f_res_2 == b)
+           ∃ (f_res : SFBool_u),
+           getPackRel f b f_res ∧ ∃ (f_res_2 : SFBool_u), getPackRel f f_res f_res_2 ∧ f_res_2 == b)
           (let _: True :=
            ⌈ # unit ⌉ in
            let _: (True ∧ VV == ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋)
                   ∧ VV
                     == ⌊ getPackF f (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌋ :=
            ⌈ let _: True :=
-             ⌈ let _: ∃ f_res, getUPackRel f b f_res ∧ f_res == b :=
+             ⌈ let _: ∃ (f_res : SFBool_u), getPackRel f b f_res ∧ f_res == b :=
                ⌈ getPackF x (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌉ in
                let _: ⌊ getPackF x (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌋
                       == b :=
@@ -734,7 +747,7 @@ Proof.
 Defined.
 
 Definition test_nandb1_spec : Type :=
-  {{∃ nandb_res, nandb_rel SFTrue_u SFFalse_u nandb_res ∧ nandb_res == SFTrue_u}}.
+  {{∃ (nandb_res : SFBool_u), nandb_rel SFTrue_u SFFalse_u nandb_res ∧ nandb_res == SFTrue_u}}.
 
 #[global] Hint Unfold test_nandb1_spec: lia_unfold.
 
@@ -742,13 +755,14 @@ Theorem test_nandb1 : test_nandb1_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ nandb_res, nandb_rel SFTrue_u SFFalse_u nandb_res ∧ nandb_res == SFTrue_u)
+          (λ (VV : Unit),
+           ∃ (nandb_res : SFBool_u), nandb_rel SFTrue_u SFFalse_u nandb_res ∧ nandb_res == SFTrue_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_nandb2_spec : Type :=
-  {{∃ nandb_res, nandb_rel SFFalse_u SFFalse_u nandb_res ∧ nandb_res == SFTrue_u}}.
+  {{∃ (nandb_res : SFBool_u), nandb_rel SFFalse_u SFFalse_u nandb_res ∧ nandb_res == SFTrue_u}}.
 
 #[global] Hint Unfold test_nandb2_spec: lia_unfold.
 
@@ -756,13 +770,14 @@ Theorem test_nandb2 : test_nandb2_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ nandb_res, nandb_rel SFFalse_u SFFalse_u nandb_res ∧ nandb_res == SFTrue_u)
+          (λ (VV : Unit),
+           ∃ (nandb_res : SFBool_u), nandb_rel SFFalse_u SFFalse_u nandb_res ∧ nandb_res == SFTrue_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_nandb3_spec : Type :=
-  {{∃ nandb_res, nandb_rel SFFalse_u SFTrue_u nandb_res ∧ nandb_res == SFTrue_u}}.
+  {{∃ (nandb_res : SFBool_u), nandb_rel SFFalse_u SFTrue_u nandb_res ∧ nandb_res == SFTrue_u}}.
 
 #[global] Hint Unfold test_nandb3_spec: lia_unfold.
 
@@ -770,13 +785,14 @@ Theorem test_nandb3 : test_nandb3_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ nandb_res, nandb_rel SFFalse_u SFTrue_u nandb_res ∧ nandb_res == SFTrue_u)
+          (λ (VV : Unit),
+           ∃ (nandb_res : SFBool_u), nandb_rel SFFalse_u SFTrue_u nandb_res ∧ nandb_res == SFTrue_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_nandb4_spec : Type :=
-  {{∃ nandb_res, nandb_rel SFTrue_u SFTrue_u nandb_res ∧ nandb_res == SFFalse_u}}.
+  {{∃ (nandb_res : SFBool_u), nandb_rel SFTrue_u SFTrue_u nandb_res ∧ nandb_res == SFFalse_u}}.
 
 #[global] Hint Unfold test_nandb4_spec: lia_unfold.
 
@@ -784,7 +800,8 @@ Theorem test_nandb4 : test_nandb4_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ nandb_res, nandb_rel SFTrue_u SFTrue_u nandb_res ∧ nandb_res == SFFalse_u)
+          (λ (VV : Unit),
+           ∃ (nandb_res : SFBool_u), nandb_rel SFTrue_u SFTrue_u nandb_res ∧ nandb_res == SFFalse_u)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -921,8 +938,9 @@ Proof.
 Defined.
 
 Definition negb_involutive_spec (b : SFBool): Type :=
-  {{∃ negb_res,
-    negb_rel ⌊ b ⌋ negb_res ∧ ∃ negb_res_2, negb_rel negb_res negb_res_2 ∧ negb_res_2 == ⌊ b ⌋}}.
+  {{∃ (negb_res : SFBool_u),
+    negb_rel ⌊ b ⌋ negb_res
+    ∧ ∃ (negb_res_2 : SFBool_u), negb_rel negb_res negb_res_2 ∧ negb_res_2 == ⌊ b ⌋}}.
 
 #[global] Hint Unfold negb_involutive_spec: lia_unfold.
 
@@ -933,13 +951,15 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ negb_res, negb_rel b negb_res ∧ ∃ negb_res_2, negb_rel negb_res negb_res_2 ∧ negb_res_2 == b)
+             ∃ (negb_res : SFBool_u),
+             negb_rel b negb_res ∧ ∃ (negb_res_2 : SFBool_u), negb_rel negb_res negb_res_2 ∧ negb_res_2 == b)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ negb_res, negb_rel b negb_res ∧ ∃ negb_res_2, negb_rel negb_res negb_res_2 ∧ negb_res_2 == b)
+             ∃ (negb_res : SFBool_u),
+             negb_rel b negb_res ∧ ∃ (negb_res_2 : SFBool_u), negb_rel negb_res negb_res_2 ∧ negb_res_2 == b)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -1073,8 +1093,9 @@ Defined.
 
 Definition andb_eq_orb_spec
   (b c : SFBool)
-  (h : {{∃ andb_res,
-         andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res ∧ ∃ orb_res, orb_rel ⌊ b ⌋ ⌊ c ⌋ orb_res ∧ andb_res == orb_res}}):
+  (h : {{∃ (andb_res : SFBool_u),
+         andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res
+         ∧ ∃ (orb_res : SFBool_u), orb_rel ⌊ b ⌋ ⌊ c ⌋ orb_res ∧ andb_res == orb_res}}):
   Type :=
   {{⌊ b ⌋ == ⌊ c ⌋}}.
 
@@ -1082,8 +1103,9 @@ Definition andb_eq_orb_spec
 
 Theorem andb_eq_orb
   (b c : SFBool)
-  (h : {{∃ andb_res,
-         andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res ∧ ∃ orb_res, orb_rel ⌊ b ⌋ ⌊ c ⌋ orb_res ∧ andb_res == orb_res}}):
+  (h : {{∃ (andb_res : SFBool_u),
+         andb_rel ⌊ b ⌋ ⌊ c ⌋ andb_res
+         ∧ ∃ (orb_res : SFBool_u), orb_rel ⌊ b ⌋ ⌊ c ⌋ orb_res ∧ andb_res == orb_res}}):
   andb_eq_orb_spec b c h.
 Proof.
   destruct b as [b b_p].
@@ -1099,7 +1121,7 @@ Proof.
 Qed.
 
 Definition test_orb1_spec : Type :=
-  {{∃ orb_res, orb_rel SFTrue_u SFFalse_u orb_res ∧ orb_res == SFTrue_u}}.
+  {{∃ (orb_res : SFBool_u), orb_rel SFTrue_u SFFalse_u orb_res ∧ orb_res == SFTrue_u}}.
 
 #[global] Hint Unfold test_orb1_spec: lia_unfold.
 
@@ -1107,13 +1129,13 @@ Theorem test_orb1 : test_orb1_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ orb_res, orb_rel SFTrue_u SFFalse_u orb_res ∧ orb_res == SFTrue_u)
+          (λ (VV : Unit), ∃ (orb_res : SFBool_u), orb_rel SFTrue_u SFFalse_u orb_res ∧ orb_res == SFTrue_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_orb2_spec : Type :=
-  {{∃ orb_res, orb_rel SFFalse_u SFFalse_u orb_res ∧ orb_res == SFFalse_u}}.
+  {{∃ (orb_res : SFBool_u), orb_rel SFFalse_u SFFalse_u orb_res ∧ orb_res == SFFalse_u}}.
 
 #[global] Hint Unfold test_orb2_spec: lia_unfold.
 
@@ -1121,13 +1143,13 @@ Theorem test_orb2 : test_orb2_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ orb_res, orb_rel SFFalse_u SFFalse_u orb_res ∧ orb_res == SFFalse_u)
+          (λ (VV : Unit), ∃ (orb_res : SFBool_u), orb_rel SFFalse_u SFFalse_u orb_res ∧ orb_res == SFFalse_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_orb3_spec : Type :=
-  {{∃ orb_res, orb_rel SFFalse_u SFTrue_u orb_res ∧ orb_res == SFTrue_u}}.
+  {{∃ (orb_res : SFBool_u), orb_rel SFFalse_u SFTrue_u orb_res ∧ orb_res == SFTrue_u}}.
 
 #[global] Hint Unfold test_orb3_spec: lia_unfold.
 
@@ -1135,13 +1157,13 @@ Theorem test_orb3 : test_orb3_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ orb_res, orb_rel SFFalse_u SFTrue_u orb_res ∧ orb_res == SFTrue_u)
+          (λ (VV : Unit), ∃ (orb_res : SFBool_u), orb_rel SFFalse_u SFTrue_u orb_res ∧ orb_res == SFTrue_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_orb4_spec : Type :=
-  {{∃ orb_res, orb_rel SFTrue_u SFTrue_u orb_res ∧ orb_res == SFTrue_u}}.
+  {{∃ (orb_res : SFBool_u), orb_rel SFTrue_u SFTrue_u orb_res ∧ orb_res == SFTrue_u}}.
 
 #[global] Hint Unfold test_orb4_spec: lia_unfold.
 
@@ -1149,15 +1171,15 @@ Theorem test_orb4 : test_orb4_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ orb_res, orb_rel SFTrue_u SFTrue_u orb_res ∧ orb_res == SFTrue_u)
+          (λ (VV : Unit), ∃ (orb_res : SFBool_u), orb_rel SFTrue_u SFTrue_u orb_res ∧ orb_res == SFTrue_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_orb5_spec : Type :=
-  {{∃ orb_res,
+  {{∃ (orb_res : SFBool_u),
     orb_rel SFFalse_u SFTrue_u orb_res
-    ∧ ∃ orb_res_2, orb_rel SFFalse_u orb_res orb_res_2 ∧ orb_res_2 == SFTrue_u}}.
+    ∧ ∃ (orb_res_2 : SFBool_u), orb_rel SFFalse_u orb_res orb_res_2 ∧ orb_res_2 == SFTrue_u}}.
 
 #[global] Hint Unfold test_orb5_spec: lia_unfold.
 
@@ -1166,9 +1188,9 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ orb_res,
+           ∃ (orb_res : SFBool_u),
            orb_rel SFFalse_u SFTrue_u orb_res
-           ∧ ∃ orb_res_2, orb_rel SFFalse_u orb_res orb_res_2 ∧ orb_res_2 == SFTrue_u)
+           ∧ ∃ (orb_res_2 : SFBool_u), orb_rel SFFalse_u orb_res orb_res_2 ∧ orb_res_2 == SFTrue_u)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -1372,14 +1394,14 @@ Defined.
 
 Inductive bin_to_nat_rel: SFBin_u → Z → Prop :=
   | bin_to_nat_Z: bin_to_nat_rel Z_u 0
-  | bin_to_nat_Bin0: ∀ m' bin_to_nat_res,
+  | bin_to_nat_Bin0: ∀ m' (bin_to_nat_res : Z),
                      bin_to_nat_rel m' bin_to_nat_res
-                     → ∀ multZ_res, multZ_rel 2 bin_to_nat_res multZ_res → bin_to_nat_rel (Bin0_u m') multZ_res
-  | bin_to_nat_Bin1: ∀ m' bin_to_nat_res,
+                     → ∀ (multZ_res : Z), multZ_rel 2 bin_to_nat_res multZ_res → bin_to_nat_rel (Bin0_u m') multZ_res
+  | bin_to_nat_Bin1: ∀ m' (bin_to_nat_res : Z),
                      bin_to_nat_rel m' bin_to_nat_res
-                     → ∀ multZ_res,
+                     → ∀ (multZ_res : Z),
                        multZ_rel 2 bin_to_nat_res multZ_res
-                       → ∀ addZ_res, addZ_rel 1 multZ_res addZ_res → bin_to_nat_rel (Bin1_u m') addZ_res.
+                       → ∀ (addZ_res : Z), addZ_rel 1 multZ_res addZ_res → bin_to_nat_rel (Bin1_u m') addZ_res.
 
 #[global] Hint Constructors bin_to_nat_rel: core_hint_db.
 
@@ -1406,9 +1428,9 @@ Qed.
 
 Theorem bin_to_nat_Bin0_lem m' bin_to_nat_Bin0_lem_res:
   bin_to_nat_rel (Bin0_u m') bin_to_nat_Bin0_lem_res
-  ↔ ∃ bin_to_nat_res,
+  ↔ ∃ (bin_to_nat_res : Z),
     bin_to_nat_rel m' bin_to_nat_res
-    ∧ ∃ multZ_res, multZ_rel 2 bin_to_nat_res multZ_res ∧ bin_to_nat_Bin0_lem_res == multZ_res.
+    ∧ ∃ (multZ_res : Z), multZ_rel 2 bin_to_nat_res multZ_res ∧ bin_to_nat_Bin0_lem_res == multZ_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -1417,11 +1439,11 @@ Qed.
 
 Theorem bin_to_nat_Bin1_lem m' bin_to_nat_Bin1_lem_res:
   bin_to_nat_rel (Bin1_u m') bin_to_nat_Bin1_lem_res
-  ↔ ∃ bin_to_nat_res,
+  ↔ ∃ (bin_to_nat_res : Z),
     bin_to_nat_rel m' bin_to_nat_res
-    ∧ ∃ multZ_res,
+    ∧ ∃ (multZ_res : Z),
       multZ_rel 2 bin_to_nat_res multZ_res
-      ∧ ∃ addZ_res, addZ_rel 1 multZ_res addZ_res ∧ bin_to_nat_Bin1_lem_res == addZ_res.
+      ∧ ∃ (addZ_res : Z), addZ_rel 1 multZ_res addZ_res ∧ bin_to_nat_Bin1_lem_res == addZ_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -1503,7 +1525,8 @@ Proof.
 Defined.
 
 Definition test_bin_incr4_spec : Type :=
-  {{∃ bin_to_nat_res, bin_to_nat_rel (Bin0_u (Bin1_u Z_u)) bin_to_nat_res ∧ bin_to_nat_res == 2}}.
+  {{∃ (bin_to_nat_res : Z),
+    bin_to_nat_rel (Bin0_u (Bin1_u Z_u)) bin_to_nat_res ∧ bin_to_nat_res == 2}}.
 
 #[global] Hint Unfold test_bin_incr4_spec: lia_unfold.
 
@@ -1512,7 +1535,7 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ bin_to_nat_res, bin_to_nat_rel (Bin0_u (Bin1_u Z_u)) bin_to_nat_res ∧ bin_to_nat_res == 2)
+           ∃ (bin_to_nat_res : Z), bin_to_nat_rel (Bin0_u (Bin1_u Z_u)) bin_to_nat_res ∧ bin_to_nat_res == 2)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -1534,7 +1557,8 @@ Defined.
 Inductive incr_rel: SFBin_u → SFBin_u → Prop :=
   | incr_Z: incr_rel Z_u (Bin1_u Z_u)
   | incr_Bin0: ∀ m', incr_rel (Bin0_u m') (Bin1_u m')
-  | incr_Bin1: ∀ m' incr_res, incr_rel m' incr_res → incr_rel (Bin1_u m') (Bin0_u incr_res).
+  | incr_Bin1: ∀ m' (incr_res : SFBin_u),
+               incr_rel m' incr_res → incr_rel (Bin1_u m') (Bin0_u incr_res).
 
 #[global] Hint Constructors incr_rel: core_hint_db.
 
@@ -1567,7 +1591,7 @@ Qed.
 
 Theorem incr_Bin1_lem m' incr_Bin1_lem_res:
   incr_rel (Bin1_u m') incr_Bin1_lem_res
-  ↔ ∃ incr_res, incr_rel m' incr_res ∧ incr_Bin1_lem_res == Bin0_u incr_res.
+  ↔ ∃ (incr_res : SFBin_u), incr_rel m' incr_res ∧ incr_Bin1_lem_res == Bin0_u incr_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -1646,7 +1670,7 @@ Proof.
 Defined.
 
 Definition test_bin_incr1_spec : Type :=
-  {{∃ incr_res, incr_rel (Bin1_u Z_u) incr_res ∧ incr_res == Bin0_u (Bin1_u Z_u)}}.
+  {{∃ (incr_res : SFBin_u), incr_rel (Bin1_u Z_u) incr_res ∧ incr_res == Bin0_u (Bin1_u Z_u)}}.
 
 #[global] Hint Unfold test_bin_incr1_spec: lia_unfold.
 
@@ -1654,13 +1678,15 @@ Theorem test_bin_incr1 : test_bin_incr1_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ incr_res, incr_rel (Bin1_u Z_u) incr_res ∧ incr_res == Bin0_u (Bin1_u Z_u))
+          (λ (VV : Unit),
+           ∃ (incr_res : SFBin_u), incr_rel (Bin1_u Z_u) incr_res ∧ incr_res == Bin0_u (Bin1_u Z_u))
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_bin_incr2_spec : Type :=
-  {{∃ incr_res, incr_rel (Bin0_u (Bin1_u Z_u)) incr_res ∧ incr_res == Bin1_u (Bin1_u Z_u)}}.
+  {{∃ (incr_res : SFBin_u),
+    incr_rel (Bin0_u (Bin1_u Z_u)) incr_res ∧ incr_res == Bin1_u (Bin1_u Z_u)}}.
 
 #[global] Hint Unfold test_bin_incr2_spec: lia_unfold.
 
@@ -1669,13 +1695,14 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ incr_res, incr_rel (Bin0_u (Bin1_u Z_u)) incr_res ∧ incr_res == Bin1_u (Bin1_u Z_u))
+           ∃ (incr_res : SFBin_u), incr_rel (Bin0_u (Bin1_u Z_u)) incr_res ∧ incr_res == Bin1_u (Bin1_u Z_u))
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_bin_incr3_spec : Type :=
-  {{∃ incr_res, incr_rel (Bin1_u (Bin1_u Z_u)) incr_res ∧ incr_res == Bin0_u (Bin0_u (Bin1_u Z_u))}}.
+  {{∃ (incr_res : SFBin_u),
+    incr_rel (Bin1_u (Bin1_u Z_u)) incr_res ∧ incr_res == Bin0_u (Bin0_u (Bin1_u Z_u))}}.
 
 #[global] Hint Unfold test_bin_incr3_spec: lia_unfold.
 
@@ -1684,19 +1711,20 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ incr_res, incr_rel (Bin1_u (Bin1_u Z_u)) incr_res ∧ incr_res == Bin0_u (Bin0_u (Bin1_u Z_u)))
+           ∃ (incr_res : SFBin_u),
+           incr_rel (Bin1_u (Bin1_u Z_u)) incr_res ∧ incr_res == Bin0_u (Bin0_u (Bin1_u Z_u)))
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_bin_incr5_spec : Type :=
-  {{∃ incr_res,
+  {{∃ (incr_res : SFBin_u),
     incr_rel (Bin1_u Z_u) incr_res
-    ∧ ∃ bin_to_nat_res,
+    ∧ ∃ (bin_to_nat_res : Z),
       bin_to_nat_rel incr_res bin_to_nat_res
-      ∧ ∃ bin_to_nat_res_2,
+      ∧ ∃ (bin_to_nat_res_2 : Z),
         bin_to_nat_rel (Bin1_u Z_u) bin_to_nat_res_2
-        ∧ ∃ addZ_res, addZ_rel 1 bin_to_nat_res_2 addZ_res ∧ bin_to_nat_res == addZ_res}}.
+        ∧ ∃ (addZ_res : Z), addZ_rel 1 bin_to_nat_res_2 addZ_res ∧ bin_to_nat_res == addZ_res}}.
 
 #[global] Hint Unfold test_bin_incr5_spec: lia_unfold.
 
@@ -1705,27 +1733,27 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ incr_res,
+           ∃ (incr_res : SFBin_u),
            incr_rel (Bin1_u Z_u) incr_res
-           ∧ ∃ bin_to_nat_res,
+           ∧ ∃ (bin_to_nat_res : Z),
              bin_to_nat_rel incr_res bin_to_nat_res
-             ∧ ∃ bin_to_nat_res_2,
+             ∧ ∃ (bin_to_nat_res_2 : Z),
                bin_to_nat_rel (Bin1_u Z_u) bin_to_nat_res_2
-               ∧ ∃ addZ_res, addZ_rel 1 bin_to_nat_res_2 addZ_res ∧ bin_to_nat_res == addZ_res)
+               ∧ ∃ (addZ_res : Z), addZ_rel 1 bin_to_nat_res_2 addZ_res ∧ bin_to_nat_res == addZ_res)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_bin_incr6_spec : Type :=
-  {{∃ incr_res,
+  {{∃ (incr_res : SFBin_u),
     incr_rel (Bin1_u Z_u) incr_res
-    ∧ ∃ incr_res_2,
+    ∧ ∃ (incr_res_2 : SFBin_u),
       incr_rel incr_res incr_res_2
-      ∧ ∃ bin_to_nat_res,
+      ∧ ∃ (bin_to_nat_res : Z),
         bin_to_nat_rel incr_res_2 bin_to_nat_res
-        ∧ ∃ bin_to_nat_res_2,
+        ∧ ∃ (bin_to_nat_res_2 : Z),
           bin_to_nat_rel (Bin1_u Z_u) bin_to_nat_res_2
-          ∧ ∃ addZ_res, addZ_rel 2 bin_to_nat_res_2 addZ_res ∧ bin_to_nat_res == addZ_res}}.
+          ∧ ∃ (addZ_res : Z), addZ_rel 2 bin_to_nat_res_2 addZ_res ∧ bin_to_nat_res == addZ_res}}.
 
 #[global] Hint Unfold test_bin_incr6_spec: lia_unfold.
 
@@ -1734,15 +1762,15 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ incr_res,
+           ∃ (incr_res : SFBin_u),
            incr_rel (Bin1_u Z_u) incr_res
-           ∧ ∃ incr_res_2,
+           ∧ ∃ (incr_res_2 : SFBin_u),
              incr_rel incr_res incr_res_2
-             ∧ ∃ bin_to_nat_res,
+             ∧ ∃ (bin_to_nat_res : Z),
                bin_to_nat_rel incr_res_2 bin_to_nat_res
-               ∧ ∃ bin_to_nat_res_2,
+               ∧ ∃ (bin_to_nat_res_2 : Z),
                  bin_to_nat_rel (Bin1_u Z_u) bin_to_nat_res_2
-                 ∧ ∃ addZ_res, addZ_rel 2 bin_to_nat_res_2 addZ_res ∧ bin_to_nat_res == addZ_res)
+                 ∧ ∃ (addZ_res : Z), addZ_rel 2 bin_to_nat_res_2 addZ_res ∧ bin_to_nat_res == addZ_res)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -1998,11 +2026,11 @@ Definition allzero_spec (lq_tmp0 : Nibble): Type :=
 Definition allzero (lq_tmp0 : Nibble): allzero_spec lq_tmp0.
 Proof.
   destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
-  destruct lq_tmp0 as [ds_d5TQ ds_d5TR ds_d5TS ds_d5TT].
-  - destruct ds_d5TQ as [|].
-    + destruct ds_d5TR as [|].
-      ** destruct ds_d5TS as [|].
-         ** destruct ds_d5TT as [|].
+  destruct lq_tmp0 as [ds_d5TT ds_d5TU ds_d5TV ds_d5TW].
+  - destruct ds_d5TT as [|].
+    + destruct ds_d5TU as [|].
+      ** destruct ds_d5TV as [|].
+         ** destruct ds_d5TW as [|].
             ** refine SFTrue.
             ** refine SFFalse.
          ** refine SFFalse.
@@ -2281,7 +2309,7 @@ Inductive eqb_rel: MyNat_u → MyNat_u → SFBool_u → Prop :=
   | eqb_O_O: eqb_rel O_u O_u SFTrue_u
   | eqb_O_S: ∀ m', eqb_rel O_u (S_u m') SFFalse_u
   | eqb_S_O: ∀ n', eqb_rel (S_u n') O_u SFFalse_u
-  | eqb_S_S: ∀ n' m' eqb_res, eqb_rel n' m' eqb_res → eqb_rel (S_u n') (S_u m') eqb_res.
+  | eqb_S_S: ∀ n' m' (eqb_res : SFBool_u), eqb_rel n' m' eqb_res → eqb_rel (S_u n') (S_u m') eqb_res.
 
 #[global] Hint Constructors eqb_rel: core_hint_db.
 
@@ -2324,7 +2352,7 @@ Qed.
 
 Theorem eqb_S_S_lem m' n' eqb_S_S_lem_res:
   eqb_rel (S_u n') (S_u m') eqb_S_S_lem_res
-  ↔ ∃ eqb_res, eqb_rel n' m' eqb_res ∧ eqb_S_S_lem_res == eqb_res.
+  ↔ ∃ (eqb_res : SFBool_u), eqb_rel n' m' eqb_res ∧ eqb_S_S_lem_res == eqb_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -2536,7 +2564,7 @@ Defined.
 Inductive leb_rel: MyNat_u → MyNat_u → SFBool_u → Prop :=
   | leb_O_x: ∀ m, leb_rel O_u m SFTrue_u
   | leb_S_O: ∀ n', leb_rel (S_u n') O_u SFFalse_u
-  | leb_S_S: ∀ n' m' leb_res, leb_rel n' m' leb_res → leb_rel (S_u n') (S_u m') leb_res.
+  | leb_S_S: ∀ n' m' (leb_res : SFBool_u), leb_rel n' m' leb_res → leb_rel (S_u n') (S_u m') leb_res.
 
 #[global] Hint Constructors leb_rel: core_hint_db.
 
@@ -2571,7 +2599,7 @@ Qed.
 
 Theorem leb_S_S_lem m' n' leb_S_S_lem_res:
   leb_rel (S_u n') (S_u m') leb_S_S_lem_res
-  ↔ ∃ leb_res, leb_rel n' m' leb_res ∧ leb_S_S_lem_res == leb_res.
+  ↔ ∃ (leb_res : SFBool_u), leb_rel n' m' leb_res ∧ leb_S_S_lem_res == leb_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -2678,7 +2706,7 @@ Inductive ltb_rel: MyNat_u → MyNat_u → SFBool_u → Prop :=
   | ltb_O_O: ltb_rel O_u O_u SFFalse_u
   | ltb_O_S: ∀ m', ltb_rel O_u (S_u m') SFTrue_u
   | ltb_S_O: ∀ n', ltb_rel (S_u n') O_u SFFalse_u
-  | ltb_S_S: ∀ n' m' ltb_res, ltb_rel n' m' ltb_res → ltb_rel (S_u n') (S_u m') ltb_res.
+  | ltb_S_S: ∀ n' m' (ltb_res : SFBool_u), ltb_rel n' m' ltb_res → ltb_rel (S_u n') (S_u m') ltb_res.
 
 #[global] Hint Constructors ltb_rel: core_hint_db.
 
@@ -2721,7 +2749,7 @@ Qed.
 
 Theorem ltb_S_S_lem m' n' ltb_S_S_lem_res:
   ltb_rel (S_u n') (S_u m') ltb_S_S_lem_res
-  ↔ ∃ ltb_res, ltb_rel n' m' ltb_res ∧ ltb_S_S_lem_res == ltb_res.
+  ↔ ∃ (ltb_res : SFBool_u), ltb_rel n' m' ltb_res ∧ ltb_S_S_lem_res == ltb_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -2816,18 +2844,18 @@ Definition minus (n m : MyNat): minus_spec n m.
 Proof.
   destruct n as [n n_p].
   destruct m as [m m_p].
-  try revert m_p; generalize dependent m; induction n as [| ds_d5Tn IH_ds_d5Tn]; intros.
+  try revert m_p; generalize dependent m; induction n as [| ds_d5Tq IH_ds_d5Tq]; intros.
   - refine O.
   - destruct m as [| m'].
-    + refine (S (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) ds_d5Tn ltac:(solver))).
-    + refine (IH_ds_d5Tn ltac:(try clear IH_ds_d5Tn; solver) m' ltac:(try clear IH_ds_d5Tn; solver)).
+    + refine (S (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) ds_d5Tq ltac:(solver))).
+    + refine (IH_ds_d5Tq ltac:(try clear IH_ds_d5Tq; solver) m' ltac:(try clear IH_ds_d5Tq; solver)).
 Defined.
 
 Inductive minus_rel: MyNat_u → MyNat_u → MyNat_u → Prop :=
   | minus_O_x: ∀ m, minus_rel O_u m O_u
-  | minus_S_O: ∀ ds_d5Tn, minus_rel (S_u ds_d5Tn) O_u (S_u ds_d5Tn)
-  | minus_S_S: ∀ ds_d5Tn m' minus_res,
-               minus_rel ds_d5Tn m' minus_res → minus_rel (S_u ds_d5Tn) (S_u m') minus_res.
+  | minus_S_O: ∀ ds_d5Tq, minus_rel (S_u ds_d5Tq) O_u (S_u ds_d5Tq)
+  | minus_S_S: ∀ ds_d5Tq m' (minus_res : MyNat_u),
+               minus_rel ds_d5Tq m' minus_res → minus_rel (S_u ds_d5Tq) (S_u m') minus_res.
 
 #[global] Hint Constructors minus_rel: core_hint_db.
 
@@ -2838,7 +2866,7 @@ Inductive minus_rel: MyNat_u → MyNat_u → MyNat_u → Prop :=
 Theorem minus_rel_funct [n m : MyNat_u]:
   ∀ (VV VV' : MyNat_u), minus_rel n m VV → (minus_rel n m VV' → VV = VV').
 Proof.
-  try revert m_p; generalize dependent m; induction n as [| ds_d5Tn IH_ds_d5Tn]; intros;
+  try revert m_p; generalize dependent m; induction n as [| ds_d5Tq IH_ds_d5Tq]; intros;
   [ | destruct m as [| m']];
   rel_functionhood_body.
 Qed.
@@ -2853,17 +2881,17 @@ Qed.
 
 #[global] Hint Rewrite minus_O_x_lem: f_rel_back.
 
-Theorem minus_S_O_lem ds_d5Tn minus_S_O_lem_res:
-  minus_rel (S_u ds_d5Tn) O_u minus_S_O_lem_res ↔ minus_S_O_lem_res == S_u ds_d5Tn.
+Theorem minus_S_O_lem ds_d5Tq minus_S_O_lem_res:
+  minus_rel (S_u ds_d5Tq) O_u minus_S_O_lem_res ↔ minus_S_O_lem_res == S_u ds_d5Tq.
 Proof.
   rel_back' _nil.
 Qed.
 
 #[global] Hint Rewrite minus_S_O_lem: f_rel_back.
 
-Theorem minus_S_S_lem ds_d5Tn m' minus_S_S_lem_res:
-  minus_rel (S_u ds_d5Tn) (S_u m') minus_S_S_lem_res
-  ↔ ∃ minus_res, minus_rel ds_d5Tn m' minus_res ∧ minus_S_S_lem_res == minus_res.
+Theorem minus_S_S_lem ds_d5Tq m' minus_S_S_lem_res:
+  minus_rel (S_u ds_d5Tq) (S_u m') minus_S_S_lem_res
+  ↔ ∃ (minus_res : MyNat_u), minus_rel ds_d5Tq m' minus_res ∧ minus_S_S_lem_res == minus_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -2876,16 +2904,16 @@ Theorem minus_rel_ex
 Proof.
   Opaque minus.
   existence_lemma_pre minus;
-  try revert m_p; generalize dependent m; induction n as [| ds_d5Tn IH_ds_d5Tn]; intros;
+  try revert m_p; generalize dependent m; induction n as [| ds_d5Tq IH_ds_d5Tq]; intros;
   [fix_notations |
    destruct m as [| m'];
    [fix_notations |
     fix_notations;
-    pose proof (IH_ds_d5Tn
-                ltac:(try clear IH_ds_d5Tn; solver)
+    pose proof (IH_ds_d5Tq
+                ltac:(try clear IH_ds_d5Tq; solver)
                 m'
-                ltac:(try clear IH_ds_d5Tn; solver)) as IH_47650604;
-    try clear IH_ds_d5Tn]];
+                ltac:(try clear IH_ds_d5Tq; solver)) as IH_31228785;
+    try clear IH_ds_d5Tq]];
   simpl in *.
   Transparent minus.
   all: (existence_lemma_quicksolve minus; f__f_rel_ex_body; f_rel_finish).
@@ -2955,7 +2983,7 @@ Proof.
 Defined.
 
 Definition minus_n_n_spec (n : MyNat): Type :=
-  {{∃ minus_res, minus_rel ⌊ n ⌋ ⌊ n ⌋ minus_res ∧ minus_res == O_u}}.
+  {{∃ (minus_res : MyNat_u), minus_rel ⌊ n ⌋ ⌊ n ⌋ minus_res ∧ minus_res == O_u}}.
 
 #[global] Hint Unfold minus_n_n_spec: lia_unfold.
 
@@ -2965,12 +2993,12 @@ Proof.
   induction n as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ minus_res, minus_rel n n minus_res ∧ minus_res == O_u)
+            (λ (VV : Unit), ∃ (minus_res : MyNat_u), minus_rel n n minus_res ∧ minus_res == O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ minus_res, minus_rel n n minus_res ∧ minus_res == O_u)
+            (λ (VV : Unit), ∃ (minus_res : MyNat_u), minus_rel n n minus_res ∧ minus_res == O_u)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -2983,9 +3011,9 @@ Definition minustwo_spec (lq_tmp0 : MyNat): Type :=
 Definition minustwo (lq_tmp0 : MyNat): minustwo_spec lq_tmp0.
 Proof.
   destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
-  destruct lq_tmp0 as [| ds_d5TN].
+  destruct lq_tmp0 as [| ds_d5TQ].
   - refine O.
-  - destruct ds_d5TN as [| n'].
+  - destruct ds_d5TQ as [| n'].
     + refine O.
     + refine (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)).
 Defined.
@@ -3083,7 +3111,8 @@ Defined.
 
 Inductive plus_rel: MyNat_u → MyNat_u → MyNat_u → Prop :=
   | plus_O_x: ∀ m, plus_rel O_u m m
-  | plus_S_x: ∀ n' m plus_res, plus_rel n' m plus_res → plus_rel (S_u n') m (S_u plus_res).
+  | plus_S_x: ∀ n' m (plus_res : MyNat_u),
+              plus_rel n' m plus_res → plus_rel (S_u n') m (S_u plus_res).
 
 #[global] Hint Constructors plus_rel: core_hint_db.
 
@@ -3108,7 +3137,7 @@ Qed.
 
 Theorem plus_S_x_lem m n' plus_S_x_lem_res:
   plus_rel (S_u n') m plus_S_x_lem_res
-  ↔ ∃ plus_res, plus_rel n' m plus_res ∧ plus_S_x_lem_res == S_u plus_res.
+  ↔ ∃ (plus_res : MyNat_u), plus_rel n' m plus_res ∧ plus_S_x_lem_res == S_u plus_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -3192,7 +3221,7 @@ Proof.
 Defined.
 
 Definition add_0_r_spec (n : MyNat): Type :=
-  {{∃ plus_res, plus_rel ⌊ n ⌋ O_u plus_res ∧ plus_res == ⌊ n ⌋}}.
+  {{∃ (plus_res : MyNat_u), plus_rel ⌊ n ⌋ O_u plus_res ∧ plus_res == ⌊ n ⌋}}.
 
 #[global] Hint Unfold add_0_r_spec: lia_unfold.
 
@@ -3202,24 +3231,24 @@ Proof.
   induction n as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ plus_res, plus_rel n O_u plus_res ∧ plus_res == n)
+            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel n O_u plus_res ∧ plus_res == n)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ plus_res, plus_rel n O_u plus_res ∧ plus_res == n)
+            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel n O_u plus_res ∧ plus_res == n)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
 
 Definition add_assoc_spec (n m p : MyNat): Type :=
-  {{∃ plus_res,
+  {{∃ (plus_res : MyNat_u),
     plus_rel ⌊ m ⌋ ⌊ p ⌋ plus_res
-    ∧ ∃ plus_res_2,
+    ∧ ∃ (plus_res_2 : MyNat_u),
       plus_rel ⌊ n ⌋ plus_res plus_res_2
-      ∧ ∃ plus_res_3,
+      ∧ ∃ (plus_res_3 : MyNat_u),
         plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res_3
-        ∧ ∃ plus_res_4, plus_rel plus_res_3 ⌊ p ⌋ plus_res_4 ∧ plus_res_2 == plus_res_4}}.
+        ∧ ∃ (plus_res_4 : MyNat_u), plus_rel plus_res_3 ⌊ p ⌋ plus_res_4 ∧ plus_res_2 == plus_res_4}}.
 
 #[global] Hint Unfold add_assoc_spec: lia_unfold.
 
@@ -3234,23 +3263,25 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ plus_res,
+             ∃ (plus_res : MyNat_u),
              plus_rel m p plus_res
-             ∧ ∃ plus_res_2,
+             ∧ ∃ (plus_res_2 : MyNat_u),
                plus_rel n plus_res plus_res_2
-               ∧ ∃ plus_res_3,
-                 plus_rel n m plus_res_3 ∧ ∃ plus_res_4, plus_rel plus_res_3 p plus_res_4 ∧ plus_res_2 == plus_res_4)
+               ∧ ∃ (plus_res_3 : MyNat_u),
+                 plus_rel n m plus_res_3
+                 ∧ ∃ (plus_res_4 : MyNat_u), plus_rel plus_res_3 p plus_res_4 ∧ plus_res_2 == plus_res_4)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ plus_res,
+             ∃ (plus_res : MyNat_u),
              plus_rel m p plus_res
-             ∧ ∃ plus_res_2,
+             ∧ ∃ (plus_res_2 : MyNat_u),
                plus_rel n plus_res plus_res_2
-               ∧ ∃ plus_res_3,
-                 plus_rel n m plus_res_3 ∧ ∃ plus_res_4, plus_rel plus_res_3 p plus_res_4 ∧ plus_res_2 == plus_res_4)
+               ∧ ∃ (plus_res_3 : MyNat_u),
+                 plus_rel n m plus_res_3
+                 ∧ ∃ (plus_res_4 : MyNat_u), plus_rel plus_res_3 p plus_res_4 ∧ plus_res_2 == plus_res_4)
             (IH_n'
              ltac:(try clear IH_n'; solver)
              m
@@ -3261,9 +3292,9 @@ Proof.
 Qed.
 
 Definition add_succ_r_spec (n m : MyNat): Type :=
-  {{∃ plus_res,
+  {{∃ (plus_res : MyNat_u),
     plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res
-    ∧ ∃ plus_res_2, plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res_2 ∧ plus_res == S_u plus_res_2}}.
+    ∧ ∃ (plus_res_2 : MyNat_u), plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res_2 ∧ plus_res == S_u plus_res_2}}.
 
 #[global] Hint Unfold add_succ_r_spec: lia_unfold.
 
@@ -3275,15 +3306,17 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ plus_res,
-             plus_rel n (S_u m) plus_res ∧ ∃ plus_res_2, plus_rel n m plus_res_2 ∧ plus_res == S_u plus_res_2)
+             ∃ (plus_res : MyNat_u),
+             plus_rel n (S_u m) plus_res
+             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel n m plus_res_2 ∧ plus_res == S_u plus_res_2)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ plus_res,
-             plus_rel n (S_u m) plus_res ∧ ∃ plus_res_2, plus_rel n m plus_res_2 ∧ plus_res == S_u plus_res_2)
+             ∃ (plus_res : MyNat_u),
+             plus_rel n (S_u m) plus_res
+             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel n m plus_res_2 ∧ plus_res == S_u plus_res_2)
             (IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -3306,8 +3339,9 @@ Defined.
 
 Inductive mult_rel: MyNat_u → MyNat_u → MyNat_u → Prop :=
   | mult_O_x: ∀ m, mult_rel O_u m O_u
-  | mult_S_x: ∀ n' m mult_res,
-              mult_rel n' m mult_res → ∀ plus_res, plus_rel m mult_res plus_res → mult_rel (S_u n') m plus_res.
+  | mult_S_x: ∀ n' m (mult_res : MyNat_u),
+              mult_rel n' m mult_res
+              → ∀ (plus_res : MyNat_u), plus_rel m mult_res plus_res → mult_rel (S_u n') m plus_res.
 
 #[global] Hint Constructors mult_rel: core_hint_db.
 
@@ -3332,8 +3366,9 @@ Qed.
 
 Theorem mult_S_x_lem m n' mult_S_x_lem_res:
   mult_rel (S_u n') m mult_S_x_lem_res
-  ↔ ∃ mult_res,
-    mult_rel n' m mult_res ∧ ∃ plus_res, plus_rel m mult_res plus_res ∧ mult_S_x_lem_res == plus_res.
+  ↔ ∃ (mult_res : MyNat_u),
+    mult_rel n' m mult_res
+    ∧ ∃ (plus_res : MyNat_u), plus_rel m mult_res plus_res ∧ mult_S_x_lem_res == plus_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -3433,9 +3468,10 @@ Defined.
 
 Inductive factorial_rel: MyNat_u → MyNat_u → Prop :=
   | factorial_O: factorial_rel O_u (S_u O_u)
-  | factorial_S: ∀ n' factorial_res,
+  | factorial_S: ∀ n' (factorial_res : MyNat_u),
                  factorial_rel n' factorial_res
-                 → ∀ mult_res, mult_rel (S_u n') factorial_res mult_res → factorial_rel (S_u n') mult_res.
+                 → ∀ (mult_res : MyNat_u),
+                   mult_rel (S_u n') factorial_res mult_res → factorial_rel (S_u n') mult_res.
 
 #[global] Hint Constructors factorial_rel: core_hint_db.
 
@@ -3461,9 +3497,10 @@ Qed.
 
 Theorem factorial_S_lem n' factorial_S_lem_res:
   factorial_rel (S_u n') factorial_S_lem_res
-  ↔ ∃ factorial_res,
+  ↔ ∃ (factorial_res : MyNat_u),
     factorial_rel n' factorial_res
-    ∧ ∃ mult_res, mult_rel (S_u n') factorial_res mult_res ∧ factorial_S_lem_res == mult_res.
+    ∧ ∃ (mult_res : MyNat_u),
+      mult_rel (S_u n') factorial_res mult_res ∧ factorial_S_lem_res == mult_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -3550,7 +3587,7 @@ Proof.
 Defined.
 
 Definition mul_0_r_spec (n : MyNat): Type :=
-  {{∃ mult_res, mult_rel ⌊ n ⌋ O_u mult_res ∧ mult_res == O_u}}.
+  {{∃ (mult_res : MyNat_u), mult_rel ⌊ n ⌋ O_u mult_res ∧ mult_res == O_u}}.
 
 #[global] Hint Unfold mul_0_r_spec: lia_unfold.
 
@@ -3560,18 +3597,18 @@ Proof.
   induction n as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ mult_res, mult_rel n O_u mult_res ∧ mult_res == O_u)
+            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel n O_u mult_res ∧ mult_res == O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ mult_res, mult_rel n O_u mult_res ∧ mult_res == O_u)
+            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel n O_u mult_res ∧ mult_res == O_u)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
 
 Definition mult_0_1_spec (n : MyNat): Type :=
-  {{∃ mult_res, mult_rel O_u ⌊ n ⌋ mult_res ∧ mult_res == O_u}}.
+  {{∃ (mult_res : MyNat_u), mult_rel O_u ⌊ n ⌋ mult_res ∧ mult_res == O_u}}.
 
 #[global] Hint Unfold mult_0_1_spec: lia_unfold.
 
@@ -3580,13 +3617,13 @@ Proof.
   destruct n as [n n_p].
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ mult_res, mult_rel O_u n mult_res ∧ mult_res == O_u)
+          (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel O_u n mult_res ∧ mult_res == O_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition mult_n_O_spec (n : MyNat): Type :=
-  {{∃ mult_res, mult_rel ⌊ n ⌋ O_u mult_res ∧ O_u == mult_res}}.
+  {{∃ (mult_res : MyNat_u), mult_rel ⌊ n ⌋ O_u mult_res ∧ O_u == mult_res}}.
 
 #[global] Hint Unfold mult_n_O_spec: lia_unfold.
 
@@ -3596,22 +3633,22 @@ Proof.
   induction n as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ mult_res, mult_rel n O_u mult_res ∧ O_u == mult_res)
+            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel n O_u mult_res ∧ O_u == mult_res)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ mult_res, mult_rel n O_u mult_res ∧ O_u == mult_res)
+            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel n O_u mult_res ∧ O_u == mult_res)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
 
 Definition mult_n_0_m_0_spec (p q : MyNat): Type :=
-  {{∃ mult_res,
+  {{∃ (mult_res : MyNat_u),
     mult_rel ⌊ q ⌋ O_u mult_res
-    ∧ ∃ mult_res_2,
+    ∧ ∃ (mult_res_2 : MyNat_u),
       mult_rel ⌊ p ⌋ O_u mult_res_2
-      ∧ ∃ plus_res, plus_rel mult_res_2 mult_res plus_res ∧ plus_res == O_u}}.
+      ∧ ∃ (plus_res : MyNat_u), plus_rel mult_res_2 mult_res plus_res ∧ plus_res == O_u}}.
 
 #[global] Hint Unfold mult_n_0_m_0_spec: lia_unfold.
 
@@ -3622,22 +3659,23 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ mult_res,
+           ∃ (mult_res : MyNat_u),
            mult_rel q O_u mult_res
-           ∧ ∃ mult_res_2,
-             mult_rel p O_u mult_res_2 ∧ ∃ plus_res, plus_rel mult_res_2 mult_res plus_res ∧ plus_res == O_u)
-          (let _: ∃ mult_res, mult_rel q O_u mult_res ∧ O_u == mult_res :=
+           ∧ ∃ (mult_res_2 : MyNat_u),
+             mult_rel p O_u mult_res_2
+             ∧ ∃ (plus_res : MyNat_u), plus_rel mult_res_2 mult_res plus_res ∧ plus_res == O_u)
+          (let _: ∃ (mult_res : MyNat_u), mult_rel q O_u mult_res ∧ O_u == mult_res :=
            ⌈ mult_n_O (exist (λ (q : MyNat_u), MyNat_wf q ∧ True) q ltac:(solver)) ⌉ in
            mult_n_O (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)))
           ltac:(solver)).
 Qed.
 
 Definition mult_n_Sm_spec (n m : MyNat): Type :=
-  {{∃ mult_res,
+  {{∃ (mult_res : MyNat_u),
     mult_rel ⌊ n ⌋ ⌊ m ⌋ mult_res
-    ∧ ∃ plus_res,
+    ∧ ∃ (plus_res : MyNat_u),
       plus_rel mult_res ⌊ n ⌋ plus_res
-      ∧ ∃ mult_res_2, mult_rel ⌊ n ⌋ (S_u ⌊ m ⌋) mult_res_2 ∧ plus_res == mult_res_2}}.
+      ∧ ∃ (mult_res_2 : MyNat_u), mult_rel ⌊ n ⌋ (S_u ⌊ m ⌋) mult_res_2 ∧ plus_res == mult_res_2}}.
 
 #[global] Hint Unfold mult_n_Sm_spec: lia_unfold.
 
@@ -3649,20 +3687,22 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ mult_res,
+             ∃ (mult_res : MyNat_u),
              mult_rel n m mult_res
-             ∧ ∃ plus_res,
-               plus_rel mult_res n plus_res ∧ ∃ mult_res_2, mult_rel n (S_u m) mult_res_2 ∧ plus_res == mult_res_2)
+             ∧ ∃ (plus_res : MyNat_u),
+               plus_rel mult_res n plus_res
+               ∧ ∃ (mult_res_2 : MyNat_u), mult_rel n (S_u m) mult_res_2 ∧ plus_res == mult_res_2)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ mult_res,
+             ∃ (mult_res : MyNat_u),
              mult_rel n m mult_res
-             ∧ ∃ plus_res,
-               plus_rel mult_res n plus_res ∧ ∃ mult_res_2, mult_rel n (S_u m) mult_res_2 ∧ plus_res == mult_res_2)
-            (let _: ∃ plus_res,
+             ∧ ∃ (plus_res : MyNat_u),
+               plus_rel mult_res n plus_res
+               ∧ ∃ (mult_res_2 : MyNat_u), mult_rel n (S_u m) mult_res_2 ∧ plus_res == mult_res_2)
+            (let _: ∃ (plus_res : MyNat_u),
                     plus_rel
                     ⌊ plus
                       (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))
@@ -3671,7 +3711,7 @@ Proof.
                        (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))) ⌋
                     (S_u n')
                     plus_res
-                    ∧ ∃ plus_res_2,
+                    ∧ ∃ (plus_res_2 : MyNat_u),
                       plus_rel
                       ⌊ plus
                         (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))
@@ -3698,7 +3738,7 @@ Proof.
 Qed.
 
 Definition mult_n_1_spec (p : MyNat): Type :=
-  {{∃ one_res, one_rel one_res ∧ ∃ mult_res, mult_rel ⌊ p ⌋ one_res mult_res ∧ mult_res == ⌊ p ⌋}}.
+  {{∃ (mult_res : MyNat_u), mult_rel ⌊ p ⌋ ⌊ one -⌋ mult_res ∧ mult_res == ⌊ p ⌋}}.
 
 #[global] Hint Unfold mult_n_1_spec: lia_unfold.
 
@@ -3707,17 +3747,15 @@ Proof.
   destruct p as [p p_p].
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit),
-           ∃ one_res, one_rel one_res ∧ ∃ mult_res, mult_rel p one_res mult_res ∧ mult_res == p)
-          (let _: ∃ mult_res, mult_rel p O_u mult_res ∧ O_u == mult_res :=
+          (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel p ⌊ one -⌋ mult_res ∧ mult_res == p)
+          (let _: ∃ (mult_res : MyNat_u), mult_rel p O_u mult_res ∧ O_u == mult_res :=
            ⌈ mult_n_O (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)) ⌉ in
            mult_n_Sm (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)) O)
           ltac:(solver)).
 Qed.
 
 Definition plus_1_1_spec (n : MyNat): Type :=
-  {{∃ one_res,
-    one_rel one_res ∧ ∃ plus_res, plus_rel one_res ⌊ n ⌋ plus_res ∧ plus_res == S_u ⌊ n ⌋}}.
+  {{∃ (plus_res : MyNat_u), plus_rel ⌊ one -⌋ ⌊ n ⌋ plus_res ∧ plus_res == S_u ⌊ n ⌋}}.
 
 #[global] Hint Unfold plus_1_1_spec: lia_unfold.
 
@@ -3726,37 +3764,34 @@ Proof.
   destruct n as [n n_p].
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit),
-           ∃ one_res, one_rel one_res ∧ ∃ plus_res, plus_rel one_res n plus_res ∧ plus_res == S_u n)
+          (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel ⌊ one -⌋ n plus_res ∧ plus_res == S_u n)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition plus_1_neq_0_spec (n : MyNat): Type :=
-  {{∃ one_res, one_rel one_res ∧ ∃ plus_res, plus_rel ⌊ n ⌋ one_res plus_res ∧ plus_res ≠ O_u}}.
+  {{∃ (plus_res : MyNat_u), plus_rel ⌊ n ⌋ ⌊ one -⌋ plus_res ∧ plus_res ≠ O_u}}.
 
 #[global] Hint Unfold plus_1_neq_0_spec: lia_unfold.
 
 Theorem plus_1_neq_0 (n : MyNat): plus_1_neq_0_spec n.
 Proof.
   destruct n as [n n_p].
-  destruct n as [| ds_d5T8].
+  destruct n as [| ds_d5Tb].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit),
-             ∃ one_res, one_rel one_res ∧ ∃ plus_res, plus_rel n one_res plus_res ∧ plus_res ≠ O_u)
+            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel n ⌊ one -⌋ plus_res ∧ plus_res ≠ O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit),
-             ∃ one_res, one_rel one_res ∧ ∃ plus_res, plus_rel n one_res plus_res ∧ plus_res ≠ O_u)
+            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel n ⌊ one -⌋ plus_res ∧ plus_res ≠ O_u)
             (# unit)
             ltac:(solver)).
 Qed.
 
 Definition plus_O_n_spec (n : MyNat): Type :=
-  {{∃ plus_res, plus_rel O_u ⌊ n ⌋ plus_res ∧ plus_res == ⌊ n ⌋}}.
+  {{∃ (plus_res : MyNat_u), plus_rel O_u ⌊ n ⌋ plus_res ∧ plus_res == ⌊ n ⌋}}.
 
 #[global] Hint Unfold plus_O_n_spec: lia_unfold.
 
@@ -3765,15 +3800,15 @@ Proof.
   destruct n as [n n_p].
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ plus_res, plus_rel O_u n plus_res ∧ plus_res == n)
+          (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel O_u n plus_res ∧ plus_res == n)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition plus_id_example_spec (n m : MyNat) (z : {{⌊ n ⌋ == ⌊ m ⌋}}): Type :=
-  {{∃ plus_res,
+  {{∃ (plus_res : MyNat_u),
     plus_rel ⌊ n ⌋ ⌊ n ⌋ plus_res
-    ∧ ∃ plus_res_2, plus_rel ⌊ m ⌋ ⌊ m ⌋ plus_res_2 ∧ plus_res == plus_res_2}}.
+    ∧ ∃ (plus_res_2 : MyNat_u), plus_rel ⌊ m ⌋ ⌊ m ⌋ plus_res_2 ∧ plus_res == plus_res_2}}.
 
 #[global] Hint Unfold plus_id_example_spec: lia_unfold.
 
@@ -3785,16 +3820,17 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ plus_res, plus_rel n n plus_res ∧ ∃ plus_res_2, plus_rel m m plus_res_2 ∧ plus_res == plus_res_2)
+           ∃ (plus_res : MyNat_u),
+           plus_rel n n plus_res ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m m plus_res_2 ∧ plus_res == plus_res_2)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition plus_id_exercise_spec (n m o : MyNat) (p : {{⌊ n ⌋ == ⌊ m ⌋}}) (q : {{⌊ m ⌋ == ⌊ o ⌋}}):
   Type :=
-  {{∃ plus_res,
+  {{∃ (plus_res : MyNat_u),
     plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
-    ∧ ∃ plus_res_2, plus_rel ⌊ m ⌋ ⌊ o ⌋ plus_res_2 ∧ plus_res == plus_res_2}}.
+    ∧ ∃ (plus_res_2 : MyNat_u), plus_rel ⌊ m ⌋ ⌊ o ⌋ plus_res_2 ∧ plus_res == plus_res_2}}.
 
 #[global] Hint Unfold plus_id_exercise_spec: lia_unfold.
 
@@ -3809,15 +3845,16 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ plus_res, plus_rel n m plus_res ∧ ∃ plus_res_2, plus_rel m o plus_res_2 ∧ plus_res == plus_res_2)
+           ∃ (plus_res : MyNat_u),
+           plus_rel n m plus_res ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m o plus_res_2 ∧ plus_res == plus_res_2)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition plus_n_Sm_spec (n m : MyNat): Type :=
-  {{∃ plus_res,
+  {{∃ (plus_res : MyNat_u),
     plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
-    ∧ ∃ plus_res_2, plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res_2 ∧ S_u plus_res == plus_res_2}}.
+    ∧ ∃ (plus_res_2 : MyNat_u), plus_rel ⌊ n ⌋ (S_u ⌊ m ⌋) plus_res_2 ∧ S_u plus_res == plus_res_2}}.
 
 #[global] Hint Unfold plus_n_Sm_spec: lia_unfold.
 
@@ -3829,23 +3866,25 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ plus_res,
-             plus_rel n m plus_res ∧ ∃ plus_res_2, plus_rel n (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
+             ∃ (plus_res : MyNat_u),
+             plus_rel n m plus_res
+             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel n (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ plus_res,
-             plus_rel n m plus_res ∧ ∃ plus_res_2, plus_rel n (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
+             ∃ (plus_res : MyNat_u),
+             plus_rel n m plus_res
+             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel n (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
             (IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
 
 Definition add_comm_spec (n m : MyNat): Type :=
-  {{∃ plus_res,
+  {{∃ (plus_res : MyNat_u),
     plus_rel ⌊ n ⌋ ⌊ m ⌋ plus_res
-    ∧ ∃ plus_res_2, plus_rel ⌊ m ⌋ ⌊ n ⌋ plus_res_2 ∧ plus_res == plus_res_2}}.
+    ∧ ∃ (plus_res_2 : MyNat_u), plus_rel ⌊ m ⌋ ⌊ n ⌋ plus_res_2 ∧ plus_res == plus_res_2}}.
 
 #[global] Hint Unfold add_comm_spec: lia_unfold.
 
@@ -3857,15 +3896,18 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ plus_res, plus_rel n m plus_res ∧ ∃ plus_res_2, plus_rel m n plus_res_2 ∧ plus_res == plus_res_2)
+             ∃ (plus_res : MyNat_u),
+             plus_rel n m plus_res ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m n plus_res_2 ∧ plus_res == plus_res_2)
             (add_0_r (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver)))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ plus_res, plus_rel n m plus_res ∧ ∃ plus_res_2, plus_rel m n plus_res_2 ∧ plus_res == plus_res_2)
-            (let _: ∃ plus_res,
-                    plus_rel n' m plus_res ∧ ∃ plus_res_2, plus_rel m n' plus_res_2 ∧ plus_res == plus_res_2 :=
+             ∃ (plus_res : MyNat_u),
+             plus_rel n m plus_res ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m n plus_res_2 ∧ plus_res == plus_res_2)
+            (let _: ∃ (plus_res : MyNat_u),
+                    plus_rel n' m plus_res
+                    ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m n' plus_res_2 ∧ plus_res == plus_res_2 :=
              ⌈ IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver) ⌉ in
              plus_n_Sm
              (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))
@@ -4007,9 +4049,9 @@ Defined.
 
 Inductive sf_exp_rel: MyNat_u → MyNat_u → MyNat_u → Prop :=
   | sf_exp_x_O: ∀ base, sf_exp_rel base O_u (S_u O_u)
-  | sf_exp_x_S: ∀ base p sf_exp_res,
+  | sf_exp_x_S: ∀ base p (sf_exp_res : MyNat_u),
                 sf_exp_rel base p sf_exp_res
-                → ∀ mult_res, mult_rel base sf_exp_res mult_res → sf_exp_rel base (S_u p) mult_res.
+                → ∀ (mult_res : MyNat_u), mult_rel base sf_exp_res mult_res → sf_exp_rel base (S_u p) mult_res.
 
 #[global] Hint Constructors sf_exp_rel: core_hint_db.
 
@@ -4036,9 +4078,9 @@ Qed.
 
 Theorem sf_exp_x_S_lem base p sf_exp_x_S_lem_res:
   sf_exp_rel base (S_u p) sf_exp_x_S_lem_res
-  ↔ ∃ sf_exp_res,
+  ↔ ∃ (sf_exp_res : MyNat_u),
     sf_exp_rel base p sf_exp_res
-    ∧ ∃ mult_res, mult_rel base sf_exp_res mult_res ∧ sf_exp_x_S_lem_res == mult_res.
+    ∧ ∃ (mult_res : MyNat_u), mult_rel base sf_exp_res mult_res ∧ sf_exp_x_S_lem_res == mult_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -4249,9 +4291,9 @@ Proof.
 Defined.
 
 Definition surjective_pairing_spec (p : Natprod): Type :=
-  {{∃ sndSF_res,
+  {{∃ (sndSF_res : MyNat_u),
     sndSF_rel ⌊ p ⌋ sndSF_res
-    ∧ ∃ fstSF_res, fstSF_rel ⌊ p ⌋ fstSF_res ∧ ⌊ p ⌋ == Pair_u fstSF_res sndSF_res}}.
+    ∧ ∃ (fstSF_res : MyNat_u), fstSF_rel ⌊ p ⌋ fstSF_res ∧ ⌊ p ⌋ == Pair_u fstSF_res sndSF_res}}.
 
 #[global] Hint Unfold surjective_pairing_spec: lia_unfold.
 
@@ -4262,16 +4304,17 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ sndSF_res,
-             sndSF_rel p sndSF_res ∧ ∃ fstSF_res, fstSF_rel p fstSF_res ∧ p == Pair_u fstSF_res sndSF_res)
+             ∃ (sndSF_res : MyNat_u),
+             sndSF_rel p sndSF_res
+             ∧ ∃ (fstSF_res : MyNat_u), fstSF_rel p fstSF_res ∧ p == Pair_u fstSF_res sndSF_res)
             (# unit)
             ltac:(solver)).
 Qed.
 
 Definition surjective_pairing'_spec (n m : MyNat): Type :=
-  {{∃ sndSF_res,
+  {{∃ (sndSF_res : MyNat_u),
     sndSF_rel (Pair_u ⌊ n ⌋ ⌊ m ⌋) sndSF_res
-    ∧ ∃ fstSF_res,
+    ∧ ∃ (fstSF_res : MyNat_u),
       fstSF_rel (Pair_u ⌊ n ⌋ ⌊ m ⌋) fstSF_res ∧ Pair_u ⌊ n ⌋ ⌊ m ⌋ == Pair_u fstSF_res sndSF_res}}.
 
 #[global] Hint Unfold surjective_pairing'_spec: lia_unfold.
@@ -4283,9 +4326,10 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ sndSF_res,
+           ∃ (sndSF_res : MyNat_u),
            sndSF_rel (Pair_u n m) sndSF_res
-           ∧ ∃ fstSF_res, fstSF_rel (Pair_u n m) fstSF_res ∧ Pair_u n m == Pair_u fstSF_res sndSF_res)
+           ∧ ∃ (fstSF_res : MyNat_u),
+             fstSF_rel (Pair_u n m) fstSF_res ∧ Pair_u n m == Pair_u fstSF_res sndSF_res)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -4301,7 +4345,7 @@ Proof.
 Defined.
 
 Inductive two_rel: MyNat_u → Prop :=
-  | two_Constr: ∀ one_res, one_rel one_res → two_rel (S_u one_res).
+  | two_Constr: two_rel (S_u ⌊ one -⌋).
 
 #[global] Hint Constructors two_rel: core_hint_db.
 
@@ -4316,8 +4360,7 @@ Qed.
 
 #[global] Hint Resolve two_rel_funct: f_rel_funct_db.
 
-Theorem two_inv_lem two_inv_lem_res:
-  two_rel two_inv_lem_res ↔ ∃ one_res, one_rel one_res ∧ two_inv_lem_res == S_u one_res.
+Theorem two_inv_lem two_inv_lem_res: two_rel two_inv_lem_res ↔ two_inv_lem_res == S_u ⌊ one -⌋.
 Proof.
   rel_back' _nil.
 Qed.
@@ -4369,7 +4412,7 @@ Qed.
 #[global] Hint Resolve two_rel_mk: f_rel_funct_db.
 
 Definition test_leb1_spec : Type :=
-  {{∃ two_res, two_rel two_res ∧ ∃ leb_res, leb_rel two_res two_res leb_res ∧ leb_res == SFTrue_u}}.
+  {{∃ (leb_res : SFBool_u), leb_rel ⌊ two -⌋ ⌊ two -⌋ leb_res ∧ leb_res == SFTrue_u}}.
 
 #[global] Hint Unfold test_leb1_spec: lia_unfold.
 
@@ -4377,14 +4420,13 @@ Theorem test_leb1 : test_leb1_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit),
-           ∃ two_res, two_rel two_res ∧ ∃ leb_res, leb_rel two_res two_res leb_res ∧ leb_res == SFTrue_u)
+          (λ (VV : Unit), ∃ (leb_res : SFBool_u), leb_rel ⌊ two -⌋ ⌊ two -⌋ leb_res ∧ leb_res == SFTrue_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_ltb1_spec : Type :=
-  {{∃ two_res, two_rel two_res ∧ ∃ ltb_res, ltb_rel two_res two_res ltb_res ∧ ltb_res == SFFalse_u}}.
+  {{∃ (ltb_res : SFBool_u), ltb_rel ⌊ two -⌋ ⌊ two -⌋ ltb_res ∧ ltb_res == SFFalse_u}}.
 
 #[global] Hint Unfold test_ltb1_spec: lia_unfold.
 
@@ -4392,8 +4434,7 @@ Theorem test_ltb1 : test_ltb1_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit),
-           ∃ two_res, two_rel two_res ∧ ∃ ltb_res, ltb_rel two_res two_res ltb_res ∧ ltb_res == SFFalse_u)
+          (λ (VV : Unit), ∃ (ltb_res : SFBool_u), ltb_rel ⌊ two -⌋ ⌊ two -⌋ ltb_res ∧ ltb_res == SFFalse_u)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -4409,7 +4450,7 @@ Proof.
 Defined.
 
 Inductive three_rel: MyNat_u → Prop :=
-  | three_Constr: ∀ two_res, two_rel two_res → three_rel (S_u two_res).
+  | three_Constr: three_rel (S_u ⌊ two -⌋).
 
 #[global] Hint Constructors three_rel: core_hint_db.
 
@@ -4425,7 +4466,7 @@ Qed.
 #[global] Hint Resolve three_rel_funct: f_rel_funct_db.
 
 Theorem three_inv_lem three_inv_lem_res:
-  three_rel three_inv_lem_res ↔ ∃ two_res, two_rel two_res ∧ three_inv_lem_res == S_u two_res.
+  three_rel three_inv_lem_res ↔ three_inv_lem_res == S_u ⌊ two -⌋.
 Proof.
   rel_back' _nil.
 Qed.
@@ -4490,7 +4531,7 @@ Proof.
 Defined.
 
 Inductive four_rel: MyNat_u → Prop :=
-  | four_Constr: ∀ three_res, three_rel three_res → four_rel (S_u three_res).
+  | four_Constr: four_rel (S_u ⌊ three -⌋).
 
 #[global] Hint Constructors four_rel: core_hint_db.
 
@@ -4506,7 +4547,7 @@ Qed.
 #[global] Hint Resolve four_rel_funct: f_rel_funct_db.
 
 Theorem four_inv_lem four_inv_lem_res:
-  four_rel four_inv_lem_res ↔ ∃ three_res, three_rel three_res ∧ four_inv_lem_res == S_u three_res.
+  four_rel four_inv_lem_res ↔ four_inv_lem_res == S_u ⌊ three -⌋.
 Proof.
   rel_back' _nil.
 Qed.
@@ -4571,7 +4612,7 @@ Proof.
 Defined.
 
 Inductive five_rel: MyNat_u → Prop :=
-  | five_Constr: ∀ four_res, four_rel four_res → five_rel (S_u four_res).
+  | five_Constr: five_rel (S_u ⌊ four -⌋).
 
 #[global] Hint Constructors five_rel: core_hint_db.
 
@@ -4587,7 +4628,7 @@ Qed.
 #[global] Hint Resolve five_rel_funct: f_rel_funct_db.
 
 Theorem five_inv_lem five_inv_lem_res:
-  five_rel five_inv_lem_res ↔ ∃ four_res, four_rel four_res ∧ five_inv_lem_res == S_u four_res.
+  five_rel five_inv_lem_res ↔ five_inv_lem_res == S_u ⌊ four -⌋.
 Proof.
   rel_back' _nil.
 Qed.
@@ -4652,7 +4693,7 @@ Proof.
 Defined.
 
 Inductive six_rel: MyNat_u → Prop :=
-  | six_Constr: ∀ five_res, five_rel five_res → six_rel (S_u five_res).
+  | six_Constr: six_rel (S_u ⌊ five -⌋).
 
 #[global] Hint Constructors six_rel: core_hint_db.
 
@@ -4667,8 +4708,7 @@ Qed.
 
 #[global] Hint Resolve six_rel_funct: f_rel_funct_db.
 
-Theorem six_inv_lem six_inv_lem_res:
-  six_rel six_inv_lem_res ↔ ∃ five_res, five_rel five_res ∧ six_inv_lem_res == S_u five_res.
+Theorem six_inv_lem six_inv_lem_res: six_rel six_inv_lem_res ↔ six_inv_lem_res == S_u ⌊ five -⌋.
 Proof.
   rel_back' _nil.
 Qed.
@@ -4730,7 +4770,7 @@ Proof.
 Defined.
 
 Inductive seven_rel: MyNat_u → Prop :=
-  | seven_Constr: ∀ six_res, six_rel six_res → seven_rel (S_u six_res).
+  | seven_Constr: seven_rel (S_u ⌊ six -⌋).
 
 #[global] Hint Constructors seven_rel: core_hint_db.
 
@@ -4746,7 +4786,7 @@ Qed.
 #[global] Hint Resolve seven_rel_funct: f_rel_funct_db.
 
 Theorem seven_inv_lem seven_inv_lem_res:
-  seven_rel seven_inv_lem_res ↔ ∃ six_res, six_rel six_res ∧ seven_inv_lem_res == S_u six_res.
+  seven_rel seven_inv_lem_res ↔ seven_inv_lem_res == S_u ⌊ six -⌋.
 Proof.
   rel_back' _nil.
 Qed.
@@ -4811,7 +4851,7 @@ Proof.
 Defined.
 
 Inductive eight_rel: MyNat_u → Prop :=
-  | eight_Constr: ∀ seven_res, seven_rel seven_res → eight_rel (S_u seven_res).
+  | eight_Constr: eight_rel (S_u ⌊ seven -⌋).
 
 #[global] Hint Constructors eight_rel: core_hint_db.
 
@@ -4827,7 +4867,7 @@ Qed.
 #[global] Hint Resolve eight_rel_funct: f_rel_funct_db.
 
 Theorem eight_inv_lem eight_inv_lem_res:
-  eight_rel eight_inv_lem_res ↔ ∃ seven_res, seven_rel seven_res ∧ eight_inv_lem_res == S_u seven_res.
+  eight_rel eight_inv_lem_res ↔ eight_inv_lem_res == S_u ⌊ seven -⌋.
 Proof.
   rel_back' _nil.
 Qed.
@@ -4892,7 +4932,7 @@ Proof.
 Defined.
 
 Inductive nine_rel: MyNat_u → Prop :=
-  | nine_Constr: ∀ eight_res, eight_rel eight_res → nine_rel (S_u eight_res).
+  | nine_Constr: nine_rel (S_u ⌊ eight -⌋).
 
 #[global] Hint Constructors nine_rel: core_hint_db.
 
@@ -4908,7 +4948,7 @@ Qed.
 #[global] Hint Resolve nine_rel_funct: f_rel_funct_db.
 
 Theorem nine_inv_lem nine_inv_lem_res:
-  nine_rel nine_inv_lem_res ↔ ∃ eight_res, eight_rel eight_res ∧ nine_inv_lem_res == S_u eight_res.
+  nine_rel nine_inv_lem_res ↔ nine_inv_lem_res == S_u ⌊ eight -⌋.
 Proof.
   rel_back' _nil.
 Qed.
@@ -4973,7 +5013,7 @@ Proof.
 Defined.
 
 Inductive ten_rel: MyNat_u → Prop :=
-  | ten_Constr: ∀ nine_res, nine_rel nine_res → ten_rel (S_u nine_res).
+  | ten_Constr: ten_rel (S_u ⌊ nine -⌋).
 
 #[global] Hint Constructors ten_rel: core_hint_db.
 
@@ -4988,8 +5028,7 @@ Qed.
 
 #[global] Hint Resolve ten_rel_funct: f_rel_funct_db.
 
-Theorem ten_inv_lem ten_inv_lem_res:
-  ten_rel ten_inv_lem_res ↔ ∃ nine_res, nine_rel nine_res ∧ ten_inv_lem_res == S_u nine_res.
+Theorem ten_inv_lem ten_inv_lem_res: ten_rel ten_inv_lem_res ↔ ten_inv_lem_res == S_u ⌊ nine -⌋.
 Proof.
   rel_back' _nil.
 Qed.
@@ -5051,7 +5090,7 @@ Proof.
 Defined.
 
 Inductive eleven_rel: MyNat_u → Prop :=
-  | eleven_Constr: ∀ ten_res, ten_rel ten_res → eleven_rel (S_u ten_res).
+  | eleven_Constr: eleven_rel (S_u ⌊ ten -⌋).
 
 #[global] Hint Constructors eleven_rel: core_hint_db.
 
@@ -5067,7 +5106,7 @@ Qed.
 #[global] Hint Resolve eleven_rel_funct: f_rel_funct_db.
 
 Theorem eleven_inv_lem eleven_inv_lem_res:
-  eleven_rel eleven_inv_lem_res ↔ ∃ ten_res, ten_rel ten_res ∧ eleven_inv_lem_res == S_u ten_res.
+  eleven_rel eleven_inv_lem_res ↔ eleven_inv_lem_res == S_u ⌊ ten -⌋.
 Proof.
   rel_back' _nil.
 Qed.
@@ -5133,7 +5172,7 @@ Proof.
 Defined.
 
 Inductive twelve_rel: MyNat_u → Prop :=
-  | twelve_Constr: ∀ eleven_res, eleven_rel eleven_res → twelve_rel (S_u eleven_res).
+  | twelve_Constr: twelve_rel (S_u ⌊ eleven -⌋).
 
 #[global] Hint Constructors twelve_rel: core_hint_db.
 
@@ -5149,8 +5188,7 @@ Qed.
 #[global] Hint Resolve twelve_rel_funct: f_rel_funct_db.
 
 Theorem twelve_inv_lem twelve_inv_lem_res:
-  twelve_rel twelve_inv_lem_res
-  ↔ ∃ eleven_res, eleven_rel eleven_res ∧ twelve_inv_lem_res == S_u eleven_res.
+  twelve_rel twelve_inv_lem_res ↔ twelve_inv_lem_res == S_u ⌊ eleven -⌋.
 Proof.
   rel_back' _nil.
 Qed.
@@ -5206,9 +5244,7 @@ Qed.
 #[global] Hint Resolve twelve_rel_mk: f_rel_funct_db.
 
 Definition test_leb2_spec : Type :=
-  {{∃ four_res,
-    four_rel four_res
-    ∧ ∃ two_res, two_rel two_res ∧ ∃ leb_res, leb_rel two_res four_res leb_res ∧ leb_res == SFTrue_u}}.
+  {{∃ (leb_res : SFBool_u), leb_rel ⌊ two -⌋ ⌊ four -⌋ leb_res ∧ leb_res == SFTrue_u}}.
 
 #[global] Hint Unfold test_leb2_spec: lia_unfold.
 
@@ -5216,19 +5252,13 @@ Theorem test_leb2 : test_leb2_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit),
-           ∃ four_res,
-           four_rel four_res
-           ∧ ∃ two_res, two_rel two_res ∧ ∃ leb_res, leb_rel two_res four_res leb_res ∧ leb_res == SFTrue_u)
+          (λ (VV : Unit), ∃ (leb_res : SFBool_u), leb_rel ⌊ two -⌋ ⌊ four -⌋ leb_res ∧ leb_res == SFTrue_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_leb3_spec : Type :=
-  {{∃ two_res,
-    two_rel two_res
-    ∧ ∃ four_res,
-      four_rel four_res ∧ ∃ leb_res, leb_rel four_res two_res leb_res ∧ leb_res == SFFalse_u}}.
+  {{∃ (leb_res : SFBool_u), leb_rel ⌊ four -⌋ ⌊ two -⌋ leb_res ∧ leb_res == SFFalse_u}}.
 
 #[global] Hint Unfold test_leb3_spec: lia_unfold.
 
@@ -5236,19 +5266,13 @@ Theorem test_leb3 : test_leb3_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit),
-           ∃ two_res,
-           two_rel two_res
-           ∧ ∃ four_res,
-             four_rel four_res ∧ ∃ leb_res, leb_rel four_res two_res leb_res ∧ leb_res == SFFalse_u)
+          (λ (VV : Unit), ∃ (leb_res : SFBool_u), leb_rel ⌊ four -⌋ ⌊ two -⌋ leb_res ∧ leb_res == SFFalse_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_ltb2_spec : Type :=
-  {{∃ four_res,
-    four_rel four_res
-    ∧ ∃ two_res, two_rel two_res ∧ ∃ ltb_res, ltb_rel two_res four_res ltb_res ∧ ltb_res == SFTrue_u}}.
+  {{∃ (ltb_res : SFBool_u), ltb_rel ⌊ two -⌋ ⌊ four -⌋ ltb_res ∧ ltb_res == SFTrue_u}}.
 
 #[global] Hint Unfold test_ltb2_spec: lia_unfold.
 
@@ -5256,19 +5280,13 @@ Theorem test_ltb2 : test_ltb2_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit),
-           ∃ four_res,
-           four_rel four_res
-           ∧ ∃ two_res, two_rel two_res ∧ ∃ ltb_res, ltb_rel two_res four_res ltb_res ∧ ltb_res == SFTrue_u)
+          (λ (VV : Unit), ∃ (ltb_res : SFBool_u), ltb_rel ⌊ two -⌋ ⌊ four -⌋ ltb_res ∧ ltb_res == SFTrue_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_ltb3_spec : Type :=
-  {{∃ two_res,
-    two_rel two_res
-    ∧ ∃ four_res,
-      four_rel four_res ∧ ∃ ltb_res, ltb_rel four_res two_res ltb_res ∧ ltb_res == SFFalse_u}}.
+  {{∃ (ltb_res : SFBool_u), ltb_rel ⌊ four -⌋ ⌊ two -⌋ ltb_res ∧ ltb_res == SFFalse_u}}.
 
 #[global] Hint Unfold test_ltb3_spec: lia_unfold.
 
@@ -5276,20 +5294,14 @@ Theorem test_ltb3 : test_ltb3_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit),
-           ∃ two_res,
-           two_rel two_res
-           ∧ ∃ four_res,
-             four_rel four_res ∧ ∃ ltb_res, ltb_rel four_res two_res ltb_res ∧ ltb_res == SFFalse_u)
+          (λ (VV : Unit), ∃ (ltb_res : SFBool_u), ltb_rel ⌊ four -⌋ ⌊ two -⌋ ltb_res ∧ ltb_res == SFFalse_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_factorial1_spec : Type :=
-  {{∃ three_res,
-    three_rel three_res
-    ∧ ∃ factorial_res,
-      factorial_rel three_res factorial_res ∧ ∃ six_res, six_rel six_res ∧ factorial_res == six_res}}.
+  {{∃ (factorial_res : MyNat_u),
+    factorial_rel ⌊ three -⌋ factorial_res ∧ factorial_res == ⌊ six -⌋}}.
 
 #[global] Hint Unfold test_factorial1_spec: lia_unfold.
 
@@ -5298,19 +5310,13 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ three_res,
-           three_rel three_res
-           ∧ ∃ factorial_res,
-             factorial_rel three_res factorial_res ∧ ∃ six_res, six_rel six_res ∧ factorial_res == six_res)
+           ∃ (factorial_res : MyNat_u), factorial_rel ⌊ three -⌋ factorial_res ∧ factorial_res == ⌊ six -⌋)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_mult1_spec : Type :=
-  {{∃ three_res,
-    three_rel three_res
-    ∧ ∃ mult_res,
-      mult_rel three_res three_res mult_res ∧ ∃ nine_res, nine_rel nine_res ∧ mult_res == nine_res}}.
+  {{∃ (mult_res : MyNat_u), mult_rel ⌊ three -⌋ ⌊ three -⌋ mult_res ∧ mult_res == ⌊ nine -⌋}}.
 
 #[global] Hint Unfold test_mult1_spec: lia_unfold.
 
@@ -5319,19 +5325,15 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ three_res,
-           three_rel three_res
-           ∧ ∃ mult_res,
-             mult_rel three_res three_res mult_res ∧ ∃ nine_res, nine_rel nine_res ∧ mult_res == nine_res)
+           ∃ (mult_res : MyNat_u), mult_rel ⌊ three -⌋ ⌊ three -⌋ mult_res ∧ mult_res == ⌊ nine -⌋)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition zero_nbeq_plus_1_spec (n : MyNat): Type :=
-  {{∃ one_res,
-    one_rel one_res
-    ∧ ∃ plus_res,
-      plus_rel ⌊ n ⌋ one_res plus_res ∧ ∃ eqb_res, eqb_rel O_u plus_res eqb_res ∧ eqb_res == SFFalse_u}}.
+  {{∃ (plus_res : MyNat_u),
+    plus_rel ⌊ n ⌋ ⌊ one -⌋ plus_res
+    ∧ ∃ (eqb_res : SFBool_u), eqb_rel O_u plus_res eqb_res ∧ eqb_res == SFFalse_u}}.
 
 #[global] Hint Unfold zero_nbeq_plus_1_spec: lia_unfold.
 
@@ -5342,19 +5344,17 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ one_res,
-             one_rel one_res
-             ∧ ∃ plus_res,
-               plus_rel n one_res plus_res ∧ ∃ eqb_res, eqb_rel O_u plus_res eqb_res ∧ eqb_res == SFFalse_u)
+             ∃ (plus_res : MyNat_u),
+             plus_rel n ⌊ one -⌋ plus_res
+             ∧ ∃ (eqb_res : SFBool_u), eqb_rel O_u plus_res eqb_res ∧ eqb_res == SFFalse_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ one_res,
-             one_rel one_res
-             ∧ ∃ plus_res,
-               plus_rel n one_res plus_res ∧ ∃ eqb_res, eqb_rel O_u plus_res eqb_res ∧ eqb_res == SFFalse_u)
+             ∃ (plus_res : MyNat_u),
+             plus_rel n ⌊ one -⌋ plus_res
+             ∧ ∃ (eqb_res : SFBool_u), eqb_rel O_u plus_res eqb_res ∧ eqb_res == SFFalse_u)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -5687,7 +5687,8 @@ Proof.
 Defined.
 
 Definition lower_letter_F_is_F_spec : Type :=
-  {{∃ lower_letter_res, lower_letter_rel F_u lower_letter_res ∧ lower_letter_res == F_u}}.
+  {{∃ (lower_letter_res : Letter_u),
+    lower_letter_rel F_u lower_letter_res ∧ lower_letter_res == F_u}}.
 
 #[global] Hint Unfold lower_letter_F_is_F_spec: lia_unfold.
 
@@ -5695,7 +5696,8 @@ Theorem lower_letter_F_is_F : lower_letter_F_is_F_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ lower_letter_res, lower_letter_rel F_u lower_letter_res ∧ lower_letter_res == F_u)
+          (λ (VV : Unit),
+           ∃ (lower_letter_res : Letter_u), lower_letter_rel F_u lower_letter_res ∧ lower_letter_res == F_u)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -5793,16 +5795,16 @@ Defined.
 Inductive lower_grade_rel: Grades_u → Grades_u → Prop :=
   | lower_grade__Grade_x_Plus: ∀ l, lower_grade_rel (Grade_u l Plus_u) (Grade_u l Natural_u)
   | lower_grade__Grade_x_Natural: ∀ l, lower_grade_rel (Grade_u l Natural_u) (Grade_u l Minus_u)
-  | lower_grade__Grade_A_Minus: ∀ lower_letter_res,
+  | lower_grade__Grade_A_Minus: ∀ (lower_letter_res : Letter_u),
                                 lower_letter_rel A_u lower_letter_res
                                 → lower_grade_rel (Grade_u A_u Minus_u) (Grade_u lower_letter_res Plus_u)
-  | lower_grade__Grade_B_Minus: ∀ lower_letter_res,
+  | lower_grade__Grade_B_Minus: ∀ (lower_letter_res : Letter_u),
                                 lower_letter_rel B_u lower_letter_res
                                 → lower_grade_rel (Grade_u B_u Minus_u) (Grade_u lower_letter_res Plus_u)
-  | lower_grade__Grade_C_Minus: ∀ lower_letter_res,
+  | lower_grade__Grade_C_Minus: ∀ (lower_letter_res : Letter_u),
                                 lower_letter_rel C_u lower_letter_res
                                 → lower_grade_rel (Grade_u C_u Minus_u) (Grade_u lower_letter_res Plus_u)
-  | lower_grade__Grade_D_Minus: ∀ lower_letter_res,
+  | lower_grade__Grade_D_Minus: ∀ (lower_letter_res : Letter_u),
                                 lower_letter_rel D_u lower_letter_res
                                 → lower_grade_rel (Grade_u D_u Minus_u) (Grade_u lower_letter_res Plus_u)
   | lower_grade__Grade_F_Minus: lower_grade_rel (Grade_u F_u Minus_u) (Grade_u F_u Minus_u).
@@ -5845,7 +5847,7 @@ Qed.
 
 Theorem lower_grade__Grade_A_Minus_lem lower_grade__Grade_A_Minus_lem_res:
   lower_grade_rel (Grade_u A_u Minus_u) lower_grade__Grade_A_Minus_lem_res
-  ↔ ∃ lower_letter_res,
+  ↔ ∃ (lower_letter_res : Letter_u),
     lower_letter_rel A_u lower_letter_res
     ∧ lower_grade__Grade_A_Minus_lem_res == Grade_u lower_letter_res Plus_u.
 Proof.
@@ -5856,7 +5858,7 @@ Qed.
 
 Theorem lower_grade__Grade_B_Minus_lem lower_grade__Grade_B_Minus_lem_res:
   lower_grade_rel (Grade_u B_u Minus_u) lower_grade__Grade_B_Minus_lem_res
-  ↔ ∃ lower_letter_res,
+  ↔ ∃ (lower_letter_res : Letter_u),
     lower_letter_rel B_u lower_letter_res
     ∧ lower_grade__Grade_B_Minus_lem_res == Grade_u lower_letter_res Plus_u.
 Proof.
@@ -5867,7 +5869,7 @@ Qed.
 
 Theorem lower_grade__Grade_C_Minus_lem lower_grade__Grade_C_Minus_lem_res:
   lower_grade_rel (Grade_u C_u Minus_u) lower_grade__Grade_C_Minus_lem_res
-  ↔ ∃ lower_letter_res,
+  ↔ ∃ (lower_letter_res : Letter_u),
     lower_letter_rel C_u lower_letter_res
     ∧ lower_grade__Grade_C_Minus_lem_res == Grade_u lower_letter_res Plus_u.
 Proof.
@@ -5878,7 +5880,7 @@ Qed.
 
 Theorem lower_grade__Grade_D_Minus_lem lower_grade__Grade_D_Minus_lem_res:
   lower_grade_rel (Grade_u D_u Minus_u) lower_grade__Grade_D_Minus_lem_res
-  ↔ ∃ lower_letter_res,
+  ↔ ∃ (lower_letter_res : Letter_u),
     lower_letter_rel D_u lower_letter_res
     ∧ lower_grade__Grade_D_Minus_lem_res == Grade_u lower_letter_res Plus_u.
 Proof.
@@ -5998,26 +6000,26 @@ Inductive apply_late_policy_rel: Z → Grades_u → Grades_u → Prop :=
                                              (late_days <? 9) == false
                                              → ((late_days <? 17) == false
                                                 → ((late_days <? 21) == false
-                                                   → ∀ lower_grade_res,
+                                                   → ∀ (lower_grade_res : Grades_u),
                                                      lower_grade_rel g lower_grade_res
-                                                     → ∀ lower_grade_res_2,
+                                                     → ∀ (lower_grade_res_2 : Grades_u),
                                                        lower_grade_rel lower_grade_res lower_grade_res_2
-                                                       → ∀ lower_grade_res_3,
+                                                       → ∀ (lower_grade_res_3 : Grades_u),
                                                          lower_grade_rel lower_grade_res_2 lower_grade_res_3
                                                          → apply_late_policy_rel late_days g lower_grade_res_3))
   | apply_late_policy_x_x_False_False_True: ∀ late_days g,
                                             (late_days <? 9) == false
                                             → ((late_days <? 17) == false
                                                → ((late_days <? 21) == true
-                                                  → ∀ lower_grade_res,
+                                                  → ∀ (lower_grade_res : Grades_u),
                                                     lower_grade_rel g lower_grade_res
-                                                    → ∀ lower_grade_res_2,
+                                                    → ∀ (lower_grade_res_2 : Grades_u),
                                                       lower_grade_rel lower_grade_res lower_grade_res_2
                                                       → apply_late_policy_rel late_days g lower_grade_res_2))
   | apply_late_policy_x_x_False_True: ∀ late_days g,
                                       (late_days <? 9) == false
                                       → ((late_days <? 17) == true
-                                         → ∀ lower_grade_res,
+                                         → ∀ (lower_grade_res : Grades_u),
                                            lower_grade_rel g lower_grade_res
                                            → apply_late_policy_rel late_days g lower_grade_res)
   | apply_late_policy_x_x_True: ∀ late_days g,
@@ -6048,24 +6050,24 @@ Theorem apply_late_policy_inv_lem g late_days apply_late_policy_inv_lem_res:
   ↔ ((((late_days <? 9) == false
        → ((late_days <? 17) == false
           → ((late_days <? 21) == false
-             → ∃ lower_grade_res,
+             → ∃ (lower_grade_res : Grades_u),
                lower_grade_rel g lower_grade_res
-               ∧ ∃ lower_grade_res_2,
+               ∧ ∃ (lower_grade_res_2 : Grades_u),
                  lower_grade_rel lower_grade_res lower_grade_res_2
-                 ∧ ∃ lower_grade_res_3,
+                 ∧ ∃ (lower_grade_res_3 : Grades_u),
                    lower_grade_rel lower_grade_res_2 lower_grade_res_3
                    ∧ apply_late_policy_inv_lem_res == lower_grade_res_3)))
       ∨ ((late_days <? 9) == false
          → ((late_days <? 17) == false
             → ((late_days <? 21) == true
-               → ∃ lower_grade_res,
+               → ∃ (lower_grade_res : Grades_u),
                  lower_grade_rel g lower_grade_res
-                 ∧ ∃ lower_grade_res_2,
+                 ∧ ∃ (lower_grade_res_2 : Grades_u),
                    lower_grade_rel lower_grade_res lower_grade_res_2
                    ∧ apply_late_policy_inv_lem_res == lower_grade_res_2))))
      ∨ ((late_days <? 9) == false
         → ((late_days <? 17) == true
-           → ∃ lower_grade_res,
+           → ∃ (lower_grade_res : Grades_u),
              lower_grade_rel g lower_grade_res ∧ apply_late_policy_inv_lem_res == lower_grade_res)))
     ∨ ((late_days <? 9) == true → apply_late_policy_inv_lem_res == g).
 Proof.
@@ -6177,7 +6179,7 @@ Proof.
 Defined.
 
 Definition lower_grade_F_Minus_spec : Type :=
-  {{∃ lower_grade_res,
+  {{∃ (lower_grade_res : Grades_u),
     lower_grade_rel (Grade_u F_u Minus_u) lower_grade_res ∧ lower_grade_res == Grade_u F_u Minus_u}}.
 
 #[global] Hint Unfold lower_grade_F_Minus_spec: lia_unfold.
@@ -6187,18 +6189,18 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ lower_grade_res,
+           ∃ (lower_grade_res : Grades_u),
            lower_grade_rel (Grade_u F_u Minus_u) lower_grade_res ∧ lower_grade_res == Grade_u F_u Minus_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition lower_grade_thrice_spec : Type :=
-  {{∃ lower_grade_res,
+  {{∃ (lower_grade_res : Grades_u),
     lower_grade_rel (Grade_u B_u Minus_u) lower_grade_res
-    ∧ ∃ lower_grade_res_2,
+    ∧ ∃ (lower_grade_res_2 : Grades_u),
       lower_grade_rel lower_grade_res lower_grade_res_2
-      ∧ ∃ lower_grade_res_3,
+      ∧ ∃ (lower_grade_res_3 : Grades_u),
         lower_grade_rel lower_grade_res_2 lower_grade_res_3 ∧ lower_grade_res_3 == Grade_u C_u Minus_u}}.
 
 #[global] Hint Unfold lower_grade_thrice_spec: lia_unfold.
@@ -6208,20 +6210,20 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ lower_grade_res,
+           ∃ (lower_grade_res : Grades_u),
            lower_grade_rel (Grade_u B_u Minus_u) lower_grade_res
-           ∧ ∃ lower_grade_res_2,
+           ∧ ∃ (lower_grade_res_2 : Grades_u),
              lower_grade_rel lower_grade_res lower_grade_res_2
-             ∧ ∃ lower_grade_res_3,
+             ∧ ∃ (lower_grade_res_3 : Grades_u),
                lower_grade_rel lower_grade_res_2 lower_grade_res_3 ∧ lower_grade_res_3 == Grade_u C_u Minus_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition lower_grade_twice_spec : Type :=
-  {{∃ lower_grade_res,
+  {{∃ (lower_grade_res : Grades_u),
     lower_grade_rel (Grade_u B_u Minus_u) lower_grade_res
-    ∧ ∃ lower_grade_res_2,
+    ∧ ∃ (lower_grade_res_2 : Grades_u),
       lower_grade_rel lower_grade_res lower_grade_res_2 ∧ lower_grade_res_2 == Grade_u C_u Natural_u}}.
 
 #[global] Hint Unfold lower_grade_twice_spec: lia_unfold.
@@ -6231,9 +6233,9 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ lower_grade_res,
+           ∃ (lower_grade_res : Grades_u),
            lower_grade_rel (Grade_u B_u Minus_u) lower_grade_res
-           ∧ ∃ lower_grade_res_2,
+           ∧ ∃ (lower_grade_res_2 : Grades_u),
              lower_grade_rel lower_grade_res lower_grade_res_2 ∧ lower_grade_res_2 == Grade_u C_u Natural_u)
           (# unit)
           ltac:(solver)).
@@ -6242,7 +6244,7 @@ Qed.
 Definition no_penalty_for_mostly_on_time_spec
   (late_days : {late_days: Z | True}) (g : Grades) (h : {{ltbZ_rel ⌊ late_days ⌋ 9 true}}):
   Type :=
-  {{∃ apply_late_policy_res,
+  {{∃ (apply_late_policy_res : Grades_u),
     apply_late_policy_rel ⌊ late_days ⌋ ⌊ g ⌋ apply_late_policy_res ∧ apply_late_policy_res == ⌊ g ⌋}}.
 
 #[global] Hint Unfold no_penalty_for_mostly_on_time_spec: lia_unfold.
@@ -6258,14 +6260,14 @@ Proof.
   [refine (subsumptionCast
            Unit
            (λ (VV : Unit),
-            ∃ apply_late_policy_res,
+            ∃ (apply_late_policy_res : Grades_u),
             apply_late_policy_rel late_days g apply_late_policy_res ∧ apply_late_policy_res == g)
            (exist (λ (h : Unit), ltbZ_rel late_days 9 true) h ltac:(solver))
            ltac:(solver)) |
    refine (subsumptionCast
            Unit
            (λ (VV : Unit),
-            ∃ apply_late_policy_res,
+            ∃ (apply_late_policy_res : Grades_u),
             apply_late_policy_rel late_days g apply_late_policy_res ∧ apply_late_policy_res == g)
            (# unit)
            ltac:(solver))].
@@ -6586,9 +6588,9 @@ Proof.
 Defined.
 
 Definition test_next_weekday_spec : Type :=
-  {{∃ next_weekday_res,
+  {{∃ (next_weekday_res : Day_u),
     next_weekday_rel Saturday_u next_weekday_res
-    ∧ ∃ next_weekday_res_2,
+    ∧ ∃ (next_weekday_res_2 : Day_u),
       next_weekday_rel next_weekday_res next_weekday_res_2 ∧ next_weekday_res_2 == Tuesday_u}}.
 
 #[global] Hint Unfold test_next_weekday_spec: lia_unfold.
@@ -6598,9 +6600,9 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ next_weekday_res,
+           ∃ (next_weekday_res : Day_u),
            next_weekday_rel Saturday_u next_weekday_res
-           ∧ ∃ next_weekday_res_2,
+           ∧ ∃ (next_weekday_res_2 : Day_u),
              next_weekday_rel next_weekday_res next_weekday_res_2 ∧ next_weekday_res_2 == Tuesday_u)
           (# unit)
           ltac:(solver)).
@@ -7074,7 +7076,7 @@ Proof.
 Defined.
 
 Definition letter_comparison_eq_spec (l : Letter): Type :=
-  {{∃ letter_comparison_res,
+  {{∃ (letter_comparison_res : Comparison_u),
     letter_comparison_rel ⌊ l ⌋ ⌊ l ⌋ letter_comparison_res ∧ letter_comparison_res == Eq_u}}.
 
 #[global] Hint Unfold letter_comparison_eq_spec: lia_unfold.
@@ -7086,35 +7088,35 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ letter_comparison_res,
+             ∃ (letter_comparison_res : Comparison_u),
              letter_comparison_rel l l letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ letter_comparison_res,
+             ∃ (letter_comparison_res : Comparison_u),
              letter_comparison_rel l l letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ letter_comparison_res,
+             ∃ (letter_comparison_res : Comparison_u),
              letter_comparison_rel l l letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ letter_comparison_res,
+             ∃ (letter_comparison_res : Comparison_u),
              letter_comparison_rel l l letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ letter_comparison_res,
+             ∃ (letter_comparison_res : Comparison_u),
              letter_comparison_rel l l letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
@@ -7122,12 +7124,12 @@ Qed.
 
 Definition lower_letter_lowers_spec
   (l : Letter)
-  (p : {{∃ letter_comparison_res,
+  (p : {{∃ (letter_comparison_res : Comparison_u),
          letter_comparison_rel F_u ⌊ l ⌋ letter_comparison_res ∧ letter_comparison_res == Lt_u}}):
   Type :=
-  {{∃ lower_letter_res,
+  {{∃ (lower_letter_res : Letter_u),
     lower_letter_rel ⌊ l ⌋ lower_letter_res
-    ∧ ∃ letter_comparison_res,
+    ∧ ∃ (letter_comparison_res : Comparison_u),
       letter_comparison_rel lower_letter_res ⌊ l ⌋ letter_comparison_res
       ∧ letter_comparison_res == Lt_u}}.
 
@@ -7135,7 +7137,7 @@ Definition lower_letter_lowers_spec
 
 Theorem lower_letter_lowers
   (l : Letter)
-  (p : {{∃ letter_comparison_res,
+  (p : {{∃ (letter_comparison_res : Comparison_u),
          letter_comparison_rel F_u ⌊ l ⌋ letter_comparison_res ∧ letter_comparison_res == Lt_u}}):
   lower_letter_lowers_spec l p.
 Proof.
@@ -7145,48 +7147,48 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ lower_letter_res,
+             ∃ (lower_letter_res : Letter_u),
              lower_letter_rel l lower_letter_res
-             ∧ ∃ letter_comparison_res,
+             ∧ ∃ (letter_comparison_res : Comparison_u),
                letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ lower_letter_res,
+             ∃ (lower_letter_res : Letter_u),
              lower_letter_rel l lower_letter_res
-             ∧ ∃ letter_comparison_res,
+             ∧ ∃ (letter_comparison_res : Comparison_u),
                letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ lower_letter_res,
+             ∃ (lower_letter_res : Letter_u),
              lower_letter_rel l lower_letter_res
-             ∧ ∃ letter_comparison_res,
+             ∧ ∃ (letter_comparison_res : Comparison_u),
                letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ lower_letter_res,
+             ∃ (lower_letter_res : Letter_u),
              lower_letter_rel l lower_letter_res
-             ∧ ∃ letter_comparison_res,
+             ∧ ∃ (letter_comparison_res : Comparison_u),
                letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ lower_letter_res,
+             ∃ (lower_letter_res : Letter_u),
              lower_letter_rel l lower_letter_res
-             ∧ ∃ letter_comparison_res,
+             ∧ ∃ (letter_comparison_res : Comparison_u),
                letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (exist (λ (p : Unit),
-                    ∃ letter_comparison_res,
+                    ∃ (letter_comparison_res : Comparison_u),
                     letter_comparison_rel F_u F_u letter_comparison_res
                     ∧ letter_comparison_res == Lt_u) p ltac:(solver))
             ltac:(solver)).
@@ -7513,9 +7515,9 @@ Definition isred_spec (c : Color): Type :=
 Definition isred (c : Color): isred_spec c.
 Proof.
   destruct c as [c c_p].
-  destruct c as [| ds_d5TZ|].
+  destruct c as [| ds_d5U2|].
   - refine SFFalse.
-  - destruct ds_d5TZ as [| |].
+  - destruct ds_d5U2 as [| |].
     + refine SFFalse.
     + refine SFFalse.
     + refine SFTrue.

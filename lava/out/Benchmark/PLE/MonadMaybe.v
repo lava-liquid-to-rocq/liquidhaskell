@@ -108,7 +108,7 @@ Defined.
 Inductive bind_rel: MaybeInt_u → @uPack (Z ::UT nilUT) MaybeInt_u → MaybeInt_u → Prop :=
   | bind_Nothing_x: ∀ (lq_tmp2 : @uPack (Z ::UT nilUT) MaybeInt_u),
                     bind_rel Nothing_u lq_tmp2 Nothing_u
-  | bind_Just_x: ∀ m (lq_tmp2 : @uPack (Z ::UT nilUT) MaybeInt_u) lq_tmp2_res,
+  | bind_Just_x: ∀ m (lq_tmp2 : @uPack (Z ::UT nilUT) MaybeInt_u) (lq_tmp2_res : MaybeInt_u),
                  getUPackRel lq_tmp2 m lq_tmp2_res → bind_rel (Just_u m) lq_tmp2 lq_tmp2_res.
 
 #[global] Hint Constructors bind_rel: core_hint_db.
@@ -135,7 +135,8 @@ Qed.
 
 Theorem bind_Just_x_lem lq_tmp2 m bind_Just_x_lem_res:
   bind_rel (Just_u m) lq_tmp2 bind_Just_x_lem_res
-  ↔ ∃ lq_tmp2_res, getUPackRel lq_tmp2 m lq_tmp2_res ∧ bind_Just_x_lem_res == lq_tmp2_res.
+  ↔ ∃ (lq_tmp2_res : MaybeInt_u),
+    getUPackRel lq_tmp2 m lq_tmp2_res ∧ bind_Just_x_lem_res == lq_tmp2_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -380,10 +381,11 @@ Definition left_identity_spec
           (v_x_46517173 : MaybeInt_u),
         ltac:(flattenP (λ (f : {VV: Z | True}) (VV : MaybeInt_u), MaybeInt_wf VV ∧ True) x_46517173 v_x_46517173))):
   Type :=
-  {{∃ retrn_res,
+  {{∃ (retrn_res : MaybeInt_u),
     retrn_rel ⌊ x ⌋ retrn_res
-    ∧ ∃ bind_res,
-      bind_rel retrn_res ⌊ f ⌋ bind_res ∧ ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ bind_res == f_res}}.
+    ∧ ∃ (bind_res : MaybeInt_u),
+      bind_rel retrn_res ⌊ f ⌋ bind_res
+      ∧ ∃ (f_res : MaybeInt_u), getPackRel f ⌊ x ⌋ f_res ∧ bind_res == f_res}}.
 
 #[global] Hint Unfold left_identity_spec: lia_unfold.
 
@@ -403,15 +405,17 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ retrn_res,
+           ∃ (retrn_res : MaybeInt_u),
            retrn_rel x retrn_res
-           ∧ ∃ bind_res, bind_rel retrn_res f bind_res ∧ ∃ f_res, getUPackRel f x f_res ∧ bind_res == f_res)
+           ∧ ∃ (bind_res : MaybeInt_u),
+             bind_rel retrn_res ⌊ f ⌋ bind_res
+             ∧ ∃ (f_res : MaybeInt_u), getPackRel f x f_res ∧ bind_res == f_res)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition right_identity_spec (x : MaybeInt): Type :=
-  {{∃ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res ∧ bind_res == ⌊ x ⌋}}.
+  {{∃ (bind_res : MaybeInt_u), bind_rel ⌊ x ⌋ retrn_upack bind_res ∧ bind_res == ⌊ x ⌋}}.
 
 #[global] Hint Unfold right_identity_spec: lia_unfold.
 
@@ -421,12 +425,12 @@ Proof.
   destruct x as [x|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ bind_res, bind_rel x retrn_upack bind_res ∧ bind_res == x)
+            (λ (VV : Unit), ∃ (bind_res : MaybeInt_u), bind_rel x retrn_upack bind_res ∧ bind_res == x)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ bind_res, bind_rel x retrn_upack bind_res ∧ bind_res == x)
+            (λ (VV : Unit), ∃ (bind_res : MaybeInt_u), bind_rel x retrn_upack bind_res ∧ bind_res == x)
             (# unit)
             ltac:(solver)).
 Qed.

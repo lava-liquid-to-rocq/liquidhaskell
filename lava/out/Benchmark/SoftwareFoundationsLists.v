@@ -285,9 +285,9 @@ Proof.
 Defined.
 
 Definition surjective_pairing'_spec (n m : MyNat): Type :=
-  {{∃ sndSF_res,
+  {{∃ (sndSF_res : MyNat_u),
     sndSF_rel (Pair_u ⌊ n ⌋ ⌊ m ⌋) sndSF_res
-    ∧ ∃ fstSF_res,
+    ∧ ∃ (fstSF_res : MyNat_u),
       fstSF_rel (Pair_u ⌊ n ⌋ ⌊ m ⌋) fstSF_res ∧ Pair_u ⌊ n ⌋ ⌊ m ⌋ == Pair_u fstSF_res sndSF_res}}.
 
 #[global] Hint Unfold surjective_pairing'_spec: lia_unfold.
@@ -299,17 +299,18 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ sndSF_res,
+           ∃ (sndSF_res : MyNat_u),
            sndSF_rel (Pair_u n m) sndSF_res
-           ∧ ∃ fstSF_res, fstSF_rel (Pair_u n m) fstSF_res ∧ Pair_u n m == Pair_u fstSF_res sndSF_res)
+           ∧ ∃ (fstSF_res : MyNat_u),
+             fstSF_rel (Pair_u n m) fstSF_res ∧ Pair_u n m == Pair_u fstSF_res sndSF_res)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition surjective_pairing_spec (p : Natprod): Type :=
-  {{∃ sndSF_res,
+  {{∃ (sndSF_res : MyNat_u),
     sndSF_rel ⌊ p ⌋ sndSF_res
-    ∧ ∃ fstSF_res, fstSF_rel ⌊ p ⌋ fstSF_res ∧ ⌊ p ⌋ == Pair_u fstSF_res sndSF_res}}.
+    ∧ ∃ (fstSF_res : MyNat_u), fstSF_rel ⌊ p ⌋ fstSF_res ∧ ⌊ p ⌋ == Pair_u fstSF_res sndSF_res}}.
 
 #[global] Hint Unfold surjective_pairing_spec: lia_unfold.
 
@@ -320,8 +321,9 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ sndSF_res,
-             sndSF_rel p sndSF_res ∧ ∃ fstSF_res, fstSF_rel p fstSF_res ∧ p == Pair_u fstSF_res sndSF_res)
+             ∃ (sndSF_res : MyNat_u),
+             sndSF_rel p sndSF_res
+             ∧ ∃ (fstSF_res : MyNat_u), fstSF_rel p fstSF_res ∧ p == Pair_u fstSF_res sndSF_res)
             (# unit)
             ltac:(solver)).
 Qed.

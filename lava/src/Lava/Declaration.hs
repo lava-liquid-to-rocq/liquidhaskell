@@ -27,7 +27,7 @@ import Text.PrettyPrint.HughesPJClass hiding (first)
 --   The boolean is True to use Equations
 trDecl :: Bool -> LH.Decl -> [Coq.Decl]
 -- An inductive data type gives an unrefined data type, a well-formedness predicate, some utility definitions and pseudo-constructors
--- trDecl decl | trace (render $ text "Translating" <+> pPrint decl) False = undefined
+-- trDecl _ decl | trace (render $ text "Translating" <+> pPrint decl) False = undefined
 trDecl equations (LH.Data tc alts) =
   unrefTCDecl tc alts --                     TC_u: unrefined datatype declaration
     : tcEqDecls tc alts --                   TC_eq: equality for TC_u and associated declarations
@@ -41,7 +41,7 @@ trDecl equations (LH.Data tc alts) =
 trDecl _ (LH.Import modName _) = [Coq.Load modName]
 trDecl equations (LH.Definition f tpf e isRefl) =
   (if equations then trDefEquations fdata else trDefRefDef fdata) -- f  -- f
-    ++ if isRefl
+    ++ if isRefl && (case tpf of ArrType {} -> True; RefType {} -> False)
       then
         defGraphRelAndHints fdata --       f_rel
           ++ relFunctionhoodLemma fdata -- f_rel_funct
@@ -379,9 +379,9 @@ separateBranches σxs σp (Case r branches _) =
       -- if r is an applied constructor
       (DC c, rs) -> maybe [] (separateBranches σxs σp) $ matchBranch (c, rs) cleanBranches
       -- if r is a first-order local variable (always injected)
-      (Inj (LH.Var x 0 _) _, []) -> concatMap (varRecCall x) cleanBranches
+      (Inj (LH.Var x Nothing _) _, []) -> concatMap (varRecCall x) cleanBranches
       -- if r is a first-order global variable
-      (LH.Var x 0 _, []) -> concatMap (varRecCall x) cleanBranches
+      (LH.Var x Nothing _, []) -> concatMap (varRecCall x) cleanBranches
       -- if r is an application or top-level constant
       _ -> concatMap (\(pat, e) -> separateBranches σxs (σp ++ [(r, matchToApp pat)]) e) cleanBranches
     Just _ -> error "Error in creation of function paths"
@@ -391,8 +391,8 @@ separateBranches σxs σp (Case r branches _) =
     -- Returns the pattern to which r is matched if it is already
     alreadyMatched =
       apps <$> case r of
-        Inj (LH.Var x 0 _) _ -> case lookup x σxs of Just (LH.Var {}) -> Nothing; pat -> pat
-        LH.Var x 0 _ -> case lookup x σxs of Just (LH.Var {}) -> Nothing; pat -> pat
+        Inj (LH.Var x Nothing _) _ -> case lookup x σxs of Just (LH.Var {}) -> Nothing; pat -> pat
+        LH.Var x Nothing _ -> case lookup x σxs of Just (LH.Var {}) -> Nothing; pat -> pat
         _ -> lookup r σp
     -- Recursive calls for the variable case, substituting the variable everywhere
     varRecCall :: Id -> ((Id, [(Id, Bool)]), Expr) -> [FunctionPath]
@@ -405,7 +405,7 @@ separateBranches σxs σp (Case r branches _) =
     -- Returns the application corresponding to the pattern of a case
     -- Since we do not have higher-order constructors, all variables are of arity 0
     matchToApp :: (Id, [(Id, Bool)]) -> Reft
-    matchToApp (c, ys) = foldl LH.App (DC c) (map (\(y, _) -> LH.Var y 0 Local) ys)
+    matchToApp (c, ys) = foldl LH.App (DC c) (map (\(y, _) -> LH.Var y Nothing Local) ys)
     -- Given a pattern and a branch, returns the corresponding branch instantiated
     -- with respect to the arguments of the constructor.
     -- There should be at most one corresponding branch, so we return only one
@@ -496,7 +496,7 @@ mkEquationsBranches eq paths = map trBranch $ factorizePaths paths
       (concatMap (trArgPattern . snd) σxs, map (Coq.mkProj Sig1 . trReft eq) with, map trGuard guards)
     -- Translate arguments patterns and change `pat` to `pat _` for FO parameters
     trArgPattern :: Reft -> [CoqTerm]
-    trArgPattern pat@(LH.Var _ n _) | n > 0 = [utrReft eq pat]
+    trArgPattern pat@(LH.Var _ (Just _) _) = [utrReft eq pat]
     trArgPattern pat = [utrReft eq pat, TermHole]
     -- Translate guards patterns and the branch term
     -- We add holes as patterns for guards that are not involved in the branch
@@ -545,7 +545,7 @@ trPathToConstr eq f argsUT p@(σxs, _, _) =
   where
     -- Variables introduced by destructing the arguments
     argsVarsWithTypes = concat $ zipWith patVars σxs argsUT
-    patVars (x, LH.Var x' n Local) tp | x == x' && n > 0 = [(x, tp)]
+    patVars (x, LH.Var x' (Just _) Local) tp | x == x' = [(x, tp)]
     patVars (_, pat) _ = map (,Hole) . Set.toList $ LH.freeVars pat
 
 -- | Auxiliary function for `trPathToConstr` and `inversionLemma`

@@ -30,11 +30,11 @@ elaborate = wfDecls initial
 
 -- | Singleton type of a literal
 litType :: Builtin -> Reft -> RefType
-litType tp l = RefType "VV" (Builtin tp) (Bop Eq (Var "VV" 0 Local) l)
+litType tp l = RefType "VV" (Builtin tp) (Bop Eq (Var "VV" Nothing Local) l)
 
 -- | Type of negation, with singleton return type
 negType :: RefType
-negType = ArrType "x" (RefType "x" boolTp ttTm) (RefType "VV" boolTp (Bop Eq (Var "VV" 0 Local) (Neg . Proj $ Var "x" 0 Local)))
+negType = ArrType "x" (RefType "x" boolTp ttTm) (RefType "VV" boolTp (Bop Eq (Var "VV" Nothing Local) (Neg . Proj $ Var "x" Nothing Local)))
 
 -- | Types of binary operators, with singleton return type
 bopTypes :: [(Bop, RefType)]
@@ -55,7 +55,7 @@ bopTypes =
   ]
   where
     intTp = Builtin Integer
-    x2NotZero = Bop Neq (Var "x_2" 0 Local) (IntLit 0)
+    x2NotZero = Bop Neq (Var "x_2" Nothing Local) (IntLit 0)
 
 -- | Type of the equality and inequality for any base type
 eqneqTypes :: BaseType -> [(Bop, RefType)]
@@ -66,7 +66,7 @@ mkBopType :: Bop -> BaseType -> BaseType -> Reft -> BaseType -> RefType
 mkBopType bop a1 a2 r2 a3 =
   ArrType "x_1" (RefType "x_1" a1 ttTm) $
     ArrType "x_2" (RefType "x_2" a2 r2) $
-      RefType "VV" a3 (Bop Eq (Var "VV" 0 Local) (Bop bop (Proj $ Var "x_1" 0 Local) (Proj $ Var "x_2" 0 Local)))
+      RefType "VV" a3 (Bop Eq (Var "VV" Nothing Local) (Bop bop (Proj $ Var "x_1" Nothing Local) (Proj $ Var "x_2" Nothing Local)))
 
 -- * Simple types, used for typing type refinements
 
@@ -96,7 +96,7 @@ refTptoSmpTp (ArrType _ tpx tp) = SmpArrow (refTptoSmpTp tpx) (refTptoSmpTp tp)
 smpTpCheck :: TypEnv -> Reft -> Either TypeError (SimpleType, Reft)
 smpTpCheck γ (Var x _ locx) = do
   (locγ, tp) <- lookupVar x γ
-  let res loc = return (refTptoSmpTp tp, Var x (arity tp) loc)
+  let res loc = return (refTptoSmpTp tp, mkVarWithAnnot x tp loc)
   case locx of
     Recursive {} -> res locx
     _ -> case locγ of
@@ -173,7 +173,7 @@ wfRefType γ (ArrType x tpx tp) = do
   tpx' <- wfRefType γ tpx
   let γ' = insertLocalVar (x, tpx') γ
   tp' <- wfRefType γ' tp
-  return $ ArrType x tpx' (subst (Proj (Var x (arity tpx') Local)) x tp')
+  return $ ArrType x tpx' (subst (Proj (mkVarWithAnnot x tpx' Local)) x tp')
 
 -- * Well-formedness of declarations
 
@@ -276,16 +276,16 @@ synReft γ (Var x _ locx) = do
   (locγ, tp) <- lookupVar x γ
   case (arity tp, locγ) of
     -- (S-VarL)
-    (0, Local) -> return (tp, Inj (Var x 0 Local) tp)
+    (0, Local) -> return (tp, Inj (mkVarWithAnnot x tp Local) tp)
     -- For recursive variables, the localization must be instantiated when
     -- elaborating matches.
     -- If not, we have not been able to find an inductive variable for this occurence of the application
-    (ar, Recursive {}) ->
+    (_, Recursive {}) ->
       case locx of
-        Recursive {} -> return (tp, Var x ar locx)
+        Recursive {} -> return (tp, mkVarWithAnnot x tp locx)
         _ -> Left . SynErr $ "Impossible to build induction for an occurence of the function" <+> text x <> ". Found locx =" <+> pPrint locx
     -- (S-Var)
-    (ar, _) -> return (tp, Var x ar locγ)
+    _ -> return (tp, mkVarWithAnnot x tp locγ)
 -- (S-Lit)
 synReft _ r@(StringLit _) = let tp = litType String r in return (tp, Inj r tp)
 synReft _ r@(IntLit _) = let tp = litType Integer r in return (tp, Inj r tp)
@@ -349,7 +349,7 @@ synReft γ r@(Pop pop r1 r2) = do
           (tp2, r2') <- synReft γ r2
           return (tp2, Pop pop r1' r2')
       | otherwise -> do
-          let xvar = Var x 0 Local
+          let xvar = Var x Nothing Local
               reft2 = Bop And reft1 (Bop (popToBop pop) xvar (mkProj r1'))
           r2' <- checkReft γ r2 (RefType x a reft2)
           let reft3' = Bop And reft1 (Bop Eq xvar (mkProj r2'))
@@ -441,7 +441,7 @@ checkExpr γ state e0@(Case r branches _) tp = do
             -- if we match on a variable xMatch, we replace the variable in the context
             -- by the variables introduced by the pattern
             -- and we substitute all occurences of xMatch by the pattern
-            Inj (Var xMatch 0 Local) _ ->
+            Inj (Var xMatch Nothing Local) _ ->
               let pat = foldl App (DC c) (map (mkVar . fst) ys)
                in substInEnv pat xMatch $ Env.delete xMatch γ
             -- If we match on an application or a constant, we keep the same context:

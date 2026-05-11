@@ -92,7 +92,7 @@ Defined.
 
 Inductive append_rel: L_u → L_u → L_u → Prop :=
   | append_Emp_x: ∀ lq_tmp1, append_rel Emp_u lq_tmp1 lq_tmp1
-  | append_C_x: ∀ x xs lq_tmp1 append_res,
+  | append_C_x: ∀ x xs lq_tmp1 (append_res : L_u),
                 append_rel xs lq_tmp1 append_res → append_rel (C_u x xs) lq_tmp1 (C_u x append_res).
 
 #[global] Hint Constructors append_rel: core_hint_db.
@@ -120,7 +120,7 @@ Qed.
 
 Theorem append_C_x_lem lq_tmp1 x xs append_C_x_lem_res:
   append_rel (C_u x xs) lq_tmp1 append_C_x_lem_res
-  ↔ ∃ append_res, append_rel xs lq_tmp1 append_res ∧ append_C_x_lem_res == C_u x append_res.
+  ↔ ∃ (append_res : L_u), append_rel xs lq_tmp1 append_res ∧ append_C_x_lem_res == C_u x append_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -255,11 +255,11 @@ Defined.
 
 Inductive bind_rel: L_u → @uPack (Z ::UT nilUT) L_u → L_u → Prop :=
   | bind_Emp_x: ∀ (lq_tmp2 : @uPack (Z ::UT nilUT) L_u), bind_rel Emp_u lq_tmp2 Emp_u
-  | bind_C_x: ∀ x xs (lq_tmp2 : @uPack (Z ::UT nilUT) L_u) bind_res,
+  | bind_C_x: ∀ x xs (lq_tmp2 : @uPack (Z ::UT nilUT) L_u) (bind_res : L_u),
               bind_rel xs lq_tmp2 bind_res
-              → ∀ lq_tmp2_res,
+              → ∀ (lq_tmp2_res : L_u),
                 getUPackRel lq_tmp2 x lq_tmp2_res
-                → ∀ append_res,
+                → ∀ (append_res : L_u),
                   append_rel lq_tmp2_res bind_res append_res → bind_rel (C_u x xs) lq_tmp2 append_res.
 
 #[global] Hint Constructors bind_rel: core_hint_db.
@@ -287,11 +287,11 @@ Qed.
 
 Theorem bind_C_x_lem lq_tmp2 x xs bind_C_x_lem_res:
   bind_rel (C_u x xs) lq_tmp2 bind_C_x_lem_res
-  ↔ ∃ bind_res,
+  ↔ ∃ (bind_res : L_u),
     bind_rel xs lq_tmp2 bind_res
-    ∧ ∃ lq_tmp2_res,
+    ∧ ∃ (lq_tmp2_res : L_u),
       getUPackRel lq_tmp2 x lq_tmp2_res
-      ∧ ∃ append_res, append_rel lq_tmp2_res bind_res append_res ∧ bind_C_x_lem_res == append_res.
+      ∧ ∃ (append_res : L_u), append_rel lq_tmp2_res bind_res append_res ∧ bind_C_x_lem_res == append_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -418,7 +418,7 @@ Qed.
 #[global] Hint Resolve bind_rel_mk: f_rel_funct_db.
 
 Definition prop_append_neutral_spec (xs : L): Type :=
-  {{∃ append_res, append_rel ⌊ xs ⌋ Emp_u append_res ∧ append_res == ⌊ xs ⌋}}.
+  {{∃ (append_res : L_u), append_rel ⌊ xs ⌋ Emp_u append_res ∧ append_res == ⌊ xs ⌋}}.
 
 #[global] Hint Unfold prop_append_neutral_spec: lia_unfold.
 
@@ -428,12 +428,12 @@ Proof.
   induction xs as [x xs IH_xs|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ append_res, append_rel xs Emp_u append_res ∧ append_res == xs)
+            (λ (VV : Unit), ∃ (append_res : L_u), append_rel xs Emp_u append_res ∧ append_res == xs)
             (IH_xs ltac:(try clear IH_xs; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ append_res, append_rel xs Emp_u append_res ∧ append_res == xs)
+            (λ (VV : Unit), ∃ (append_res : L_u), append_rel xs Emp_u append_res ∧ append_res == xs)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -553,10 +553,11 @@ Definition left_identity_spec
        (λ (x_46517173 : ArgList ({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT)) (v_x_46517173 : L_u),
         ltac:(flattenP (λ (f : {VV: Z | True}) (VV : L_u), L_wf VV ∧ True) x_46517173 v_x_46517173))):
   Type :=
-  {{∃ retrn_res,
+  {{∃ (retrn_res : L_u),
     retrn_rel ⌊ x ⌋ retrn_res
-    ∧ ∃ bind_res,
-      bind_rel retrn_res ⌊ f ⌋ bind_res ∧ ∃ f_res, getPackRel f ⌊ x ⌋ f_res ∧ bind_res == f_res}}.
+    ∧ ∃ (bind_res : L_u),
+      bind_rel retrn_res ⌊ f ⌋ bind_res
+      ∧ ∃ (f_res : L_u), getPackRel f ⌊ x ⌋ f_res ∧ bind_res == f_res}}.
 
 #[global] Hint Unfold left_identity_spec: lia_unfold.
 
@@ -575,15 +576,16 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ retrn_res,
+           ∃ (retrn_res : L_u),
            retrn_rel x retrn_res
-           ∧ ∃ bind_res, bind_rel retrn_res f bind_res ∧ ∃ f_res, getUPackRel f x f_res ∧ bind_res == f_res)
+           ∧ ∃ (bind_res : L_u),
+             bind_rel retrn_res ⌊ f ⌋ bind_res ∧ ∃ (f_res : L_u), getPackRel f x f_res ∧ bind_res == f_res)
           (prop_append_neutral (getPackF f (# x)))
           ltac:(solver)).
 Qed.
 
 Definition right_identity_spec (x : L): Type :=
-  {{∃ bind_res, bind_rel ⌊ x ⌋ retrn_upack bind_res ∧ bind_res == ⌊ x ⌋}}.
+  {{∃ (bind_res : L_u), bind_rel ⌊ x ⌋ retrn_upack bind_res ∧ bind_res == ⌊ x ⌋}}.
 
 #[global] Hint Unfold right_identity_spec: lia_unfold.
 
@@ -593,12 +595,12 @@ Proof.
   induction x as [x xs IH_xs|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ bind_res, bind_rel x retrn_upack bind_res ∧ bind_res == x)
+            (λ (VV : Unit), ∃ (bind_res : L_u), bind_rel x retrn_upack bind_res ∧ bind_res == x)
             (IH_xs ltac:(try clear IH_xs; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ bind_res, bind_rel x retrn_upack bind_res ∧ bind_res == x)
+            (λ (VV : Unit), ∃ (bind_res : L_u), bind_rel x retrn_upack bind_res ∧ bind_res == x)
             (# unit)
             ltac:(solver)).
 Qed.

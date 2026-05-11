@@ -88,7 +88,11 @@ utrRefTypeTopProp (ArrType _ tpx tp) = Coq.Arrow (utrRefType tpx) (utrRefTypeTop
 utrReft :: Bool -> LH.Reft -> Coq.CoqTerm
 -- utrReft r | traceFunc "utrReft" [pPrint r] = undefined
 utrReft eq r0 = case r0 of
-  LH.Var x n Global | n > 0 -> Coq.Var $ upackInstanceName x
+  -- global function -> f_pack
+  LH.Var x (Just _) Global -> Coq.Var $ upackInstanceName x
+  -- global constant -> proj1_sig f
+  LH.Var x Nothing Global -> Coq.Proj Sig1 (Coq.Def x)
+  -- local or recursive variable -> x
   LH.Var x _ _ -> Coq.Var x
   LH.StringLit s -> Coq.StringLiteral s
   LH.IntLit n -> Coq.IntLiteral n
@@ -128,11 +132,11 @@ utrReftProp eq r =
 -- In the paper, this is everything except = and ≠
 operatorsWithGraph :: [(LH.Bop, Reft)]
 operatorsWithGraph =
-  [ (LH.Plus, LH.Var "addZ" 2 Global),
-    (LH.Minus, LH.Var "subZ" 2 Global),
-    (LH.Times, LH.Var "multZ" 2 Global),
-    (LH.Div, LH.Var "divZ" 2 Global),
-    (LH.Mod, LH.Var "modZ" 2 Global)
+  [ (LH.Plus, LH.Var "addZ" (Just (LH.Builtin Integer)) Global),
+    (LH.Minus, LH.Var "subZ" (Just (LH.Builtin Integer)) Global),
+    (LH.Times, LH.Var "multZ" (Just (LH.Builtin Integer)) Global),
+    (LH.Div, LH.Var "divZ" (Just (LH.Builtin Integer)) Global),
+    (LH.Mod, LH.Var "modZ" (Just (LH.Builtin Integer)) Global)
   ]
 
 -- | Returns an association of each application in the input to a fresh variable and the term where replacements of the applications by the associated variable have been done.
@@ -145,8 +149,6 @@ extractApps r0 = go [] r0
   where
     go :: [(Reft, Id)] -> Reft -> ([(Reft, Id)], Reft)
     go env r = case r of
-      -- top-level constant
-      LH.Var _ 0 Global -> updateEnv env r
       (LH.Var {}; StringLit {}; FloatLit {}; IntLit {}; DC {}) -> (env, r)
       -- Inside Proj, we have a refined term, translated as refined and for
       -- which we must therefore not extract projections
@@ -183,10 +185,10 @@ extractApps r0 = go [] r0
         -- If r is in env, returns its associated variable,
         -- otherwise creates a fresh variable, update env and returns the variable
         updateEnv env' r' = case lookup r' env' of
-          Just z -> (env', LH.Var z 0 Local)
+          Just z -> (env', LH.Var z Nothing Local)
           Nothing ->
             let z = freshName (fromMaybe "z" (headVar r')) env'
-             in (env' ++ [(r', z)], LH.Var z 0 Local)
+             in (env' ++ [(r', z)], LH.Var z Nothing Local)
         -- f_res, f_res_2, f_res_3 etc
         freshName f env' =
           let isF r' = case headVar r' of Just f' -> f == f'; Nothing -> False
@@ -203,24 +205,24 @@ hypsRV eq rv graphRel = \p -> foldr hyp p rv
     -- hyp(f r1 … rn, z) p = forall z, (f_rel/get(U)PackRelName f) RtoU(r1) … RtoU(rn) z -> p
     hyp :: (Reft, Id) -> CoqTerm -> CoqTerm
     hyp (app, z) p =
-      quantifier [(z, Hole)] $
+      quantifier [(z, trBaseType tpz)] $
         link (Coq.App hdT (map (utrReft eq) args ++ [Coq.Var z])) p
       where
         (quantifier, link) =
           if graphRel then (Forall, Coq.Bop (Binop Coq.Impl PropOp)) else (Exists, Coq.Bop (Binop Coq.And PropOp))
         (hd, args) = apps app
-        hdT = case hd of
-          -- f -> f_rel for global FO/HO variables (includes operators in `operatorsWithGraph`)
-          LH.Var f _ Global -> Coq.Def $ relDefName f
+        (hdT, tpz) = case hd of
+          -- f -> f_rel for global functions (includes operators in `operatorsWithGraph`)
+          LH.Var f (Just tp) Global -> (Coq.Def $ relDefName f, tp)
           -- f -> getUPackRelName f for local HO variables
-          LH.Var f n Local | n > 0 -> upackGetRel (Coq.Def f)
+          LH.Var f (Just tp) Local -> (upackGetRel $ Coq.Def f, tp)
           -- TODO: this is not correct, but is a placeholder that does not
           -- prevent translation since this only appears in places that are not
           -- printed in Rocq (inside casts) or inside specifications, but no
           -- specifications uses the name of the function being defined
-          LH.Var f _ (Recursive {}) -> Coq.Def $ relDefName f
+          LH.Var f (Just tp) (Recursive {}) -> (Coq.Def $ relDefName f, tp)
           -- proj f -> getPackRelName f for local HO variables
-          LH.Proj (LH.Var f n _) | n > 0 -> packGetRel (Coq.Def f)
+          LH.Proj (LH.Var f (Just tp) _) -> (packGetRel (Coq.Def f), tp)
           _ -> error . render $ text "Unexpected extract term" <+> pPrint app <+> text "in Translation.hypsRV."
 
 -- * Refined translations
@@ -284,7 +286,7 @@ trRefTypeSplit eq tp =
 -- | Translation of refinements
 --   Function RtoR (def 3.8) of the paper
 trReft :: Bool -> LH.Reft -> Coq.CoqTerm
-trReft _ (LH.Var x ar Global) | ar > 0 = Coq.Def $ packInstanceName x
+trReft _ (LH.Var x (Just _) Global) = Coq.Def $ packInstanceName x
 trReft _ (LH.Var x _ _) = Coq.Var x
 trReft _ (LH.StringLit s) = Coq.StringLiteral s
 trReft _ (LH.IntLit n) = Coq.IntLiteral n
@@ -425,4 +427,4 @@ mkMatching eq trans tm alts genVars =
            in SingleIdPat y : [ihy | isInd]
         -- Whether y is used as an inductive variable, by checking the
         -- information contained in the localization of the recursive variables
-        isIndVar y = any (\case (_, (_, Recursive y' _)) -> y == y'; _ -> False) (freeVarsArLoc e)
+        isIndVar y = any (\case (_, Recursive y' _) -> y == y'; _ -> False) (freeVarsAnnot e)

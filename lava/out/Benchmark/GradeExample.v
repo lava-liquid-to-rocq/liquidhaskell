@@ -332,7 +332,7 @@ Proof.
 Defined.
 
 Definition lowerLetterFIsF_spec : Type :=
-  {{∃ lowerLetter_res, lowerLetter_rel F_u lowerLetter_res ∧ lowerLetter_res == F_u}}.
+  {{∃ (lowerLetter_res : Letter_u), lowerLetter_rel F_u lowerLetter_res ∧ lowerLetter_res == F_u}}.
 
 #[global] Hint Unfold lowerLetterFIsF_spec: lia_unfold.
 
@@ -340,7 +340,8 @@ Theorem lowerLetterFIsF : lowerLetterFIsF_spec.
 Proof.
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ lowerLetter_res, lowerLetter_rel F_u lowerLetter_res ∧ lowerLetter_res == F_u)
+          (λ (VV : Unit),
+           ∃ (lowerLetter_res : Letter_u), lowerLetter_rel F_u lowerLetter_res ∧ lowerLetter_res == F_u)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -438,16 +439,16 @@ Defined.
 Inductive lowerGrade_rel: Grades_u → Grades_u → Prop :=
   | lowerGrade__Grade_x_Plus: ∀ l, lowerGrade_rel (Grade_u l Plus_u) (Grade_u l Natural_u)
   | lowerGrade__Grade_x_Natural: ∀ l, lowerGrade_rel (Grade_u l Natural_u) (Grade_u l Minus_u)
-  | lowerGrade__Grade_A_Minus: ∀ lowerLetter_res,
+  | lowerGrade__Grade_A_Minus: ∀ (lowerLetter_res : Letter_u),
                                lowerLetter_rel A_u lowerLetter_res
                                → lowerGrade_rel (Grade_u A_u Minus_u) (Grade_u lowerLetter_res Plus_u)
-  | lowerGrade__Grade_B_Minus: ∀ lowerLetter_res,
+  | lowerGrade__Grade_B_Minus: ∀ (lowerLetter_res : Letter_u),
                                lowerLetter_rel B_u lowerLetter_res
                                → lowerGrade_rel (Grade_u B_u Minus_u) (Grade_u lowerLetter_res Plus_u)
-  | lowerGrade__Grade_C_Minus: ∀ lowerLetter_res,
+  | lowerGrade__Grade_C_Minus: ∀ (lowerLetter_res : Letter_u),
                                lowerLetter_rel C_u lowerLetter_res
                                → lowerGrade_rel (Grade_u C_u Minus_u) (Grade_u lowerLetter_res Plus_u)
-  | lowerGrade__Grade_D_Minus: ∀ lowerLetter_res,
+  | lowerGrade__Grade_D_Minus: ∀ (lowerLetter_res : Letter_u),
                                lowerLetter_rel D_u lowerLetter_res
                                → lowerGrade_rel (Grade_u D_u Minus_u) (Grade_u lowerLetter_res Plus_u)
   | lowerGrade__Grade_F_Minus: lowerGrade_rel (Grade_u F_u Minus_u) (Grade_u F_u Minus_u).
@@ -490,7 +491,7 @@ Qed.
 
 Theorem lowerGrade__Grade_A_Minus_lem lowerGrade__Grade_A_Minus_lem_res:
   lowerGrade_rel (Grade_u A_u Minus_u) lowerGrade__Grade_A_Minus_lem_res
-  ↔ ∃ lowerLetter_res,
+  ↔ ∃ (lowerLetter_res : Letter_u),
     lowerLetter_rel A_u lowerLetter_res
     ∧ lowerGrade__Grade_A_Minus_lem_res == Grade_u lowerLetter_res Plus_u.
 Proof.
@@ -501,7 +502,7 @@ Qed.
 
 Theorem lowerGrade__Grade_B_Minus_lem lowerGrade__Grade_B_Minus_lem_res:
   lowerGrade_rel (Grade_u B_u Minus_u) lowerGrade__Grade_B_Minus_lem_res
-  ↔ ∃ lowerLetter_res,
+  ↔ ∃ (lowerLetter_res : Letter_u),
     lowerLetter_rel B_u lowerLetter_res
     ∧ lowerGrade__Grade_B_Minus_lem_res == Grade_u lowerLetter_res Plus_u.
 Proof.
@@ -512,7 +513,7 @@ Qed.
 
 Theorem lowerGrade__Grade_C_Minus_lem lowerGrade__Grade_C_Minus_lem_res:
   lowerGrade_rel (Grade_u C_u Minus_u) lowerGrade__Grade_C_Minus_lem_res
-  ↔ ∃ lowerLetter_res,
+  ↔ ∃ (lowerLetter_res : Letter_u),
     lowerLetter_rel C_u lowerLetter_res
     ∧ lowerGrade__Grade_C_Minus_lem_res == Grade_u lowerLetter_res Plus_u.
 Proof.
@@ -523,7 +524,7 @@ Qed.
 
 Theorem lowerGrade__Grade_D_Minus_lem lowerGrade__Grade_D_Minus_lem_res:
   lowerGrade_rel (Grade_u D_u Minus_u) lowerGrade__Grade_D_Minus_lem_res
-  ↔ ∃ lowerLetter_res,
+  ↔ ∃ (lowerLetter_res : Letter_u),
     lowerLetter_rel D_u lowerLetter_res
     ∧ lowerGrade__Grade_D_Minus_lem_res == Grade_u lowerLetter_res Plus_u.
 Proof.
@@ -642,26 +643,26 @@ Inductive applyLatePolicy_rel: Z → Grades_u → Grades_u → Prop :=
                                            (lateDays <? 9) == false
                                            → ((lateDays <? 17) == false
                                               → ((lateDays <? 21) == false
-                                                 → ∀ lowerGrade_res,
+                                                 → ∀ (lowerGrade_res : Grades_u),
                                                    lowerGrade_rel g lowerGrade_res
-                                                   → ∀ lowerGrade_res_2,
+                                                   → ∀ (lowerGrade_res_2 : Grades_u),
                                                      lowerGrade_rel lowerGrade_res lowerGrade_res_2
-                                                     → ∀ lowerGrade_res_3,
+                                                     → ∀ (lowerGrade_res_3 : Grades_u),
                                                        lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3
                                                        → applyLatePolicy_rel lateDays g lowerGrade_res_3))
   | applyLatePolicy_x_x_False_False_True: ∀ lateDays g,
                                           (lateDays <? 9) == false
                                           → ((lateDays <? 17) == false
                                              → ((lateDays <? 21) == true
-                                                → ∀ lowerGrade_res,
+                                                → ∀ (lowerGrade_res : Grades_u),
                                                   lowerGrade_rel g lowerGrade_res
-                                                  → ∀ lowerGrade_res_2,
+                                                  → ∀ (lowerGrade_res_2 : Grades_u),
                                                     lowerGrade_rel lowerGrade_res lowerGrade_res_2
                                                     → applyLatePolicy_rel lateDays g lowerGrade_res_2))
   | applyLatePolicy_x_x_False_True: ∀ lateDays g,
                                     (lateDays <? 9) == false
                                     → ((lateDays <? 17) == true
-                                       → ∀ lowerGrade_res,
+                                       → ∀ (lowerGrade_res : Grades_u),
                                          lowerGrade_rel g lowerGrade_res
                                          → applyLatePolicy_rel lateDays g lowerGrade_res)
   | applyLatePolicy_x_x_True: ∀ lateDays g,
@@ -692,23 +693,23 @@ Theorem applyLatePolicy_inv_lem g lateDays applyLatePolicy_inv_lem_res:
   ↔ ((((lateDays <? 9) == false
        → ((lateDays <? 17) == false
           → ((lateDays <? 21) == false
-             → ∃ lowerGrade_res,
+             → ∃ (lowerGrade_res : Grades_u),
                lowerGrade_rel g lowerGrade_res
-               ∧ ∃ lowerGrade_res_2,
+               ∧ ∃ (lowerGrade_res_2 : Grades_u),
                  lowerGrade_rel lowerGrade_res lowerGrade_res_2
-                 ∧ ∃ lowerGrade_res_3,
+                 ∧ ∃ (lowerGrade_res_3 : Grades_u),
                    lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3
                    ∧ applyLatePolicy_inv_lem_res == lowerGrade_res_3)))
       ∨ ((lateDays <? 9) == false
          → ((lateDays <? 17) == false
             → ((lateDays <? 21) == true
-               → ∃ lowerGrade_res,
+               → ∃ (lowerGrade_res : Grades_u),
                  lowerGrade_rel g lowerGrade_res
-                 ∧ ∃ lowerGrade_res_2,
+                 ∧ ∃ (lowerGrade_res_2 : Grades_u),
                    lowerGrade_rel lowerGrade_res lowerGrade_res_2 ∧ applyLatePolicy_inv_lem_res == lowerGrade_res_2))))
      ∨ ((lateDays <? 9) == false
         → ((lateDays <? 17) == true
-           → ∃ lowerGrade_res,
+           → ∃ (lowerGrade_res : Grades_u),
              lowerGrade_rel g lowerGrade_res ∧ applyLatePolicy_inv_lem_res == lowerGrade_res)))
     ∨ ((lateDays <? 9) == true → applyLatePolicy_inv_lem_res == g).
 Proof.
@@ -813,7 +814,7 @@ Proof.
 Defined.
 
 Definition lowerGradeFMinus_spec : Type :=
-  {{∃ lowerGrade_res,
+  {{∃ (lowerGrade_res : Grades_u),
     lowerGrade_rel (Grade_u F_u Minus_u) lowerGrade_res ∧ lowerGrade_res == Grade_u F_u Minus_u}}.
 
 #[global] Hint Unfold lowerGradeFMinus_spec: lia_unfold.
@@ -823,18 +824,18 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ lowerGrade_res,
+           ∃ (lowerGrade_res : Grades_u),
            lowerGrade_rel (Grade_u F_u Minus_u) lowerGrade_res ∧ lowerGrade_res == Grade_u F_u Minus_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition lowerGradeThrice_spec : Type :=
-  {{∃ lowerGrade_res,
+  {{∃ (lowerGrade_res : Grades_u),
     lowerGrade_rel (Grade_u B_u Minus_u) lowerGrade_res
-    ∧ ∃ lowerGrade_res_2,
+    ∧ ∃ (lowerGrade_res_2 : Grades_u),
       lowerGrade_rel lowerGrade_res lowerGrade_res_2
-      ∧ ∃ lowerGrade_res_3,
+      ∧ ∃ (lowerGrade_res_3 : Grades_u),
         lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3 ∧ lowerGrade_res_3 == Grade_u C_u Minus_u}}.
 
 #[global] Hint Unfold lowerGradeThrice_spec: lia_unfold.
@@ -844,20 +845,20 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ lowerGrade_res,
+           ∃ (lowerGrade_res : Grades_u),
            lowerGrade_rel (Grade_u B_u Minus_u) lowerGrade_res
-           ∧ ∃ lowerGrade_res_2,
+           ∧ ∃ (lowerGrade_res_2 : Grades_u),
              lowerGrade_rel lowerGrade_res lowerGrade_res_2
-             ∧ ∃ lowerGrade_res_3,
+             ∧ ∃ (lowerGrade_res_3 : Grades_u),
                lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3 ∧ lowerGrade_res_3 == Grade_u C_u Minus_u)
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition lowerGradeTwice_spec : Type :=
-  {{∃ lowerGrade_res,
+  {{∃ (lowerGrade_res : Grades_u),
     lowerGrade_rel (Grade_u B_u Minus_u) lowerGrade_res
-    ∧ ∃ lowerGrade_res_2,
+    ∧ ∃ (lowerGrade_res_2 : Grades_u),
       lowerGrade_rel lowerGrade_res lowerGrade_res_2 ∧ lowerGrade_res_2 == Grade_u C_u Natural_u}}.
 
 #[global] Hint Unfold lowerGradeTwice_spec: lia_unfold.
@@ -867,9 +868,9 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ lowerGrade_res,
+           ∃ (lowerGrade_res : Grades_u),
            lowerGrade_rel (Grade_u B_u Minus_u) lowerGrade_res
-           ∧ ∃ lowerGrade_res_2,
+           ∧ ∃ (lowerGrade_res_2 : Grades_u),
              lowerGrade_rel lowerGrade_res lowerGrade_res_2 ∧ lowerGrade_res_2 == Grade_u C_u Natural_u)
           (# unit)
           ltac:(solver)).
@@ -878,7 +879,7 @@ Qed.
 Definition noPenaltyForMostlyOnTime_spec
   (lateDays : {lateDays: Z | True}) (g : Grades) (h : {{ltbZ_rel ⌊ lateDays ⌋ 9 true}}):
   Type :=
-  {{∃ applyLatePolicy_res,
+  {{∃ (applyLatePolicy_res : Grades_u),
     applyLatePolicy_rel ⌊ lateDays ⌋ ⌊ g ⌋ applyLatePolicy_res ∧ applyLatePolicy_res == ⌊ g ⌋}}.
 
 #[global] Hint Unfold noPenaltyForMostlyOnTime_spec: lia_unfold.
@@ -894,14 +895,14 @@ Proof.
   [refine (subsumptionCast
            Unit
            (λ (VV : Unit),
-            ∃ applyLatePolicy_res,
+            ∃ (applyLatePolicy_res : Grades_u),
             applyLatePolicy_rel lateDays g applyLatePolicy_res ∧ applyLatePolicy_res == g)
            (exist (λ (h : Unit), ltbZ_rel lateDays 9 true) h ltac:(solver))
            ltac:(solver)) |
    refine (subsumptionCast
            Unit
            (λ (VV : Unit),
-            ∃ applyLatePolicy_res,
+            ∃ (applyLatePolicy_res : Grades_u),
             applyLatePolicy_rel lateDays g applyLatePolicy_res ∧ applyLatePolicy_res == g)
            (# unit)
            ltac:(solver))].
@@ -1375,7 +1376,7 @@ Proof.
 Defined.
 
 Definition letterComparisonEq_spec (l : Letter): Type :=
-  {{∃ letterComparison_res,
+  {{∃ (letterComparison_res : Comparison_u),
     letterComparison_rel ⌊ l ⌋ ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Eq_u}}.
 
 #[global] Hint Unfold letterComparisonEq_spec: lia_unfold.
@@ -1387,35 +1388,35 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ letterComparison_res,
+             ∃ (letterComparison_res : Comparison_u),
              letterComparison_rel l l letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ letterComparison_res,
+             ∃ (letterComparison_res : Comparison_u),
              letterComparison_rel l l letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ letterComparison_res,
+             ∃ (letterComparison_res : Comparison_u),
              letterComparison_rel l l letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ letterComparison_res,
+             ∃ (letterComparison_res : Comparison_u),
              letterComparison_rel l l letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ letterComparison_res,
+             ∃ (letterComparison_res : Comparison_u),
              letterComparison_rel l l letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
@@ -1423,19 +1424,19 @@ Qed.
 
 Definition lowerLetterLowers_spec
   (l : Letter)
-  (p : {{∃ letterComparison_res,
+  (p : {{∃ (letterComparison_res : Comparison_u),
          letterComparison_rel F_u ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u}}):
   Type :=
-  {{∃ lowerLetter_res,
+  {{∃ (lowerLetter_res : Letter_u),
     lowerLetter_rel ⌊ l ⌋ lowerLetter_res
-    ∧ ∃ letterComparison_res,
+    ∧ ∃ (letterComparison_res : Comparison_u),
       letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u}}.
 
 #[global] Hint Unfold lowerLetterLowers_spec: lia_unfold.
 
 Theorem lowerLetterLowers
   (l : Letter)
-  (p : {{∃ letterComparison_res,
+  (p : {{∃ (letterComparison_res : Comparison_u),
          letterComparison_rel F_u ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u}}):
   lowerLetterLowers_spec l p.
 Proof.
@@ -1445,48 +1446,48 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ lowerLetter_res,
+             ∃ (lowerLetter_res : Letter_u),
              lowerLetter_rel l lowerLetter_res
-             ∧ ∃ letterComparison_res,
+             ∧ ∃ (letterComparison_res : Comparison_u),
                letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ lowerLetter_res,
+             ∃ (lowerLetter_res : Letter_u),
              lowerLetter_rel l lowerLetter_res
-             ∧ ∃ letterComparison_res,
+             ∧ ∃ (letterComparison_res : Comparison_u),
                letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ lowerLetter_res,
+             ∃ (lowerLetter_res : Letter_u),
              lowerLetter_rel l lowerLetter_res
-             ∧ ∃ letterComparison_res,
+             ∧ ∃ (letterComparison_res : Comparison_u),
                letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ lowerLetter_res,
+             ∃ (lowerLetter_res : Letter_u),
              lowerLetter_rel l lowerLetter_res
-             ∧ ∃ letterComparison_res,
+             ∧ ∃ (letterComparison_res : Comparison_u),
                letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ lowerLetter_res,
+             ∃ (lowerLetter_res : Letter_u),
              lowerLetter_rel l lowerLetter_res
-             ∧ ∃ letterComparison_res,
+             ∧ ∃ (letterComparison_res : Comparison_u),
                letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
             (exist (λ (p : Unit),
-                    ∃ letterComparison_res,
+                    ∃ (letterComparison_res : Comparison_u),
                     letterComparison_rel F_u F_u letterComparison_res ∧ letterComparison_res == Lt_u) p ltac:(solver))
             ltac:(solver)).
 Qed.

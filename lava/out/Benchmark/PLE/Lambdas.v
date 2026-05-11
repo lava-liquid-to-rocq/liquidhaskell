@@ -12,16 +12,16 @@ Definition fvInLambda_spec (x : {x: Z | True}): Type :=
 Definition fvInLambda (x : {x: Z | True}): fvInLambda_spec x.
 Proof.
   destruct x as [x x_p].
-  assert (f_13564224 : ∀ (y : {VV: Z | True}),
-                       {v: Z | ∃ addZ_res, addZ_rel x ⌊ y ⌋ addZ_res ∧ v == addZ_res}).
+  assert (f_73466906 : ∀ (y : {VV: Z | True}),
+                       {v: Z | ∃ (addZ_res : Z), addZ_rel x ⌊ y ⌋ addZ_res ∧ v == addZ_res}).
   { intros [y y_p];
     refine (subsumptionCast
             Z
-            (λ (v : Z), ∃ addZ_res, addZ_rel x ⌊ y ⌋ addZ_res ∧ v == addZ_res)
+            (λ (v : Z), ∃ (addZ_res : Z), addZ_rel x ⌊ y ⌋ addZ_res ∧ v == addZ_res)
             (# x +Z # y)
             ltac:(solver)). }
-  unshelve refine (let f: ltac:(buildPackG_spec f_13564224) :=
-                 ltac:(fun_to_pack f_13564224) in
+  unshelve refine (let f: ltac:(buildPackG_spec f_73466906) :=
+                 ltac:(fun_to_pack f_73466906) in
                  _).
   refine (subsumptionCast Z (λ (VV : Z), True) (getPackF f (# x)) ltac:(solver)).
 Defined.

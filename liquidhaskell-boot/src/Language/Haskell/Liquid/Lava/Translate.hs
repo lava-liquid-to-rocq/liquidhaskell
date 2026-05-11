@@ -5,7 +5,6 @@ module Language.Haskell.Liquid.Lava.Translate (runLava, SrcInfo (..)) where
 
 import Control.Monad (unless, void)
 import Data.Bifunctor (bimap)
-
 import Data.Char (isSpace)
 import Data.List (intercalate, isPrefixOf)
 import qualified Data.Map.Strict as M
@@ -18,7 +17,7 @@ import Language.Haskell.Liquid.Lava.Misc (isIgnoredBind, removeSuffix, split, st
 import Language.Haskell.Liquid.Lava.Parse
 import Language.Haskell.Liquid.Lava.Simplify (simplify)
 import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
-import Language.Haskell.Liquid.Types.RType (SpecType, TyConP(..))
+import Language.Haskell.Liquid.Types.RType (SpecType, TyConP (..))
 import qualified Language.Haskell.Liquid.Types.Specs as Specs
 import Language.Haskell.Liquid.Types.Types (AnnInfo (..))
 import qualified Lava.Calculus as Calc
@@ -220,13 +219,15 @@ getModIdsAndImports sinfo = map moduleNameString' $ filter (not . isStdLibModule
   where
     moduleNameString' = moduleNameString . moduleName
     isStdLibModule m = any (`isPrefixOf` name) stdLibPrefixes
-      where name = moduleNameString' m
+      where
+        name = moduleNameString' m
     stdLibPrefixes = ["GHC.", "Data.", "Control.", "System.", "Prelude", "Foreign.", "Text.", "Numeric.", "Language."]
 
 -- | Filter PData to only include type constructors and data constructors defined in the current module.
 --   LH's gsCtors/gsTconsP include imported types, which must not be re-declared in the output.
 filterLocalPData :: ModuleName -> PData -> PData
-filterLocalPData modName pd = pd { pdTyCons = filteredTyCons, pdCtors = filteredCtors } where
+filterLocalPData modName pd = pd {pdTyCons = filteredTyCons, pdCtors = filteredCtors}
+  where
     filteredTyCons = filter isLocalTC (pdTyCons pd)
     filteredCtors = filter (isLocalCtor . fst) (pdCtors pd)
     isLocalTC tcp = maybe True ((== modName) . moduleName) $ nameModule_maybe (tyConName (tcpCon tcp))
@@ -234,7 +235,7 @@ filterLocalPData modName pd = pd { pdTyCons = filteredTyCons, pdCtors = filtered
 
 -- | Filter PData to only include type constructors and data constructors from the given module.
 filterPDataForModule :: String -> PData -> PData
-filterPDataForModule modStr pd = pd { pdTyCons = filter isFromMod (pdTyCons pd), pdCtors = filter (isFromMod' . fst) (pdCtors pd) }
+filterPDataForModule modStr pd = pd {pdTyCons = filter isFromMod (pdTyCons pd), pdCtors = filter (isFromMod' . fst) (pdCtors pd)}
   where
     isFromMod tcp = maybe False ((== modStr) . moduleNameString . moduleName) $ nameModule_maybe (tyConName (tcpCon tcp))
     isFromMod' v = maybe False ((== modStr) . moduleNameString . moduleName) $ nameModule_maybe (varName v)
@@ -250,7 +251,7 @@ mkImportDecl moduleId allPData rawSpecs modName = Calc.Import modName (dataDs ++
       Calc.Definition
         (stripLegalName moduleId (show (varName v)))
         (SLH.transSig moduleId Nothing (F.val locSpec))
-        (Calc.Reft (Calc.Var "imported" 0 Calc.Global))
+        (Calc.Reft (Calc.Var "imported" Nothing Calc.Global))
         False
     isFromModule modStr v = maybe False ((== modStr) . moduleNameString . moduleName) $ nameModule_maybe (varName v)
 
