@@ -208,7 +208,7 @@ Proof.
   destruct b1 as [b1 b1_p].
   destruct b2 as [b2 b2_p].
   let E := fresh "E" in destruct (b1 ==? SFTrue_u) as [|] eqn:E;
-  [refine SFFalse | refine (exist (λ (b2 : SFBool_u), SFBool_wf b2 ∧ True) b2 ltac:(solver))].
+  [refine (exist (λ (b2 : SFBool_u), SFBool_wf b2 ∧ True) b2 ltac:(solver)) | refine SFFalse].
 Defined.
 
 Definition andb3_spec (ds_d5U8 ds_d5U9 ds_d5Ua : SFBool): Type :=
@@ -491,17 +491,15 @@ Proof.
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ (andb_res : SFBool_u),
-               andb_rel ds_d5T7 ds_d5T8 andb_res
-               ∧ ∃ (andb_res_2 : SFBool_u), andb_rel ds_d5T8 ds_d5T7 andb_res_2 ∧ andb_res == andb_res_2)
+               ∃ (andb_res : SFBool_u), andb_rel SFFalse_u SFFalse_u andb_res ∧ andb_res == andb_res)
               (# unit)
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
                ∃ (andb_res : SFBool_u),
-               andb_rel ds_d5T7 ds_d5T8 andb_res
-               ∧ ∃ (andb_res_2 : SFBool_u), andb_rel ds_d5T8 ds_d5T7 andb_res_2 ∧ andb_res == andb_res_2)
+               andb_rel SFFalse_u SFTrue_u andb_res
+               ∧ ∃ (andb_res_2 : SFBool_u), andb_rel SFTrue_u SFFalse_u andb_res_2 ∧ andb_res == andb_res_2)
               (# unit)
               ltac:(solver)).
   - destruct ds_d5T8 as [|].
@@ -509,16 +507,13 @@ Proof.
               Unit
               (λ (VV : Unit),
                ∃ (andb_res : SFBool_u),
-               andb_rel ds_d5T7 ds_d5T8 andb_res
-               ∧ ∃ (andb_res_2 : SFBool_u), andb_rel ds_d5T8 ds_d5T7 andb_res_2 ∧ andb_res == andb_res_2)
+               andb_rel SFTrue_u SFFalse_u andb_res
+               ∧ ∃ (andb_res_2 : SFBool_u), andb_rel SFFalse_u SFTrue_u andb_res_2 ∧ andb_res == andb_res_2)
               (# unit)
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
-              (λ (VV : Unit),
-               ∃ (andb_res : SFBool_u),
-               andb_rel ds_d5T7 ds_d5T8 andb_res
-               ∧ ∃ (andb_res_2 : SFBool_u), andb_rel ds_d5T8 ds_d5T7 andb_res_2 ∧ andb_res == andb_res_2)
+              (λ (VV : Unit), ∃ (andb_res : SFBool_u), andb_rel SFTrue_u SFTrue_u andb_res ∧ andb_res == andb_res)
               (# unit)
               ltac:(solver)).
 Qed.
@@ -543,11 +538,11 @@ Proof.
   destruct ds_d5T6 as [ds_d5T6 ds_d5T6_p].
   destruct ds_d5T4 as [|].
   - destruct ds_d5T5 as [|].
-    + refine (subsumptionCast Unit (λ (VV : Unit), ds_d5T5 == SFTrue_u) (# unit) ltac:(solver)).
-    + refine (subsumptionCast Unit (λ (VV : Unit), ds_d5T5 == SFTrue_u) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), SFFalse_u == SFTrue_u) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), SFTrue_u == SFTrue_u) (# unit) ltac:(solver)).
   - destruct ds_d5T5 as [|].
-    + refine (subsumptionCast Unit (λ (VV : Unit), ds_d5T5 == SFTrue_u) (# unit) ltac:(solver)).
-    + refine (subsumptionCast Unit (λ (VV : Unit), ds_d5T5 == SFTrue_u) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), SFFalse_u == SFTrue_u) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), SFTrue_u == SFTrue_u) (# unit) ltac:(solver)).
 Qed.
 
 Definition identity_fn_applied_twice_spec
@@ -972,7 +967,7 @@ Definition negb' (b : SFBool): negb'_spec b.
 Proof.
   destruct b as [b b_p].
   let E := fresh "E" in destruct (b ==? SFTrue_u) as [|] eqn:E;
-  [refine SFTrue | refine SFFalse].
+  [refine SFFalse | refine SFTrue].
 Defined.
 
 Definition negb_involutive_spec (ds_d5T9 : SFBool): Type :=
@@ -990,16 +985,16 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (negb_res : SFBool_u),
-             negb_rel ds_d5T9 negb_res
-             ∧ ∃ (negb_res_2 : SFBool_u), negb_rel negb_res negb_res_2 ∧ negb_res_2 == ds_d5T9)
+             negb_rel SFFalse_u negb_res
+             ∧ ∃ (negb_res_2 : SFBool_u), negb_rel negb_res negb_res_2 ∧ negb_res_2 == SFFalse_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (negb_res : SFBool_u),
-             negb_rel ds_d5T9 negb_res
-             ∧ ∃ (negb_res_2 : SFBool_u), negb_rel negb_res negb_res_2 ∧ negb_res_2 == ds_d5T9)
+             negb_rel SFTrue_u negb_res
+             ∧ ∃ (negb_res_2 : SFBool_u), negb_rel negb_res negb_res_2 ∧ negb_res_2 == SFTrue_u)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -1153,11 +1148,11 @@ Proof.
   destruct ds_d5T2 as [ds_d5T2 ds_d5T2_p].
   destruct ds_d5T0 as [|].
   - destruct ds_d5T1 as [|].
-    + refine (subsumptionCast Unit (λ (VV : Unit), ds_d5T0 == ds_d5T1) (# unit) ltac:(solver)).
-    + refine (subsumptionCast Unit (λ (VV : Unit), ds_d5T0 == ds_d5T1) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), SFFalse_u == SFFalse_u) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), SFFalse_u == SFTrue_u) (# unit) ltac:(solver)).
   - destruct ds_d5T1 as [|].
-    + refine (subsumptionCast Unit (λ (VV : Unit), ds_d5T0 == ds_d5T1) (# unit) ltac:(solver)).
-    + refine (subsumptionCast Unit (λ (VV : Unit), ds_d5T0 == ds_d5T1) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), SFTrue_u == SFFalse_u) (# unit) ltac:(solver)).
+    + refine (subsumptionCast Unit (λ (VV : Unit), SFTrue_u == SFTrue_u) (# unit) ltac:(solver)).
 Qed.
 
 Definition test_orb1_spec : Type :=
@@ -1245,7 +1240,7 @@ Proof.
   destruct b1 as [b1 b1_p].
   destruct b2 as [b2 b2_p].
   let E := fresh "E" in destruct (b1 ==? SFTrue_u) as [|] eqn:E;
-  [refine (exist (λ (b2 : SFBool_u), SFBool_wf b2 ∧ True) b2 ltac:(solver)) | refine SFTrue].
+  [refine SFTrue | refine (exist (λ (b2 : SFBool_u), SFBool_wf b2 ∧ True) b2 ltac:(solver))].
 Defined.
 
 Inductive SFBit_u: Type :=
@@ -3132,12 +3127,12 @@ Proof.
   induction ds_d5Sa as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (minus_res : MyNat_u), minus_rel ds_d5Sa ds_d5Sa minus_res ∧ minus_res == O_u)
+            (λ (VV : Unit), ∃ (minus_res : MyNat_u), minus_rel O_u O_u minus_res ∧ minus_res == O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (minus_res : MyNat_u), minus_rel ds_d5Sa ds_d5Sa minus_res ∧ minus_res == O_u)
+            (λ (VV : Unit), ∃ (minus_res : MyNat_u), minus_rel (S_u n') (S_u n') minus_res ∧ minus_res == O_u)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -3315,12 +3310,12 @@ Proof.
   induction ds_d5Sb as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel ds_d5Sb O_u plus_res ∧ plus_res == ds_d5Sb)
+            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel O_u O_u plus_res ∧ plus_res == O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel ds_d5Sb O_u plus_res ∧ plus_res == ds_d5Sb)
+            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel (S_u n') O_u plus_res ∧ plus_res == S_u n')
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -3352,9 +3347,9 @@ Proof.
              ∃ (plus_res : MyNat_u),
              plus_rel ds_d5Td ds_d5Te plus_res
              ∧ ∃ (plus_res_2 : MyNat_u),
-               plus_rel ds_d5Tc plus_res plus_res_2
+               plus_rel O_u plus_res plus_res_2
                ∧ ∃ (plus_res_3 : MyNat_u),
-                 plus_rel ds_d5Tc ds_d5Td plus_res_3
+                 plus_rel O_u ds_d5Td plus_res_3
                  ∧ ∃ (plus_res_4 : MyNat_u), plus_rel plus_res_3 ds_d5Te plus_res_4 ∧ plus_res_2 == plus_res_4)
             (# unit)
             ltac:(solver)).
@@ -3364,9 +3359,9 @@ Proof.
              ∃ (plus_res : MyNat_u),
              plus_rel ds_d5Td ds_d5Te plus_res
              ∧ ∃ (plus_res_2 : MyNat_u),
-               plus_rel ds_d5Tc plus_res plus_res_2
+               plus_rel (S_u n') plus_res plus_res_2
                ∧ ∃ (plus_res_3 : MyNat_u),
-                 plus_rel ds_d5Tc ds_d5Td plus_res_3
+                 plus_rel (S_u n') ds_d5Td plus_res_3
                  ∧ ∃ (plus_res_4 : MyNat_u), plus_rel plus_res_3 ds_d5Te plus_res_4 ∧ plus_res_2 == plus_res_4)
             (IH_n'
              ltac:(try clear IH_n'; solver)
@@ -3394,16 +3389,16 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (plus_res : MyNat_u),
-             plus_rel ds_d5Tf (S_u ds_d5Tg) plus_res
-             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel ds_d5Tf ds_d5Tg plus_res_2 ∧ plus_res == S_u plus_res_2)
+             plus_rel O_u (S_u ds_d5Tg) plus_res
+             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel O_u ds_d5Tg plus_res_2 ∧ plus_res == S_u plus_res_2)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (plus_res : MyNat_u),
-             plus_rel ds_d5Tf (S_u ds_d5Tg) plus_res
-             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel ds_d5Tf ds_d5Tg plus_res_2 ∧ plus_res == S_u plus_res_2)
+             plus_rel (S_u n') (S_u ds_d5Tg) plus_res
+             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel (S_u n') ds_d5Tg plus_res_2 ∧ plus_res == S_u plus_res_2)
             (IH_n' ltac:(try clear IH_n'; solver) ds_d5Tg ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -3709,12 +3704,12 @@ Proof.
   induction ds_d5S9 as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel ds_d5S9 O_u mult_res ∧ mult_res == O_u)
+            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel O_u O_u mult_res ∧ mult_res == O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel ds_d5S9 O_u mult_res ∧ mult_res == O_u)
+            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel (S_u n') O_u mult_res ∧ mult_res == O_u)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -3745,12 +3740,12 @@ Proof.
   induction ds_d5Th as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel ds_d5Th O_u mult_res ∧ O_u == mult_res)
+            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel O_u O_u mult_res ∧ O_u == mult_res)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel ds_d5Th O_u mult_res ∧ O_u == mult_res)
+            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel (S_u n') O_u mult_res ∧ O_u == mult_res)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -3801,20 +3796,20 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (mult_res : MyNat_u),
-             mult_rel ds_d5TN ds_d5TO mult_res
+             mult_rel O_u ds_d5TO mult_res
              ∧ ∃ (plus_res : MyNat_u),
-               plus_rel mult_res ds_d5TN plus_res
-               ∧ ∃ (mult_res_2 : MyNat_u), mult_rel ds_d5TN (S_u ds_d5TO) mult_res_2 ∧ plus_res == mult_res_2)
+               plus_rel mult_res O_u plus_res
+               ∧ ∃ (mult_res_2 : MyNat_u), mult_rel O_u (S_u ds_d5TO) mult_res_2 ∧ plus_res == mult_res_2)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (mult_res : MyNat_u),
-             mult_rel ds_d5TN ds_d5TO mult_res
+             mult_rel (S_u n') ds_d5TO mult_res
              ∧ ∃ (plus_res : MyNat_u),
-               plus_rel mult_res ds_d5TN plus_res
-               ∧ ∃ (mult_res_2 : MyNat_u), mult_rel ds_d5TN (S_u ds_d5TO) mult_res_2 ∧ plus_res == mult_res_2)
+               plus_rel mult_res (S_u n') plus_res
+               ∧ ∃ (mult_res_2 : MyNat_u), mult_rel (S_u n') (S_u ds_d5TO) mult_res_2 ∧ plus_res == mult_res_2)
             (let _: ∃ (plus_res : MyNat_u),
                     plus_rel
                     ⌊ plus
@@ -3893,12 +3888,12 @@ Proof.
   destruct ds_d5Ta as [| ds_d5Tb].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel ds_d5Ta ⌊ one -⌋ plus_res ∧ plus_res ≠ O_u)
+            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel O_u ⌊ one -⌋ plus_res ∧ plus_res ≠ O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel ds_d5Ta ⌊ one -⌋ plus_res ∧ plus_res ≠ O_u)
+            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel (S_u ds_d5Tb) ⌊ one -⌋ plus_res ∧ plus_res ≠ O_u)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -3981,16 +3976,16 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (plus_res : MyNat_u),
-             plus_rel ds_d5S8 m plus_res
-             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel ds_d5S8 (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
+             plus_rel O_u m plus_res
+             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel O_u (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (plus_res : MyNat_u),
-             plus_rel ds_d5S8 m plus_res
-             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel ds_d5S8 (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
+             plus_rel (S_u n') m plus_res
+             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel (S_u n') (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
             (IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -4011,16 +4006,16 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (plus_res : MyNat_u),
-             plus_rel ds_d5Sc m plus_res
-             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m ds_d5Sc plus_res_2 ∧ plus_res == plus_res_2)
+             plus_rel O_u m plus_res
+             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m O_u plus_res_2 ∧ plus_res == plus_res_2)
             (add_0_r (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver)))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (plus_res : MyNat_u),
-             plus_rel ds_d5Sc m plus_res
-             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m ds_d5Sc plus_res_2 ∧ plus_res == plus_res_2)
+             plus_rel (S_u n') m plus_res
+             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m (S_u n') plus_res_2 ∧ plus_res == plus_res_2)
             (let _: ∃ (plus_res : MyNat_u),
                     plus_rel n' m plus_res
                     ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m n' plus_res_2 ∧ plus_res == plus_res_2 :=
@@ -4431,8 +4426,9 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (sndSF_res : MyNat_u),
-             sndSF_rel ds_d5S2 sndSF_res
-             ∧ ∃ (fstSF_res : MyNat_u), fstSF_rel ds_d5S2 fstSF_res ∧ ds_d5S2 == Pair_u fstSF_res sndSF_res)
+             sndSF_rel (Pair_u n m) sndSF_res
+             ∧ ∃ (fstSF_res : MyNat_u),
+               fstSF_rel (Pair_u n m) fstSF_res ∧ Pair_u n m == Pair_u fstSF_res sndSF_res)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -4700,7 +4696,7 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (plus_res : MyNat_u),
-             plus_rel ds_d5T3 ⌊ one -⌋ plus_res
+             plus_rel O_u ⌊ one -⌋ plus_res
              ∧ ∃ (eqb_res : SFBool_u), eqb_rel O_u plus_res eqb_res ∧ eqb_res == SFFalse_u)
             (# unit)
             ltac:(solver)).
@@ -4708,7 +4704,7 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (plus_res : MyNat_u),
-             plus_rel ds_d5T3 ⌊ one -⌋ plus_res
+             plus_rel (S_u n') ⌊ one -⌋ plus_res
              ∧ ∃ (eqb_res : SFBool_u), eqb_rel O_u plus_res eqb_res ∧ eqb_res == SFFalse_u)
             (# unit)
             ltac:(solver)).
@@ -5351,13 +5347,13 @@ Proof.
   destruct late_days as [late_days late_days_p].
   destruct g as [g g_p].
   let E := fresh "E" in destruct (late_days <? 9) as [|] eqn:E;
-  [let E := fresh "E" in destruct (late_days <? 17) as [|] eqn:E;
-   [let E := fresh "E" in destruct (late_days <? 21) as [|] eqn:E;
-    [refine (lower_grade
-             (lower_grade (lower_grade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver))))) |
-     refine (lower_grade (lower_grade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver))))] |
-    refine (lower_grade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver)))] |
-   refine (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver))].
+  [refine (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver)) |
+   let E := fresh "E" in destruct (late_days <? 17) as [|] eqn:E;
+   [refine (lower_grade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver))) |
+    let E := fresh "E" in destruct (late_days <? 21) as [|] eqn:E;
+    [refine (lower_grade (lower_grade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver)))) |
+     refine (lower_grade
+             (lower_grade (lower_grade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver)))))]]].
 Defined.
 
 Inductive apply_late_policy_rel: Z → Grades_u → Grades_u → Prop :=
@@ -5403,8 +5399,9 @@ Theorem apply_late_policy_rel_funct [late_days : Z] [g : Grades_u]:
   apply_late_policy_rel late_days g VV → (apply_late_policy_rel late_days g VV' → VV = VV').
 Proof.
   let E := fresh "E" in destruct (late_days <? 9) as [|] eqn:E;
-  [let E := fresh "E" in destruct (late_days <? 17) as [|] eqn:E;
-   [let E := fresh "E" in destruct (late_days <? 21) as [|] eqn:E |] |];
+  [ |
+   let E := fresh "E" in destruct (late_days <? 17) as [|] eqn:E;
+   [ | let E := fresh "E" in destruct (late_days <? 21) as [|] eqn:E]];
   rel_functionhood_body.
 Qed.
 
@@ -5453,11 +5450,11 @@ Proof.
   Opaque apply_late_policy.
   existence_lemma_pre apply_late_policy;
   let E := fresh "E" in destruct (late_days <? 9) as [|] eqn:E;
-  [let E := fresh "E" in destruct (late_days <? 17) as [|] eqn:E;
-   [let E := fresh "E" in destruct (late_days <? 21) as [|] eqn:E;
-    [fix_notations | fix_notations] |
-    fix_notations] |
-   fix_notations];
+  [fix_notations |
+   let E := fresh "E" in destruct (late_days <? 17) as [|] eqn:E;
+   [fix_notations |
+    let E := fresh "E" in destruct (late_days <? 21) as [|] eqn:E;
+    [fix_notations | fix_notations]]];
   simpl in *.
   Transparent apply_late_policy.
   all: (existence_lemma_quicksolve apply_late_policy; f__f_rel_ex_body; f_rel_finish).
@@ -5627,14 +5624,14 @@ Proof.
            (λ (VV : Unit),
             ∃ (apply_late_policy_res : Grades_u),
             apply_late_policy_rel late_days g apply_late_policy_res ∧ apply_late_policy_res == g)
-           (exist (λ (h : Unit), ltbZ_rel late_days 9 true) h ltac:(solver))
+           (# unit)
            ltac:(solver)) |
    refine (subsumptionCast
            Unit
            (λ (VV : Unit),
             ∃ (apply_late_policy_res : Grades_u),
             apply_late_policy_rel late_days g apply_late_policy_res ∧ apply_late_policy_res == g)
-           (# unit)
+           (exist (λ (h : Unit), ltbZ_rel late_days 9 true) h ltac:(solver))
            ltac:(solver))].
 Qed.
 
@@ -6476,35 +6473,35 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (letter_comparison_res : Comparison_u),
-             letter_comparison_rel ds_d5SL ds_d5SL letter_comparison_res ∧ letter_comparison_res == Eq_u)
+             letter_comparison_rel A_u A_u letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (letter_comparison_res : Comparison_u),
-             letter_comparison_rel ds_d5SL ds_d5SL letter_comparison_res ∧ letter_comparison_res == Eq_u)
+             letter_comparison_rel B_u B_u letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (letter_comparison_res : Comparison_u),
-             letter_comparison_rel ds_d5SL ds_d5SL letter_comparison_res ∧ letter_comparison_res == Eq_u)
+             letter_comparison_rel C_u C_u letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (letter_comparison_res : Comparison_u),
-             letter_comparison_rel ds_d5SL ds_d5SL letter_comparison_res ∧ letter_comparison_res == Eq_u)
+             letter_comparison_rel D_u D_u letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (letter_comparison_res : Comparison_u),
-             letter_comparison_rel ds_d5SL ds_d5SL letter_comparison_res ∧ letter_comparison_res == Eq_u)
+             letter_comparison_rel F_u F_u letter_comparison_res ∧ letter_comparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -6535,45 +6532,45 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (lower_letter_res : Letter_u),
-             lower_letter_rel l lower_letter_res
+             lower_letter_rel A_u lower_letter_res
              ∧ ∃ (letter_comparison_res : Comparison_u),
-               letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
+               letter_comparison_rel lower_letter_res A_u letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (lower_letter_res : Letter_u),
-             lower_letter_rel l lower_letter_res
+             lower_letter_rel B_u lower_letter_res
              ∧ ∃ (letter_comparison_res : Comparison_u),
-               letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
+               letter_comparison_rel lower_letter_res B_u letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (lower_letter_res : Letter_u),
-             lower_letter_rel l lower_letter_res
+             lower_letter_rel C_u lower_letter_res
              ∧ ∃ (letter_comparison_res : Comparison_u),
-               letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
+               letter_comparison_rel lower_letter_res C_u letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (lower_letter_res : Letter_u),
-             lower_letter_rel l lower_letter_res
+             lower_letter_rel D_u lower_letter_res
              ∧ ∃ (letter_comparison_res : Comparison_u),
-               letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
+               letter_comparison_rel lower_letter_res D_u letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (lower_letter_res : Letter_u),
-             lower_letter_rel l lower_letter_res
+             lower_letter_rel F_u lower_letter_res
              ∧ ∃ (letter_comparison_res : Comparison_u),
-               letter_comparison_rel lower_letter_res l letter_comparison_res ∧ letter_comparison_res == Lt_u)
+               letter_comparison_rel lower_letter_res F_u letter_comparison_res ∧ letter_comparison_res == Lt_u)
             (exist (λ (p : Unit),
                     ∃ (letter_comparison_res : Comparison_u),
                     letter_comparison_rel F_u F_u letter_comparison_res

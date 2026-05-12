@@ -235,13 +235,13 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (mappend_res : L_u),
-             mappend_rel ds_d3ZQ ys mappend_res
+             mappend_rel (C_u x xs) ys mappend_res
              ∧ ∃ (mappend_res_2 : L_u),
                mappend_rel mappend_res zs mappend_res_2
                ∧ ∃ (mappend_res_3 : L_u),
                  mappend_rel ys zs mappend_res_3
                  ∧ ∃ (mappend_res_4 : L_u),
-                   mappend_rel ds_d3ZQ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
+                   mappend_rel (C_u x xs) mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
             (IH_xs
              ltac:(try clear IH_xs; solver)
              ys
@@ -253,13 +253,13 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (mappend_res : L_u),
-             mappend_rel ds_d3ZQ ys mappend_res
+             mappend_rel Emp_u ys mappend_res
              ∧ ∃ (mappend_res_2 : L_u),
                mappend_rel mappend_res zs mappend_res_2
                ∧ ∃ (mappend_res_3 : L_u),
                  mappend_rel ys zs mappend_res_3
                  ∧ ∃ (mappend_res_4 : L_u),
-                   mappend_rel ds_d3ZQ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
+                   mappend_rel Emp_u mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -302,13 +302,13 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ (mappend_res : L_u), mappend_rel ds_d3ZR ⌊ mempty -⌋ mappend_res ∧ mappend_res == ds_d3ZR)
+             ∃ (mappend_res : L_u), mappend_rel (C_u x xs) ⌊ mempty -⌋ mappend_res ∧ mappend_res == C_u x xs)
             (IH_xs ltac:(try clear IH_xs; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ (mappend_res : L_u), mappend_rel ds_d3ZR ⌊ mempty -⌋ mappend_res ∧ mappend_res == ds_d3ZR)
+             ∃ (mappend_res : L_u), mappend_rel Emp_u ⌊ mempty -⌋ mappend_res ∧ mappend_res == Emp_u)
             (# unit)
             ltac:(solver)).
 Qed.

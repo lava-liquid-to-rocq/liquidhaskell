@@ -232,8 +232,8 @@ Proof.
   destruct i' as [i' i'_p].
   try revert i'_p; generalize dependent i'; induction ds_d4QY as [x xs' IH_xs'|]; intros.
   - let E := fresh "E" in destruct (i' ==? 0) as [|] eqn:E;
-    [refine (IH_xs' ltac:(try clear IH_xs'; solver) (i' - 1) ltac:(try clear IH_xs'; solver)) |
-     refine (exist (λ (n : Z), ltbZ_rel 5 n true) x ltac:(solver))].
+    [refine (exist (λ (n : Z), ltbZ_rel 5 n true) x ltac:(solver)) |
+     refine (IH_xs' ltac:(try clear IH_xs'; solver) (i' - 1) ltac:(try clear IH_xs'; solver))].
   - intros; exfalso; solver.
 Defined.
 
@@ -286,13 +286,13 @@ Proof.
   existence_lemma_pre get;
   try revert i'_p; generalize dependent i'; induction ds_d4QY as [x xs' IH_xs'|]; intros;
   [let E := fresh "E" in destruct (i' ==? 0) as [|] eqn:E;
-   [fix_notations;
+   [fix_notations |
+    fix_notations;
     pose proof (IH_xs'
                 ltac:(try clear IH_xs'; solver)
                 (i' - 1)
                 ltac:(try clear IH_xs'; solver)) as IH_21013558;
-    try clear IH_xs' |
-    fix_notations] |];
+    try clear IH_xs'] |];
   simpl in *.
   Transparent get.
   all: (existence_lemma_quicksolve get; f__f_rel_ex_body; f_rel_finish).

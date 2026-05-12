@@ -283,9 +283,9 @@ Proof.
              ∃ (add_res : Nats_u),
              add_rel ds_d4mC ds_d4mD add_res
              ∧ ∃ (add_res_2 : Nats_u),
-               add_rel ds_d4mB add_res add_res_2
+               add_rel (Suc_u m) add_res add_res_2
                ∧ ∃ (add_res_3 : Nats_u),
-                 add_rel ds_d4mB ds_d4mC add_res_3
+                 add_rel (Suc_u m) ds_d4mC add_res_3
                  ∧ ∃ (add_res_4 : Nats_u), add_rel add_res_3 ds_d4mD add_res_4 ∧ add_res_2 == add_res_4)
             (IH_m
              ltac:(try clear IH_m; solver)
@@ -300,9 +300,9 @@ Proof.
              ∃ (add_res : Nats_u),
              add_rel ds_d4mC ds_d4mD add_res
              ∧ ∃ (add_res_2 : Nats_u),
-               add_rel ds_d4mB add_res add_res_2
+               add_rel Zero_u add_res add_res_2
                ∧ ∃ (add_res_3 : Nats_u),
-                 add_rel ds_d4mB ds_d4mC add_res_3
+                 add_rel Zero_u ds_d4mC add_res_3
                  ∧ ∃ (add_res_4 : Nats_u), add_rel add_res_3 ds_d4mD add_res_4 ∧ add_res_2 == add_res_4)
             (# unit)
             ltac:(solver)).
@@ -325,16 +325,16 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (add_res : Nats_u),
-             add_rel ds_d4mq ds_d4mr add_res
-             ∧ ∃ (add_res_2 : Nats_u), add_rel ds_d4mq (Suc_u ds_d4mr) add_res_2 ∧ Suc_u add_res == add_res_2)
+             add_rel (Suc_u m) ds_d4mr add_res
+             ∧ ∃ (add_res_2 : Nats_u), add_rel (Suc_u m) (Suc_u ds_d4mr) add_res_2 ∧ Suc_u add_res == add_res_2)
             (IH_m ltac:(try clear IH_m; solver) ds_d4mr ltac:(try clear IH_m; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (add_res : Nats_u),
-             add_rel ds_d4mq ds_d4mr add_res
-             ∧ ∃ (add_res_2 : Nats_u), add_rel ds_d4mq (Suc_u ds_d4mr) add_res_2 ∧ Suc_u add_res == add_res_2)
+             add_rel Zero_u ds_d4mr add_res
+             ∧ ∃ (add_res_2 : Nats_u), add_rel Zero_u (Suc_u ds_d4mr) add_res_2 ∧ Suc_u add_res == add_res_2)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -350,12 +350,12 @@ Proof.
   induction ds_d4mE as [n IH_n|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel Zero_u ds_d4mE add_res ∧ add_res == ds_d4mE)
+            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel Zero_u (Suc_u n) add_res ∧ add_res == Suc_u n)
             (IH_n ltac:(try clear IH_n; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel Zero_u ds_d4mE add_res ∧ add_res == ds_d4mE)
+            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel Zero_u Zero_u add_res ∧ add_res == Zero_u)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -388,12 +388,12 @@ Proof.
   induction ds_d4ms as [n IH_n|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel ds_d4ms Zero_u add_res ∧ add_res == ds_d4ms)
+            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel (Suc_u n) Zero_u add_res ∧ add_res == Suc_u n)
             (IH_n ltac:(try clear IH_n; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel ds_d4ms Zero_u add_res ∧ add_res == ds_d4ms)
+            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel Zero_u Zero_u add_res ∧ add_res == Zero_u)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -957,13 +957,13 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (add_res : Nats_u),
-             add_rel ds_d4mL ds_d4mM add_res
+             add_rel (Suc_u m) ds_d4mM add_res
              ∧ ∃ (mult_res : Nats_u),
                mult_rel add_res ds_d4mN mult_res
                ∧ ∃ (mult_res_2 : Nats_u),
                  mult_rel ds_d4mM ds_d4mN mult_res_2
                  ∧ ∃ (mult_res_3 : Nats_u),
-                   mult_rel ds_d4mL ds_d4mN mult_res_3
+                   mult_rel (Suc_u m) ds_d4mN mult_res_3
                    ∧ ∃ (add_res_2 : Nats_u), add_rel mult_res_3 mult_res_2 add_res_2 ∧ mult_res == add_res_2)
             (let _: ∃ (add_res : Nats_u),
                     add_rel
@@ -1010,13 +1010,13 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (add_res : Nats_u),
-             add_rel ds_d4mL ds_d4mM add_res
+             add_rel Zero_u ds_d4mM add_res
              ∧ ∃ (mult_res : Nats_u),
                mult_rel add_res ds_d4mN mult_res
                ∧ ∃ (mult_res_2 : Nats_u),
                  mult_rel ds_d4mM ds_d4mN mult_res_2
                  ∧ ∃ (mult_res_3 : Nats_u),
-                   mult_rel ds_d4mL ds_d4mN mult_res_3
+                   mult_rel Zero_u ds_d4mN mult_res_3
                    ∧ ∃ (add_res_2 : Nats_u), add_rel mult_res_3 mult_res_2 add_res_2 ∧ mult_res == add_res_2)
             (# unit)
             ltac:(solver)).
@@ -1053,19 +1053,19 @@ Proof.
   - destruct ds_d4m0 as [n|].
     + refine (subsumptionCast
               Nats_u
-              (λ (o : Nats_u), Nats_wf o ∧ (o ≠ Zero_u ↔ ds_d4lZ ≠ ds_d4m0))
+              (λ (o : Nats_u), Nats_wf o ∧ (o ≠ Zero_u ↔ Suc_u m ≠ Suc_u n))
               (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver))
               ltac:(solver)).
     + refine (subsumptionCast
               Nats_u
-              (λ (o : Nats_u), Nats_wf o ∧ (o ≠ Zero_u ↔ ds_d4lZ ≠ ds_d4m0))
+              (λ (o : Nats_u), Nats_wf o ∧ (o ≠ Zero_u ↔ Suc_u m ≠ Zero_u))
               (Suc (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver)))
               ltac:(solver)).
   - destruct ds_d4m0 as [lq_anf7205759403792810483|].
     + intros; exfalso; solver.
     + refine (subsumptionCast
               Nats_u
-              (λ (o : Nats_u), Nats_wf o ∧ (o ≠ Zero_u ↔ ds_d4lZ ≠ ds_d4m0))
+              (λ (o : Nats_u), Nats_wf o ∧ (o ≠ Zero_u ↔ Zero_u ≠ Zero_u))
               Zero
               ltac:(solver)).
 Defined.
@@ -1272,8 +1272,9 @@ Proof.
               Unit
               (λ (VV : Unit),
                ∃ (add_res : Nats_u),
-               add_rel ds_d4mt ds_d4mu add_res
-               ∧ ∃ (sub_res : Nats_u), sub_rel add_res ds_d4mu sub_res ∧ sub_res == ds_d4mt)
+               add_rel (Suc_u m) (Suc_u lq_anf7205759403792810453) add_res
+               ∧ ∃ (sub_res : Nats_u),
+                 sub_rel add_res (Suc_u lq_anf7205759403792810453) sub_res ∧ sub_res == Suc_u m)
               (let _: ∃ (add_res : Nats_u),
                       add_rel (Suc_u m) lq_anf7205759403792810453 add_res
                       ∧ ∃ (sub_res : Nats_u), sub_rel add_res lq_anf7205759403792810453 sub_res ∧ sub_res == Suc_u m :=
@@ -1286,8 +1287,8 @@ Proof.
               Unit
               (λ (VV : Unit),
                ∃ (add_res : Nats_u),
-               add_rel ds_d4mt ds_d4mu add_res
-               ∧ ∃ (sub_res : Nats_u), sub_rel add_res ds_d4mu sub_res ∧ sub_res == ds_d4mt)
+               add_rel (Suc_u m) Zero_u add_res
+               ∧ ∃ (sub_res : Nats_u), sub_rel add_res Zero_u sub_res ∧ sub_res == Suc_u m)
               (add_zero_r (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver)))
               ltac:(solver)).
   - induction ds_d4mu as [lq_anf7205759403792810445 IH_lq_anf7205759403792810445|].
@@ -1295,8 +1296,9 @@ Proof.
               Unit
               (λ (VV : Unit),
                ∃ (add_res : Nats_u),
-               add_rel ds_d4mt ds_d4mu add_res
-               ∧ ∃ (sub_res : Nats_u), sub_rel add_res ds_d4mu sub_res ∧ sub_res == ds_d4mt)
+               add_rel Zero_u (Suc_u lq_anf7205759403792810445) add_res
+               ∧ ∃ (sub_res : Nats_u),
+                 sub_rel add_res (Suc_u lq_anf7205759403792810445) sub_res ∧ sub_res == Zero_u)
               (let _: ∃ (add_res : Nats_u),
                       add_rel Zero_u lq_anf7205759403792810445 add_res
                       ∧ ∃ (sub_res : Nats_u), sub_rel add_res lq_anf7205759403792810445 sub_res ∧ sub_res == Zero_u :=
@@ -1307,8 +1309,8 @@ Proof.
               Unit
               (λ (VV : Unit),
                ∃ (add_res : Nats_u),
-               add_rel ds_d4mt ds_d4mu add_res
-               ∧ ∃ (sub_res : Nats_u), sub_rel add_res ds_d4mu sub_res ∧ sub_res == ds_d4mt)
+               add_rel Zero_u Zero_u add_res
+               ∧ ∃ (sub_res : Nats_u), sub_rel add_res Zero_u sub_res ∧ sub_res == Zero_u)
               (# unit)
               ltac:(solver)).
 Qed.
@@ -1328,22 +1330,22 @@ Proof.
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ (eqN_res : bool), eqN_rel ds_d4lT ds_d4lU eqN_res ∧ is_true eqN_res
-               → ∃ (sub_res : Nats_u), sub_rel ds_d4lT ds_d4lU sub_res ∧ sub_res == Zero_u)
+               ∃ (eqN_res : bool), eqN_rel (Suc_u m) (Suc_u n) eqN_res ∧ is_true eqN_res
+               → ∃ (sub_res : Nats_u), sub_rel (Suc_u m) (Suc_u n) sub_res ∧ sub_res == Zero_u)
               (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver))
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ (eqN_res : bool), eqN_rel ds_d4lT ds_d4lU eqN_res ∧ is_true eqN_res
-               → ∃ (sub_res : Nats_u), sub_rel ds_d4lT ds_d4lU sub_res ∧ sub_res == Zero_u)
+               ∃ (eqN_res : bool), eqN_rel (Suc_u m) Zero_u eqN_res ∧ is_true eqN_res
+               → ∃ (sub_res : Nats_u), sub_rel (Suc_u m) Zero_u sub_res ∧ sub_res == Zero_u)
               (# unit)
               ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ (eqN_res : bool), eqN_rel ds_d4lT ds_d4lU eqN_res ∧ is_true eqN_res
-             → ∃ (sub_res : Nats_u), sub_rel ds_d4lT ds_d4lU sub_res ∧ sub_res == Zero_u)
+             ∃ (eqN_res : bool), eqN_rel Zero_u ds_d4lU eqN_res ∧ is_true eqN_res
+             → ∃ (sub_res : Nats_u), sub_rel Zero_u ds_d4lU sub_res ∧ sub_res == Zero_u)
             (# unit)
             ltac:(solver)).
 Qed.

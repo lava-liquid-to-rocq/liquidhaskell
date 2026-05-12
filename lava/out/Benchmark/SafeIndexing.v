@@ -237,7 +237,7 @@ Proof.
              ∧ ∃ (llen_res : Z),
                llen_rel v llen_res
                ∧ ∃ (llen_res_2 : Z),
-                 llen_rel ds_d4Wj llen_res_2
+                 llen_rel (Cons_u x xs) llen_res_2
                  ∧ ∃ (llen_res_3 : Z),
                    llen_rel ys llen_res_3
                    ∧ ∃ (addZ_res : Z), addZ_rel llen_res_2 llen_res_3 addZ_res ∧ llen_res == addZ_res)
@@ -256,7 +256,7 @@ Proof.
              ∧ ∃ (llen_res : Z),
                llen_rel v llen_res
                ∧ ∃ (llen_res_2 : Z),
-                 llen_rel ds_d4Wj llen_res_2
+                 llen_rel Nil_u llen_res_2
                  ∧ ∃ (llen_res_3 : Z),
                    llen_rel ys llen_res_3
                    ∧ ∃ (addZ_res : Z), addZ_rel llen_res_2 llen_res_3 addZ_res ∧ llen_res == addZ_res)
@@ -426,8 +426,8 @@ Proof.
   destruct i' as [i' i'_p].
   try revert i'_p; generalize dependent i'; induction ds_d4Wo as [x xs' IH_xs'|]; intros.
   - let E := fresh "E" in destruct (i' ==? 0) as [|] eqn:E;
-    [refine (IH_xs' ltac:(try clear IH_xs'; solver) (i' - 1) ltac:(try clear IH_xs'; solver)) |
-     refine (exist (λ (n : Z), ltbZ_rel 5 n true) x ltac:(solver))].
+    [refine (exist (λ (n : Z), ltbZ_rel 5 n true) x ltac:(solver)) |
+     refine (IH_xs' ltac:(try clear IH_xs'; solver) (i' - 1) ltac:(try clear IH_xs'; solver))].
   - intros; exfalso; solver.
 Defined.
 
@@ -480,13 +480,13 @@ Proof.
   existence_lemma_pre get;
   try revert i'_p; generalize dependent i'; induction ds_d4Wo as [x xs' IH_xs'|]; intros;
   [let E := fresh "E" in destruct (i' ==? 0) as [|] eqn:E;
-   [fix_notations;
+   [fix_notations |
+    fix_notations;
     pose proof (IH_xs'
                 ltac:(try clear IH_xs'; solver)
                 (i' - 1)
                 ltac:(try clear IH_xs'; solver)) as IH_21013558;
-    try clear IH_xs' |
-    fix_notations] |];
+    try clear IH_xs'] |];
   simpl in *.
   Transparent get.
   all: (existence_lemma_quicksolve get; f__f_rel_ex_body; f_rel_finish).
@@ -677,11 +677,11 @@ Proof.
              ∃ (get_res : Z),
              get_rel ds_d4Wt ds_d4Wv get_res
              ∧ ∃ (llen_res : Z),
-               llen_rel ds_d4Wu llen_res
+               llen_rel (Cons_u y ys) llen_res
                ∧ ∃ (addZ_res : Z),
                  addZ_rel ds_d4Wv llen_res addZ_res
                  ∧ ∃ (append_res : IList_u),
-                   append_rel ds_d4Wu ds_d4Wt append_res
+                   append_rel (Cons_u y ys) ds_d4Wt append_res
                    ∧ ∃ (get_res_2 : Z), get_rel append_res addZ_res get_res_2 ∧ get_res == get_res_2)
             (let _: ∃ (get_res : Z),
                     get_rel
@@ -751,11 +751,11 @@ Proof.
              ∃ (get_res : Z),
              get_rel ds_d4Wt ds_d4Wv get_res
              ∧ ∃ (llen_res : Z),
-               llen_rel ds_d4Wu llen_res
+               llen_rel Nil_u llen_res
                ∧ ∃ (addZ_res : Z),
                  addZ_rel ds_d4Wv llen_res addZ_res
                  ∧ ∃ (append_res : IList_u),
-                   append_rel ds_d4Wu ds_d4Wt append_res
+                   append_rel Nil_u ds_d4Wt append_res
                    ∧ ∃ (get_res_2 : Z), get_rel append_res addZ_res get_res_2 ∧ get_res == get_res_2)
             (# unit)
             ltac:(solver)).

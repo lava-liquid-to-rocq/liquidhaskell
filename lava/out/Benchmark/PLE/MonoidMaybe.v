@@ -235,13 +235,13 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (mappend_res : MaybeInt_u),
-             mappend_rel ds_d48D y mappend_res
+             mappend_rel (Just_u x) y mappend_res
              ∧ ∃ (mappend_res_2 : MaybeInt_u),
                mappend_rel mappend_res z mappend_res_2
                ∧ ∃ (mappend_res_3 : MaybeInt_u),
                  mappend_rel y z mappend_res_3
                  ∧ ∃ (mappend_res_4 : MaybeInt_u),
-                   mappend_rel ds_d48D mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
+                   mappend_rel (Just_u x) mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
             (# unit)
             ltac:(solver)).
   - destruct y as [y|].
@@ -249,26 +249,26 @@ Proof.
               Unit
               (λ (VV : Unit),
                ∃ (mappend_res : MaybeInt_u),
-               mappend_rel ds_d48D y mappend_res
+               mappend_rel Nothing_u (Just_u y) mappend_res
                ∧ ∃ (mappend_res_2 : MaybeInt_u),
                  mappend_rel mappend_res z mappend_res_2
                  ∧ ∃ (mappend_res_3 : MaybeInt_u),
-                   mappend_rel y z mappend_res_3
+                   mappend_rel (Just_u y) z mappend_res_3
                    ∧ ∃ (mappend_res_4 : MaybeInt_u),
-                     mappend_rel ds_d48D mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
+                     mappend_rel Nothing_u mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
               (# unit)
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
                ∃ (mappend_res : MaybeInt_u),
-               mappend_rel ds_d48D y mappend_res
+               mappend_rel Nothing_u Nothing_u mappend_res
                ∧ ∃ (mappend_res_2 : MaybeInt_u),
                  mappend_rel mappend_res z mappend_res_2
                  ∧ ∃ (mappend_res_3 : MaybeInt_u),
-                   mappend_rel y z mappend_res_3
+                   mappend_rel Nothing_u z mappend_res_3
                    ∧ ∃ (mappend_res_4 : MaybeInt_u),
-                     mappend_rel ds_d48D mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
+                     mappend_rel Nothing_u mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
               (# unit)
               ltac:(solver)).
 Qed.
@@ -313,13 +313,15 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ (mappend_res : MaybeInt_u), mappend_rel ds_d48E ⌊ mempty -⌋ mappend_res ∧ mappend_res == ds_d48E)
+             ∃ (mappend_res : MaybeInt_u),
+             mappend_rel (Just_u x) ⌊ mempty -⌋ mappend_res ∧ mappend_res == Just_u x)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ (mappend_res : MaybeInt_u), mappend_rel ds_d48E ⌊ mempty -⌋ mappend_res ∧ mappend_res == ds_d48E)
+             ∃ (mappend_res : MaybeInt_u),
+             mappend_rel Nothing_u ⌊ mempty -⌋ mappend_res ∧ mappend_res == Nothing_u)
             (# unit)
             ltac:(solver)).
 Qed.

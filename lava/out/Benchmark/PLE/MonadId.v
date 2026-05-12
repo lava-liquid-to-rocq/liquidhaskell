@@ -391,7 +391,8 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ (compose_res : Identity_u), compose_rel ds_d3B9 retrn_upack compose_res ∧ compose_res == ds_d3B9)
+             ∃ (compose_res : Identity_u),
+             compose_rel (Val_u x) retrn_upack compose_res ∧ compose_res == Val_u x)
             (# unit)
             ltac:(solver)).
 Qed.

@@ -19,16 +19,16 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (plus_res : MyNat_u),
-             plus_rel ds_d9ag m plus_res
-             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel ds_d9ag (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
+             plus_rel O_u m plus_res
+             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel O_u (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (plus_res : MyNat_u),
-             plus_rel ds_d9ag m plus_res
-             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel ds_d9ag (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
+             plus_rel (S_u n') m plus_res
+             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel (S_u n') (S_u m) plus_res_2 ∧ S_u plus_res == plus_res_2)
             (IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -44,12 +44,12 @@ Proof.
   induction ds_d9ah as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel ds_d9ah O_u mult_res ∧ mult_res == O_u)
+            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel O_u O_u mult_res ∧ mult_res == O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel ds_d9ah O_u mult_res ∧ mult_res == O_u)
+            (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel (S_u n') O_u mult_res ∧ mult_res == O_u)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -65,12 +65,12 @@ Proof.
   induction ds_d9ai as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (minus_res : MyNat_u), minus_rel ds_d9ai ds_d9ai minus_res ∧ minus_res == O_u)
+            (λ (VV : Unit), ∃ (minus_res : MyNat_u), minus_rel O_u O_u minus_res ∧ minus_res == O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (minus_res : MyNat_u), minus_rel ds_d9ai ds_d9ai minus_res ∧ minus_res == O_u)
+            (λ (VV : Unit), ∃ (minus_res : MyNat_u), minus_rel (S_u n') (S_u n') minus_res ∧ minus_res == O_u)
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -86,12 +86,12 @@ Proof.
   induction ds_d9aj as [| n' IH_n'].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel ds_d9aj O_u plus_res ∧ plus_res == ds_d9aj)
+            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel O_u O_u plus_res ∧ plus_res == O_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel ds_d9aj O_u plus_res ∧ plus_res == ds_d9aj)
+            (λ (VV : Unit), ∃ (plus_res : MyNat_u), plus_rel (S_u n') O_u plus_res ∧ plus_res == S_u n')
             (IH_n' ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
@@ -112,16 +112,16 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (plus_res : MyNat_u),
-             plus_rel ds_d9ak m plus_res
-             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m ds_d9ak plus_res_2 ∧ plus_res == plus_res_2)
+             plus_rel O_u m plus_res
+             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m O_u plus_res_2 ∧ plus_res == plus_res_2)
             (add_0_r (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver)))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (plus_res : MyNat_u),
-             plus_rel ds_d9ak m plus_res
-             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m ds_d9ak plus_res_2 ∧ plus_res == plus_res_2)
+             plus_rel (S_u n') m plus_res
+             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m (S_u n') plus_res_2 ∧ plus_res == plus_res_2)
             (let _: ∃ (plus_res : MyNat_u),
                     plus_rel n' m plus_res
                     ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m n' plus_res_2 ∧ plus_res == plus_res_2 :=

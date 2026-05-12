@@ -417,12 +417,13 @@ Proof.
   induction ds_d3Ip as [x xs IH_xs|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (append_res : L_u), append_rel ds_d3Ip Emp_u append_res ∧ append_res == ds_d3Ip)
+            (λ (VV : Unit),
+             ∃ (append_res : L_u), append_rel (C_u x xs) Emp_u append_res ∧ append_res == C_u x xs)
             (IH_xs ltac:(try clear IH_xs; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (append_res : L_u), append_rel ds_d3Ip Emp_u append_res ∧ append_res == ds_d3Ip)
+            (λ (VV : Unit), ∃ (append_res : L_u), append_rel Emp_u Emp_u append_res ∧ append_res == Emp_u)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -581,12 +582,12 @@ Proof.
   induction ds_d3Iq as [x xs IH_xs|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (bind_res : L_u), bind_rel ds_d3Iq retrn_upack bind_res ∧ bind_res == ds_d3Iq)
+            (λ (VV : Unit), ∃ (bind_res : L_u), bind_rel (C_u x xs) retrn_upack bind_res ∧ bind_res == C_u x xs)
             (IH_xs ltac:(try clear IH_xs; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (bind_res : L_u), bind_rel ds_d3Iq retrn_upack bind_res ∧ bind_res == ds_d3Iq)
+            (λ (VV : Unit), ∃ (bind_res : L_u), bind_rel Emp_u retrn_upack bind_res ∧ bind_res == Emp_u)
             (# unit)
             ltac:(solver)).
 Qed.

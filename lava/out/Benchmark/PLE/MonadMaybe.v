@@ -425,13 +425,13 @@ Proof.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ (bind_res : MaybeInt_u), bind_rel ds_d3S6 retrn_upack bind_res ∧ bind_res == ds_d3S6)
+             ∃ (bind_res : MaybeInt_u), bind_rel (Just_u x) retrn_upack bind_res ∧ bind_res == Just_u x)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ (bind_res : MaybeInt_u), bind_rel ds_d3S6 retrn_upack bind_res ∧ bind_res == ds_d3S6)
+             ∃ (bind_res : MaybeInt_u), bind_rel Nothing_u retrn_upack bind_res ∧ bind_res == Nothing_u)
             (# unit)
             ltac:(solver)).
 Qed.

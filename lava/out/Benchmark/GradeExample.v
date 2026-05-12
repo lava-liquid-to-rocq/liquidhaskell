@@ -640,13 +640,13 @@ Proof.
   destruct lateDays as [lateDays lateDays_p].
   destruct g as [g g_p].
   let E := fresh "E" in destruct (lateDays <? 9) as [|] eqn:E;
-  [let E := fresh "E" in destruct (lateDays <? 17) as [|] eqn:E;
-   [let E := fresh "E" in destruct (lateDays <? 21) as [|] eqn:E;
-    [refine (lowerGrade
-             (lowerGrade (lowerGrade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver))))) |
-     refine (lowerGrade (lowerGrade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver))))] |
-    refine (lowerGrade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver)))] |
-   refine (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver))].
+  [refine (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver)) |
+   let E := fresh "E" in destruct (lateDays <? 17) as [|] eqn:E;
+   [refine (lowerGrade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver))) |
+    let E := fresh "E" in destruct (lateDays <? 21) as [|] eqn:E;
+    [refine (lowerGrade (lowerGrade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver)))) |
+     refine (lowerGrade
+             (lowerGrade (lowerGrade (exist (λ (g : Grades_u), Grades_wf g ∧ True) g ltac:(solver)))))]]].
 Defined.
 
 Inductive applyLatePolicy_rel: Z → Grades_u → Grades_u → Prop :=
@@ -691,8 +691,9 @@ Theorem applyLatePolicy_rel_funct [lateDays : Z] [g : Grades_u]:
   applyLatePolicy_rel lateDays g VV → (applyLatePolicy_rel lateDays g VV' → VV = VV').
 Proof.
   let E := fresh "E" in destruct (lateDays <? 9) as [|] eqn:E;
-  [let E := fresh "E" in destruct (lateDays <? 17) as [|] eqn:E;
-   [let E := fresh "E" in destruct (lateDays <? 21) as [|] eqn:E |] |];
+  [ |
+   let E := fresh "E" in destruct (lateDays <? 17) as [|] eqn:E;
+   [ | let E := fresh "E" in destruct (lateDays <? 21) as [|] eqn:E]];
   rel_functionhood_body.
 Qed.
 
@@ -737,11 +738,11 @@ Proof.
   Opaque applyLatePolicy.
   existence_lemma_pre applyLatePolicy;
   let E := fresh "E" in destruct (lateDays <? 9) as [|] eqn:E;
-  [let E := fresh "E" in destruct (lateDays <? 17) as [|] eqn:E;
-   [let E := fresh "E" in destruct (lateDays <? 21) as [|] eqn:E;
-    [fix_notations | fix_notations] |
-    fix_notations] |
-   fix_notations];
+  [fix_notations |
+   let E := fresh "E" in destruct (lateDays <? 17) as [|] eqn:E;
+   [fix_notations |
+    let E := fresh "E" in destruct (lateDays <? 21) as [|] eqn:E;
+    [fix_notations | fix_notations]]];
   simpl in *.
   Transparent applyLatePolicy.
   all: (existence_lemma_quicksolve applyLatePolicy; f__f_rel_ex_body; f_rel_finish).
@@ -907,14 +908,14 @@ Proof.
            (λ (VV : Unit),
             ∃ (applyLatePolicy_res : Grades_u),
             applyLatePolicy_rel lateDays g applyLatePolicy_res ∧ applyLatePolicy_res == g)
-           (exist (λ (h : Unit), ltbZ_rel lateDays 9 true) h ltac:(solver))
+           (# unit)
            ltac:(solver)) |
    refine (subsumptionCast
            Unit
            (λ (VV : Unit),
             ∃ (applyLatePolicy_res : Grades_u),
             applyLatePolicy_rel lateDays g applyLatePolicy_res ∧ applyLatePolicy_res == g)
-           (# unit)
+           (exist (λ (h : Unit), ltbZ_rel lateDays 9 true) h ltac:(solver))
            ltac:(solver))].
 Qed.
 
@@ -1414,35 +1415,35 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (letterComparison_res : Comparison_u),
-             letterComparison_rel ds_d15C ds_d15C letterComparison_res ∧ letterComparison_res == Eq_u)
+             letterComparison_rel A_u A_u letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (letterComparison_res : Comparison_u),
-             letterComparison_rel ds_d15C ds_d15C letterComparison_res ∧ letterComparison_res == Eq_u)
+             letterComparison_rel B_u B_u letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (letterComparison_res : Comparison_u),
-             letterComparison_rel ds_d15C ds_d15C letterComparison_res ∧ letterComparison_res == Eq_u)
+             letterComparison_rel C_u C_u letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (letterComparison_res : Comparison_u),
-             letterComparison_rel ds_d15C ds_d15C letterComparison_res ∧ letterComparison_res == Eq_u)
+             letterComparison_rel D_u D_u letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (letterComparison_res : Comparison_u),
-             letterComparison_rel ds_d15C ds_d15C letterComparison_res ∧ letterComparison_res == Eq_u)
+             letterComparison_rel F_u F_u letterComparison_res ∧ letterComparison_res == Eq_u)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -1472,45 +1473,45 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (lowerLetter_res : Letter_u),
-             lowerLetter_rel l lowerLetter_res
+             lowerLetter_rel A_u lowerLetter_res
              ∧ ∃ (letterComparison_res : Comparison_u),
-               letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
+               letterComparison_rel lowerLetter_res A_u letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (lowerLetter_res : Letter_u),
-             lowerLetter_rel l lowerLetter_res
+             lowerLetter_rel B_u lowerLetter_res
              ∧ ∃ (letterComparison_res : Comparison_u),
-               letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
+               letterComparison_rel lowerLetter_res B_u letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (lowerLetter_res : Letter_u),
-             lowerLetter_rel l lowerLetter_res
+             lowerLetter_rel C_u lowerLetter_res
              ∧ ∃ (letterComparison_res : Comparison_u),
-               letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
+               letterComparison_rel lowerLetter_res C_u letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (lowerLetter_res : Letter_u),
-             lowerLetter_rel l lowerLetter_res
+             lowerLetter_rel D_u lowerLetter_res
              ∧ ∃ (letterComparison_res : Comparison_u),
-               letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
+               letterComparison_rel lowerLetter_res D_u letterComparison_res ∧ letterComparison_res == Lt_u)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (lowerLetter_res : Letter_u),
-             lowerLetter_rel l lowerLetter_res
+             lowerLetter_rel F_u lowerLetter_res
              ∧ ∃ (letterComparison_res : Comparison_u),
-               letterComparison_rel lowerLetter_res l letterComparison_res ∧ letterComparison_res == Lt_u)
+               letterComparison_rel lowerLetter_res F_u letterComparison_res ∧ letterComparison_res == Lt_u)
             (exist (λ (p : Unit),
                     ∃ (letterComparison_res : Comparison_u),
                     letterComparison_rel F_u F_u letterComparison_res ∧ letterComparison_res == Lt_u) p ltac:(solver))

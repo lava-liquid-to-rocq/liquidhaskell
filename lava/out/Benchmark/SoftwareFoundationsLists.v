@@ -329,8 +329,9 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (sndSF_res : MyNat_u),
-             sndSF_rel ds_d9fP sndSF_res
-             ∧ ∃ (fstSF_res : MyNat_u), fstSF_rel ds_d9fP fstSF_res ∧ ds_d9fP == Pair_u fstSF_res sndSF_res)
+             sndSF_rel (Pair_u n m) sndSF_res
+             ∧ ∃ (fstSF_res : MyNat_u),
+               fstSF_rel (Pair_u n m) fstSF_res ∧ Pair_u n m == Pair_u fstSF_res sndSF_res)
             (# unit)
             ltac:(solver)).
 Qed.

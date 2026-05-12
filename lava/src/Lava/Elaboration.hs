@@ -441,20 +441,22 @@ checkExpr γ state e0@(Case r branches _) tp = do
           -- We look for applications where one of the potentialInductives can be
           -- used as inductive variable and instantiate the head of those applications
           (e', indVars) = instRec potentialInductives e
-          -- We remove projections from the types of the variables
+          -- If we match on a variable xMatch, we replace the variable in the context
+          -- by the variables introduced by the pattern
+          -- and we substitute all occurences of xMatch by the pattern.
+          -- We also replace the occurences of xMatch in the type to be checked.
+          -- We also remove projections from the types of the variables
           -- introduced by the patterns, as these are considered unrefined
-          γ' = insertLocalVars (map (second removeFOArgProjs) argsc) $ case matched of
-            -- if we match on a variable xMatch, we replace the variable in the context
-            -- by the variables introduced by the pattern
-            -- and we substitute all occurences of xMatch by the pattern
+          (γ', tp') = case matched of
             Inj (Var xMatch Nothing Local) _ ->
               let pat = foldl App (DC c) (map (mkVar . fst) ys)
-               in substInEnv pat xMatch $ Env.delete xMatch γ
+                  γ'0 = substInEnv pat xMatch $ Env.delete xMatch γ
+               in (insertLocalVars (map (second removeFOArgProjs) argsc) γ'0, subst pat xMatch tp)
             -- If we match on an application or a constant, we keep the same context:
             -- in particular, we do not add an equality between the matched term and the pattern:
             -- this equality is useful for occurence typing when checking the VC, but will never appear in elaboration
-            _ -> γ
-      e'' <- checkExpr γ' state' e' tp
+            _ -> (γ, tp)
+      e'' <- checkExpr γ' state' e' tp'
       return (((c, ys), Just e''), indVars)
       where
         -- Given a list of potential inductive variables `inds` introduced by the
