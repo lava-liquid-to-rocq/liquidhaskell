@@ -445,17 +445,17 @@ checkExpr γ state e0@(Case r branches _) tp = do
           -- by the variables introduced by the pattern
           -- and we substitute all occurences of xMatch by the pattern.
           -- We also replace the occurences of xMatch in the type to be checked.
-          -- We also remove projections from the types of the variables
-          -- introduced by the patterns, as these are considered unrefined
-          (γ', tp') = case matched of
+          (γ'', tp') = case matched of
             Inj (Var xMatch Nothing Local) _ ->
               let pat = foldl App (DC c) (map (mkVar . fst) ys)
-                  γ'0 = substInEnv pat xMatch $ Env.delete xMatch γ
-               in (insertLocalVars (map (second removeFOArgProjs) argsc) γ'0, subst pat xMatch tp)
+               in (substInEnv pat xMatch $ Env.delete xMatch γ, subst pat xMatch tp)
             -- If we match on an application or a constant, we keep the same context:
             -- in particular, we do not add an equality between the matched term and the pattern:
             -- this equality is useful for occurence typing when checking the VC, but will never appear in elaboration
             _ -> (γ, tp)
+          -- We remove projections from the types of the variables
+          -- introduced by the patterns, as these are considered unrefined
+          γ' = insertLocalVars (map (second removeFOArgProjs) argsc) γ''
       e'' <- checkExpr γ' state' e' tp'
       return (((c, ys), Just e''), indVars)
       where
