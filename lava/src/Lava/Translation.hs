@@ -203,6 +203,7 @@ hypsRV :: Bool -> [(Reft, Id)] -> Bool -> CoqTerm -> CoqTerm
 hypsRV eq rv graphRel = \p -> foldr hyp p rv
   where
     -- hyp(f r1 … rn, z) p = forall z, (f_rel/get(U)PackRelName f) RtoU(r1) … RtoU(rn) z -> p
+    --                    or exists z, (f_rel/get(U)PackRelName f) RtoU(r1) … RtoU(rn) z /\ p
     hyp :: (Reft, Id) -> CoqTerm -> CoqTerm
     hyp (app, z) p =
       quantifier [(z, trBaseType tpz)] $

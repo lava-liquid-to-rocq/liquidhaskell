@@ -76,24 +76,24 @@ Defined.
 
 #[global] Hint Unfold Emp: ref_constr_db.
 
-Definition append_spec (lq_tmp0 lq_tmp1 : L): Type :=
+Definition append_spec (ds_d3vS ys : L): Type :=
   L.
 
 #[global] Hint Unfold append_spec: lia_unfold.
 
-Definition append (lq_tmp0 lq_tmp1 : L): append_spec lq_tmp0 lq_tmp1.
+Definition append (ds_d3vS ys : L): append_spec ds_d3vS ys.
 Proof.
-  destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
-  destruct lq_tmp1 as [lq_tmp1 lq_tmp1_p].
-  try revert lq_tmp1_p; generalize dependent lq_tmp1; induction lq_tmp0 as [x xs IH_xs|]; intros.
-  - refine (C (# x) (IH_xs ltac:(try clear IH_xs; solver) lq_tmp1 ltac:(try clear IH_xs; solver))).
-  - refine (exist (λ (lq_tmp1 : L_u), L_wf lq_tmp1 ∧ True) lq_tmp1 ltac:(solver)).
+  destruct ds_d3vS as [ds_d3vS ds_d3vS_p].
+  destruct ys as [ys ys_p].
+  try revert ys_p; generalize dependent ys; induction ds_d3vS as [x xs IH_xs|]; intros.
+  - refine (C (# x) (IH_xs ltac:(try clear IH_xs; solver) ys ltac:(try clear IH_xs; solver))).
+  - refine (exist (λ (ys : L_u), L_wf ys ∧ True) ys ltac:(solver)).
 Defined.
 
 Inductive append_rel: L_u → L_u → L_u → Prop :=
-  | append_Emp_x: ∀ lq_tmp1, append_rel Emp_u lq_tmp1 lq_tmp1
-  | append_C_x: ∀ x xs lq_tmp1 (append_res : L_u),
-                append_rel xs lq_tmp1 append_res → append_rel (C_u x xs) lq_tmp1 (C_u x append_res).
+  | append_Emp_x: ∀ ys, append_rel Emp_u ys ys
+  | append_C_x: ∀ x xs ys (append_res : L_u),
+                append_rel xs ys append_res → append_rel (C_u x xs) ys (C_u x append_res).
 
 #[global] Hint Constructors append_rel: core_hint_db.
 
@@ -101,26 +101,26 @@ Inductive append_rel: L_u → L_u → L_u → Prop :=
 
 #[global] Instance append_getF: getFunc append_rel := { getF' := append }.
 
-Theorem append_rel_funct [lq_tmp0 lq_tmp1 : L_u]:
-  ∀ (VV VV' : L_u), append_rel lq_tmp0 lq_tmp1 VV → (append_rel lq_tmp0 lq_tmp1 VV' → VV = VV').
+Theorem append_rel_funct [ds_d3vS ys : L_u]:
+  ∀ (VV VV' : L_u), append_rel ds_d3vS ys VV → (append_rel ds_d3vS ys VV' → VV = VV').
 Proof.
-  try revert lq_tmp1_p; generalize dependent lq_tmp1; induction lq_tmp0 as [x xs IH_xs|]; intros;
+  try revert ys_p; generalize dependent ys; induction ds_d3vS as [x xs IH_xs|]; intros;
   rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve append_rel_funct: f_rel_funct_db.
 
-Theorem append_Emp_x_lem lq_tmp1 append_Emp_x_lem_res:
-  append_rel Emp_u lq_tmp1 append_Emp_x_lem_res ↔ append_Emp_x_lem_res == lq_tmp1.
+Theorem append_Emp_x_lem ys append_Emp_x_lem_res:
+  append_rel Emp_u ys append_Emp_x_lem_res ↔ append_Emp_x_lem_res == ys.
 Proof.
   rel_back' _nil.
 Qed.
 
 #[global] Hint Rewrite append_Emp_x_lem: f_rel_back.
 
-Theorem append_C_x_lem lq_tmp1 x xs append_C_x_lem_res:
-  append_rel (C_u x xs) lq_tmp1 append_C_x_lem_res
-  ↔ ∃ (append_res : L_u), append_rel xs lq_tmp1 append_res ∧ append_C_x_lem_res == C_u x append_res.
+Theorem append_C_x_lem x xs ys append_C_x_lem_res:
+  append_rel (C_u x xs) ys append_C_x_lem_res
+  ↔ ∃ (append_res : L_u), append_rel xs ys append_res ∧ append_C_x_lem_res == C_u x append_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -128,17 +128,14 @@ Qed.
 #[global] Hint Rewrite append_C_x_lem: f_rel_back.
 
 Theorem append_rel_ex
-  (lq_tmp0 : L_u) (lq_tmp0_p : L_wf lq_tmp0 ∧ True) (lq_tmp1 : L_u) (lq_tmp1_p : L_wf lq_tmp1 ∧ True):
-  append_rel lq_tmp0 lq_tmp1 ⌊ append (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋.
+  (ds_d3vS : L_u) (ds_d3vS_p : L_wf ds_d3vS ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
+  append_rel ds_d3vS ys ⌊ append (exist _ ds_d3vS ds_d3vS_p) (exist _ ys ys_p) -⌋.
 Proof.
   Opaque append.
   existence_lemma_pre append;
-  try revert lq_tmp1_p; generalize dependent lq_tmp1; induction lq_tmp0 as [x xs IH_xs|]; intros;
+  try revert ys_p; generalize dependent ys; induction ds_d3vS as [x xs IH_xs|]; intros;
   [fix_notations;
-   pose proof (IH_xs
-               ltac:(try clear IH_xs; solver)
-               lq_tmp1
-               ltac:(try clear IH_xs; solver)) as IH_26846909;
+   pose proof (IH_xs ltac:(try clear IH_xs; solver) ys ltac:(try clear IH_xs; solver)) as IH_47088561;
    try clear IH_xs |
    fix_notations];
   simpl in *.
@@ -151,13 +148,8 @@ Qed.
 #[global] Opaque append.
 
 Theorem append__append_rel_rw
-  (lq_tmp0 : L_u)
-  (lq_tmp0_p : L_wf lq_tmp0 ∧ True)
-  (lq_tmp1 : L_u)
-  (lq_tmp1_p : L_wf lq_tmp1 ∧ True)
-  (VV : L_u):
-  ⌊ append (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋ = VV
-  ↔ append_rel lq_tmp0 lq_tmp1 VV.
+  (ds_d3vS : L_u) (ds_d3vS_p : L_wf ds_d3vS ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True) (VV : L_u):
+  ⌊ append (exist _ ds_d3vS ds_d3vS_p) (exist _ ys ys_p) -⌋ = VV ↔ append_rel ds_d3vS ys VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -169,32 +161,32 @@ Qed.
 #[global] Instance append_lookup_rw: dictionary rwLem append := {
     lookup' := append__append_rel_rw }.
 
-Theorem append__append_rel (lq_tmp0 lq_tmp1 : L) (VV : L_u):
-  ⌊ append lq_tmp0 lq_tmp1 -⌋ = VV ↔ append_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp1 ⌋ VV.
+Theorem append__append_rel (ds_d3vS ys : L) (VV : L_u):
+  ⌊ append ds_d3vS ys -⌋ = VV ↔ append_rel ⌊ ds_d3vS ⌋ ⌊ ys ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite append__append_rel: f_rel_funct_db.
 
-Theorem append__append_rel' (lq_tmp0_u lq_tmp1_u : L_u) (lq_tmp0 lq_tmp1 : L) (VV : L_u):
-  lq_tmp0_u = ⌊ lq_tmp0 ⌋
-  → (lq_tmp1_u = ⌊ lq_tmp1 ⌋ → ⌊ append lq_tmp0 lq_tmp1 -⌋ = VV ↔ append_rel lq_tmp0_u lq_tmp1_u VV).
+Theorem append__append_rel' (ds_d3vS_u ys_u : L_u) (ds_d3vS ys : L) (VV : L_u):
+  ds_d3vS_u = ⌊ ds_d3vS ⌋
+  → (ys_u = ⌊ ys ⌋ → ⌊ append ds_d3vS ys -⌋ = VV ↔ append_rel ds_d3vS_u ys_u VV).
 Proof.
-  intros -> ->. refine (append__append_rel lq_tmp0 lq_tmp1 VV).
+  intros -> ->. refine (append__append_rel ds_d3vS ys VV).
 Qed.
 
 #[global] Hint Resolve append__append_rel': f_rel_funct_db.
 
 Theorem append_rel_mk
-  (lq_tmp0 : L_u) (lq_tmp0_p : L_wf lq_tmp0 ∧ True) (lq_tmp1 : L_u) (lq_tmp1_p : L_wf lq_tmp1 ∧ True):
-  {VV: _ | append_rel lq_tmp0 lq_tmp1 VV}.
+  (ds_d3vS : L_u) (ds_d3vS_p : L_wf ds_d3vS ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
+  {VV: _ | append_rel ds_d3vS ys VV}.
 Proof.
   intros;
   refine (subsumptionCast
           _
-          (λ VV, append_rel lq_tmp0 lq_tmp1 VV)
-          (append (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p))
+          (λ VV, append_rel ds_d3vS ys VV)
+          (append (exist _ ds_d3vS ds_d3vS_p) (exist _ ys ys_p))
           _);
   rewrite <- append__append_rel';
   quicksolve.
@@ -204,13 +196,12 @@ Qed.
 
 #[global] Instance append_pack:
   @Pack
-  (L ::RT λ (lq_tmp0 : L), L ::RT λ (lq_tmp1 : L), nilRT)
+  (L ::RT λ (ds_d3vS : L), L ::RT λ (ys : L), nilRT)
   (L_u ::UT (L_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((L ::RT λ (lq_tmp0 : L), L ::RT λ (lq_tmp1 : L), nilRT)) ((L_u ::UT (L_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG ((L ::RT λ (ds_d3vS : L), L ::RT λ (ys : L), nilRT)) ((L_u ::UT (L_u ::UT nilUT))))
   L_u
-  (λ (x_59358093 : ArgList (L ::RT λ (lq_tmp0 : L), L ::RT λ (lq_tmp1 : L), nilRT))
-     (v_x_59358093 : L_u),
-   ltac:(flattenP (λ (lq_tmp0 lq_tmp1 : L) (VV : L_u), L_wf VV ∧ True) x_59358093 v_x_59358093)).
+  (λ (x_10954234 : ArgList (L ::RT λ (ds_d3vS : L), L ::RT λ (ys : L), nilRT)) (v_x_10954234 : L_u),
+   ltac:(flattenP (λ (ds_d3vS ys : L) (VV : L_u), L_wf VV ∧ True) x_10954234 v_x_10954234)).
 Proof.
   buildPackG append append_rel append__append_rel append_rel_funct.
 Defined.
@@ -220,16 +211,16 @@ Proof.
   buildUPackG append_rel append_rel_funct.
 Defined.
 
-Definition propConst1_spec (lq_tmp0 : {{True}}): Type :=
+Definition propConst1_spec (ds_d3vZ : {{True}}): Type :=
   {{∃ (append_res : L_u),
     append_rel (C_u 1 Emp_u) Emp_u append_res
     ∧ ∃ (append_res_2 : L_u), append_rel append_res Emp_u append_res_2 ∧ append_res_2 == C_u 1 Emp_u}}.
 
 #[global] Hint Unfold propConst1_spec: lia_unfold.
 
-Theorem propConst1 (lq_tmp0 : {{True}}): propConst1_spec lq_tmp0.
+Theorem propConst1 (ds_d3vZ : {{True}}): propConst1_spec ds_d3vZ.
 Proof.
-  destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
+  destruct ds_d3vZ as [ds_d3vZ ds_d3vZ_p].
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
@@ -240,7 +231,7 @@ Proof.
           ltac:(solver)).
 Qed.
 
-Definition propConst2_spec (lq_tmp0 : {{True}}): Type :=
+Definition propConst2_spec (ds_d3vY : {{True}}): Type :=
   {{∃ (append_res : L_u),
     append_rel (C_u 1 (C_u 2 Emp_u)) Emp_u append_res
     ∧ ∃ (append_res_2 : L_u),
@@ -248,9 +239,9 @@ Definition propConst2_spec (lq_tmp0 : {{True}}): Type :=
 
 #[global] Hint Unfold propConst2_spec: lia_unfold.
 
-Theorem propConst2 (lq_tmp0 : {{True}}): propConst2_spec lq_tmp0.
+Theorem propConst2 (ds_d3vY : {{True}}): propConst2_spec ds_d3vY.
 Proof.
-  destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
+  destruct ds_d3vY as [ds_d3vY ds_d3vY_p].
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
@@ -262,7 +253,7 @@ Proof.
           ltac:(solver)).
 Qed.
 
-Definition propConst3_spec (lq_tmp0 : {{True}}): Type :=
+Definition propConst3_spec (ds_d3vX : {{True}}): Type :=
   {{∃ (append_res : L_u),
     append_rel (C_u 1 (C_u 2 (C_u 3 Emp_u))) Emp_u append_res
     ∧ ∃ (append_res_2 : L_u),
@@ -270,9 +261,9 @@ Definition propConst3_spec (lq_tmp0 : {{True}}): Type :=
 
 #[global] Hint Unfold propConst3_spec: lia_unfold.
 
-Theorem propConst3 (lq_tmp0 : {{True}}): propConst3_spec lq_tmp0.
+Theorem propConst3 (ds_d3vX : {{True}}): propConst3_spec ds_d3vX.
 Proof.
-  destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
+  destruct ds_d3vX as [ds_d3vX ds_d3vX_p].
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
@@ -284,15 +275,15 @@ Proof.
           ltac:(solver)).
 Qed.
 
-Definition length_spec (lq_tmp0 : L): Type :=
+Definition length_spec (ds_d3vV : L): Type :=
   {VV: Z | gebZ_rel VV 0 true}.
 
 #[global] Hint Unfold length_spec: lia_unfold.
 
-Definition length (lq_tmp0 : L): length_spec lq_tmp0.
+Definition length (ds_d3vV : L): length_spec ds_d3vV.
 Proof.
-  destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
-  induction lq_tmp0 as [ds_d3vW xs IH_xs|].
+  destruct ds_d3vV as [ds_d3vV ds_d3vV_p].
+  induction ds_d3vV as [ds_d3vW xs IH_xs|].
   - refine (subsumptionCast
             Z
             (λ (VV : Z), gebZ_rel VV 0 true)
@@ -318,10 +309,10 @@ Inductive length_rel: L_u → Z → Prop :=
 
 #[global] Instance length_getF: getFunc length_rel := { getF' := length }.
 
-Theorem length_rel_funct [lq_tmp0 : L_u]:
-  ∀ (VV VV' : Z), length_rel lq_tmp0 VV → (length_rel lq_tmp0 VV' → VV = VV').
+Theorem length_rel_funct [ds_d3vV : L_u]:
+  ∀ (VV VV' : Z), length_rel ds_d3vV VV → (length_rel ds_d3vV VV' → VV = VV').
 Proof.
-  induction lq_tmp0 as [ds_d3vW xs IH_xs|]; rel_functionhood_body.
+  induction ds_d3vV as [ds_d3vW xs IH_xs|]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve length_rel_funct: f_rel_funct_db.
@@ -345,12 +336,12 @@ Qed.
 
 #[global] Hint Rewrite length_C_lem: f_rel_back.
 
-Theorem length_rel_ex (lq_tmp0 : L_u) (lq_tmp0_p : L_wf lq_tmp0 ∧ True):
-  length_rel lq_tmp0 ⌊ length (exist _ lq_tmp0 lq_tmp0_p) -⌋.
+Theorem length_rel_ex (ds_d3vV : L_u) (ds_d3vV_p : L_wf ds_d3vV ∧ True):
+  length_rel ds_d3vV ⌊ length (exist _ ds_d3vV ds_d3vV_p) -⌋.
 Proof.
   Opaque length.
   existence_lemma_pre length;
-  induction lq_tmp0 as [ds_d3vW xs IH_xs|];
+  induction ds_d3vV as [ds_d3vW xs IH_xs|];
   [fix_notations; pose proof (IH_xs ltac:(try clear IH_xs; solver)) as IH_67415571; try clear IH_xs |
    fix_notations];
   simpl in *.
@@ -362,8 +353,8 @@ Qed.
 
 #[global] Opaque length.
 
-Theorem length__length_rel_rw (lq_tmp0 : L_u) (lq_tmp0_p : L_wf lq_tmp0 ∧ True) (VV : Z):
-  ⌊ length (exist _ lq_tmp0 lq_tmp0_p) -⌋ = VV ↔ length_rel lq_tmp0 VV.
+Theorem length__length_rel_rw (ds_d3vV : L_u) (ds_d3vV_p : L_wf ds_d3vV ∧ True) (VV : Z):
+  ⌊ length (exist _ ds_d3vV ds_d3vV_p) -⌋ = VV ↔ length_rel ds_d3vV VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -375,27 +366,27 @@ Qed.
 #[global] Instance length_lookup_rw: dictionary rwLem length := {
     lookup' := length__length_rel_rw }.
 
-Theorem length__length_rel (lq_tmp0 : L) (VV : Z):
-  ⌊ length lq_tmp0 -⌋ = VV ↔ length_rel ⌊ lq_tmp0 ⌋ VV.
+Theorem length__length_rel (ds_d3vV : L) (VV : Z):
+  ⌊ length ds_d3vV -⌋ = VV ↔ length_rel ⌊ ds_d3vV ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite length__length_rel: f_rel_funct_db.
 
-Theorem length__length_rel' (lq_tmp0_u : L_u) (lq_tmp0 : L) (VV : Z):
-  lq_tmp0_u = ⌊ lq_tmp0 ⌋ → ⌊ length lq_tmp0 -⌋ = VV ↔ length_rel lq_tmp0_u VV.
+Theorem length__length_rel' (ds_d3vV_u : L_u) (ds_d3vV : L) (VV : Z):
+  ds_d3vV_u = ⌊ ds_d3vV ⌋ → ⌊ length ds_d3vV -⌋ = VV ↔ length_rel ds_d3vV_u VV.
 Proof.
-  intros ->. refine (length__length_rel lq_tmp0 VV).
+  intros ->. refine (length__length_rel ds_d3vV VV).
 Qed.
 
 #[global] Hint Resolve length__length_rel': f_rel_funct_db.
 
-Theorem length_rel_mk (lq_tmp0 : L_u) (lq_tmp0_p : L_wf lq_tmp0 ∧ True):
-  {VV: _ | length_rel lq_tmp0 VV}.
+Theorem length_rel_mk (ds_d3vV : L_u) (ds_d3vV_p : L_wf ds_d3vV ∧ True):
+  {VV: _ | length_rel ds_d3vV VV}.
 Proof.
   intros;
-  refine (subsumptionCast _ (λ VV, length_rel lq_tmp0 VV) (length (exist _ lq_tmp0 lq_tmp0_p)) _);
+  refine (subsumptionCast _ (λ VV, length_rel ds_d3vV VV) (length (exist _ ds_d3vV ds_d3vV_p)) _);
   rewrite <- length__length_rel';
   quicksolve.
 Qed.
@@ -404,12 +395,12 @@ Qed.
 
 #[global] Instance length_pack:
   @Pack
-  (L ::RT λ (lq_tmp0 : L), nilRT)
+  (L ::RT λ (ds_d3vV : L), nilRT)
   (L_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((L ::RT λ (lq_tmp0 : L), nilRT)) ((L_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG ((L ::RT λ (ds_d3vV : L), nilRT)) ((L_u ::UT nilUT)))
   Z
-  (λ (x_51115233 : ArgList (L ::RT λ (lq_tmp0 : L), nilRT)) (v_x_51115233 : Z),
-   ltac:(flattenP (λ (lq_tmp0 : L) (VV : Z), gebZ_rel VV 0 true) x_51115233 v_x_51115233)).
+  (λ (x_34509900 : ArgList (L ::RT λ (ds_d3vV : L), nilRT)) (v_x_34509900 : Z),
+   ltac:(flattenP (λ (ds_d3vV : L) (VV : Z), gebZ_rel VV 0 true) x_34509900 v_x_34509900)).
 Proof.
   buildPackG length length_rel length__length_rel length_rel_funct.
 Defined.

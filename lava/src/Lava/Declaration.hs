@@ -569,7 +569,8 @@ trPathGuard eq f (σxs, (r, rp) : σp', rf) hs relRes =
       foralls = mkForallXs . Set.toList $ LH.freeVars rp
       equality = Coq.Bop (Binop Coq.Eq PropOp) (utrReft eq r') (utrReft eq rp)
       recCall = trPathGuard eq f (σxs, σp', rf) (hs ++ currentHyps) relRes
-   in hypsRV eq currentHyps (isNothing relRes) . foralls $ Coq.Bop (Binop Coq.Impl PropOp) equality recCall
+      guardOp = if isNothing relRes then Coq.Impl else Coq.And
+   in hypsRV eq currentHyps (isNothing relRes) . foralls $ Coq.Bop (Binop guardOp PropOp) equality recCall
 
 -- | From a function name `f` and a list of patterns `pats`,
 -- returns a name for the constructor for f wrt pats

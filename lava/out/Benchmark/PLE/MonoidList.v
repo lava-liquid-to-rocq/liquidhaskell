@@ -76,24 +76,24 @@ Defined.
 
 #[global] Hint Unfold Emp: ref_constr_db.
 
-Definition mappend_spec (lq_tmp0 lq_tmp1 : L): Type :=
+Definition mappend_spec (ds_d3ZS ys : L): Type :=
   L.
 
 #[global] Hint Unfold mappend_spec: lia_unfold.
 
-Definition mappend (lq_tmp0 lq_tmp1 : L): mappend_spec lq_tmp0 lq_tmp1.
+Definition mappend (ds_d3ZS ys : L): mappend_spec ds_d3ZS ys.
 Proof.
-  destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
-  destruct lq_tmp1 as [lq_tmp1 lq_tmp1_p].
-  try revert lq_tmp1_p; generalize dependent lq_tmp1; induction lq_tmp0 as [x xs IH_xs|]; intros.
-  - refine (C (# x) (IH_xs ltac:(try clear IH_xs; solver) lq_tmp1 ltac:(try clear IH_xs; solver))).
-  - refine (exist (λ (lq_tmp1 : L_u), L_wf lq_tmp1 ∧ True) lq_tmp1 ltac:(solver)).
+  destruct ds_d3ZS as [ds_d3ZS ds_d3ZS_p].
+  destruct ys as [ys ys_p].
+  try revert ys_p; generalize dependent ys; induction ds_d3ZS as [x xs IH_xs|]; intros.
+  - refine (C (# x) (IH_xs ltac:(try clear IH_xs; solver) ys ltac:(try clear IH_xs; solver))).
+  - refine (exist (λ (ys : L_u), L_wf ys ∧ True) ys ltac:(solver)).
 Defined.
 
 Inductive mappend_rel: L_u → L_u → L_u → Prop :=
-  | mappend_Emp_x: ∀ lq_tmp1, mappend_rel Emp_u lq_tmp1 lq_tmp1
-  | mappend_C_x: ∀ x xs lq_tmp1 (mappend_res : L_u),
-                 mappend_rel xs lq_tmp1 mappend_res → mappend_rel (C_u x xs) lq_tmp1 (C_u x mappend_res).
+  | mappend_Emp_x: ∀ ys, mappend_rel Emp_u ys ys
+  | mappend_C_x: ∀ x xs ys (mappend_res : L_u),
+                 mappend_rel xs ys mappend_res → mappend_rel (C_u x xs) ys (C_u x mappend_res).
 
 #[global] Hint Constructors mappend_rel: core_hint_db.
 
@@ -101,27 +101,26 @@ Inductive mappend_rel: L_u → L_u → L_u → Prop :=
 
 #[global] Instance mappend_getF: getFunc mappend_rel := { getF' := mappend }.
 
-Theorem mappend_rel_funct [lq_tmp0 lq_tmp1 : L_u]:
-  ∀ (VV VV' : L_u), mappend_rel lq_tmp0 lq_tmp1 VV → (mappend_rel lq_tmp0 lq_tmp1 VV' → VV = VV').
+Theorem mappend_rel_funct [ds_d3ZS ys : L_u]:
+  ∀ (VV VV' : L_u), mappend_rel ds_d3ZS ys VV → (mappend_rel ds_d3ZS ys VV' → VV = VV').
 Proof.
-  try revert lq_tmp1_p; generalize dependent lq_tmp1; induction lq_tmp0 as [x xs IH_xs|]; intros;
+  try revert ys_p; generalize dependent ys; induction ds_d3ZS as [x xs IH_xs|]; intros;
   rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve mappend_rel_funct: f_rel_funct_db.
 
-Theorem mappend_Emp_x_lem lq_tmp1 mappend_Emp_x_lem_res:
-  mappend_rel Emp_u lq_tmp1 mappend_Emp_x_lem_res ↔ mappend_Emp_x_lem_res == lq_tmp1.
+Theorem mappend_Emp_x_lem ys mappend_Emp_x_lem_res:
+  mappend_rel Emp_u ys mappend_Emp_x_lem_res ↔ mappend_Emp_x_lem_res == ys.
 Proof.
   rel_back' _nil.
 Qed.
 
 #[global] Hint Rewrite mappend_Emp_x_lem: f_rel_back.
 
-Theorem mappend_C_x_lem lq_tmp1 x xs mappend_C_x_lem_res:
-  mappend_rel (C_u x xs) lq_tmp1 mappend_C_x_lem_res
-  ↔ ∃ (mappend_res : L_u),
-    mappend_rel xs lq_tmp1 mappend_res ∧ mappend_C_x_lem_res == C_u x mappend_res.
+Theorem mappend_C_x_lem x xs ys mappend_C_x_lem_res:
+  mappend_rel (C_u x xs) ys mappend_C_x_lem_res
+  ↔ ∃ (mappend_res : L_u), mappend_rel xs ys mappend_res ∧ mappend_C_x_lem_res == C_u x mappend_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -129,17 +128,14 @@ Qed.
 #[global] Hint Rewrite mappend_C_x_lem: f_rel_back.
 
 Theorem mappend_rel_ex
-  (lq_tmp0 : L_u) (lq_tmp0_p : L_wf lq_tmp0 ∧ True) (lq_tmp1 : L_u) (lq_tmp1_p : L_wf lq_tmp1 ∧ True):
-  mappend_rel lq_tmp0 lq_tmp1 ⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋.
+  (ds_d3ZS : L_u) (ds_d3ZS_p : L_wf ds_d3ZS ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
+  mappend_rel ds_d3ZS ys ⌊ mappend (exist _ ds_d3ZS ds_d3ZS_p) (exist _ ys ys_p) -⌋.
 Proof.
   Opaque mappend.
   existence_lemma_pre mappend;
-  try revert lq_tmp1_p; generalize dependent lq_tmp1; induction lq_tmp0 as [x xs IH_xs|]; intros;
+  try revert ys_p; generalize dependent ys; induction ds_d3ZS as [x xs IH_xs|]; intros;
   [fix_notations;
-   pose proof (IH_xs
-               ltac:(try clear IH_xs; solver)
-               lq_tmp1
-               ltac:(try clear IH_xs; solver)) as IH_26846909;
+   pose proof (IH_xs ltac:(try clear IH_xs; solver) ys ltac:(try clear IH_xs; solver)) as IH_47088561;
    try clear IH_xs |
    fix_notations];
   simpl in *.
@@ -152,13 +148,8 @@ Qed.
 #[global] Opaque mappend.
 
 Theorem mappend__mappend_rel_rw
-  (lq_tmp0 : L_u)
-  (lq_tmp0_p : L_wf lq_tmp0 ∧ True)
-  (lq_tmp1 : L_u)
-  (lq_tmp1_p : L_wf lq_tmp1 ∧ True)
-  (VV : L_u):
-  ⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋ = VV
-  ↔ mappend_rel lq_tmp0 lq_tmp1 VV.
+  (ds_d3ZS : L_u) (ds_d3ZS_p : L_wf ds_d3ZS ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True) (VV : L_u):
+  ⌊ mappend (exist _ ds_d3ZS ds_d3ZS_p) (exist _ ys ys_p) -⌋ = VV ↔ mappend_rel ds_d3ZS ys VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -170,33 +161,32 @@ Qed.
 #[global] Instance mappend_lookup_rw: dictionary rwLem mappend := {
     lookup' := mappend__mappend_rel_rw }.
 
-Theorem mappend__mappend_rel (lq_tmp0 lq_tmp1 : L) (VV : L_u):
-  ⌊ mappend lq_tmp0 lq_tmp1 -⌋ = VV ↔ mappend_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp1 ⌋ VV.
+Theorem mappend__mappend_rel (ds_d3ZS ys : L) (VV : L_u):
+  ⌊ mappend ds_d3ZS ys -⌋ = VV ↔ mappend_rel ⌊ ds_d3ZS ⌋ ⌊ ys ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite mappend__mappend_rel: f_rel_funct_db.
 
-Theorem mappend__mappend_rel' (lq_tmp0_u lq_tmp1_u : L_u) (lq_tmp0 lq_tmp1 : L) (VV : L_u):
-  lq_tmp0_u = ⌊ lq_tmp0 ⌋
-  → (lq_tmp1_u = ⌊ lq_tmp1 ⌋
-     → ⌊ mappend lq_tmp0 lq_tmp1 -⌋ = VV ↔ mappend_rel lq_tmp0_u lq_tmp1_u VV).
+Theorem mappend__mappend_rel' (ds_d3ZS_u ys_u : L_u) (ds_d3ZS ys : L) (VV : L_u):
+  ds_d3ZS_u = ⌊ ds_d3ZS ⌋
+  → (ys_u = ⌊ ys ⌋ → ⌊ mappend ds_d3ZS ys -⌋ = VV ↔ mappend_rel ds_d3ZS_u ys_u VV).
 Proof.
-  intros -> ->. refine (mappend__mappend_rel lq_tmp0 lq_tmp1 VV).
+  intros -> ->. refine (mappend__mappend_rel ds_d3ZS ys VV).
 Qed.
 
 #[global] Hint Resolve mappend__mappend_rel': f_rel_funct_db.
 
 Theorem mappend_rel_mk
-  (lq_tmp0 : L_u) (lq_tmp0_p : L_wf lq_tmp0 ∧ True) (lq_tmp1 : L_u) (lq_tmp1_p : L_wf lq_tmp1 ∧ True):
-  {VV: _ | mappend_rel lq_tmp0 lq_tmp1 VV}.
+  (ds_d3ZS : L_u) (ds_d3ZS_p : L_wf ds_d3ZS ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
+  {VV: _ | mappend_rel ds_d3ZS ys VV}.
 Proof.
   intros;
   refine (subsumptionCast
           _
-          (λ VV, mappend_rel lq_tmp0 lq_tmp1 VV)
-          (mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p))
+          (λ VV, mappend_rel ds_d3ZS ys VV)
+          (mappend (exist _ ds_d3ZS ds_d3ZS_p) (exist _ ys ys_p))
           _);
   rewrite <- mappend__mappend_rel';
   quicksolve.
@@ -206,13 +196,12 @@ Qed.
 
 #[global] Instance mappend_pack:
   @Pack
-  (L ::RT λ (lq_tmp0 : L), L ::RT λ (lq_tmp1 : L), nilRT)
+  (L ::RT λ (ds_d3ZS : L), L ::RT λ (ys : L), nilRT)
   (L_u ::UT (L_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((L ::RT λ (lq_tmp0 : L), L ::RT λ (lq_tmp1 : L), nilRT)) ((L_u ::UT (L_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG ((L ::RT λ (ds_d3ZS : L), L ::RT λ (ys : L), nilRT)) ((L_u ::UT (L_u ::UT nilUT))))
   L_u
-  (λ (x_59358093 : ArgList (L ::RT λ (lq_tmp0 : L), L ::RT λ (lq_tmp1 : L), nilRT))
-     (v_x_59358093 : L_u),
-   ltac:(flattenP (λ (lq_tmp0 lq_tmp1 : L) (VV : L_u), L_wf VV ∧ True) x_59358093 v_x_59358093)).
+  (λ (x_14238839 : ArgList (L ::RT λ (ds_d3ZS : L), L ::RT λ (ys : L), nilRT)) (v_x_14238839 : L_u),
+   ltac:(flattenP (λ (ds_d3ZS ys : L) (VV : L_u), L_wf VV ∧ True) x_14238839 v_x_14238839)).
 Proof.
   buildPackG mappend mappend_rel mappend__mappend_rel mappend_rel_funct.
 Defined.
@@ -222,37 +211,37 @@ Proof.
   buildUPackG mappend_rel mappend_rel_funct.
 Defined.
 
-Definition mappend_assoc_spec (xs ys zs : L): Type :=
+Definition mappend_assoc_spec (ds_d3ZQ ys zs : L): Type :=
   {{∃ (mappend_res : L_u),
-    mappend_rel ⌊ xs ⌋ ⌊ ys ⌋ mappend_res
+    mappend_rel ⌊ ds_d3ZQ ⌋ ⌊ ys ⌋ mappend_res
     ∧ ∃ (mappend_res_2 : L_u),
       mappend_rel mappend_res ⌊ zs ⌋ mappend_res_2
       ∧ ∃ (mappend_res_3 : L_u),
         mappend_rel ⌊ ys ⌋ ⌊ zs ⌋ mappend_res_3
         ∧ ∃ (mappend_res_4 : L_u),
-          mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4}}.
+          mappend_rel ⌊ ds_d3ZQ ⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4}}.
 
 #[global] Hint Unfold mappend_assoc_spec: lia_unfold.
 
-Theorem mappend_assoc (xs ys zs : L): mappend_assoc_spec xs ys zs.
+Theorem mappend_assoc (ds_d3ZQ ys zs : L): mappend_assoc_spec ds_d3ZQ ys zs.
 Proof.
-  destruct xs as [xs xs_p].
+  destruct ds_d3ZQ as [ds_d3ZQ ds_d3ZQ_p].
   destruct ys as [ys ys_p].
   destruct zs as [zs zs_p].
   try revert zs_p; generalize dependent zs; try revert ys_p; generalize dependent ys;
-  induction xs as [x xs IH_xs|];
+  induction ds_d3ZQ as [x xs IH_xs|];
   intros.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (mappend_res : L_u),
-             mappend_rel xs ys mappend_res
+             mappend_rel ds_d3ZQ ys mappend_res
              ∧ ∃ (mappend_res_2 : L_u),
                mappend_rel mappend_res zs mappend_res_2
                ∧ ∃ (mappend_res_3 : L_u),
                  mappend_rel ys zs mappend_res_3
                  ∧ ∃ (mappend_res_4 : L_u),
-                   mappend_rel xs mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
+                   mappend_rel ds_d3ZQ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
             (IH_xs
              ltac:(try clear IH_xs; solver)
              ys
@@ -264,13 +253,13 @@ Proof.
             Unit
             (λ (VV : Unit),
              ∃ (mappend_res : L_u),
-             mappend_rel xs ys mappend_res
+             mappend_rel ds_d3ZQ ys mappend_res
              ∧ ∃ (mappend_res_2 : L_u),
                mappend_rel mappend_res zs mappend_res_2
                ∧ ∃ (mappend_res_3 : L_u),
                  mappend_rel ys zs mappend_res_3
                  ∧ ∃ (mappend_res_4 : L_u),
-                   mappend_rel xs mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
+                   mappend_rel ds_d3ZQ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -285,110 +274,41 @@ Proof.
   refine Emp.
 Defined.
 
-Inductive mempty_rel: L_u → Prop :=
-  | mempty_Constr: mempty_rel Emp_u.
-
-#[global] Hint Constructors mempty_rel: core_hint_db.
-
-#[global] Instance mempty_lookup_rel: dictionary rel mempty := { lookup' := mempty_rel }.
-
-#[global] Instance mempty_getF: getFunc mempty_rel := { getF' := mempty }.
-
-Theorem mempty_rel_funct : ∀ (VV VV' : L_u), mempty_rel VV → (mempty_rel VV' → VV = VV').
-Proof.
-  rel_functionhood_body.
-Qed.
-
-#[global] Hint Resolve mempty_rel_funct: f_rel_funct_db.
-
-Theorem mempty_inv_lem mempty_inv_lem_res:
-  mempty_rel mempty_inv_lem_res ↔ mempty_inv_lem_res == Emp_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite mempty_inv_lem: f_rel_back.
-
-Theorem mempty_rel_ex : mempty_rel ⌊ mempty -⌋.
-Proof.
-  Opaque mempty.
-  existence_lemma_pre mempty; fix_notations; simpl in *.
-  Transparent mempty.
-  all: (existence_lemma_quicksolve mempty; f__f_rel_ex_body; f_rel_finish).
-Qed.
-
-#[global] Hint Resolve mempty_rel_ex: rel_ax_db.
-
-#[global] Opaque mempty.
-
-Theorem mempty__mempty_rel_rw (VV : L_u): ⌊ mempty -⌋ = VV ↔ mempty_rel VV.
-Proof.
-  f__f_rel_rw.
-Qed.
-
-#[global] Hint Rewrite mempty__mempty_rel_rw: f_rel_funct_db.
-
-#[global] Hint Resolve mempty__mempty_rel_rw: rel_ax_db.
-
-#[global] Instance mempty_lookup_rw: dictionary rwLem mempty := {
-    lookup' := mempty__mempty_rel_rw }.
-
-Theorem mempty__mempty_rel (VV : L_u): ⌊ mempty -⌋ = VV ↔ mempty_rel VV.
-Proof.
-  f__f_rel.
-Qed.
-
-#[global] Hint Rewrite mempty__mempty_rel: f_rel_funct_db.
-
-Theorem mempty__mempty_rel' (VV : L_u): ⌊ mempty -⌋ = VV ↔ mempty_rel VV.
-Proof.
-  intros. refine (mempty__mempty_rel VV).
-Qed.
-
-#[global] Hint Resolve mempty__mempty_rel': f_rel_funct_db.
-
-Theorem mempty_rel_mk : {VV: _ | mempty_rel VV}.
-Proof.
-  intros;
-  refine (subsumptionCast _ (λ VV, mempty_rel VV) mempty _);
-  rewrite <- mempty__mempty_rel';
-  quicksolve.
-Qed.
-
-#[global] Hint Resolve mempty_rel_mk: f_rel_funct_db.
-
-Definition mempty_left_spec (x : L): Type :=
-  {{∃ (mappend_res : L_u), mappend_rel ⌊ mempty -⌋ ⌊ x ⌋ mappend_res ∧ mappend_res == ⌊ x ⌋}}.
+Definition mempty_left_spec (xs : L): Type :=
+  {{∃ (mappend_res : L_u), mappend_rel ⌊ mempty -⌋ ⌊ xs ⌋ mappend_res ∧ mappend_res == ⌊ xs ⌋}}.
 
 #[global] Hint Unfold mempty_left_spec: lia_unfold.
 
-Theorem mempty_left (x : L): mempty_left_spec x.
+Theorem mempty_left (xs : L): mempty_left_spec xs.
 Proof.
-  destruct x as [x x_p].
+  destruct xs as [xs xs_p].
   refine (subsumptionCast
           Unit
-          (λ (VV : Unit), ∃ (mappend_res : L_u), mappend_rel ⌊ mempty -⌋ x mappend_res ∧ mappend_res == x)
+          (λ (VV : Unit), ∃ (mappend_res : L_u), mappend_rel ⌊ mempty -⌋ xs mappend_res ∧ mappend_res == xs)
           (# unit)
           ltac:(solver)).
 Qed.
 
-Definition mempty_right_spec (x : L): Type :=
-  {{∃ (mappend_res : L_u), mappend_rel ⌊ x ⌋ ⌊ mempty -⌋ mappend_res ∧ mappend_res == ⌊ x ⌋}}.
+Definition mempty_right_spec (ds_d3ZR : L): Type :=
+  {{∃ (mappend_res : L_u),
+    mappend_rel ⌊ ds_d3ZR ⌋ ⌊ mempty -⌋ mappend_res ∧ mappend_res == ⌊ ds_d3ZR ⌋}}.
 
 #[global] Hint Unfold mempty_right_spec: lia_unfold.
 
-Theorem mempty_right (x : L): mempty_right_spec x.
+Theorem mempty_right (ds_d3ZR : L): mempty_right_spec ds_d3ZR.
 Proof.
-  destruct x as [x x_p].
-  induction x as [x xs IH_xs|].
+  destruct ds_d3ZR as [ds_d3ZR ds_d3ZR_p].
+  induction ds_d3ZR as [x xs IH_xs|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (mappend_res : L_u), mappend_rel x ⌊ mempty -⌋ mappend_res ∧ mappend_res == x)
+            (λ (VV : Unit),
+             ∃ (mappend_res : L_u), mappend_rel ds_d3ZR ⌊ mempty -⌋ mappend_res ∧ mappend_res == ds_d3ZR)
             (IH_xs ltac:(try clear IH_xs; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (mappend_res : L_u), mappend_rel x ⌊ mempty -⌋ mappend_res ∧ mappend_res == x)
+            (λ (VV : Unit),
+             ∃ (mappend_res : L_u), mappend_rel ds_d3ZR ⌊ mempty -⌋ mappend_res ∧ mappend_res == ds_d3ZR)
             (# unit)
             ltac:(solver)).
 Qed.
