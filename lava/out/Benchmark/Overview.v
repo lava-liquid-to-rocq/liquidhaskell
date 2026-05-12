@@ -432,12 +432,12 @@ Proof.
 Defined.
 
 Inductive get_rel: IList_u → Z → Z → Prop :=
+  | get_Cons_x_True: ∀ x xs' i', (i' ==? 0) == true → get_rel (Cons_u x xs') i' x
   | get_Cons_x_False: ∀ x xs' i',
                       (i' ==? 0) == false
                       → ∀ (subZ_res : Z),
                         subZ_rel i' 1 subZ_res
-                        → ∀ (get_res : Z), get_rel xs' subZ_res get_res → get_rel (Cons_u x xs') i' get_res
-  | get_Cons_x_True: ∀ x xs' i', (i' ==? 0) == true → get_rel (Cons_u x xs') i' x.
+                        → ∀ (get_res : Z), get_rel xs' subZ_res get_res → get_rel (Cons_u x xs') i' get_res.
 
 #[global] Hint Constructors get_rel: core_hint_db.
 
@@ -457,11 +457,11 @@ Qed.
 
 Theorem get_Cons_x_lem i' x xs' get_Cons_x_lem_res:
   get_rel (Cons_u x xs') i' get_Cons_x_lem_res
-  ↔ (i' ==? 0) == false
-    ∧ ∃ (subZ_res : Z),
-      subZ_rel i' 1 subZ_res
-      ∧ ∃ (get_res : Z), get_rel xs' subZ_res get_res ∧ get_Cons_x_lem_res == get_res
-    ∨ (i' ==? 0) == true ∧ get_Cons_x_lem_res == x.
+  ↔ (i' ==? 0) == true ∧ get_Cons_x_lem_res == x
+    ∨ (i' ==? 0) == false
+      ∧ ∃ (subZ_res : Z),
+        subZ_rel i' 1 subZ_res
+        ∧ ∃ (get_res : Z), get_rel xs' subZ_res get_res ∧ get_Cons_x_lem_res == get_res.
 Proof.
   rel_back' ((i' ==? 0) _::_ _nil).
 Qed.

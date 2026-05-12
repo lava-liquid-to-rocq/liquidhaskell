@@ -390,8 +390,9 @@ checkExpr _ _ e@(Let {}) _ = Left . CheckingErr $ "Type annotation expected for 
 checkExpr γ state e0@(Case r branches _) tp = do
   (tpr, r') <- synReft γ r
   case tpr of
-    RefType _ (TC _) _ -> do
-      (branches', indVars) <- second Set.unions <$> mapAndUnzipM (checkBranch r') branches
+    RefType _ (TC tc) _ -> do
+      sortedBranches <- sortBranches tc branches
+      (branches', indVars) <- second Set.unions <$> mapAndUnzipM (checkBranch r') sortedBranches
       let -- In an induct, we generalize the other parameters that have not been destructed already
           -- the set indVars being non empty tells us that we use induction rather than destruct
           genVars = if Set.null indVars then Nothing else Just $ reverse [z | (Param z _) <- state']
@@ -413,6 +414,16 @@ checkExpr γ state e0@(Case r branches _) tp = do
     state' =
       let updateState (_, pos) = take pos state ++ Destructed : drop (pos + 1) state
        in maybe state updateState matchedParamAndPos
+    -- Reorder branches to correspond to the order of the definition in the type
+    sortBranches :: Id -> [((Id, [(Id, Bool)]), Maybe Expr)] -> Either TypeError [((Id, [(Id, Bool)]), Maybe Expr)]
+    sortBranches tc brs = do
+      tpConstrs <- map fst <$> lookupTC tc γ
+      return $ map fdBranch tpConstrs
+      where
+        fdBranch c = case lookup c brs' of
+          Just (ys, ebr) -> ((c, ys), ebr)
+          Nothing -> error $ "Missing branch for constructor " ++ c ++ " not detected as patErr."
+        brs' = map (\((c, ys), ebr) -> (c, (ys, ebr))) brs
 
     -- Returns the elaborated branch and a boolean to indicate if a subterm uses
     -- an induction hypothesis one of the introduced variables
@@ -449,7 +460,6 @@ checkExpr γ state e0@(Case r branches _) tp = do
         -- Given a list of potential inductive variables `inds` introduced by the
         -- pattern matching, instantiate relevant recursive calls using those variable as basis for induction.
         -- Returns the instantiated term and the set of variables that are used for an induction
-
         instRec :: [Id] -> Expr -> (Expr, Set Id)
         instRec [] tm = (tm, Set.empty)
         instRec inds (Reft tm) = first Reft $ instRecReft inds tm

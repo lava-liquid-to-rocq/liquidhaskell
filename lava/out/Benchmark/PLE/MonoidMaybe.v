@@ -85,8 +85,8 @@ Proof.
 Defined.
 
 Inductive mappend_rel: MaybeInt_u → MaybeInt_u → MaybeInt_u → Prop :=
-  | mappend_Nothing_x: ∀ y, mappend_rel Nothing_u y y
-  | mappend_Just_x: ∀ x y, mappend_rel (Just_u x) y (Just_u x).
+  | mappend_Just_x: ∀ x y, mappend_rel (Just_u x) y (Just_u x)
+  | mappend_Nothing_x: ∀ y, mappend_rel Nothing_u y y.
 
 #[global] Hint Constructors mappend_rel: core_hint_db.
 
@@ -102,14 +102,6 @@ Qed.
 
 #[global] Hint Resolve mappend_rel_funct: f_rel_funct_db.
 
-Theorem mappend_Nothing_x_lem y mappend_Nothing_x_lem_res:
-  mappend_rel Nothing_u y mappend_Nothing_x_lem_res ↔ mappend_Nothing_x_lem_res == y.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite mappend_Nothing_x_lem: f_rel_back.
-
 Theorem mappend_Just_x_lem x y mappend_Just_x_lem_res:
   mappend_rel (Just_u x) y mappend_Just_x_lem_res ↔ mappend_Just_x_lem_res == Just_u x.
 Proof.
@@ -117,6 +109,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite mappend_Just_x_lem: f_rel_back.
+
+Theorem mappend_Nothing_x_lem y mappend_Nothing_x_lem_res:
+  mappend_rel Nothing_u y mappend_Nothing_x_lem_res ↔ mappend_Nothing_x_lem_res == y.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite mappend_Nothing_x_lem: f_rel_back.
 
 Theorem mappend_rel_ex
   (ds_d48G : MaybeInt_u)

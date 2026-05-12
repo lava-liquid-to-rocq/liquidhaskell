@@ -374,12 +374,12 @@ Proof.
 Defined.
 
 Inductive geqN_rel: Nats_u → Nats_u → bool → Prop :=
-  | geqN_x_Zero: ∀ ds_d2z8, geqN_rel ds_d2z8 Zero_u true
-  | geqN_Zero_Suc: ∀ lq_anf7205759403792803869,
-                   geqN_rel Zero_u (Suc_u lq_anf7205759403792803869) false
   | geqN_Suc_Suc: ∀ m lq_anf7205759403792803869 (geqN_res : bool),
                   geqN_rel m lq_anf7205759403792803869 geqN_res
-                  → geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792803869) geqN_res.
+                  → geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792803869) geqN_res
+  | geqN_Zero_Suc: ∀ lq_anf7205759403792803869,
+                   geqN_rel Zero_u (Suc_u lq_anf7205759403792803869) false
+  | geqN_x_Zero: ∀ ds_d2z8, geqN_rel ds_d2z8 Zero_u true.
 
 #[global] Hint Constructors geqN_rel: core_hint_db.
 
@@ -399,13 +399,15 @@ Qed.
 
 #[global] Hint Resolve geqN_rel_funct: f_rel_funct_db.
 
-Theorem geqN_x_Zero_lem ds_d2z8 geqN_x_Zero_lem_res:
-  geqN_rel ds_d2z8 Zero_u geqN_x_Zero_lem_res ↔ geqN_x_Zero_lem_res == true.
+Theorem geqN_Suc_Suc_lem lq_anf7205759403792803869 m geqN_Suc_Suc_lem_res:
+  geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792803869) geqN_Suc_Suc_lem_res
+  ↔ ∃ (geqN_res : bool),
+    geqN_rel m lq_anf7205759403792803869 geqN_res ∧ geqN_Suc_Suc_lem_res == geqN_res.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite geqN_x_Zero_lem: f_rel_back.
+#[global] Hint Rewrite geqN_Suc_Suc_lem: f_rel_back.
 
 Theorem geqN_Zero_Suc_lem lq_anf7205759403792803869 geqN_Zero_Suc_lem_res:
   geqN_rel Zero_u (Suc_u lq_anf7205759403792803869) geqN_Zero_Suc_lem_res
@@ -416,15 +418,13 @@ Qed.
 
 #[global] Hint Rewrite geqN_Zero_Suc_lem: f_rel_back.
 
-Theorem geqN_Suc_Suc_lem lq_anf7205759403792803869 m geqN_Suc_Suc_lem_res:
-  geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792803869) geqN_Suc_Suc_lem_res
-  ↔ ∃ (geqN_res : bool),
-    geqN_rel m lq_anf7205759403792803869 geqN_res ∧ geqN_Suc_Suc_lem_res == geqN_res.
+Theorem geqN_x_Zero_lem ds_d2z8 geqN_x_Zero_lem_res:
+  geqN_rel ds_d2z8 Zero_u geqN_x_Zero_lem_res ↔ geqN_x_Zero_lem_res == true.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite geqN_Suc_Suc_lem: f_rel_back.
+#[global] Hint Rewrite geqN_x_Zero_lem: f_rel_back.
 
 Theorem geqN_rel_ex
   (ds_d2z8 : Nats_u)
@@ -622,9 +622,9 @@ Proof.
 Defined.
 
 Inductive length2_rel: L2_u → Nats_u → Prop :=
-  | length2_Emp2: length2_rel Emp2_u Zero_u
   | length2_App2: ∀ ds_d2zQ xs (length2_res : Nats_u),
-                  length2_rel xs length2_res → length2_rel (App2_u ds_d2zQ xs) (Suc_u length2_res).
+                  length2_rel xs length2_res → length2_rel (App2_u ds_d2zQ xs) (Suc_u length2_res)
+  | length2_Emp2: length2_rel Emp2_u Zero_u.
 
 #[global] Hint Constructors length2_rel: core_hint_db.
 
@@ -640,14 +640,6 @@ Qed.
 
 #[global] Hint Resolve length2_rel_funct: f_rel_funct_db.
 
-Theorem length2_Emp2_lem length2_Emp2_lem_res:
-  length2_rel Emp2_u length2_Emp2_lem_res ↔ length2_Emp2_lem_res == Zero_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite length2_Emp2_lem: f_rel_back.
-
 Theorem length2_App2_lem ds_d2zQ xs length2_App2_lem_res:
   length2_rel (App2_u ds_d2zQ xs) length2_App2_lem_res
   ↔ ∃ (length2_res : Nats_u), length2_rel xs length2_res ∧ length2_App2_lem_res == Suc_u length2_res.
@@ -656,6 +648,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite length2_App2_lem: f_rel_back.
+
+Theorem length2_Emp2_lem length2_Emp2_lem_res:
+  length2_rel Emp2_u length2_Emp2_lem_res ↔ length2_Emp2_lem_res == Zero_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite length2_Emp2_lem: f_rel_back.
 
 Theorem length2_rel_ex (ds_d2zO : L2_u) (ds_d2zO_p : L2_wf ds_d2zO ∧ True):
   length2_rel ds_d2zO ⌊ length2 (exist _ ds_d2zO ds_d2zO_p) -⌋.
@@ -927,9 +927,9 @@ Proof.
 Defined.
 
 Inductive append_rel: L_u → L_u → L_u → Prop :=
-  | append_Emp_x: ∀ ys, append_rel Emp_u ys ys
   | append_App_x: ∀ x xs ys (append_res : L_u),
-                  append_rel xs ys append_res → append_rel (App_u x xs) ys (App_u x append_res).
+                  append_rel xs ys append_res → append_rel (App_u x xs) ys (App_u x append_res)
+  | append_Emp_x: ∀ ys, append_rel Emp_u ys ys.
 
 #[global] Hint Constructors append_rel: core_hint_db.
 
@@ -946,14 +946,6 @@ Qed.
 
 #[global] Hint Resolve append_rel_funct: f_rel_funct_db.
 
-Theorem append_Emp_x_lem ys append_Emp_x_lem_res:
-  append_rel Emp_u ys append_Emp_x_lem_res ↔ append_Emp_x_lem_res == ys.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite append_Emp_x_lem: f_rel_back.
-
 Theorem append_App_x_lem x xs ys append_App_x_lem_res:
   append_rel (App_u x xs) ys append_App_x_lem_res
   ↔ ∃ (append_res : L_u), append_rel xs ys append_res ∧ append_App_x_lem_res == App_u x append_res.
@@ -962,6 +954,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite append_App_x_lem: f_rel_back.
+
+Theorem append_Emp_x_lem ys append_Emp_x_lem_res:
+  append_rel Emp_u ys append_Emp_x_lem_res ↔ append_Emp_x_lem_res == ys.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite append_Emp_x_lem: f_rel_back.
 
 Theorem append_rel_ex
   (ds_d2AP : L_u) (ds_d2AP_p : L_wf ds_d2AP ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
@@ -1159,13 +1159,13 @@ Proof.
 Defined.
 
 Inductive concatMap_rel: @uPack (Z ::UT nilUT) L_u → L_u → L_u → Prop :=
-  | concatMap_x_Emp: ∀ (f : @uPack (Z ::UT nilUT) L_u), concatMap_rel f Emp_u Emp_u
   | concatMap_x_App: ∀ (f : @uPack (Z ::UT nilUT) L_u) x xs (concatMap_res : L_u),
                      concatMap_rel f xs concatMap_res
                      → ∀ (f_res : L_u),
                        getUPackRel f x f_res
                        → ∀ (append_res : L_u),
-                         append_rel f_res concatMap_res append_res → concatMap_rel f (App_u x xs) append_res.
+                         append_rel f_res concatMap_res append_res → concatMap_rel f (App_u x xs) append_res
+  | concatMap_x_Emp: ∀ (f : @uPack (Z ::UT nilUT) L_u), concatMap_rel f Emp_u Emp_u.
 
 #[global] Hint Constructors concatMap_rel: core_hint_db.
 
@@ -1182,14 +1182,6 @@ Qed.
 
 #[global] Hint Resolve concatMap_rel_funct: f_rel_funct_db.
 
-Theorem concatMap_x_Emp_lem f concatMap_x_Emp_lem_res:
-  concatMap_rel f Emp_u concatMap_x_Emp_lem_res ↔ concatMap_x_Emp_lem_res == Emp_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite concatMap_x_Emp_lem: f_rel_back.
-
 Theorem concatMap_x_App_lem f x xs concatMap_x_App_lem_res:
   concatMap_rel f (App_u x xs) concatMap_x_App_lem_res
   ↔ ∃ (concatMap_res : L_u),
@@ -1203,6 +1195,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite concatMap_x_App_lem: f_rel_back.
+
+Theorem concatMap_x_Emp_lem f concatMap_x_Emp_lem_res:
+  concatMap_rel f Emp_u concatMap_x_Emp_lem_res ↔ concatMap_x_Emp_lem_res == Emp_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite concatMap_x_Emp_lem: f_rel_back.
 
 Theorem concatMap_rel_ex
   (f : @Pack
@@ -1339,9 +1339,9 @@ Proof.
 Defined.
 
 Inductive l2_pr1_rel: L2_u → L_u → Prop :=
-  | l2_pr1_Emp2: l2_pr1_rel Emp2_u Emp_u
   | l2_pr1__App2_MkPair_x: ∀ ds_d2zC l x (l2_pr1_res : L_u),
-                           l2_pr1_rel l l2_pr1_res → l2_pr1_rel (App2_u (MkPair_u x ds_d2zC) l) (App_u x l2_pr1_res).
+                           l2_pr1_rel l l2_pr1_res → l2_pr1_rel (App2_u (MkPair_u x ds_d2zC) l) (App_u x l2_pr1_res)
+  | l2_pr1_Emp2: l2_pr1_rel Emp2_u Emp_u.
 
 #[global] Hint Constructors l2_pr1_rel: core_hint_db.
 
@@ -1359,14 +1359,6 @@ Qed.
 
 #[global] Hint Resolve l2_pr1_rel_funct: f_rel_funct_db.
 
-Theorem l2_pr1_Emp2_lem l2_pr1_Emp2_lem_res:
-  l2_pr1_rel Emp2_u l2_pr1_Emp2_lem_res ↔ l2_pr1_Emp2_lem_res == Emp_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite l2_pr1_Emp2_lem: f_rel_back.
-
 Theorem l2_pr1__App2_MkPair_x_lem ds_d2zC l x l2_pr1__App2_MkPair_x_lem_res:
   l2_pr1_rel (App2_u (MkPair_u x ds_d2zC) l) l2_pr1__App2_MkPair_x_lem_res
   ↔ ∃ (l2_pr1_res : L_u),
@@ -1376,6 +1368,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite l2_pr1__App2_MkPair_x_lem: f_rel_back.
+
+Theorem l2_pr1_Emp2_lem l2_pr1_Emp2_lem_res:
+  l2_pr1_rel Emp2_u l2_pr1_Emp2_lem_res ↔ l2_pr1_Emp2_lem_res == Emp_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite l2_pr1_Emp2_lem: f_rel_back.
 
 Theorem l2_pr1_rel_ex (ds_d2zy : L2_u) (ds_d2zy_p : L2_wf ds_d2zy ∧ True):
   l2_pr1_rel ds_d2zy ⌊ l2_pr1 (exist _ ds_d2zy ds_d2zy_p) -⌋.
@@ -1467,9 +1467,9 @@ Proof.
 Defined.
 
 Inductive l2_pr2_rel: L2_u → L_u → Prop :=
-  | l2_pr2_Emp2: l2_pr2_rel Emp2_u Emp_u
   | l2_pr2__App2_MkPair_x: ∀ ds_d2zx l y (l2_pr2_res : L_u),
-                           l2_pr2_rel l l2_pr2_res → l2_pr2_rel (App2_u (MkPair_u ds_d2zx y) l) (App_u y l2_pr2_res).
+                           l2_pr2_rel l l2_pr2_res → l2_pr2_rel (App2_u (MkPair_u ds_d2zx y) l) (App_u y l2_pr2_res)
+  | l2_pr2_Emp2: l2_pr2_rel Emp2_u Emp_u.
 
 #[global] Hint Constructors l2_pr2_rel: core_hint_db.
 
@@ -1487,14 +1487,6 @@ Qed.
 
 #[global] Hint Resolve l2_pr2_rel_funct: f_rel_funct_db.
 
-Theorem l2_pr2_Emp2_lem l2_pr2_Emp2_lem_res:
-  l2_pr2_rel Emp2_u l2_pr2_Emp2_lem_res ↔ l2_pr2_Emp2_lem_res == Emp_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite l2_pr2_Emp2_lem: f_rel_back.
-
 Theorem l2_pr2__App2_MkPair_x_lem ds_d2zx l y l2_pr2__App2_MkPair_x_lem_res:
   l2_pr2_rel (App2_u (MkPair_u ds_d2zx y) l) l2_pr2__App2_MkPair_x_lem_res
   ↔ ∃ (l2_pr2_res : L_u),
@@ -1504,6 +1496,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite l2_pr2__App2_MkPair_x_lem: f_rel_back.
+
+Theorem l2_pr2_Emp2_lem l2_pr2_Emp2_lem_res:
+  l2_pr2_rel Emp2_u l2_pr2_Emp2_lem_res ↔ l2_pr2_Emp2_lem_res == Emp_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite l2_pr2_Emp2_lem: f_rel_back.
 
 Theorem l2_pr2_rel_ex (ds_d2zt : L2_u) (ds_d2zt_p : L2_wf ds_d2zt ∧ True):
   l2_pr2_rel ds_d2zt ⌊ l2_pr2 (exist _ ds_d2zt ds_d2zt_p) -⌋.
@@ -1594,9 +1594,9 @@ Proof.
 Defined.
 
 Inductive length_rel: L_u → Nats_u → Prop :=
-  | length_Emp: length_rel Emp_u Zero_u
   | length_App: ∀ ds_d2zT xs (length_res : Nats_u),
-                length_rel xs length_res → length_rel (App_u ds_d2zT xs) (Suc_u length_res).
+                length_rel xs length_res → length_rel (App_u ds_d2zT xs) (Suc_u length_res)
+  | length_Emp: length_rel Emp_u Zero_u.
 
 #[global] Hint Constructors length_rel: core_hint_db.
 
@@ -1612,14 +1612,6 @@ Qed.
 
 #[global] Hint Resolve length_rel_funct: f_rel_funct_db.
 
-Theorem length_Emp_lem length_Emp_lem_res:
-  length_rel Emp_u length_Emp_lem_res ↔ length_Emp_lem_res == Zero_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite length_Emp_lem: f_rel_back.
-
 Theorem length_App_lem ds_d2zT xs length_App_lem_res:
   length_rel (App_u ds_d2zT xs) length_App_lem_res
   ↔ ∃ (length_res : Nats_u), length_rel xs length_res ∧ length_App_lem_res == Suc_u length_res.
@@ -1628,6 +1620,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite length_App_lem: f_rel_back.
+
+Theorem length_Emp_lem length_Emp_lem_res:
+  length_rel Emp_u length_Emp_lem_res ↔ length_Emp_lem_res == Zero_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite length_Emp_lem: f_rel_back.
 
 Theorem length_rel_ex (ds_d2zR : L_u) (ds_d2zR_p : L_wf ds_d2zR ∧ True):
   length_rel ds_d2zR ⌊ length (exist _ ds_d2zR ds_d2zR_p) -⌋.
@@ -1807,10 +1807,10 @@ Proof.
 Defined.
 
 Inductive map_rel: @uPack (Z ::UT nilUT) Z → L_u → L_u → Prop :=
-  | map_x_Emp: ∀ (f : @uPack (Z ::UT nilUT) Z), map_rel f Emp_u Emp_u
   | map_x_App: ∀ (f : @uPack (Z ::UT nilUT) Z) x xs (map_res : L_u),
                map_rel f xs map_res
-               → ∀ (f_res : Z), getUPackRel f x f_res → map_rel f (App_u x xs) (App_u f_res map_res).
+               → ∀ (f_res : Z), getUPackRel f x f_res → map_rel f (App_u x xs) (App_u f_res map_res)
+  | map_x_Emp: ∀ (f : @uPack (Z ::UT nilUT) Z), map_rel f Emp_u Emp_u.
 
 #[global] Hint Constructors map_rel: core_hint_db.
 
@@ -1827,14 +1827,6 @@ Qed.
 
 #[global] Hint Resolve map_rel_funct: f_rel_funct_db.
 
-Theorem map_x_Emp_lem f map_x_Emp_lem_res:
-  map_rel f Emp_u map_x_Emp_lem_res ↔ map_x_Emp_lem_res == Emp_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite map_x_Emp_lem: f_rel_back.
-
 Theorem map_x_App_lem f x xs map_x_App_lem_res:
   map_rel f (App_u x xs) map_x_App_lem_res
   ↔ ∃ (map_res : L_u),
@@ -1845,6 +1837,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite map_x_App_lem: f_rel_back.
+
+Theorem map_x_Emp_lem f map_x_Emp_lem_res:
+  map_rel f Emp_u map_x_Emp_lem_res ↔ map_x_Emp_lem_res == Emp_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite map_x_Emp_lem: f_rel_back.
 
 Theorem map_rel_ex
   (f : @Pack
@@ -2033,11 +2033,11 @@ Proof.
 Defined.
 
 Inductive reverse_rel: L_u → L_u → Prop :=
-  | reverse_Emp: reverse_rel Emp_u Emp_u
   | reverse_App: ∀ x xs (reverse_res : L_u),
                  reverse_rel xs reverse_res
                  → ∀ (append_res : L_u),
-                   append_rel reverse_res (App_u x Emp_u) append_res → reverse_rel (App_u x xs) append_res.
+                   append_rel reverse_res (App_u x Emp_u) append_res → reverse_rel (App_u x xs) append_res
+  | reverse_Emp: reverse_rel Emp_u Emp_u.
 
 #[global] Hint Constructors reverse_rel: core_hint_db.
 
@@ -2053,14 +2053,6 @@ Qed.
 
 #[global] Hint Resolve reverse_rel_funct: f_rel_funct_db.
 
-Theorem reverse_Emp_lem reverse_Emp_lem_res:
-  reverse_rel Emp_u reverse_Emp_lem_res ↔ reverse_Emp_lem_res == Emp_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite reverse_Emp_lem: f_rel_back.
-
 Theorem reverse_App_lem x xs reverse_App_lem_res:
   reverse_rel (App_u x xs) reverse_App_lem_res
   ↔ ∃ (reverse_res : L_u),
@@ -2072,6 +2064,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite reverse_App_lem: f_rel_back.
+
+Theorem reverse_Emp_lem reverse_Emp_lem_res:
+  reverse_rel Emp_u reverse_Emp_lem_res ↔ reverse_Emp_lem_res == Emp_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite reverse_Emp_lem: f_rel_back.
 
 Theorem reverse_rel_ex (ds_d2AT : L_u) (ds_d2AT_p : L_wf ds_d2AT ∧ True):
   reverse_rel ds_d2AT ⌊ reverse (exist _ ds_d2AT ds_d2AT_p) -⌋.
@@ -2210,15 +2210,15 @@ Proof.
 Defined.
 
 Inductive take_rel: Nats_u → L_u → L_u → Prop :=
-  | take_Zero_x: ∀ ds_d2zg, take_rel Zero_u ds_d2zg Emp_u
-  | take_Suc_Emp: ∀ lq_anf7205759403792803826, take_rel (Suc_u lq_anf7205759403792803826) Emp_u Emp_u
   | take_Suc_App: ∀ lq_anf7205759403792803826 lq_anf7205759403792803824 lq_anf7205759403792803825
                     (take_res : L_u),
                   take_rel lq_anf7205759403792803826 lq_anf7205759403792803825 take_res
                   → take_rel
                     (Suc_u lq_anf7205759403792803826)
                     (App_u lq_anf7205759403792803824 lq_anf7205759403792803825)
-                    (App_u lq_anf7205759403792803824 take_res).
+                    (App_u lq_anf7205759403792803824 take_res)
+  | take_Suc_Emp: ∀ lq_anf7205759403792803826, take_rel (Suc_u lq_anf7205759403792803826) Emp_u Emp_u
+  | take_Zero_x: ∀ ds_d2zg, take_rel Zero_u ds_d2zg Emp_u.
 
 #[global] Hint Constructors take_rel: core_hint_db.
 
@@ -2238,23 +2238,6 @@ Qed.
 
 #[global] Hint Resolve take_rel_funct: f_rel_funct_db.
 
-Theorem take_Zero_x_lem ds_d2zg take_Zero_x_lem_res:
-  take_rel Zero_u ds_d2zg take_Zero_x_lem_res ↔ take_Zero_x_lem_res == Emp_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite take_Zero_x_lem: f_rel_back.
-
-Theorem take_Suc_Emp_lem lq_anf7205759403792803826 take_Suc_Emp_lem_res:
-  take_rel (Suc_u lq_anf7205759403792803826) Emp_u take_Suc_Emp_lem_res
-  ↔ take_Suc_Emp_lem_res == Emp_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite take_Suc_Emp_lem: f_rel_back.
-
 Theorem take_Suc_App_lem
   lq_anf7205759403792803824 lq_anf7205759403792803825 lq_anf7205759403792803826 take_Suc_App_lem_res:
   take_rel
@@ -2269,6 +2252,23 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite take_Suc_App_lem: f_rel_back.
+
+Theorem take_Suc_Emp_lem lq_anf7205759403792803826 take_Suc_Emp_lem_res:
+  take_rel (Suc_u lq_anf7205759403792803826) Emp_u take_Suc_Emp_lem_res
+  ↔ take_Suc_Emp_lem_res == Emp_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite take_Suc_Emp_lem: f_rel_back.
+
+Theorem take_Zero_x_lem ds_d2zg take_Zero_x_lem_res:
+  take_rel Zero_u ds_d2zg take_Zero_x_lem_res ↔ take_Zero_x_lem_res == Emp_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite take_Zero_x_lem: f_rel_back.
 
 Theorem take_rel_ex
   (ds_d2zf : Nats_u)
@@ -2439,16 +2439,16 @@ Proof.
 Defined.
 
 Inductive zip_rel: L_u → L_u → L2_u → Prop :=
-  | zip_Emp_x: ∀ ds_d2Ag, zip_rel Emp_u ds_d2Ag Emp2_u
-  | zip_App_Emp: ∀ lq_anf7205759403792803735 lq_anf7205759403792803736,
-                 zip_rel (App_u lq_anf7205759403792803735 lq_anf7205759403792803736) Emp_u Emp2_u
   | zip_App_App: ∀ lq_anf7205759403792803735 lq_anf7205759403792803736 lq_anf7205759403792803733 lq_anf7205759403792803734
                    (zip_res : L2_u),
                  zip_rel lq_anf7205759403792803736 lq_anf7205759403792803734 zip_res
                  → zip_rel
                    (App_u lq_anf7205759403792803735 lq_anf7205759403792803736)
                    (App_u lq_anf7205759403792803733 lq_anf7205759403792803734)
-                   (App2_u (MkPair_u lq_anf7205759403792803735 lq_anf7205759403792803733) zip_res).
+                   (App2_u (MkPair_u lq_anf7205759403792803735 lq_anf7205759403792803733) zip_res)
+  | zip_App_Emp: ∀ lq_anf7205759403792803735 lq_anf7205759403792803736,
+                 zip_rel (App_u lq_anf7205759403792803735 lq_anf7205759403792803736) Emp_u Emp2_u
+  | zip_Emp_x: ∀ ds_d2Ag, zip_rel Emp_u ds_d2Ag Emp2_u.
 
 #[global] Hint Constructors zip_rel: core_hint_db.
 
@@ -2468,23 +2468,6 @@ Qed.
 
 #[global] Hint Resolve zip_rel_funct: f_rel_funct_db.
 
-Theorem zip_Emp_x_lem ds_d2Ag zip_Emp_x_lem_res:
-  zip_rel Emp_u ds_d2Ag zip_Emp_x_lem_res ↔ zip_Emp_x_lem_res == Emp2_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite zip_Emp_x_lem: f_rel_back.
-
-Theorem zip_App_Emp_lem lq_anf7205759403792803735 lq_anf7205759403792803736 zip_App_Emp_lem_res:
-  zip_rel (App_u lq_anf7205759403792803735 lq_anf7205759403792803736) Emp_u zip_App_Emp_lem_res
-  ↔ zip_App_Emp_lem_res == Emp2_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite zip_App_Emp_lem: f_rel_back.
-
 Theorem zip_App_App_lem
   lq_anf7205759403792803733 lq_anf7205759403792803734 lq_anf7205759403792803735 lq_anf7205759403792803736 zip_App_App_lem_res:
   zip_rel
@@ -2500,6 +2483,23 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite zip_App_App_lem: f_rel_back.
+
+Theorem zip_App_Emp_lem lq_anf7205759403792803735 lq_anf7205759403792803736 zip_App_Emp_lem_res:
+  zip_rel (App_u lq_anf7205759403792803735 lq_anf7205759403792803736) Emp_u zip_App_Emp_lem_res
+  ↔ zip_App_Emp_lem_res == Emp2_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite zip_App_Emp_lem: f_rel_back.
+
+Theorem zip_Emp_x_lem ds_d2Ag zip_Emp_x_lem_res:
+  zip_rel Emp_u ds_d2Ag zip_Emp_x_lem_res ↔ zip_Emp_x_lem_res == Emp2_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite zip_Emp_x_lem: f_rel_back.
 
 Theorem zip_rel_ex
   (ds_d2Af : L_u) (ds_d2Af_p : L_wf ds_d2Af ∧ True) (ds_d2Ag : L_u) (ds_d2Ag_p : L_wf ds_d2Ag ∧ True):
@@ -2797,11 +2797,6 @@ Proof.
 Defined.
 
 Inductive zipWith_rel: @uPack (Z ::UT (Z ::UT nilUT)) Z → L_u → L_u → L_u → Prop :=
-  | zipWith_x_Emp_x: ∀ (f : @uPack (Z ::UT (Z ::UT nilUT)) Z) ds_d2A6,
-                     zipWith_rel f Emp_u ds_d2A6 Emp_u
-  | zipWith_x_App_Emp: ∀ (f : @uPack (Z ::UT (Z ::UT nilUT)) Z)
-                         lq_anf7205759403792803751 lq_anf7205759403792803752,
-                       zipWith_rel f (App_u lq_anf7205759403792803751 lq_anf7205759403792803752) Emp_u Emp_u
   | zipWith_x_App_App: ∀ (f : @uPack (Z ::UT (Z ::UT nilUT)) Z)
                          lq_anf7205759403792803751 lq_anf7205759403792803752 lq_anf7205759403792803749 lq_anf7205759403792803750
                          (zipWith_res : L_u),
@@ -2812,7 +2807,12 @@ Inductive zipWith_rel: @uPack (Z ::UT (Z ::UT nilUT)) Z → L_u → L_u → L_u 
                            f
                            (App_u lq_anf7205759403792803751 lq_anf7205759403792803752)
                            (App_u lq_anf7205759403792803749 lq_anf7205759403792803750)
-                           (App_u f_res zipWith_res).
+                           (App_u f_res zipWith_res)
+  | zipWith_x_App_Emp: ∀ (f : @uPack (Z ::UT (Z ::UT nilUT)) Z)
+                         lq_anf7205759403792803751 lq_anf7205759403792803752,
+                       zipWith_rel f (App_u lq_anf7205759403792803751 lq_anf7205759403792803752) Emp_u Emp_u
+  | zipWith_x_Emp_x: ∀ (f : @uPack (Z ::UT (Z ::UT nilUT)) Z) ds_d2A6,
+                     zipWith_rel f Emp_u ds_d2A6 Emp_u.
 
 #[global] Hint Constructors zipWith_rel: core_hint_db.
 
@@ -2832,28 +2832,6 @@ Qed.
 
 #[global] Hint Resolve zipWith_rel_funct: f_rel_funct_db.
 
-Theorem zipWith_x_Emp_x_lem ds_d2A6 f zipWith_x_Emp_x_lem_res:
-  zipWith_rel f Emp_u ds_d2A6 zipWith_x_Emp_x_lem_res ↔ zipWith_x_Emp_x_lem_res == Emp_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite zipWith_x_Emp_x_lem: f_rel_back.
-
-Theorem zipWith_x_App_Emp_lem
-  f lq_anf7205759403792803751 lq_anf7205759403792803752 zipWith_x_App_Emp_lem_res:
-  zipWith_rel
-  f
-  (App_u lq_anf7205759403792803751 lq_anf7205759403792803752)
-  Emp_u
-  zipWith_x_App_Emp_lem_res
-  ↔ zipWith_x_App_Emp_lem_res == Emp_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite zipWith_x_App_Emp_lem: f_rel_back.
-
 Theorem zipWith_x_App_App_lem
   f lq_anf7205759403792803749 lq_anf7205759403792803750 lq_anf7205759403792803751 lq_anf7205759403792803752 zipWith_x_App_App_lem_res:
   zipWith_rel
@@ -2871,6 +2849,28 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite zipWith_x_App_App_lem: f_rel_back.
+
+Theorem zipWith_x_App_Emp_lem
+  f lq_anf7205759403792803751 lq_anf7205759403792803752 zipWith_x_App_Emp_lem_res:
+  zipWith_rel
+  f
+  (App_u lq_anf7205759403792803751 lq_anf7205759403792803752)
+  Emp_u
+  zipWith_x_App_Emp_lem_res
+  ↔ zipWith_x_App_Emp_lem_res == Emp_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite zipWith_x_App_Emp_lem: f_rel_back.
+
+Theorem zipWith_x_Emp_x_lem ds_d2A6 f zipWith_x_Emp_x_lem_res:
+  zipWith_rel f Emp_u ds_d2A6 zipWith_x_Emp_x_lem_res ↔ zipWith_x_Emp_x_lem_res == Emp_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite zipWith_x_Emp_x_lem: f_rel_back.
 
 Theorem zipWith_rel_ex
   (f : @Pack

@@ -91,9 +91,9 @@ Proof.
 Defined.
 
 Inductive append_rel: L_u → L_u → L_u → Prop :=
-  | append_Emp_x: ∀ ys, append_rel Emp_u ys ys
   | append_C_x: ∀ x xs ys (append_res : L_u),
-                append_rel xs ys append_res → append_rel (C_u x xs) ys (C_u x append_res).
+                append_rel xs ys append_res → append_rel (C_u x xs) ys (C_u x append_res)
+  | append_Emp_x: ∀ ys, append_rel Emp_u ys ys.
 
 #[global] Hint Constructors append_rel: core_hint_db.
 
@@ -110,14 +110,6 @@ Qed.
 
 #[global] Hint Resolve append_rel_funct: f_rel_funct_db.
 
-Theorem append_Emp_x_lem ys append_Emp_x_lem_res:
-  append_rel Emp_u ys append_Emp_x_lem_res ↔ append_Emp_x_lem_res == ys.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite append_Emp_x_lem: f_rel_back.
-
 Theorem append_C_x_lem x xs ys append_C_x_lem_res:
   append_rel (C_u x xs) ys append_C_x_lem_res
   ↔ ∃ (append_res : L_u), append_rel xs ys append_res ∧ append_C_x_lem_res == C_u x append_res.
@@ -126,6 +118,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite append_C_x_lem: f_rel_back.
+
+Theorem append_Emp_x_lem ys append_Emp_x_lem_res:
+  append_rel Emp_u ys append_Emp_x_lem_res ↔ append_Emp_x_lem_res == ys.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite append_Emp_x_lem: f_rel_back.
 
 Theorem append_rel_ex
   (ds_d3Ir : L_u) (ds_d3Ir_p : L_wf ds_d3Ir ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
@@ -245,12 +245,12 @@ Proof.
 Defined.
 
 Inductive bind_rel: L_u → @uPack (Z ::UT nilUT) L_u → L_u → Prop :=
-  | bind_Emp_x: ∀ (f : @uPack (Z ::UT nilUT) L_u), bind_rel Emp_u f Emp_u
   | bind_C_x: ∀ x xs (f : @uPack (Z ::UT nilUT) L_u) (bind_res : L_u),
               bind_rel xs f bind_res
               → ∀ (f_res : L_u),
                 getUPackRel f x f_res
-                → ∀ (append_res : L_u), append_rel f_res bind_res append_res → bind_rel (C_u x xs) f append_res.
+                → ∀ (append_res : L_u), append_rel f_res bind_res append_res → bind_rel (C_u x xs) f append_res
+  | bind_Emp_x: ∀ (f : @uPack (Z ::UT nilUT) L_u), bind_rel Emp_u f Emp_u.
 
 #[global] Hint Constructors bind_rel: core_hint_db.
 
@@ -267,14 +267,6 @@ Qed.
 
 #[global] Hint Resolve bind_rel_funct: f_rel_funct_db.
 
-Theorem bind_Emp_x_lem f bind_Emp_x_lem_res:
-  bind_rel Emp_u f bind_Emp_x_lem_res ↔ bind_Emp_x_lem_res == Emp_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite bind_Emp_x_lem: f_rel_back.
-
 Theorem bind_C_x_lem f x xs bind_C_x_lem_res:
   bind_rel (C_u x xs) f bind_C_x_lem_res
   ↔ ∃ (bind_res : L_u),
@@ -287,6 +279,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite bind_C_x_lem: f_rel_back.
+
+Theorem bind_Emp_x_lem f bind_Emp_x_lem_res:
+  bind_rel Emp_u f bind_Emp_x_lem_res ↔ bind_Emp_x_lem_res == Emp_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite bind_Emp_x_lem: f_rel_back.
 
 Theorem bind_rel_ex
   (ds_d3Iu : L_u)

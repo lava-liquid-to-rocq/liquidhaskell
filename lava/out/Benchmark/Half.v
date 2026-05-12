@@ -94,8 +94,8 @@ Proof.
 Defined.
 
 Inductive even_rel: Nats_u → bool → Prop :=
-  | even_Zero: even_rel Zero_u true
-  | even_Suc: ∀ n (even_res : bool), even_rel n even_res → even_rel (Suc_u n) (negb even_res).
+  | even_Suc: ∀ n (even_res : bool), even_rel n even_res → even_rel (Suc_u n) (negb even_res)
+  | even_Zero: even_rel Zero_u true.
 
 #[global] Hint Constructors even_rel: core_hint_db.
 
@@ -111,14 +111,6 @@ Qed.
 
 #[global] Hint Resolve even_rel_funct: f_rel_funct_db.
 
-Theorem even_Zero_lem even_Zero_lem_res:
-  even_rel Zero_u even_Zero_lem_res ↔ even_Zero_lem_res == true.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite even_Zero_lem: f_rel_back.
-
 Theorem even_Suc_lem n even_Suc_lem_res:
   even_rel (Suc_u n) even_Suc_lem_res
   ↔ ∃ (even_res : bool), even_rel n even_res ∧ even_Suc_lem_res == negb even_res.
@@ -127,6 +119,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite even_Suc_lem: f_rel_back.
+
+Theorem even_Zero_lem even_Zero_lem_res:
+  even_rel Zero_u even_Zero_lem_res ↔ even_Zero_lem_res == true.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite even_Zero_lem: f_rel_back.
 
 Theorem even_rel_ex (ds_d1Zd : Nats_u) (ds_d1Zd_p : Nats_wf ds_d1Zd ∧ True):
   even_rel ds_d1Zd ⌊ even (exist _ ds_d1Zd ds_d1Zd_p) -⌋.

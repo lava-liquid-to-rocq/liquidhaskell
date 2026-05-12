@@ -442,8 +442,6 @@ Proof.
 Defined.
 
 Inductive lowerGrade_rel: Grades_u → Grades_u → Prop :=
-  | lowerGrade__Grade_x_Plus: ∀ l, lowerGrade_rel (Grade_u l Plus_u) (Grade_u l Natural_u)
-  | lowerGrade__Grade_x_Natural: ∀ l, lowerGrade_rel (Grade_u l Natural_u) (Grade_u l Minus_u)
   | lowerGrade__Grade_A_Minus: ∀ (lowerLetter_res : Letter_u),
                                lowerLetter_rel A_u lowerLetter_res
                                → lowerGrade_rel (Grade_u A_u Minus_u) (Grade_u lowerLetter_res Plus_u)
@@ -456,7 +454,9 @@ Inductive lowerGrade_rel: Grades_u → Grades_u → Prop :=
   | lowerGrade__Grade_D_Minus: ∀ (lowerLetter_res : Letter_u),
                                lowerLetter_rel D_u lowerLetter_res
                                → lowerGrade_rel (Grade_u D_u Minus_u) (Grade_u lowerLetter_res Plus_u)
-  | lowerGrade__Grade_F_Minus: lowerGrade_rel (Grade_u F_u Minus_u) (Grade_u F_u Minus_u).
+  | lowerGrade__Grade_F_Minus: lowerGrade_rel (Grade_u F_u Minus_u) (Grade_u F_u Minus_u)
+  | lowerGrade__Grade_x_Natural: ∀ l, lowerGrade_rel (Grade_u l Natural_u) (Grade_u l Minus_u)
+  | lowerGrade__Grade_x_Plus: ∀ l, lowerGrade_rel (Grade_u l Plus_u) (Grade_u l Natural_u).
 
 #[global] Hint Constructors lowerGrade_rel: core_hint_db.
 
@@ -475,24 +475,6 @@ Proof.
 Qed.
 
 #[global] Hint Resolve lowerGrade_rel_funct: f_rel_funct_db.
-
-Theorem lowerGrade__Grade_x_Plus_lem l lowerGrade__Grade_x_Plus_lem_res:
-  lowerGrade_rel (Grade_u l Plus_u) lowerGrade__Grade_x_Plus_lem_res
-  ↔ lowerGrade__Grade_x_Plus_lem_res == Grade_u l Natural_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite lowerGrade__Grade_x_Plus_lem: f_rel_back.
-
-Theorem lowerGrade__Grade_x_Natural_lem l lowerGrade__Grade_x_Natural_lem_res:
-  lowerGrade_rel (Grade_u l Natural_u) lowerGrade__Grade_x_Natural_lem_res
-  ↔ lowerGrade__Grade_x_Natural_lem_res == Grade_u l Minus_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite lowerGrade__Grade_x_Natural_lem: f_rel_back.
 
 Theorem lowerGrade__Grade_A_Minus_lem lowerGrade__Grade_A_Minus_lem_res:
   lowerGrade_rel (Grade_u A_u Minus_u) lowerGrade__Grade_A_Minus_lem_res
@@ -546,6 +528,24 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite lowerGrade__Grade_F_Minus_lem: f_rel_back.
+
+Theorem lowerGrade__Grade_x_Natural_lem l lowerGrade__Grade_x_Natural_lem_res:
+  lowerGrade_rel (Grade_u l Natural_u) lowerGrade__Grade_x_Natural_lem_res
+  ↔ lowerGrade__Grade_x_Natural_lem_res == Grade_u l Minus_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lowerGrade__Grade_x_Natural_lem: f_rel_back.
+
+Theorem lowerGrade__Grade_x_Plus_lem l lowerGrade__Grade_x_Plus_lem_res:
+  lowerGrade_rel (Grade_u l Plus_u) lowerGrade__Grade_x_Plus_lem_res
+  ↔ lowerGrade__Grade_x_Plus_lem_res == Grade_u l Natural_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lowerGrade__Grade_x_Plus_lem: f_rel_back.
 
 Theorem lowerGrade_rel_ex (ds_d157 : Grades_u) (ds_d157_p : Grades_wf ds_d157 ∧ True):
   lowerGrade_rel ds_d157 ⌊ lowerGrade (exist _ ds_d157 ds_d157_p) -⌋.
@@ -650,6 +650,22 @@ Proof.
 Defined.
 
 Inductive applyLatePolicy_rel: Z → Grades_u → Grades_u → Prop :=
+  | applyLatePolicy_x_x_True: ∀ lateDays g, (lateDays <? 9) == true → applyLatePolicy_rel lateDays g g
+  | applyLatePolicy_x_x_False_True: ∀ lateDays g,
+                                    (lateDays <? 9) == false
+                                    → ((lateDays <? 17) == true
+                                       → ∀ (lowerGrade_res : Grades_u),
+                                         lowerGrade_rel g lowerGrade_res
+                                         → applyLatePolicy_rel lateDays g lowerGrade_res)
+  | applyLatePolicy_x_x_False_False_True: ∀ lateDays g,
+                                          (lateDays <? 9) == false
+                                          → ((lateDays <? 17) == false
+                                             → ((lateDays <? 21) == true
+                                                → ∀ (lowerGrade_res : Grades_u),
+                                                  lowerGrade_rel g lowerGrade_res
+                                                  → ∀ (lowerGrade_res_2 : Grades_u),
+                                                    lowerGrade_rel lowerGrade_res lowerGrade_res_2
+                                                    → applyLatePolicy_rel lateDays g lowerGrade_res_2))
   | applyLatePolicy_x_x_False_False_False: ∀ lateDays g,
                                            (lateDays <? 9) == false
                                            → ((lateDays <? 17) == false
@@ -660,24 +676,7 @@ Inductive applyLatePolicy_rel: Z → Grades_u → Grades_u → Prop :=
                                                      lowerGrade_rel lowerGrade_res lowerGrade_res_2
                                                      → ∀ (lowerGrade_res_3 : Grades_u),
                                                        lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3
-                                                       → applyLatePolicy_rel lateDays g lowerGrade_res_3))
-  | applyLatePolicy_x_x_False_False_True: ∀ lateDays g,
-                                          (lateDays <? 9) == false
-                                          → ((lateDays <? 17) == false
-                                             → ((lateDays <? 21) == true
-                                                → ∀ (lowerGrade_res : Grades_u),
-                                                  lowerGrade_rel g lowerGrade_res
-                                                  → ∀ (lowerGrade_res_2 : Grades_u),
-                                                    lowerGrade_rel lowerGrade_res lowerGrade_res_2
-                                                    → applyLatePolicy_rel lateDays g lowerGrade_res_2))
-  | applyLatePolicy_x_x_False_True: ∀ lateDays g,
-                                    (lateDays <? 9) == false
-                                    → ((lateDays <? 17) == true
-                                       → ∀ (lowerGrade_res : Grades_u),
-                                         lowerGrade_rel g lowerGrade_res
-                                         → applyLatePolicy_rel lateDays g lowerGrade_res)
-  | applyLatePolicy_x_x_True: ∀ lateDays g,
-                              (lateDays <? 9) == true → applyLatePolicy_rel lateDays g g.
+                                                       → applyLatePolicy_rel lateDays g lowerGrade_res_3)).
 
 #[global] Hint Constructors applyLatePolicy_rel: core_hint_db.
 
@@ -701,7 +700,19 @@ Qed.
 
 Theorem applyLatePolicy_inv_lem g lateDays applyLatePolicy_inv_lem_res:
   applyLatePolicy_rel lateDays g applyLatePolicy_inv_lem_res
-  ↔ (((lateDays <? 9) == false
+  ↔ (((lateDays <? 9) == true ∧ applyLatePolicy_inv_lem_res == g
+      ∨ (lateDays <? 9) == false
+        ∧ ((lateDays <? 17) == true
+           ∧ ∃ (lowerGrade_res : Grades_u),
+             lowerGrade_rel g lowerGrade_res ∧ applyLatePolicy_inv_lem_res == lowerGrade_res))
+     ∨ (lateDays <? 9) == false
+       ∧ ((lateDays <? 17) == false
+          ∧ ((lateDays <? 21) == true
+             ∧ ∃ (lowerGrade_res : Grades_u),
+               lowerGrade_rel g lowerGrade_res
+               ∧ ∃ (lowerGrade_res_2 : Grades_u),
+                 lowerGrade_rel lowerGrade_res lowerGrade_res_2 ∧ applyLatePolicy_inv_lem_res == lowerGrade_res_2)))
+    ∨ (lateDays <? 9) == false
       ∧ ((lateDays <? 17) == false
          ∧ ((lateDays <? 21) == false
             ∧ ∃ (lowerGrade_res : Grades_u),
@@ -709,19 +720,8 @@ Theorem applyLatePolicy_inv_lem g lateDays applyLatePolicy_inv_lem_res:
               ∧ ∃ (lowerGrade_res_2 : Grades_u),
                 lowerGrade_rel lowerGrade_res lowerGrade_res_2
                 ∧ ∃ (lowerGrade_res_3 : Grades_u),
-                  lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3 ∧ applyLatePolicy_inv_lem_res == lowerGrade_res_3))
-      ∨ (lateDays <? 9) == false
-        ∧ ((lateDays <? 17) == false
-           ∧ ((lateDays <? 21) == true
-              ∧ ∃ (lowerGrade_res : Grades_u),
-                lowerGrade_rel g lowerGrade_res
-                ∧ ∃ (lowerGrade_res_2 : Grades_u),
-                  lowerGrade_rel lowerGrade_res lowerGrade_res_2 ∧ applyLatePolicy_inv_lem_res == lowerGrade_res_2)))
-     ∨ (lateDays <? 9) == false
-       ∧ ((lateDays <? 17) == true
-          ∧ ∃ (lowerGrade_res : Grades_u),
-            lowerGrade_rel g lowerGrade_res ∧ applyLatePolicy_inv_lem_res == lowerGrade_res))
-    ∨ (lateDays <? 9) == true ∧ applyLatePolicy_inv_lem_res == g.
+                  lowerGrade_rel lowerGrade_res_2 lowerGrade_res_3
+                  ∧ applyLatePolicy_inv_lem_res == lowerGrade_res_3)).
 Proof.
   rel_back' ((lateDays <? 9) _::_
            (lateDays <? 17) _::_
@@ -1542,15 +1542,15 @@ Proof.
 Defined.
 
 Inductive modifierComparison_rel: Modifier_u → Modifier_u → Comparison_u → Prop :=
-  | modifierComparison_Plus_Plus: modifierComparison_rel Plus_u Plus_u Eq_u
-  | modifierComparison_Plus_Natural: modifierComparison_rel Plus_u Natural_u Gt_u
-  | modifierComparison_Plus_Minus: modifierComparison_rel Plus_u Minus_u Gt_u
-  | modifierComparison_Natural_Plus: modifierComparison_rel Natural_u Plus_u Lt_u
-  | modifierComparison_Natural_Natural: modifierComparison_rel Natural_u Natural_u Eq_u
-  | modifierComparison_Natural_Minus: modifierComparison_rel Natural_u Minus_u Gt_u
-  | modifierComparison_Minus_Plus: modifierComparison_rel Minus_u Plus_u Lt_u
+  | modifierComparison_Minus_Minus: modifierComparison_rel Minus_u Minus_u Eq_u
   | modifierComparison_Minus_Natural: modifierComparison_rel Minus_u Natural_u Lt_u
-  | modifierComparison_Minus_Minus: modifierComparison_rel Minus_u Minus_u Eq_u.
+  | modifierComparison_Minus_Plus: modifierComparison_rel Minus_u Plus_u Lt_u
+  | modifierComparison_Natural_Minus: modifierComparison_rel Natural_u Minus_u Gt_u
+  | modifierComparison_Natural_Natural: modifierComparison_rel Natural_u Natural_u Eq_u
+  | modifierComparison_Natural_Plus: modifierComparison_rel Natural_u Plus_u Lt_u
+  | modifierComparison_Plus_Minus: modifierComparison_rel Plus_u Minus_u Gt_u
+  | modifierComparison_Plus_Natural: modifierComparison_rel Plus_u Natural_u Gt_u
+  | modifierComparison_Plus_Plus: modifierComparison_rel Plus_u Plus_u Eq_u.
 
 #[global] Hint Constructors modifierComparison_rel: core_hint_db.
 
@@ -1571,68 +1571,14 @@ Qed.
 
 #[global] Hint Resolve modifierComparison_rel_funct: f_rel_funct_db.
 
-Theorem modifierComparison_Plus_Plus_lem modifierComparison_Plus_Plus_lem_res:
-  modifierComparison_rel Plus_u Plus_u modifierComparison_Plus_Plus_lem_res
-  ↔ modifierComparison_Plus_Plus_lem_res == Eq_u.
+Theorem modifierComparison_Minus_Minus_lem modifierComparison_Minus_Minus_lem_res:
+  modifierComparison_rel Minus_u Minus_u modifierComparison_Minus_Minus_lem_res
+  ↔ modifierComparison_Minus_Minus_lem_res == Eq_u.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite modifierComparison_Plus_Plus_lem: f_rel_back.
-
-Theorem modifierComparison_Plus_Natural_lem modifierComparison_Plus_Natural_lem_res:
-  modifierComparison_rel Plus_u Natural_u modifierComparison_Plus_Natural_lem_res
-  ↔ modifierComparison_Plus_Natural_lem_res == Gt_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite modifierComparison_Plus_Natural_lem: f_rel_back.
-
-Theorem modifierComparison_Plus_Minus_lem modifierComparison_Plus_Minus_lem_res:
-  modifierComparison_rel Plus_u Minus_u modifierComparison_Plus_Minus_lem_res
-  ↔ modifierComparison_Plus_Minus_lem_res == Gt_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite modifierComparison_Plus_Minus_lem: f_rel_back.
-
-Theorem modifierComparison_Natural_Plus_lem modifierComparison_Natural_Plus_lem_res:
-  modifierComparison_rel Natural_u Plus_u modifierComparison_Natural_Plus_lem_res
-  ↔ modifierComparison_Natural_Plus_lem_res == Lt_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite modifierComparison_Natural_Plus_lem: f_rel_back.
-
-Theorem modifierComparison_Natural_Natural_lem modifierComparison_Natural_Natural_lem_res:
-  modifierComparison_rel Natural_u Natural_u modifierComparison_Natural_Natural_lem_res
-  ↔ modifierComparison_Natural_Natural_lem_res == Eq_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite modifierComparison_Natural_Natural_lem: f_rel_back.
-
-Theorem modifierComparison_Natural_Minus_lem modifierComparison_Natural_Minus_lem_res:
-  modifierComparison_rel Natural_u Minus_u modifierComparison_Natural_Minus_lem_res
-  ↔ modifierComparison_Natural_Minus_lem_res == Gt_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite modifierComparison_Natural_Minus_lem: f_rel_back.
-
-Theorem modifierComparison_Minus_Plus_lem modifierComparison_Minus_Plus_lem_res:
-  modifierComparison_rel Minus_u Plus_u modifierComparison_Minus_Plus_lem_res
-  ↔ modifierComparison_Minus_Plus_lem_res == Lt_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite modifierComparison_Minus_Plus_lem: f_rel_back.
+#[global] Hint Rewrite modifierComparison_Minus_Minus_lem: f_rel_back.
 
 Theorem modifierComparison_Minus_Natural_lem modifierComparison_Minus_Natural_lem_res:
   modifierComparison_rel Minus_u Natural_u modifierComparison_Minus_Natural_lem_res
@@ -1643,14 +1589,68 @@ Qed.
 
 #[global] Hint Rewrite modifierComparison_Minus_Natural_lem: f_rel_back.
 
-Theorem modifierComparison_Minus_Minus_lem modifierComparison_Minus_Minus_lem_res:
-  modifierComparison_rel Minus_u Minus_u modifierComparison_Minus_Minus_lem_res
-  ↔ modifierComparison_Minus_Minus_lem_res == Eq_u.
+Theorem modifierComparison_Minus_Plus_lem modifierComparison_Minus_Plus_lem_res:
+  modifierComparison_rel Minus_u Plus_u modifierComparison_Minus_Plus_lem_res
+  ↔ modifierComparison_Minus_Plus_lem_res == Lt_u.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite modifierComparison_Minus_Minus_lem: f_rel_back.
+#[global] Hint Rewrite modifierComparison_Minus_Plus_lem: f_rel_back.
+
+Theorem modifierComparison_Natural_Minus_lem modifierComparison_Natural_Minus_lem_res:
+  modifierComparison_rel Natural_u Minus_u modifierComparison_Natural_Minus_lem_res
+  ↔ modifierComparison_Natural_Minus_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifierComparison_Natural_Minus_lem: f_rel_back.
+
+Theorem modifierComparison_Natural_Natural_lem modifierComparison_Natural_Natural_lem_res:
+  modifierComparison_rel Natural_u Natural_u modifierComparison_Natural_Natural_lem_res
+  ↔ modifierComparison_Natural_Natural_lem_res == Eq_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifierComparison_Natural_Natural_lem: f_rel_back.
+
+Theorem modifierComparison_Natural_Plus_lem modifierComparison_Natural_Plus_lem_res:
+  modifierComparison_rel Natural_u Plus_u modifierComparison_Natural_Plus_lem_res
+  ↔ modifierComparison_Natural_Plus_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifierComparison_Natural_Plus_lem: f_rel_back.
+
+Theorem modifierComparison_Plus_Minus_lem modifierComparison_Plus_Minus_lem_res:
+  modifierComparison_rel Plus_u Minus_u modifierComparison_Plus_Minus_lem_res
+  ↔ modifierComparison_Plus_Minus_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifierComparison_Plus_Minus_lem: f_rel_back.
+
+Theorem modifierComparison_Plus_Natural_lem modifierComparison_Plus_Natural_lem_res:
+  modifierComparison_rel Plus_u Natural_u modifierComparison_Plus_Natural_lem_res
+  ↔ modifierComparison_Plus_Natural_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifierComparison_Plus_Natural_lem: f_rel_back.
+
+Theorem modifierComparison_Plus_Plus_lem modifierComparison_Plus_Plus_lem_res:
+  modifierComparison_rel Plus_u Plus_u modifierComparison_Plus_Plus_lem_res
+  ↔ modifierComparison_Plus_Plus_lem_res == Eq_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifierComparison_Plus_Plus_lem: f_rel_back.
 
 Theorem modifierComparison_rel_ex
   (ds_d15u : Modifier_u)

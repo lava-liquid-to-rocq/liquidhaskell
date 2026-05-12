@@ -85,8 +85,8 @@ Proof.
 Defined.
 
 Inductive andb_rel: SFBool_u → SFBool_u → SFBool_u → Prop :=
-  | andb_SFTrue_x: ∀ b2, andb_rel SFTrue_u b2 b2
-  | andb_SFFalse_x: ∀ b2, andb_rel SFFalse_u b2 SFFalse_u.
+  | andb_SFFalse_x: ∀ b2, andb_rel SFFalse_u b2 SFFalse_u
+  | andb_SFTrue_x: ∀ b2, andb_rel SFTrue_u b2 b2.
 
 #[global] Hint Constructors andb_rel: core_hint_db.
 
@@ -102,14 +102,6 @@ Qed.
 
 #[global] Hint Resolve andb_rel_funct: f_rel_funct_db.
 
-Theorem andb_SFTrue_x_lem b2 andb_SFTrue_x_lem_res:
-  andb_rel SFTrue_u b2 andb_SFTrue_x_lem_res ↔ andb_SFTrue_x_lem_res == b2.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite andb_SFTrue_x_lem: f_rel_back.
-
 Theorem andb_SFFalse_x_lem b2 andb_SFFalse_x_lem_res:
   andb_rel SFFalse_u b2 andb_SFFalse_x_lem_res ↔ andb_SFFalse_x_lem_res == SFFalse_u.
 Proof.
@@ -117,6 +109,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite andb_SFFalse_x_lem: f_rel_back.
+
+Theorem andb_SFTrue_x_lem b2 andb_SFTrue_x_lem_res:
+  andb_rel SFTrue_u b2 andb_SFTrue_x_lem_res ↔ andb_SFTrue_x_lem_res == b2.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite andb_SFTrue_x_lem: f_rel_back.
 
 Theorem andb_rel_ex
   (b1 : SFBool_u) (b1_p : SFBool_wf b1 ∧ True) (b2 : SFBool_u) (b2_p : SFBool_wf b2 ∧ True):
@@ -231,10 +231,10 @@ Proof.
 Defined.
 
 Inductive andb3_rel: SFBool_u → SFBool_u → SFBool_u → SFBool_u → Prop :=
-  | andb3_SFTrue_SFTrue_SFTrue: andb3_rel SFTrue_u SFTrue_u SFTrue_u SFTrue_u
-  | andb3_SFTrue_SFTrue_SFFalse: andb3_rel SFTrue_u SFTrue_u SFFalse_u SFFalse_u
+  | andb3_SFFalse_x_x: ∀ ds_d7WR ds_d7WS, andb3_rel SFFalse_u ds_d7WR ds_d7WS SFFalse_u
   | andb3_SFTrue_SFFalse_x: ∀ ds_d7WS, andb3_rel SFTrue_u SFFalse_u ds_d7WS SFFalse_u
-  | andb3_SFFalse_x_x: ∀ ds_d7WR ds_d7WS, andb3_rel SFFalse_u ds_d7WR ds_d7WS SFFalse_u.
+  | andb3_SFTrue_SFTrue_SFFalse: andb3_rel SFTrue_u SFTrue_u SFFalse_u SFFalse_u
+  | andb3_SFTrue_SFTrue_SFTrue: andb3_rel SFTrue_u SFTrue_u SFTrue_u SFTrue_u.
 
 #[global] Hint Constructors andb3_rel: core_hint_db.
 
@@ -255,23 +255,14 @@ Qed.
 
 #[global] Hint Resolve andb3_rel_funct: f_rel_funct_db.
 
-Theorem andb3_SFTrue_SFTrue_SFTrue_lem andb3_SFTrue_SFTrue_SFTrue_lem_res:
-  andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3_SFTrue_SFTrue_SFTrue_lem_res
-  ↔ andb3_SFTrue_SFTrue_SFTrue_lem_res == SFTrue_u.
+Theorem andb3_SFFalse_x_x_lem ds_d7WR ds_d7WS andb3_SFFalse_x_x_lem_res:
+  andb3_rel SFFalse_u ds_d7WR ds_d7WS andb3_SFFalse_x_x_lem_res
+  ↔ andb3_SFFalse_x_x_lem_res == SFFalse_u.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite andb3_SFTrue_SFTrue_SFTrue_lem: f_rel_back.
-
-Theorem andb3_SFTrue_SFTrue_SFFalse_lem andb3_SFTrue_SFTrue_SFFalse_lem_res:
-  andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3_SFTrue_SFTrue_SFFalse_lem_res
-  ↔ andb3_SFTrue_SFTrue_SFFalse_lem_res == SFFalse_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite andb3_SFTrue_SFTrue_SFFalse_lem: f_rel_back.
+#[global] Hint Rewrite andb3_SFFalse_x_x_lem: f_rel_back.
 
 Theorem andb3_SFTrue_SFFalse_x_lem ds_d7WS andb3_SFTrue_SFFalse_x_lem_res:
   andb3_rel SFTrue_u SFFalse_u ds_d7WS andb3_SFTrue_SFFalse_x_lem_res
@@ -282,14 +273,23 @@ Qed.
 
 #[global] Hint Rewrite andb3_SFTrue_SFFalse_x_lem: f_rel_back.
 
-Theorem andb3_SFFalse_x_x_lem ds_d7WR ds_d7WS andb3_SFFalse_x_x_lem_res:
-  andb3_rel SFFalse_u ds_d7WR ds_d7WS andb3_SFFalse_x_x_lem_res
-  ↔ andb3_SFFalse_x_x_lem_res == SFFalse_u.
+Theorem andb3_SFTrue_SFTrue_SFFalse_lem andb3_SFTrue_SFTrue_SFFalse_lem_res:
+  andb3_rel SFTrue_u SFTrue_u SFFalse_u andb3_SFTrue_SFTrue_SFFalse_lem_res
+  ↔ andb3_SFTrue_SFTrue_SFFalse_lem_res == SFFalse_u.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite andb3_SFFalse_x_x_lem: f_rel_back.
+#[global] Hint Rewrite andb3_SFTrue_SFTrue_SFFalse_lem: f_rel_back.
+
+Theorem andb3_SFTrue_SFTrue_SFTrue_lem andb3_SFTrue_SFTrue_SFTrue_lem_res:
+  andb3_rel SFTrue_u SFTrue_u SFTrue_u andb3_SFTrue_SFTrue_SFTrue_lem_res
+  ↔ andb3_SFTrue_SFTrue_SFTrue_lem_res == SFTrue_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite andb3_SFTrue_SFTrue_SFTrue_lem: f_rel_back.
 
 Theorem andb3_rel_ex
   (ds_d7WQ : SFBool_u)
@@ -641,9 +641,9 @@ Proof.
 Defined.
 
 Inductive nandb_rel: SFBool_u → SFBool_u → SFBool_u → Prop :=
-  | nandb_SFTrue_SFTrue: nandb_rel SFTrue_u SFTrue_u SFFalse_u
+  | nandb_SFFalse_x: ∀ ds_d7WY, nandb_rel SFFalse_u ds_d7WY SFTrue_u
   | nandb_SFTrue_SFFalse: nandb_rel SFTrue_u SFFalse_u SFTrue_u
-  | nandb_SFFalse_x: ∀ ds_d7WY, nandb_rel SFFalse_u ds_d7WY SFTrue_u.
+  | nandb_SFTrue_SFTrue: nandb_rel SFTrue_u SFTrue_u SFFalse_u.
 
 #[global] Hint Constructors nandb_rel: core_hint_db.
 
@@ -661,13 +661,13 @@ Qed.
 
 #[global] Hint Resolve nandb_rel_funct: f_rel_funct_db.
 
-Theorem nandb_SFTrue_SFTrue_lem nandb_SFTrue_SFTrue_lem_res:
-  nandb_rel SFTrue_u SFTrue_u nandb_SFTrue_SFTrue_lem_res ↔ nandb_SFTrue_SFTrue_lem_res == SFFalse_u.
+Theorem nandb_SFFalse_x_lem ds_d7WY nandb_SFFalse_x_lem_res:
+  nandb_rel SFFalse_u ds_d7WY nandb_SFFalse_x_lem_res ↔ nandb_SFFalse_x_lem_res == SFTrue_u.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite nandb_SFTrue_SFTrue_lem: f_rel_back.
+#[global] Hint Rewrite nandb_SFFalse_x_lem: f_rel_back.
 
 Theorem nandb_SFTrue_SFFalse_lem nandb_SFTrue_SFFalse_lem_res:
   nandb_rel SFTrue_u SFFalse_u nandb_SFTrue_SFFalse_lem_res
@@ -678,13 +678,13 @@ Qed.
 
 #[global] Hint Rewrite nandb_SFTrue_SFFalse_lem: f_rel_back.
 
-Theorem nandb_SFFalse_x_lem ds_d7WY nandb_SFFalse_x_lem_res:
-  nandb_rel SFFalse_u ds_d7WY nandb_SFFalse_x_lem_res ↔ nandb_SFFalse_x_lem_res == SFTrue_u.
+Theorem nandb_SFTrue_SFTrue_lem nandb_SFTrue_SFTrue_lem_res:
+  nandb_rel SFTrue_u SFTrue_u nandb_SFTrue_SFTrue_lem_res ↔ nandb_SFTrue_SFTrue_lem_res == SFFalse_u.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite nandb_SFFalse_x_lem: f_rel_back.
+#[global] Hint Rewrite nandb_SFTrue_SFTrue_lem: f_rel_back.
 
 Theorem nandb_rel_ex
   (ds_d7WX : SFBool_u)
@@ -858,7 +858,7 @@ Proof.
 Defined.
 
 Inductive negb_rel: SFBool_u → SFBool_u → Prop :=
-  | negb_SFTrue: negb_rel SFTrue_u SFFalse_u | negb_SFFalse: negb_rel SFFalse_u SFTrue_u.
+  | negb_SFFalse: negb_rel SFFalse_u SFTrue_u | negb_SFTrue: negb_rel SFTrue_u SFFalse_u.
 
 #[global] Hint Constructors negb_rel: core_hint_db.
 
@@ -874,14 +874,6 @@ Qed.
 
 #[global] Hint Resolve negb_rel_funct: f_rel_funct_db.
 
-Theorem negb_SFTrue_lem negb_SFTrue_lem_res:
-  negb_rel SFTrue_u negb_SFTrue_lem_res ↔ negb_SFTrue_lem_res == SFFalse_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite negb_SFTrue_lem: f_rel_back.
-
 Theorem negb_SFFalse_lem negb_SFFalse_lem_res:
   negb_rel SFFalse_u negb_SFFalse_lem_res ↔ negb_SFFalse_lem_res == SFTrue_u.
 Proof.
@@ -889,6 +881,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite negb_SFFalse_lem: f_rel_back.
+
+Theorem negb_SFTrue_lem negb_SFTrue_lem_res:
+  negb_rel SFTrue_u negb_SFTrue_lem_res ↔ negb_SFTrue_lem_res == SFFalse_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite negb_SFTrue_lem: f_rel_back.
 
 Theorem negb_rel_ex (ds_d7X5 : SFBool_u) (ds_d7X5_p : SFBool_wf ds_d7X5 ∧ True):
   negb_rel ds_d7X5 ⌊ negb (exist _ ds_d7X5 ds_d7X5_p) -⌋.
@@ -1019,7 +1019,7 @@ Proof.
 Defined.
 
 Inductive orb_rel: SFBool_u → SFBool_u → SFBool_u → Prop :=
-  | orb_SFTrue_x: ∀ b2, orb_rel SFTrue_u b2 SFTrue_u | orb_SFFalse_x: ∀ b2, orb_rel SFFalse_u b2 b2.
+  | orb_SFFalse_x: ∀ b2, orb_rel SFFalse_u b2 b2 | orb_SFTrue_x: ∀ b2, orb_rel SFTrue_u b2 SFTrue_u.
 
 #[global] Hint Constructors orb_rel: core_hint_db.
 
@@ -1035,14 +1035,6 @@ Qed.
 
 #[global] Hint Resolve orb_rel_funct: f_rel_funct_db.
 
-Theorem orb_SFTrue_x_lem b2 orb_SFTrue_x_lem_res:
-  orb_rel SFTrue_u b2 orb_SFTrue_x_lem_res ↔ orb_SFTrue_x_lem_res == SFTrue_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite orb_SFTrue_x_lem: f_rel_back.
-
 Theorem orb_SFFalse_x_lem b2 orb_SFFalse_x_lem_res:
   orb_rel SFFalse_u b2 orb_SFFalse_x_lem_res ↔ orb_SFFalse_x_lem_res == b2.
 Proof.
@@ -1050,6 +1042,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite orb_SFFalse_x_lem: f_rel_back.
+
+Theorem orb_SFTrue_x_lem b2 orb_SFTrue_x_lem_res:
+  orb_rel SFTrue_u b2 orb_SFTrue_x_lem_res ↔ orb_SFTrue_x_lem_res == SFTrue_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite orb_SFTrue_x_lem: f_rel_back.
 
 Theorem orb_rel_ex
   (b1 : SFBool_u) (b1_p : SFBool_wf b1 ∧ True) (b2 : SFBool_u) (b2_p : SFBool_wf b2 ∧ True):
@@ -1433,7 +1433,6 @@ Proof.
 Defined.
 
 Inductive bin_to_nat_rel: SFBin_u → Z → Prop :=
-  | bin_to_nat_Z: bin_to_nat_rel Z_u 0
   | bin_to_nat_Bin0: ∀ m' (bin_to_nat_res : Z),
                      bin_to_nat_rel m' bin_to_nat_res
                      → ∀ (multZ_res : Z), multZ_rel 2 bin_to_nat_res multZ_res → bin_to_nat_rel (Bin0_u m') multZ_res
@@ -1441,7 +1440,8 @@ Inductive bin_to_nat_rel: SFBin_u → Z → Prop :=
                      bin_to_nat_rel m' bin_to_nat_res
                      → ∀ (multZ_res : Z),
                        multZ_rel 2 bin_to_nat_res multZ_res
-                       → ∀ (addZ_res : Z), addZ_rel 1 multZ_res addZ_res → bin_to_nat_rel (Bin1_u m') addZ_res.
+                       → ∀ (addZ_res : Z), addZ_rel 1 multZ_res addZ_res → bin_to_nat_rel (Bin1_u m') addZ_res
+  | bin_to_nat_Z: bin_to_nat_rel Z_u 0.
 
 #[global] Hint Constructors bin_to_nat_rel: core_hint_db.
 
@@ -1457,14 +1457,6 @@ Proof.
 Qed.
 
 #[global] Hint Resolve bin_to_nat_rel_funct: f_rel_funct_db.
-
-Theorem bin_to_nat_Z_lem bin_to_nat_Z_lem_res:
-  bin_to_nat_rel Z_u bin_to_nat_Z_lem_res ↔ bin_to_nat_Z_lem_res == 0.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite bin_to_nat_Z_lem: f_rel_back.
 
 Theorem bin_to_nat_Bin0_lem m' bin_to_nat_Bin0_lem_res:
   bin_to_nat_rel (Bin0_u m') bin_to_nat_Bin0_lem_res
@@ -1489,6 +1481,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite bin_to_nat_Bin1_lem: f_rel_back.
+
+Theorem bin_to_nat_Z_lem bin_to_nat_Z_lem_res:
+  bin_to_nat_rel Z_u bin_to_nat_Z_lem_res ↔ bin_to_nat_Z_lem_res == 0.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite bin_to_nat_Z_lem: f_rel_back.
 
 Theorem bin_to_nat_rel_ex (ds_d7UV : SFBin_u) (ds_d7UV_p : SFBin_wf ds_d7UV ∧ True):
   bin_to_nat_rel ds_d7UV ⌊ bin_to_nat (exist _ ds_d7UV ds_d7UV_p) -⌋.
@@ -1601,10 +1601,10 @@ Proof.
 Defined.
 
 Inductive incr_rel: SFBin_u → SFBin_u → Prop :=
-  | incr_Z: incr_rel Z_u (Bin1_u Z_u)
   | incr_Bin0: ∀ m', incr_rel (Bin0_u m') (Bin1_u m')
   | incr_Bin1: ∀ m' (incr_res : SFBin_u),
-               incr_rel m' incr_res → incr_rel (Bin1_u m') (Bin0_u incr_res).
+               incr_rel m' incr_res → incr_rel (Bin1_u m') (Bin0_u incr_res)
+  | incr_Z: incr_rel Z_u (Bin1_u Z_u).
 
 #[global] Hint Constructors incr_rel: core_hint_db.
 
@@ -1619,13 +1619,6 @@ Proof.
 Qed.
 
 #[global] Hint Resolve incr_rel_funct: f_rel_funct_db.
-
-Theorem incr_Z_lem incr_Z_lem_res: incr_rel Z_u incr_Z_lem_res ↔ incr_Z_lem_res == Bin1_u Z_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite incr_Z_lem: f_rel_back.
 
 Theorem incr_Bin0_lem m' incr_Bin0_lem_res:
   incr_rel (Bin0_u m') incr_Bin0_lem_res ↔ incr_Bin0_lem_res == Bin1_u m'.
@@ -1643,6 +1636,13 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite incr_Bin1_lem: f_rel_back.
+
+Theorem incr_Z_lem incr_Z_lem_res: incr_rel Z_u incr_Z_lem_res ↔ incr_Z_lem_res == Bin1_u Z_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite incr_Z_lem: f_rel_back.
 
 Theorem incr_rel_ex (ds_d7UW : SFBin_u) (ds_d7UW_p : SFBin_wf ds_d7UW ∧ True):
   incr_rel ds_d7UW ⌊ incr (exist _ ds_d7UW ds_d7UW_p) -⌋.
@@ -4575,8 +4575,6 @@ Proof.
 Defined.
 
 Inductive lower_grade_rel: Grades_u → Grades_u → Prop :=
-  | lower_grade__Grade_x_Plus: ∀ l, lower_grade_rel (Grade_u l Plus_u) (Grade_u l Natural_u)
-  | lower_grade__Grade_x_Natural: ∀ l, lower_grade_rel (Grade_u l Natural_u) (Grade_u l Minus_u)
   | lower_grade__Grade_A_Minus: ∀ (lower_letter_res : Letter_u),
                                 lower_letter_rel A_u lower_letter_res
                                 → lower_grade_rel (Grade_u A_u Minus_u) (Grade_u lower_letter_res Plus_u)
@@ -4589,7 +4587,9 @@ Inductive lower_grade_rel: Grades_u → Grades_u → Prop :=
   | lower_grade__Grade_D_Minus: ∀ (lower_letter_res : Letter_u),
                                 lower_letter_rel D_u lower_letter_res
                                 → lower_grade_rel (Grade_u D_u Minus_u) (Grade_u lower_letter_res Plus_u)
-  | lower_grade__Grade_F_Minus: lower_grade_rel (Grade_u F_u Minus_u) (Grade_u F_u Minus_u).
+  | lower_grade__Grade_F_Minus: lower_grade_rel (Grade_u F_u Minus_u) (Grade_u F_u Minus_u)
+  | lower_grade__Grade_x_Natural: ∀ l, lower_grade_rel (Grade_u l Natural_u) (Grade_u l Minus_u)
+  | lower_grade__Grade_x_Plus: ∀ l, lower_grade_rel (Grade_u l Plus_u) (Grade_u l Natural_u).
 
 #[global] Hint Constructors lower_grade_rel: core_hint_db.
 
@@ -4608,24 +4608,6 @@ Proof.
 Qed.
 
 #[global] Hint Resolve lower_grade_rel_funct: f_rel_funct_db.
-
-Theorem lower_grade__Grade_x_Plus_lem l lower_grade__Grade_x_Plus_lem_res:
-  lower_grade_rel (Grade_u l Plus_u) lower_grade__Grade_x_Plus_lem_res
-  ↔ lower_grade__Grade_x_Plus_lem_res == Grade_u l Natural_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite lower_grade__Grade_x_Plus_lem: f_rel_back.
-
-Theorem lower_grade__Grade_x_Natural_lem l lower_grade__Grade_x_Natural_lem_res:
-  lower_grade_rel (Grade_u l Natural_u) lower_grade__Grade_x_Natural_lem_res
-  ↔ lower_grade__Grade_x_Natural_lem_res == Grade_u l Minus_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite lower_grade__Grade_x_Natural_lem: f_rel_back.
 
 Theorem lower_grade__Grade_A_Minus_lem lower_grade__Grade_A_Minus_lem_res:
   lower_grade_rel (Grade_u A_u Minus_u) lower_grade__Grade_A_Minus_lem_res
@@ -4679,6 +4661,24 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite lower_grade__Grade_F_Minus_lem: f_rel_back.
+
+Theorem lower_grade__Grade_x_Natural_lem l lower_grade__Grade_x_Natural_lem_res:
+  lower_grade_rel (Grade_u l Natural_u) lower_grade__Grade_x_Natural_lem_res
+  ↔ lower_grade__Grade_x_Natural_lem_res == Grade_u l Minus_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lower_grade__Grade_x_Natural_lem: f_rel_back.
+
+Theorem lower_grade__Grade_x_Plus_lem l lower_grade__Grade_x_Plus_lem_res:
+  lower_grade_rel (Grade_u l Plus_u) lower_grade__Grade_x_Plus_lem_res
+  ↔ lower_grade__Grade_x_Plus_lem_res == Grade_u l Natural_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite lower_grade__Grade_x_Plus_lem: f_rel_back.
 
 Theorem lower_grade_rel_ex (ds_d7V6 : Grades_u) (ds_d7V6_p : Grades_wf ds_d7V6 ∧ True):
   lower_grade_rel ds_d7V6 ⌊ lower_grade (exist _ ds_d7V6 ds_d7V6_p) -⌋.
@@ -4783,6 +4783,23 @@ Proof.
 Defined.
 
 Inductive apply_late_policy_rel: Z → Grades_u → Grades_u → Prop :=
+  | apply_late_policy_x_x_True: ∀ late_days g,
+                                (late_days <? 9) == true → apply_late_policy_rel late_days g g
+  | apply_late_policy_x_x_False_True: ∀ late_days g,
+                                      (late_days <? 9) == false
+                                      → ((late_days <? 17) == true
+                                         → ∀ (lower_grade_res : Grades_u),
+                                           lower_grade_rel g lower_grade_res
+                                           → apply_late_policy_rel late_days g lower_grade_res)
+  | apply_late_policy_x_x_False_False_True: ∀ late_days g,
+                                            (late_days <? 9) == false
+                                            → ((late_days <? 17) == false
+                                               → ((late_days <? 21) == true
+                                                  → ∀ (lower_grade_res : Grades_u),
+                                                    lower_grade_rel g lower_grade_res
+                                                    → ∀ (lower_grade_res_2 : Grades_u),
+                                                      lower_grade_rel lower_grade_res lower_grade_res_2
+                                                      → apply_late_policy_rel late_days g lower_grade_res_2))
   | apply_late_policy_x_x_False_False_False: ∀ late_days g,
                                              (late_days <? 9) == false
                                              → ((late_days <? 17) == false
@@ -4793,24 +4810,7 @@ Inductive apply_late_policy_rel: Z → Grades_u → Grades_u → Prop :=
                                                        lower_grade_rel lower_grade_res lower_grade_res_2
                                                        → ∀ (lower_grade_res_3 : Grades_u),
                                                          lower_grade_rel lower_grade_res_2 lower_grade_res_3
-                                                         → apply_late_policy_rel late_days g lower_grade_res_3))
-  | apply_late_policy_x_x_False_False_True: ∀ late_days g,
-                                            (late_days <? 9) == false
-                                            → ((late_days <? 17) == false
-                                               → ((late_days <? 21) == true
-                                                  → ∀ (lower_grade_res : Grades_u),
-                                                    lower_grade_rel g lower_grade_res
-                                                    → ∀ (lower_grade_res_2 : Grades_u),
-                                                      lower_grade_rel lower_grade_res lower_grade_res_2
-                                                      → apply_late_policy_rel late_days g lower_grade_res_2))
-  | apply_late_policy_x_x_False_True: ∀ late_days g,
-                                      (late_days <? 9) == false
-                                      → ((late_days <? 17) == true
-                                         → ∀ (lower_grade_res : Grades_u),
-                                           lower_grade_rel g lower_grade_res
-                                           → apply_late_policy_rel late_days g lower_grade_res)
-  | apply_late_policy_x_x_True: ∀ late_days g,
-                                (late_days <? 9) == true → apply_late_policy_rel late_days g g.
+                                                         → apply_late_policy_rel late_days g lower_grade_res_3)).
 
 #[global] Hint Constructors apply_late_policy_rel: core_hint_db.
 
@@ -4834,7 +4834,20 @@ Qed.
 
 Theorem apply_late_policy_inv_lem g late_days apply_late_policy_inv_lem_res:
   apply_late_policy_rel late_days g apply_late_policy_inv_lem_res
-  ↔ (((late_days <? 9) == false
+  ↔ (((late_days <? 9) == true ∧ apply_late_policy_inv_lem_res == g
+      ∨ (late_days <? 9) == false
+        ∧ ((late_days <? 17) == true
+           ∧ ∃ (lower_grade_res : Grades_u),
+             lower_grade_rel g lower_grade_res ∧ apply_late_policy_inv_lem_res == lower_grade_res))
+     ∨ (late_days <? 9) == false
+       ∧ ((late_days <? 17) == false
+          ∧ ((late_days <? 21) == true
+             ∧ ∃ (lower_grade_res : Grades_u),
+               lower_grade_rel g lower_grade_res
+               ∧ ∃ (lower_grade_res_2 : Grades_u),
+                 lower_grade_rel lower_grade_res lower_grade_res_2
+                 ∧ apply_late_policy_inv_lem_res == lower_grade_res_2)))
+    ∨ (late_days <? 9) == false
       ∧ ((late_days <? 17) == false
          ∧ ((late_days <? 21) == false
             ∧ ∃ (lower_grade_res : Grades_u),
@@ -4843,20 +4856,7 @@ Theorem apply_late_policy_inv_lem g late_days apply_late_policy_inv_lem_res:
                 lower_grade_rel lower_grade_res lower_grade_res_2
                 ∧ ∃ (lower_grade_res_3 : Grades_u),
                   lower_grade_rel lower_grade_res_2 lower_grade_res_3
-                  ∧ apply_late_policy_inv_lem_res == lower_grade_res_3))
-      ∨ (late_days <? 9) == false
-        ∧ ((late_days <? 17) == false
-           ∧ ((late_days <? 21) == true
-              ∧ ∃ (lower_grade_res : Grades_u),
-                lower_grade_rel g lower_grade_res
-                ∧ ∃ (lower_grade_res_2 : Grades_u),
-                  lower_grade_rel lower_grade_res lower_grade_res_2
-                  ∧ apply_late_policy_inv_lem_res == lower_grade_res_2)))
-     ∨ (late_days <? 9) == false
-       ∧ ((late_days <? 17) == true
-          ∧ ∃ (lower_grade_res : Grades_u),
-            lower_grade_rel g lower_grade_res ∧ apply_late_policy_inv_lem_res == lower_grade_res))
-    ∨ (late_days <? 9) == true ∧ apply_late_policy_inv_lem_res == g.
+                  ∧ apply_late_policy_inv_lem_res == lower_grade_res_3)).
 Proof.
   rel_back' ((late_days <? 9) _::_
            (late_days <? 17) _::_
@@ -5213,13 +5213,13 @@ Proof.
 Defined.
 
 Inductive next_weekday_rel: Day_u → Day_u → Prop :=
-  | next_weekday_Monday: next_weekday_rel Monday_u Tuesday_u
-  | next_weekday_Tuesday: next_weekday_rel Tuesday_u Wednesday_u
-  | next_weekday_Wednesday: next_weekday_rel Wednesday_u Thursday_u
-  | next_weekday_Thursday: next_weekday_rel Thursday_u Friday_u
   | next_weekday_Friday: next_weekday_rel Friday_u Monday_u
+  | next_weekday_Monday: next_weekday_rel Monday_u Tuesday_u
   | next_weekday_Saturday: next_weekday_rel Saturday_u Monday_u
-  | next_weekday_Sunday: next_weekday_rel Sunday_u Monday_u.
+  | next_weekday_Sunday: next_weekday_rel Sunday_u Monday_u
+  | next_weekday_Thursday: next_weekday_rel Thursday_u Friday_u
+  | next_weekday_Tuesday: next_weekday_rel Tuesday_u Wednesday_u
+  | next_weekday_Wednesday: next_weekday_rel Wednesday_u Thursday_u.
 
 #[global] Hint Constructors next_weekday_rel: core_hint_db.
 
@@ -5236,6 +5236,14 @@ Qed.
 
 #[global] Hint Resolve next_weekday_rel_funct: f_rel_funct_db.
 
+Theorem next_weekday_Friday_lem next_weekday_Friday_lem_res:
+  next_weekday_rel Friday_u next_weekday_Friday_lem_res ↔ next_weekday_Friday_lem_res == Monday_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite next_weekday_Friday_lem: f_rel_back.
+
 Theorem next_weekday_Monday_lem next_weekday_Monday_lem_res:
   next_weekday_rel Monday_u next_weekday_Monday_lem_res ↔ next_weekday_Monday_lem_res == Tuesday_u.
 Proof.
@@ -5243,6 +5251,32 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite next_weekday_Monday_lem: f_rel_back.
+
+Theorem next_weekday_Saturday_lem next_weekday_Saturday_lem_res:
+  next_weekday_rel Saturday_u next_weekday_Saturday_lem_res
+  ↔ next_weekday_Saturday_lem_res == Monday_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite next_weekday_Saturday_lem: f_rel_back.
+
+Theorem next_weekday_Sunday_lem next_weekday_Sunday_lem_res:
+  next_weekday_rel Sunday_u next_weekday_Sunday_lem_res ↔ next_weekday_Sunday_lem_res == Monday_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite next_weekday_Sunday_lem: f_rel_back.
+
+Theorem next_weekday_Thursday_lem next_weekday_Thursday_lem_res:
+  next_weekday_rel Thursday_u next_weekday_Thursday_lem_res
+  ↔ next_weekday_Thursday_lem_res == Friday_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite next_weekday_Thursday_lem: f_rel_back.
 
 Theorem next_weekday_Tuesday_lem next_weekday_Tuesday_lem_res:
   next_weekday_rel Tuesday_u next_weekday_Tuesday_lem_res
@@ -5261,40 +5295,6 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite next_weekday_Wednesday_lem: f_rel_back.
-
-Theorem next_weekday_Thursday_lem next_weekday_Thursday_lem_res:
-  next_weekday_rel Thursday_u next_weekday_Thursday_lem_res
-  ↔ next_weekday_Thursday_lem_res == Friday_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite next_weekday_Thursday_lem: f_rel_back.
-
-Theorem next_weekday_Friday_lem next_weekday_Friday_lem_res:
-  next_weekday_rel Friday_u next_weekday_Friday_lem_res ↔ next_weekday_Friday_lem_res == Monday_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite next_weekday_Friday_lem: f_rel_back.
-
-Theorem next_weekday_Saturday_lem next_weekday_Saturday_lem_res:
-  next_weekday_rel Saturday_u next_weekday_Saturday_lem_res
-  ↔ next_weekday_Saturday_lem_res == Monday_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite next_weekday_Saturday_lem: f_rel_back.
-
-Theorem next_weekday_Sunday_lem next_weekday_Sunday_lem_res:
-  next_weekday_rel Sunday_u next_weekday_Sunday_lem_res ↔ next_weekday_Sunday_lem_res == Monday_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite next_weekday_Sunday_lem: f_rel_back.
 
 Theorem next_weekday_rel_ex (ds_d7X6 : Day_u) (ds_d7X6_p : Day_wf ds_d7X6 ∧ True):
   next_weekday_rel ds_d7X6 ⌊ next_weekday (exist _ ds_d7X6 ds_d7X6_p) -⌋.
@@ -6029,15 +6029,15 @@ Proof.
 Defined.
 
 Inductive modifier_comparison_rel: Modifier_u → Modifier_u → Comparison_u → Prop :=
-  | modifier_comparison_Plus_Plus: modifier_comparison_rel Plus_u Plus_u Eq_u
-  | modifier_comparison_Plus_Natural: modifier_comparison_rel Plus_u Natural_u Gt_u
-  | modifier_comparison_Plus_Minus: modifier_comparison_rel Plus_u Minus_u Gt_u
-  | modifier_comparison_Natural_Plus: modifier_comparison_rel Natural_u Plus_u Lt_u
-  | modifier_comparison_Natural_Natural: modifier_comparison_rel Natural_u Natural_u Eq_u
-  | modifier_comparison_Natural_Minus: modifier_comparison_rel Natural_u Minus_u Gt_u
-  | modifier_comparison_Minus_Plus: modifier_comparison_rel Minus_u Plus_u Lt_u
+  | modifier_comparison_Minus_Minus: modifier_comparison_rel Minus_u Minus_u Eq_u
   | modifier_comparison_Minus_Natural: modifier_comparison_rel Minus_u Natural_u Lt_u
-  | modifier_comparison_Minus_Minus: modifier_comparison_rel Minus_u Minus_u Eq_u.
+  | modifier_comparison_Minus_Plus: modifier_comparison_rel Minus_u Plus_u Lt_u
+  | modifier_comparison_Natural_Minus: modifier_comparison_rel Natural_u Minus_u Gt_u
+  | modifier_comparison_Natural_Natural: modifier_comparison_rel Natural_u Natural_u Eq_u
+  | modifier_comparison_Natural_Plus: modifier_comparison_rel Natural_u Plus_u Lt_u
+  | modifier_comparison_Plus_Minus: modifier_comparison_rel Plus_u Minus_u Gt_u
+  | modifier_comparison_Plus_Natural: modifier_comparison_rel Plus_u Natural_u Gt_u
+  | modifier_comparison_Plus_Plus: modifier_comparison_rel Plus_u Plus_u Eq_u.
 
 #[global] Hint Constructors modifier_comparison_rel: core_hint_db.
 
@@ -6059,68 +6059,14 @@ Qed.
 
 #[global] Hint Resolve modifier_comparison_rel_funct: f_rel_funct_db.
 
-Theorem modifier_comparison_Plus_Plus_lem modifier_comparison_Plus_Plus_lem_res:
-  modifier_comparison_rel Plus_u Plus_u modifier_comparison_Plus_Plus_lem_res
-  ↔ modifier_comparison_Plus_Plus_lem_res == Eq_u.
+Theorem modifier_comparison_Minus_Minus_lem modifier_comparison_Minus_Minus_lem_res:
+  modifier_comparison_rel Minus_u Minus_u modifier_comparison_Minus_Minus_lem_res
+  ↔ modifier_comparison_Minus_Minus_lem_res == Eq_u.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite modifier_comparison_Plus_Plus_lem: f_rel_back.
-
-Theorem modifier_comparison_Plus_Natural_lem modifier_comparison_Plus_Natural_lem_res:
-  modifier_comparison_rel Plus_u Natural_u modifier_comparison_Plus_Natural_lem_res
-  ↔ modifier_comparison_Plus_Natural_lem_res == Gt_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite modifier_comparison_Plus_Natural_lem: f_rel_back.
-
-Theorem modifier_comparison_Plus_Minus_lem modifier_comparison_Plus_Minus_lem_res:
-  modifier_comparison_rel Plus_u Minus_u modifier_comparison_Plus_Minus_lem_res
-  ↔ modifier_comparison_Plus_Minus_lem_res == Gt_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite modifier_comparison_Plus_Minus_lem: f_rel_back.
-
-Theorem modifier_comparison_Natural_Plus_lem modifier_comparison_Natural_Plus_lem_res:
-  modifier_comparison_rel Natural_u Plus_u modifier_comparison_Natural_Plus_lem_res
-  ↔ modifier_comparison_Natural_Plus_lem_res == Lt_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite modifier_comparison_Natural_Plus_lem: f_rel_back.
-
-Theorem modifier_comparison_Natural_Natural_lem modifier_comparison_Natural_Natural_lem_res:
-  modifier_comparison_rel Natural_u Natural_u modifier_comparison_Natural_Natural_lem_res
-  ↔ modifier_comparison_Natural_Natural_lem_res == Eq_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite modifier_comparison_Natural_Natural_lem: f_rel_back.
-
-Theorem modifier_comparison_Natural_Minus_lem modifier_comparison_Natural_Minus_lem_res:
-  modifier_comparison_rel Natural_u Minus_u modifier_comparison_Natural_Minus_lem_res
-  ↔ modifier_comparison_Natural_Minus_lem_res == Gt_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite modifier_comparison_Natural_Minus_lem: f_rel_back.
-
-Theorem modifier_comparison_Minus_Plus_lem modifier_comparison_Minus_Plus_lem_res:
-  modifier_comparison_rel Minus_u Plus_u modifier_comparison_Minus_Plus_lem_res
-  ↔ modifier_comparison_Minus_Plus_lem_res == Lt_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite modifier_comparison_Minus_Plus_lem: f_rel_back.
+#[global] Hint Rewrite modifier_comparison_Minus_Minus_lem: f_rel_back.
 
 Theorem modifier_comparison_Minus_Natural_lem modifier_comparison_Minus_Natural_lem_res:
   modifier_comparison_rel Minus_u Natural_u modifier_comparison_Minus_Natural_lem_res
@@ -6131,14 +6077,68 @@ Qed.
 
 #[global] Hint Rewrite modifier_comparison_Minus_Natural_lem: f_rel_back.
 
-Theorem modifier_comparison_Minus_Minus_lem modifier_comparison_Minus_Minus_lem_res:
-  modifier_comparison_rel Minus_u Minus_u modifier_comparison_Minus_Minus_lem_res
-  ↔ modifier_comparison_Minus_Minus_lem_res == Eq_u.
+Theorem modifier_comparison_Minus_Plus_lem modifier_comparison_Minus_Plus_lem_res:
+  modifier_comparison_rel Minus_u Plus_u modifier_comparison_Minus_Plus_lem_res
+  ↔ modifier_comparison_Minus_Plus_lem_res == Lt_u.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite modifier_comparison_Minus_Minus_lem: f_rel_back.
+#[global] Hint Rewrite modifier_comparison_Minus_Plus_lem: f_rel_back.
+
+Theorem modifier_comparison_Natural_Minus_lem modifier_comparison_Natural_Minus_lem_res:
+  modifier_comparison_rel Natural_u Minus_u modifier_comparison_Natural_Minus_lem_res
+  ↔ modifier_comparison_Natural_Minus_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Natural_Minus_lem: f_rel_back.
+
+Theorem modifier_comparison_Natural_Natural_lem modifier_comparison_Natural_Natural_lem_res:
+  modifier_comparison_rel Natural_u Natural_u modifier_comparison_Natural_Natural_lem_res
+  ↔ modifier_comparison_Natural_Natural_lem_res == Eq_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Natural_Natural_lem: f_rel_back.
+
+Theorem modifier_comparison_Natural_Plus_lem modifier_comparison_Natural_Plus_lem_res:
+  modifier_comparison_rel Natural_u Plus_u modifier_comparison_Natural_Plus_lem_res
+  ↔ modifier_comparison_Natural_Plus_lem_res == Lt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Natural_Plus_lem: f_rel_back.
+
+Theorem modifier_comparison_Plus_Minus_lem modifier_comparison_Plus_Minus_lem_res:
+  modifier_comparison_rel Plus_u Minus_u modifier_comparison_Plus_Minus_lem_res
+  ↔ modifier_comparison_Plus_Minus_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Plus_Minus_lem: f_rel_back.
+
+Theorem modifier_comparison_Plus_Natural_lem modifier_comparison_Plus_Natural_lem_res:
+  modifier_comparison_rel Plus_u Natural_u modifier_comparison_Plus_Natural_lem_res
+  ↔ modifier_comparison_Plus_Natural_lem_res == Gt_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Plus_Natural_lem: f_rel_back.
+
+Theorem modifier_comparison_Plus_Plus_lem modifier_comparison_Plus_Plus_lem_res:
+  modifier_comparison_rel Plus_u Plus_u modifier_comparison_Plus_Plus_lem_res
+  ↔ modifier_comparison_Plus_Plus_lem_res == Eq_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite modifier_comparison_Plus_Plus_lem: f_rel_back.
 
 Theorem modifier_comparison_rel_ex
   (ds_d7Vl : Modifier_u)
@@ -6365,8 +6365,8 @@ Defined.
 
 Inductive monochrome_rel: Color_u → SFBool_u → Prop :=
   | monochrome_Black: monochrome_rel Black_u SFTrue_u
-  | monochrome_White: monochrome_rel White_u SFTrue_u
-  | monochrome_Primary: ∀ p, monochrome_rel (Primary_u p) SFFalse_u.
+  | monochrome_Primary: ∀ p, monochrome_rel (Primary_u p) SFFalse_u
+  | monochrome_White: monochrome_rel White_u SFTrue_u.
 
 #[global] Hint Constructors monochrome_rel: core_hint_db.
 
@@ -6391,14 +6391,6 @@ Qed.
 
 #[global] Hint Rewrite monochrome_Black_lem: f_rel_back.
 
-Theorem monochrome_White_lem monochrome_White_lem_res:
-  monochrome_rel White_u monochrome_White_lem_res ↔ monochrome_White_lem_res == SFTrue_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite monochrome_White_lem: f_rel_back.
-
 Theorem monochrome_Primary_lem p monochrome_Primary_lem_res:
   monochrome_rel (Primary_u p) monochrome_Primary_lem_res ↔ monochrome_Primary_lem_res == SFFalse_u.
 Proof.
@@ -6406,6 +6398,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite monochrome_Primary_lem: f_rel_back.
+
+Theorem monochrome_White_lem monochrome_White_lem_res:
+  monochrome_rel White_u monochrome_White_lem_res ↔ monochrome_White_lem_res == SFTrue_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite monochrome_White_lem: f_rel_back.
 
 Theorem monochrome_rel_ex (ds_d7WP : Color_u) (ds_d7WP_p : Color_wf ds_d7WP ∧ True):
   monochrome_rel ds_d7WP ⌊ monochrome (exist _ ds_d7WP ds_d7WP_p) -⌋.

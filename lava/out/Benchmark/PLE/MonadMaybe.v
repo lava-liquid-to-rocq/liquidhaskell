@@ -106,10 +106,10 @@ Proof.
 Defined.
 
 Inductive bind_rel: MaybeInt_u → @uPack (Z ::UT nilUT) MaybeInt_u → MaybeInt_u → Prop :=
-  | bind_Nothing_x: ∀ (ds_d3S8 : @uPack (Z ::UT nilUT) MaybeInt_u),
-                    bind_rel Nothing_u ds_d3S8 Nothing_u
   | bind_Just_x: ∀ m (ds_d3S8 : @uPack (Z ::UT nilUT) MaybeInt_u) (ds_d3S8_res : MaybeInt_u),
-                 getUPackRel ds_d3S8 m ds_d3S8_res → bind_rel (Just_u m) ds_d3S8 ds_d3S8_res.
+                 getUPackRel ds_d3S8 m ds_d3S8_res → bind_rel (Just_u m) ds_d3S8 ds_d3S8_res
+  | bind_Nothing_x: ∀ (ds_d3S8 : @uPack (Z ::UT nilUT) MaybeInt_u),
+                    bind_rel Nothing_u ds_d3S8 Nothing_u.
 
 #[global] Hint Constructors bind_rel: core_hint_db.
 
@@ -125,14 +125,6 @@ Qed.
 
 #[global] Hint Resolve bind_rel_funct: f_rel_funct_db.
 
-Theorem bind_Nothing_x_lem ds_d3S8 bind_Nothing_x_lem_res:
-  bind_rel Nothing_u ds_d3S8 bind_Nothing_x_lem_res ↔ bind_Nothing_x_lem_res == Nothing_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite bind_Nothing_x_lem: f_rel_back.
-
 Theorem bind_Just_x_lem ds_d3S8 m bind_Just_x_lem_res:
   bind_rel (Just_u m) ds_d3S8 bind_Just_x_lem_res
   ↔ ∃ (ds_d3S8_res : MaybeInt_u),
@@ -142,6 +134,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite bind_Just_x_lem: f_rel_back.
+
+Theorem bind_Nothing_x_lem ds_d3S8 bind_Nothing_x_lem_res:
+  bind_rel Nothing_u ds_d3S8 bind_Nothing_x_lem_res ↔ bind_Nothing_x_lem_res == Nothing_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite bind_Nothing_x_lem: f_rel_back.
 
 Theorem bind_rel_ex
   (ds_d3S7 : MaybeInt_u)

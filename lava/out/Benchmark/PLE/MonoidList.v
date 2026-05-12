@@ -91,9 +91,9 @@ Proof.
 Defined.
 
 Inductive mappend_rel: L_u → L_u → L_u → Prop :=
-  | mappend_Emp_x: ∀ ys, mappend_rel Emp_u ys ys
   | mappend_C_x: ∀ x xs ys (mappend_res : L_u),
-                 mappend_rel xs ys mappend_res → mappend_rel (C_u x xs) ys (C_u x mappend_res).
+                 mappend_rel xs ys mappend_res → mappend_rel (C_u x xs) ys (C_u x mappend_res)
+  | mappend_Emp_x: ∀ ys, mappend_rel Emp_u ys ys.
 
 #[global] Hint Constructors mappend_rel: core_hint_db.
 
@@ -110,14 +110,6 @@ Qed.
 
 #[global] Hint Resolve mappend_rel_funct: f_rel_funct_db.
 
-Theorem mappend_Emp_x_lem ys mappend_Emp_x_lem_res:
-  mappend_rel Emp_u ys mappend_Emp_x_lem_res ↔ mappend_Emp_x_lem_res == ys.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite mappend_Emp_x_lem: f_rel_back.
-
 Theorem mappend_C_x_lem x xs ys mappend_C_x_lem_res:
   mappend_rel (C_u x xs) ys mappend_C_x_lem_res
   ↔ ∃ (mappend_res : L_u), mappend_rel xs ys mappend_res ∧ mappend_C_x_lem_res == C_u x mappend_res.
@@ -126,6 +118,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite mappend_C_x_lem: f_rel_back.
+
+Theorem mappend_Emp_x_lem ys mappend_Emp_x_lem_res:
+  mappend_rel Emp_u ys mappend_Emp_x_lem_res ↔ mappend_Emp_x_lem_res == ys.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite mappend_Emp_x_lem: f_rel_back.
 
 Theorem mappend_rel_ex
   (ds_d3ZS : L_u) (ds_d3ZS_p : L_wf ds_d3ZS ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):

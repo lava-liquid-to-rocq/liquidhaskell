@@ -91,8 +91,8 @@ Proof.
 Defined.
 
 Inductive add_rel: Nats_u → Nats_u → Nats_u → Prop :=
-  | add_Zero_x: ∀ n, add_rel Zero_u n n
-  | add_Suc_x: ∀ m n (add_res : Nats_u), add_rel m n add_res → add_rel (Suc_u m) n (Suc_u add_res).
+  | add_Suc_x: ∀ m n (add_res : Nats_u), add_rel m n add_res → add_rel (Suc_u m) n (Suc_u add_res)
+  | add_Zero_x: ∀ n, add_rel Zero_u n n.
 
 #[global] Hint Constructors add_rel: core_hint_db.
 
@@ -109,14 +109,6 @@ Qed.
 
 #[global] Hint Resolve add_rel_funct: f_rel_funct_db.
 
-Theorem add_Zero_x_lem n add_Zero_x_lem_res:
-  add_rel Zero_u n add_Zero_x_lem_res ↔ add_Zero_x_lem_res == n.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite add_Zero_x_lem: f_rel_back.
-
 Theorem add_Suc_x_lem m n add_Suc_x_lem_res:
   add_rel (Suc_u m) n add_Suc_x_lem_res
   ↔ ∃ (add_res : Nats_u), add_rel m n add_res ∧ add_Suc_x_lem_res == Suc_u add_res.
@@ -125,6 +117,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite add_Suc_x_lem: f_rel_back.
+
+Theorem add_Zero_x_lem n add_Zero_x_lem_res:
+  add_rel Zero_u n add_Zero_x_lem_res ↔ add_Zero_x_lem_res == n.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite add_Zero_x_lem: f_rel_back.
 
 Theorem add_rel_ex
   (ds_d4mH : Nats_u) (ds_d4mH_p : Nats_wf ds_d4mH ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True):
@@ -417,10 +417,10 @@ Proof.
 Defined.
 
 Inductive eqN_rel: Nats_u → Nats_u → bool → Prop :=
-  | eqN_Zero_Zero: eqN_rel Zero_u Zero_u true
-  | eqN_Zero_Suc: ∀ lq_anf7205759403792810467, eqN_rel Zero_u (Suc_u lq_anf7205759403792810467) false
+  | eqN_Suc_Suc: ∀ m n (eqN_res : bool), eqN_rel m n eqN_res → eqN_rel (Suc_u m) (Suc_u n) eqN_res
   | eqN_Suc_Zero: ∀ m, eqN_rel (Suc_u m) Zero_u false
-  | eqN_Suc_Suc: ∀ m n (eqN_res : bool), eqN_rel m n eqN_res → eqN_rel (Suc_u m) (Suc_u n) eqN_res.
+  | eqN_Zero_Suc: ∀ lq_anf7205759403792810467, eqN_rel Zero_u (Suc_u lq_anf7205759403792810467) false
+  | eqN_Zero_Zero: eqN_rel Zero_u Zero_u true.
 
 #[global] Hint Constructors eqN_rel: core_hint_db.
 
@@ -438,13 +438,22 @@ Qed.
 
 #[global] Hint Resolve eqN_rel_funct: f_rel_funct_db.
 
-Theorem eqN_Zero_Zero_lem eqN_Zero_Zero_lem_res:
-  eqN_rel Zero_u Zero_u eqN_Zero_Zero_lem_res ↔ eqN_Zero_Zero_lem_res == true.
+Theorem eqN_Suc_Suc_lem m n eqN_Suc_Suc_lem_res:
+  eqN_rel (Suc_u m) (Suc_u n) eqN_Suc_Suc_lem_res
+  ↔ ∃ (eqN_res : bool), eqN_rel m n eqN_res ∧ eqN_Suc_Suc_lem_res == eqN_res.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite eqN_Zero_Zero_lem: f_rel_back.
+#[global] Hint Rewrite eqN_Suc_Suc_lem: f_rel_back.
+
+Theorem eqN_Suc_Zero_lem m eqN_Suc_Zero_lem_res:
+  eqN_rel (Suc_u m) Zero_u eqN_Suc_Zero_lem_res ↔ eqN_Suc_Zero_lem_res == false.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite eqN_Suc_Zero_lem: f_rel_back.
 
 Theorem eqN_Zero_Suc_lem lq_anf7205759403792810467 eqN_Zero_Suc_lem_res:
   eqN_rel Zero_u (Suc_u lq_anf7205759403792810467) eqN_Zero_Suc_lem_res
@@ -455,22 +464,13 @@ Qed.
 
 #[global] Hint Rewrite eqN_Zero_Suc_lem: f_rel_back.
 
-Theorem eqN_Suc_Zero_lem m eqN_Suc_Zero_lem_res:
-  eqN_rel (Suc_u m) Zero_u eqN_Suc_Zero_lem_res ↔ eqN_Suc_Zero_lem_res == false.
+Theorem eqN_Zero_Zero_lem eqN_Zero_Zero_lem_res:
+  eqN_rel Zero_u Zero_u eqN_Zero_Zero_lem_res ↔ eqN_Zero_Zero_lem_res == true.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite eqN_Suc_Zero_lem: f_rel_back.
-
-Theorem eqN_Suc_Suc_lem m n eqN_Suc_Suc_lem_res:
-  eqN_rel (Suc_u m) (Suc_u n) eqN_Suc_Suc_lem_res
-  ↔ ∃ (eqN_res : bool), eqN_rel m n eqN_res ∧ eqN_Suc_Suc_lem_res == eqN_res.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite eqN_Suc_Suc_lem: f_rel_back.
+#[global] Hint Rewrite eqN_Zero_Zero_lem: f_rel_back.
 
 Theorem eqN_rel_ex
   (ds_d4m4 : Nats_u)
@@ -620,12 +620,12 @@ Proof.
 Defined.
 
 Inductive geqN_rel: Nats_u → Nats_u → bool → Prop :=
-  | geqN_x_Zero: ∀ ds_d4mj, geqN_rel ds_d4mj Zero_u true
-  | geqN_Zero_Suc: ∀ lq_anf7205759403792810464,
-                   geqN_rel Zero_u (Suc_u lq_anf7205759403792810464) false
   | geqN_Suc_Suc: ∀ m lq_anf7205759403792810464 (geqN_res : bool),
                   geqN_rel m lq_anf7205759403792810464 geqN_res
-                  → geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792810464) geqN_res.
+                  → geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792810464) geqN_res
+  | geqN_Zero_Suc: ∀ lq_anf7205759403792810464,
+                   geqN_rel Zero_u (Suc_u lq_anf7205759403792810464) false
+  | geqN_x_Zero: ∀ ds_d4mj, geqN_rel ds_d4mj Zero_u true.
 
 #[global] Hint Constructors geqN_rel: core_hint_db.
 
@@ -645,13 +645,15 @@ Qed.
 
 #[global] Hint Resolve geqN_rel_funct: f_rel_funct_db.
 
-Theorem geqN_x_Zero_lem ds_d4mj geqN_x_Zero_lem_res:
-  geqN_rel ds_d4mj Zero_u geqN_x_Zero_lem_res ↔ geqN_x_Zero_lem_res == true.
+Theorem geqN_Suc_Suc_lem lq_anf7205759403792810464 m geqN_Suc_Suc_lem_res:
+  geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792810464) geqN_Suc_Suc_lem_res
+  ↔ ∃ (geqN_res : bool),
+    geqN_rel m lq_anf7205759403792810464 geqN_res ∧ geqN_Suc_Suc_lem_res == geqN_res.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite geqN_x_Zero_lem: f_rel_back.
+#[global] Hint Rewrite geqN_Suc_Suc_lem: f_rel_back.
 
 Theorem geqN_Zero_Suc_lem lq_anf7205759403792810464 geqN_Zero_Suc_lem_res:
   geqN_rel Zero_u (Suc_u lq_anf7205759403792810464) geqN_Zero_Suc_lem_res
@@ -662,15 +664,13 @@ Qed.
 
 #[global] Hint Rewrite geqN_Zero_Suc_lem: f_rel_back.
 
-Theorem geqN_Suc_Suc_lem lq_anf7205759403792810464 m geqN_Suc_Suc_lem_res:
-  geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792810464) geqN_Suc_Suc_lem_res
-  ↔ ∃ (geqN_res : bool),
-    geqN_rel m lq_anf7205759403792810464 geqN_res ∧ geqN_Suc_Suc_lem_res == geqN_res.
+Theorem geqN_x_Zero_lem ds_d4mj geqN_x_Zero_lem_res:
+  geqN_rel ds_d4mj Zero_u geqN_x_Zero_lem_res ↔ geqN_x_Zero_lem_res == true.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite geqN_Suc_Suc_lem: f_rel_back.
+#[global] Hint Rewrite geqN_x_Zero_lem: f_rel_back.
 
 Theorem geqN_rel_ex
   (ds_d4mj : Nats_u)
@@ -792,10 +792,10 @@ Proof.
 Defined.
 
 Inductive mult_rel: Nats_u → Nats_u → Nats_u → Prop :=
-  | mult_Zero_x: ∀ ds_d4mK, mult_rel Zero_u ds_d4mK Zero_u
   | mult_Suc_x: ∀ m ds_d4mK (mult_res : Nats_u),
                 mult_rel m ds_d4mK mult_res
-                → ∀ (add_res : Nats_u), add_rel ds_d4mK mult_res add_res → mult_rel (Suc_u m) ds_d4mK add_res.
+                → ∀ (add_res : Nats_u), add_rel ds_d4mK mult_res add_res → mult_rel (Suc_u m) ds_d4mK add_res
+  | mult_Zero_x: ∀ ds_d4mK, mult_rel Zero_u ds_d4mK Zero_u.
 
 #[global] Hint Constructors mult_rel: core_hint_db.
 
@@ -812,14 +812,6 @@ Qed.
 
 #[global] Hint Resolve mult_rel_funct: f_rel_funct_db.
 
-Theorem mult_Zero_x_lem ds_d4mK mult_Zero_x_lem_res:
-  mult_rel Zero_u ds_d4mK mult_Zero_x_lem_res ↔ mult_Zero_x_lem_res == Zero_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite mult_Zero_x_lem: f_rel_back.
-
 Theorem mult_Suc_x_lem ds_d4mK m mult_Suc_x_lem_res:
   mult_rel (Suc_u m) ds_d4mK mult_Suc_x_lem_res
   ↔ ∃ (mult_res : Nats_u),
@@ -830,6 +822,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite mult_Suc_x_lem: f_rel_back.
+
+Theorem mult_Zero_x_lem ds_d4mK mult_Zero_x_lem_res:
+  mult_rel Zero_u ds_d4mK mult_Zero_x_lem_res ↔ mult_Zero_x_lem_res == Zero_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite mult_Zero_x_lem: f_rel_back.
 
 Theorem mult_rel_ex
   (ds_d4mJ : Nats_u)
@@ -1071,9 +1071,9 @@ Proof.
 Defined.
 
 Inductive sub_rel: Nats_u → Nats_u → Nats_u → Prop :=
-  | sub_Zero_Zero: sub_rel Zero_u Zero_u Zero_u
+  | sub_Suc_Suc: ∀ m n (sub_res : Nats_u), sub_rel m n sub_res → sub_rel (Suc_u m) (Suc_u n) sub_res
   | sub_Suc_Zero: ∀ m, sub_rel (Suc_u m) Zero_u (Suc_u m)
-  | sub_Suc_Suc: ∀ m n (sub_res : Nats_u), sub_rel m n sub_res → sub_rel (Suc_u m) (Suc_u n) sub_res.
+  | sub_Zero_Zero: sub_rel Zero_u Zero_u Zero_u.
 
 #[global] Hint Constructors sub_rel: core_hint_db.
 
@@ -1091,13 +1091,14 @@ Qed.
 
 #[global] Hint Resolve sub_rel_funct: f_rel_funct_db.
 
-Theorem sub_Zero_Zero_lem sub_Zero_Zero_lem_res:
-  sub_rel Zero_u Zero_u sub_Zero_Zero_lem_res ↔ sub_Zero_Zero_lem_res == Zero_u.
+Theorem sub_Suc_Suc_lem m n sub_Suc_Suc_lem_res:
+  sub_rel (Suc_u m) (Suc_u n) sub_Suc_Suc_lem_res
+  ↔ ∃ (sub_res : Nats_u), sub_rel m n sub_res ∧ sub_Suc_Suc_lem_res == sub_res.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite sub_Zero_Zero_lem: f_rel_back.
+#[global] Hint Rewrite sub_Suc_Suc_lem: f_rel_back.
 
 Theorem sub_Suc_Zero_lem m sub_Suc_Zero_lem_res:
   sub_rel (Suc_u m) Zero_u sub_Suc_Zero_lem_res ↔ sub_Suc_Zero_lem_res == Suc_u m.
@@ -1107,14 +1108,13 @@ Qed.
 
 #[global] Hint Rewrite sub_Suc_Zero_lem: f_rel_back.
 
-Theorem sub_Suc_Suc_lem m n sub_Suc_Suc_lem_res:
-  sub_rel (Suc_u m) (Suc_u n) sub_Suc_Suc_lem_res
-  ↔ ∃ (sub_res : Nats_u), sub_rel m n sub_res ∧ sub_Suc_Suc_lem_res == sub_res.
+Theorem sub_Zero_Zero_lem sub_Zero_Zero_lem_res:
+  sub_rel Zero_u Zero_u sub_Zero_Zero_lem_res ↔ sub_Zero_Zero_lem_res == Zero_u.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite sub_Suc_Suc_lem: f_rel_back.
+#[global] Hint Rewrite sub_Zero_Zero_lem: f_rel_back.
 
 Theorem sub_rel_ex
   (ds_d4lZ : Nats_u)

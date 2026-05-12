@@ -91,9 +91,9 @@ Proof.
 Defined.
 
 Inductive append_rel: L_u → L_u → L_u → Prop :=
-  | append_Emp_x: ∀ ys, append_rel Emp_u ys ys
   | append_C_x: ∀ x xs ys (append_res : L_u),
-                append_rel xs ys append_res → append_rel (C_u x xs) ys (C_u x append_res).
+                append_rel xs ys append_res → append_rel (C_u x xs) ys (C_u x append_res)
+  | append_Emp_x: ∀ ys, append_rel Emp_u ys ys.
 
 #[global] Hint Constructors append_rel: core_hint_db.
 
@@ -110,14 +110,6 @@ Qed.
 
 #[global] Hint Resolve append_rel_funct: f_rel_funct_db.
 
-Theorem append_Emp_x_lem ys append_Emp_x_lem_res:
-  append_rel Emp_u ys append_Emp_x_lem_res ↔ append_Emp_x_lem_res == ys.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite append_Emp_x_lem: f_rel_back.
-
 Theorem append_C_x_lem x xs ys append_C_x_lem_res:
   append_rel (C_u x xs) ys append_C_x_lem_res
   ↔ ∃ (append_res : L_u), append_rel xs ys append_res ∧ append_C_x_lem_res == C_u x append_res.
@@ -126,6 +118,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite append_C_x_lem: f_rel_back.
+
+Theorem append_Emp_x_lem ys append_Emp_x_lem_res:
+  append_rel Emp_u ys append_Emp_x_lem_res ↔ append_Emp_x_lem_res == ys.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite append_Emp_x_lem: f_rel_back.
 
 Theorem append_rel_ex
   (ds_d3vS : L_u) (ds_d3vS_p : L_wf ds_d3vS ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
@@ -298,10 +298,10 @@ Proof.
 Defined.
 
 Inductive length_rel: L_u → Z → Prop :=
-  | length_Emp: length_rel Emp_u 0
   | length_C: ∀ ds_d3vW xs (length_res : Z),
               length_rel xs length_res
-              → ∀ (addZ_res : Z), addZ_rel 1 length_res addZ_res → length_rel (C_u ds_d3vW xs) addZ_res.
+              → ∀ (addZ_res : Z), addZ_rel 1 length_res addZ_res → length_rel (C_u ds_d3vW xs) addZ_res
+  | length_Emp: length_rel Emp_u 0.
 
 #[global] Hint Constructors length_rel: core_hint_db.
 
@@ -317,14 +317,6 @@ Qed.
 
 #[global] Hint Resolve length_rel_funct: f_rel_funct_db.
 
-Theorem length_Emp_lem length_Emp_lem_res:
-  length_rel Emp_u length_Emp_lem_res ↔ length_Emp_lem_res == 0.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite length_Emp_lem: f_rel_back.
-
 Theorem length_C_lem ds_d3vW xs length_C_lem_res:
   length_rel (C_u ds_d3vW xs) length_C_lem_res
   ↔ ∃ (length_res : Z),
@@ -335,6 +327,14 @@ Proof.
 Qed.
 
 #[global] Hint Rewrite length_C_lem: f_rel_back.
+
+Theorem length_Emp_lem length_Emp_lem_res:
+  length_rel Emp_u length_Emp_lem_res ↔ length_Emp_lem_res == 0.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite length_Emp_lem: f_rel_back.
 
 Theorem length_rel_ex (ds_d3vV : L_u) (ds_d3vV_p : L_wf ds_d3vV ∧ True):
   length_rel ds_d3vV ⌊ length (exist _ ds_d3vV ds_d3vV_p) -⌋.
