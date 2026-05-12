@@ -17,7 +17,7 @@ module Lava.Coq where
 
 import Data.Bifunctor
 import Data.Data
-import Data.List (isSuffixOf, sortBy, stripPrefix, unsnoc)
+import Data.List (isSuffixOf, stripPrefix, unsnoc)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (isNothing)
 import Lava.Names
@@ -811,7 +811,7 @@ instance Pretty Tactic where
   pPrintPrec _ p (Admit hints) = dotted p $
     around (hsep (punctuate comma (map text hints))) <+> "admit"
     where around hs = if null hints then hs else rocqComment ("hints:" <+> hs)
-  pPrintPrec l p (Destruct tm branches genVars) = pPrintPrecMatch l p tm branches genVars
+  pPrintPrec l p (Destruct tm branches genVars) = pPrintPrecMatch l p tm (map snd branches) genVars
   pPrintPrec l p (Concat tacs) =
     case unsnoc tacs of
       Nothing -> empty
@@ -851,13 +851,13 @@ instance Pretty Tactic where
     dotted p ("all" <> colon <+> parens (pPrintPrec l nodotPrec tac))
 
 -- | Pretty prints destruct or induct
-pPrintPrecMatch :: PrettyLevel -> Rational -> CoqTerm -> [(Id, (CoqDestrPat, [Tactic]))] -> Maybe [Id] -> Doc
+pPrintPrecMatch :: PrettyLevel -> Rational -> CoqTerm -> [(CoqDestrPat, [Tactic])] -> Maybe [Id] -> Doc
 pPrintPrecMatch l p tm branches genVars =
   let matchTac =
-        if isNothing genVars || all (\(_, (pat, tacs)) -> pat == ConjDestrPat [] && null tacs) branches
+        if isNothing genVars || all (\(pat, tacs) -> pat == ConjDestrPat [] && null tacs) branches
         then "destruct" else "induction"
       -- destruct or induct
-      header0 = matchTac <+> pPrintPrec l (appPrec - 1) tm <+> "as" <+> pPrint (DisjDestrPat $ map fst branchesSorted)
+      header0 = matchTac <+> pPrintPrec l (appPrec - 1) tm <+> "as" <+> pPrint (DisjDestrPat $ map fst branches)
       -- generalize dependent genVars
       gendeps vars =
         sep . punctuate semi $ map (\x -> "try revert" <+> text (subsetWitnessNm x) <> semi <+> "generalize dependent" <+> text x) vars
@@ -871,21 +871,14 @@ pPrintPrecMatch l p tm branches genVars =
    in if nullBranches then dotted p header
       else dotted p' header $$ printTacBranches p'
   where
-    nullBranches = all (nullBranch . snd . snd) branches
+    nullBranches = all (nullBranch . snd) branches
     nullBranch = \case ([Concat []]; []) -> True; _ -> False
-    branchesSorted = map snd $ sortBy ordFunc branches
     -- The branches of an induct/destruct in a Concat are shown with [branch1 | … | branchn],
     -- and otherwise as - branch1. - … - branchn (with the correct bullet)
     printTacBranches p' =
       if p' == concatPrec
-      then dotted p (brackets . sep . punctuate " |" $ map (\(_, tacs) -> pPrintPrec l nodotPrec (mkConcat tacs)) branchesSorted)
-      else vcat $ map (\(_, tacs) -> rocqBullet p' <+> sep (map (pPrintPrec l (p' + 1)) tacs)) branchesSorted
-
--- | comparison operator to alphabetically order branches of Destruct
-ordFunc :: (Id, (CoqDestrPat, [Tactic])) -> (Id, (CoqDestrPat, [Tactic])) -> Ordering
-ordFunc ("true", _) ("false", _) = LT
-ordFunc ("false", _) ("true", _) = GT
-ordFunc br br' = compare (fst br) (fst br')
+      then dotted p (brackets . sep . punctuate " |" $ map (\(_, tacs) -> pPrintPrec l nodotPrec (mkConcat tacs)) branches)
+      else vcat $ map (\(_, tacs) -> rocqBullet p' <+> sep (map (pPrintPrec l (p' + 1)) tacs)) branches
 
 admitted :: [Tactic] -> Bool
 admitted = any containsAdmit

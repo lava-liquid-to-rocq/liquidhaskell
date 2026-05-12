@@ -61,6 +61,9 @@ initial :: TypEnv
 initial =
   Map.fromList
     [ ( boolTpName,
+        -- NOTE: the order of the constructors here must be the same as in Rocq
+        -- because we use tactics and tactics do a destruction where the order
+        -- of branches must correspond to the definition of the constructors
         ΓTC
           [ (ttTmName, defaultRef boolTp),
             (ffTmName, defaultRef boolTp)
