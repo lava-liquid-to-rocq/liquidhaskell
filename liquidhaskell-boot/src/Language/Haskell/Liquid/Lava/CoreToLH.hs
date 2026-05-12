@@ -156,7 +156,7 @@ flattenCoreApp :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> (C
 flattenCoreApp modId infTypes f e =
   let (hd, args) = apps e
       argsT = map (trans modId infTypes f) args
-      (letBindersArgs, sArgs) = first (foldr (.) id) . unzip $ map evaluate argsT
+      (letBindersArgs, sArgs) = first (foldr (.) id) . unzip $ map toReft argsT
       (letBinderHd, appHd) =
         case hd of
           Var name -> (id, VarHead headSym)
@@ -164,15 +164,15 @@ flattenCoreApp modId infTypes f e =
               headSym = case classifyHead . stripLegalName modId $ show name of
                 HGeneric n | isDataConId name -> HDC n
                 h -> h
-          _ -> second ReftHead . evaluate $ trans modId infTypes f hd
+          _ -> second ReftHead . toReft $ trans modId infTypes f hd
    in (letBinderHd . letBindersArgs, (appHd, sArgs))
   where
     apps :: Expr b -> (Expr b, [Expr b])
     apps (App tm1 tm2) = second (++ [tm2]) $ apps tm1
     apps tm = (tm, [])
-    evaluate :: Calc.Expr -> (Calc.Expr -> Calc.Expr, Calc.Reft)
-    evaluate (Calc.Reft t) = (id, t)
-    evaluate tm = (Calc.Let x Nothing tm, Calc.mkVar x)
+    toReft :: Calc.Expr -> (Calc.Expr -> Calc.Expr, Calc.Reft)
+    toReft (Calc.Reft t) = (id, t)
+    toReft tm = (Calc.Let x Nothing tm, Calc.mkVar x)
       where
         x = "x_" ++ hashName tm
 
@@ -222,25 +222,6 @@ toStr = showConstr . toConstr
 -- The first argument is the name of the top-level binder we are translating.
 -- Unsupported: casts, coercions, mutually recursive lets
 -- Ignored: ticks
---
--- > trans(() e1 … en) = trans(trivial e1 … en) = trivial
--- > trans(True e1 … en) = True
--- > trans(False e1 … en) = False
--- > trans(literal) = literal
--- > trans(x e1 … en) = x [trans(e1), …, trans(en)]        -- if is a x variable
--- > trans(*** e1 (=== e2 e3 e4) QED) = transEqns(e3,e4) -- if trans(e1) = trans(e2)
--- > trans(? _ _ e1 e2 e3 … en) = ? ((hint) trans(e1)) trans(e2)
--- > trans(I# e) = trans(I e) = trans(e)
--- > trans(bop e1 e2) = bop trans(e1) trans(e2)
--- > trans(tick e) = trans(e)
--- > trans(type t) = TODO
--- > trans(case e _ _ of []) = trans(e)
--- > trans(case e _ _ of alts) = let y = trans(e) in trans(case y _ _ alts)  -- if trans(e) is a simple term and not a variable
--- > trans(case x _ _ of [ci xi* |-> ei]_i) = mkCase(x,[ci xi* |-> trans(ei)]_i)
--- > trans(let x = lit in e) = trans(e)   -- lit is ignored
--- > trans(let x = e' in e) = let x = trans(e') in trans(e)
--- > trans(let [x1 = e1, ..., xn=en] in e) = let x1 = trans(e1) in trans(e) -- the other binders are ignored
--- > trans(λx.e | cast | coercion) = unsupported
 trans :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> Calc.Expr
 trans modId _ _ (Var n)
   | strippedName `elem` ["()", "True", "False"] = Calc.Reft $ transName strippedName
@@ -252,12 +233,12 @@ trans modId _ _ (Var n)
     strippedName = stripLegalName modId $ show n
 trans modId infTypes f app@App {} = transApp modId infTypes f app
 trans modId infTypes f (Case e _ _ alts) = transCase modId infTypes f e alts
-trans _ _ _ c@Cast {} = error $ "cast expression not supported: " ++ toStr c
+trans modId infTypes f (Let bind e) = transLet modId infTypes f bind e
 trans modId infTypes f (Tick _ e) = trans modId infTypes f e
 trans _ _ _ (Type t) = transGHCType t
-trans _ _ _ c@Coercion {} = error $ "coercion expression not supported: " ++ toStr c
-trans modId infTypes f (Let bind e) = transLet modId infTypes f bind e
 trans _ _ _ (Lit lit) = Calc.Reft $ transLit lit
+trans _ _ _ c@Coercion {} = error $ "coercion expression not supported: " ++ toStr c
+trans _ _ _ c@Cast {} = error $ "cast expression not supported: " ++ toStr c
 trans _ _ _ l@(Lam {}) = error $ "lambda-abstraction outside of let-binding not supported: " ++ toStr l
 
 -- | Translate type arguments.

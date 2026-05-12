@@ -246,7 +246,7 @@ removeRedundantMatches e@(Case r branches genVars) =
     (DC c, argsc) ->
       let br = filter ((==) c . fst . fst) branches
        in case br of
-            -- TODO: We should use Maybe in the translation from Core rather than "undefined"
+            -- Encodes patError
             (_, Just (Reft (Var "undefined" _ _))) : _ -> e
             ((_, ys), Just ebr) : _ -> removeRedundantMatches $ substs (zip argsc (map fst ys)) ebr
             _ -> recurse
@@ -417,7 +417,7 @@ checkExpr γ state e0@(Case r branches _) tp = do
     -- Returns the elaborated branch and a boolean to indicate if a subterm uses
     -- an induction hypothesis one of the introduced variables
     checkBranch :: Reft -> ((Id, [(Id, Bool)]), Maybe Expr) -> Either TypeError (((Id, [(Id, Bool)]), Maybe Expr), Set Id)
-    -- TODO: we should not use a variable name to translate from Core, we should not have this case
+    -- Encodes patError
     checkBranch _ (c, Just (Reft (Var "undefined" _ _))) = return ((c, Nothing), Set.empty)
     checkBranch _ (c, Nothing) = return ((c, Nothing), Set.empty)
     checkBranch matched ((c, ys), Just e) = do
