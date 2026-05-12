@@ -105,6 +105,11 @@ data ParsedEqn
   | Qmark Calc.Reft ParsedEqn
   deriving (Eq, Show)
 
+instance Pretty ParsedEqn where
+  pPrint (Basic r) = pPrint r
+  pPrint (Eqn eqs r) = pPrint eqs <+> text "===" <+> pPrint r
+  pPrint (Qmark r eqs) = pPrint r <+> char '?' <+> pPrint eqs
+
 -- | Classification of application head symbols.
 data HeadSymbol
   = HNot
@@ -186,11 +191,14 @@ transFlattenedApp (VarHead (HBinOp op)) (_ : _ : a : b : _) = Calc.Bop op a b
 transFlattenedApp (VarHead (HConst tm)) _ = tm
 transFlattenedApp (VarHead HUnbox) [singleArg] = singleArg
 transFlattenedApp (VarHead HPatError) _ = undefinedReft
+transFlattenedApp (VarHead HEqChain) args@[_, fstTerm, lstTerm] | Calc.traceFunc "transFlattenedApp: VarHead HEqChain" (map pPrint args) = undefined
 transFlattenedApp (VarHead HEqChain) [_, fstTerm, lstTerm] = transEqns (parseReft fstTerm) lstTerm
-transFlattenedApp (VarHead HCast) [_, eqChain, qed]
-  | qed == Calc.DC "QED" = asProofReft $ case parseReft eqChain of
-      Eqn firstTerm lastTerm -> transEqns firstTerm lastTerm
-      _ -> eqChain
+transFlattenedApp (VarHead HCast) args@[_, eqChain, Calc.DC "QED"] | Calc.traceFunc "transFlattenedApp: VarHead HCast" (map pPrint args) = undefined
+transFlattenedApp (VarHead HCast) [_, eqChain, Calc.DC "QED"] =
+  asProofReft $ case parseReft eqChain of
+    Eqn firstTerm lastTerm -> transEqns firstTerm lastTerm
+    _ -> eqChain
+transFlattenedApp (VarHead HQmark) args@(_ : _ : firstArg : secondArg : _) | Calc.traceFunc "transFlattenedApp: VarHead HQMark" (map pPrint args) = undefined
 transFlattenedApp (VarHead HQmark) (_ : _ : firstArg : secondArg : _)
   | hasEqn firstArg || hasEqn secondArg =
       mkQmark (prevEqns firstArg ++ [mkQmarkPair secondArg (collectReft firstArg)])
@@ -358,9 +366,8 @@ parseReft t = Basic t
 
 -- | translate a parsed equational chain to the corresponding Calculus proof structure
 transEqns :: ParsedEqn -> Calc.Reft -> Calc.Reft
-transEqns s' =
-  {- traceFuncRet ["transEqns", show s', show t'] $ -}
-  mkQmark . recurse s'
+transEqns s t | Calc.traceFunc "transEqns" [pPrint s, pPrint t] = undefined
+transEqns s' t' = mkQmark $ recurse s' t'
   where
     recurse :: ParsedEqn -> Calc.Reft -> [Calc.Reft]
     recurse (Basic s) v = [Calc.Pop Calc.PEq s v]
