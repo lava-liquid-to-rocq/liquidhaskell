@@ -18,7 +18,7 @@ import Data.Data (Data, showConstr, toConstr)
 import qualified Data.HashMap.Strict as HM
 import Data.List (find, intercalate, isPrefixOf)
 import qualified Data.Map.Strict as M
-import Data.Maybe (fromMaybe, mapMaybe)
+import Data.Maybe (mapMaybe)
 import qualified Data.Set as S
 import qualified Data.Text as Text
 import Debug.Trace (trace)
@@ -35,6 +35,7 @@ import Language.Haskell.Liquid.Types.Types (AnnInfo (..))
 import qualified Language.Haskell.Liquid.Types.Types ()
 import qualified Lava.Calculus as Calc
 import Lava.Names (Id, hashName)
+import Text.PrettyPrint.HughesPJClass hiding (first)
 
 -- | Constraint synonym for GHC Core binder variables
 type CoreBinder b = (Data b, Show b, NamedThing b)
@@ -79,8 +80,8 @@ occursFreeIn :: Id -> Calc.Expr -> Bool
 occursFreeIn x e = x `S.member` Calc.freeVars e
 
 -- | Represent undefined/unreachable as a marker expression
-undefinedExpr :: Calc.Expr
-undefinedExpr = Calc.Reft (Calc.mkVar "undefined")
+undefinedReft :: Calc.Reft
+undefinedReft = Calc.mkVar "undefined"
 
 -- | Translate Haskell binders, with mutually recursive binders unsupported for now.
 -- Entry point for the translations in this module
@@ -89,14 +90,13 @@ undefinedExpr = Calc.Reft (Calc.mkVar "undefined")
 -- > transBind(Rec [f_1 = e_1, …, f_n = e_n]) = trans(f_1,e_1)
 transBind :: (CoreBinder b) => String -> AnnInfo SpecType -> Bind b -> Def
 transBind modId infTypes binds = case binds of
-  NonRec b e ->
-    let (args, body) = flattenFun modId infTypes (f b) e
-     in Def (f b) args body False
-  Rec [(b, e)] ->
-    let (args, body) = flattenFun modId infTypes (f b) e
-     in Def (f b) args body True
+  NonRec b e -> mkDef b e
+  Rec [(b, e)] -> mkDef b e
   Rec defs -> error $ "Mutually recursive definitions " ++ show (map fst defs) ++ " not yet supported."
   where
+    mkDef b e =
+      let (args, body) = flattenFun modId infTypes (f b) e
+       in Def (f b) args body False
     f b = stripLegalName modId $ show b
 
 data ParsedEqn
@@ -133,60 +133,62 @@ classifyHead n
   | Just op <- M.lookup n SLH.bops = HBinOp op
   | otherwise = HGeneric n
 
--- | Does the term contain equational reasoning combinators?
-hasEqn :: Calc.Expr -> Bool
-hasEqn (Calc.Reft r) = hasEqnR r
-hasEqn (Calc.Let _ _ d e) = hasEqn d || hasEqn e
-hasEqn (Calc.Case _ brs _) = any (maybe False hasEqn . snd) brs
-
-hasEqnR :: Calc.Reft -> Bool
-hasEqnR (Calc.Pop {}) = True
-hasEqnR (Calc.QMark {}) = True
-hasEqnR _ = False
-
-unReft :: Calc.Expr -> Maybe Calc.Reft
-unReft (Calc.Reft tm) = Just tm
-unReft _ = Nothing
+hasEqn :: Calc.Reft -> Bool
+hasEqn (Calc.Pop {}) = True
+hasEqn (Calc.QMark {}) = True
+hasEqn _ = False
 
 -- | Cast an equational chain/value expression into an explicit Unit proof witness.
 -- Models `tm *** QED` as `unit ? (tm proves True)`.
--- TODO partial
-asProofExpr :: Calc.Expr -> Calc.Expr
-asProofExpr (Calc.Reft tm) = Calc.Reft (Calc.QMark Calc.unitTm tm Calc.ttTm)
-asProofExpr tm = error $ "Expected simple term for proof cast but found " ++ show tm
+asProofReft :: Calc.Reft -> Calc.Reft
+asProofReft tm = Calc.QMark Calc.unitTm tm Calc.ttTm
 
 -- | The head of a flattened Core application.
 data AppHead
   = -- | a classified variable
     VarHead HeadSymbol
   | -- | a non-variable expression
-    ExprHead Calc.Expr
+    ReftHead Calc.Reft
 
--- | Flatten and translate an application, returning a structured head.
---
--- > flattenCoreApp((x e_1) … e_n) = (VarHead x, [trans(e_1), …, trans(e_n)])
--- > flattenCoreApp((e e_1) … e_n) = (ExprHead (trans e), [trans(e_1), …, trans(e_n)])
-flattenCoreApp :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> (AppHead, [Calc.Expr])
-flattenCoreApp modId infTypes f = go []
+-- | Flatten and translate an application, returning a structured head and
+-- surrounding let-bindings used to extract expressions from refinements
+flattenCoreApp :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> (Calc.Expr -> Calc.Expr, (AppHead, [Calc.Reft]))
+flattenCoreApp modId infTypes f e =
+  let (hd, args) = apps e
+      argsT = map (trans modId infTypes f) args
+      (letBindersArgs, sArgs) = first (foldr (.) id) . unzip $ map evaluate argsT
+      (letBinderHd, appHd) =
+        case hd of
+          Var name -> (id, VarHead headSym)
+            where
+              headSym = case classifyHead . stripLegalName modId $ show name of
+                HGeneric n | isDataConId name -> HDC n
+                h -> h
+          _ -> second ReftHead . evaluate $ trans modId infTypes f hd
+   in (letBinderHd . letBindersArgs, (appHd, sArgs))
   where
-    go acc (App g x) = go (trans modId infTypes f x : acc) g
-    go acc (Var name) = (VarHead headSym, acc)
+    apps :: Expr b -> (Expr b, [Expr b])
+    apps (App tm1 tm2) = second (++ [tm2]) $ apps tm1
+    apps tm = (tm, [])
+    evaluate :: Calc.Expr -> (Calc.Expr -> Calc.Expr, Calc.Reft)
+    evaluate (Calc.Reft t) = (id, t)
+    evaluate tm = (Calc.Let x Nothing tm, Calc.mkVar x)
       where
-        strippedName = stripLegalName modId $ show name
-        headSym = case classifyHead strippedName of
-          HGeneric n | isDataConId name -> HDC n
-          h -> h
-    go acc t = (ExprHead (trans modId infTypes f t), acc)
+        x = "x_" ++ hashName tm
 
 -- | Translate a flattened application to Calculus.
-transFlattenedApp :: AppHead -> [Calc.Expr] -> Calc.Expr
-transFlattenedApp (ExprHead g) args = case traverse unReft (g : args) of
-  Just (h : hargs) -> Calc.Reft $ foldl Calc.App h hargs
-  _ -> unexpected "expression head" (g : args)
-transFlattenedApp (VarHead HNot) [Calc.Reft tm] = Calc.Reft $ Calc.Neg tm
-transFlattenedApp (VarHead HEqChain) [_, fstTerm, Calc.Reft lstTerm] = transEqns (parseExpr fstTerm) lstTerm
+transFlattenedApp :: AppHead -> [Calc.Reft] -> Calc.Reft
+transFlattenedApp (ReftHead h) args = foldl Calc.App h args
+transFlattenedApp (VarHead (HDC n)) args = foldl Calc.App (Calc.DC n) args
+transFlattenedApp (VarHead (HGeneric n)) args = foldl Calc.App (Calc.mkVar n) args
+transFlattenedApp (VarHead HNot) [tm] = Calc.Neg tm
+transFlattenedApp (VarHead (HBinOp op)) (_ : _ : a : b : _) = Calc.Bop op a b
+transFlattenedApp (VarHead (HConst tm)) _ = tm
+transFlattenedApp (VarHead HUnbox) [singleArg] = singleArg
+transFlattenedApp (VarHead HPatError) _ = undefinedReft
+transFlattenedApp (VarHead HEqChain) [_, fstTerm, lstTerm] = transEqns (parseReft fstTerm) lstTerm
 transFlattenedApp (VarHead HCast) [_, eqChain, qed]
-  | qed == Calc.Reft (Calc.DC "QED") = asProofExpr $ case parseExpr eqChain of
+  | qed == Calc.DC "QED" = asProofReft $ case parseReft eqChain of
       Eqn firstTerm lastTerm -> transEqns firstTerm lastTerm
       _ -> eqChain
 transFlattenedApp (VarHead HQmark) (_ : _ : firstArg : secondArg : _)
@@ -194,20 +196,6 @@ transFlattenedApp (VarHead HQmark) (_ : _ : firstArg : secondArg : _)
       mkQmark (prevEqns firstArg ++ [mkQmarkPair secondArg (collectReft firstArg)])
   | otherwise =
       mkQmark (prevEqns firstArg ++ [mkQmarkPair firstArg (collectReft secondArg)])
-transFlattenedApp (VarHead HPatError) _ = undefinedExpr
-transFlattenedApp (VarHead (HConst tm)) _ = Calc.Reft tm
-transFlattenedApp (VarHead HUnbox) [singleArg] = singleArg
-transFlattenedApp (VarHead (HBinOp op)) (_ : _ : a : b : _) =
-  let (fstBnd, fstArg) = evaluate a
-      (sndBnd, sndArg) = evaluate b
-      binders = foldr (.) id (fstBnd ++ sndBnd)
-   in binders . Calc.Reft $ Calc.Bop op fstArg sndArg
-transFlattenedApp (VarHead (HDC n)) args =
-  let (letBinders, sArgs) = first (foldr (.) id . concat) . unzip $ map evaluate args
-   in letBinders . Calc.Reft $ foldl Calc.App (Calc.DC n) sArgs
-transFlattenedApp (VarHead (HGeneric n)) args =
-  let (letBinders, sArgs) = first (foldr (.) id . concat) . unzip $ map evaluate args
-   in letBinders . Calc.Reft $ foldl Calc.App (Calc.mkVar n) sArgs
 transFlattenedApp (VarHead HNot) args = unexpected "not" args
 transFlattenedApp (VarHead HLambda) args = unexpected "lambda" args
 transFlattenedApp (VarHead HEqChain) args = unexpected "===" args
@@ -216,8 +204,8 @@ transFlattenedApp (VarHead HQmark) args = unexpected "?" args
 transFlattenedApp (VarHead HUnbox) args = unexpected "unbox" args
 transFlattenedApp (VarHead (HBinOp _)) args = unexpected "binop" args
 
-unexpected :: Id -> [Calc.Expr] -> a
-unexpected n as = error $ "transFlattenedApp: unexpected args for " ++ show n ++ ": " ++ show as
+unexpected :: Id -> [Calc.Reft] -> a
+unexpected n as = error $ "transFlattenedApp: unexpected args for " ++ n ++ ": " ++ prettyShow as
 
 transName :: Id -> Calc.Reft
 transName "()" = Calc.unitTm
@@ -279,36 +267,29 @@ transGHCType t = error $ "Polymorphism not supported: " ++ toStr t
 
 -- | Translate applications by flattening them and translating the parsed application.
 transApp :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> Calc.Expr
-transApp modId infTypes f app = transFlattenedApp appHead args
+transApp modId infTypes f app = letBinders . Calc.Reft $ transFlattenedApp appHead sArgs
   where
-    (appHead, args) = flattenCoreApp modId infTypes f app
+    (letBinders, (appHead, sArgs)) = flattenCoreApp modId infTypes f app
 
 -- | Collect the last Reft from an equational chain expression
-collectReft :: Calc.Expr -> Calc.Reft
-collectReft (Calc.Reft (Calc.Pop _ _ t)) = t
-collectReft (Calc.Reft (Calc.QMark _ r _)) = r
-collectReft (Calc.Reft r) = r
-collectReft _ = error "[CoreToLH] collectReft: expected simple proof term"
+collectReft :: Calc.Reft -> Calc.Reft
+collectReft (Calc.Pop _ _ t) = t
+collectReft (Calc.QMark _ r _) = r
+collectReft r = r
 
-prevEqns :: Calc.Expr -> [Calc.Reft]
-prevEqns (Calc.Reft r@(Calc.Pop {})) = [r]
-prevEqns (Calc.Reft (Calc.QMark r _ _)) = prevEqns (Calc.Reft r)
+prevEqns :: Calc.Reft -> [Calc.Reft]
+prevEqns r@(Calc.Pop {}) = [r]
+prevEqns (Calc.QMark r _ _) = prevEqns r
 prevEqns _ = []
-
-evaluate :: Calc.Expr -> ([Calc.Expr -> Calc.Expr], Calc.Reft)
-evaluate (Calc.Reft t) = ([], t)
-evaluate tm = ([Calc.Let x Nothing tm], Calc.mkVar x)
-  where
-    x = "x_" ++ hashName tm
 
 -- | Translate case expressions.
 transCase :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> [Alt b] -> Calc.Expr
 transCase modId infTypes f e [] = trans modId infTypes f e
--- NOTE: we could support match on simple terms
+-- TODO: we now support match on simple terms, so change mkCase to support it
 transCase modId infTypes f e alts = case eT of
   Calc.Reft (Calc.Var x' _ _) -> mkCase f x' branches
   Calc.Reft {} -> Calc.Let y Nothing eT (mkCase f y branches)
-  _ -> error $ "unexpected case: case " ++ show eT ++ " of \n" ++ intercalate "\n" (map show branches)
+  _ -> error $ "unexpected case: case " ++ prettyShow eT ++ " of \n" ++ intercalate "\n" (map show branches)
   where
     eT = trans modId infTypes f e
     y = "x_" ++ hashName eT
@@ -377,23 +358,16 @@ flattenFun modId infTypes f (Lam b e) = first ((stripLegalName modId . show) b :
 flattenFun modId infTypes f e = ([], trans modId infTypes f e)
 
 -- | Build a QMark Reft pairing a proof/hint with a term
-mkQmarkPair :: Calc.Expr -> Calc.Reft -> Calc.Reft
-mkQmarkPair hint proof = Calc.QMark (go hint) proof Calc.ttTm
-  where
-    go :: Calc.Expr -> Calc.Reft
-    go e = fromMaybe (error $ "[CoreToLH] mkQmarkPair: expected simple term, got: " ++ show e) (unReft e)
+mkQmarkPair :: Calc.Reft -> Calc.Reft -> Calc.Reft
+mkQmarkPair hint proof = Calc.QMark hint proof Calc.ttTm
 
 -- | Combine a list of Refts into a single Expr using QMark
-mkQmark :: [Calc.Reft] -> Calc.Expr
-mkQmark [] = Calc.Reft Calc.unitTm
-mkQmark [z] = Calc.Reft z
-mkQmark (z : zs) = Calc.Reft $ foldl (\acc r -> Calc.QMark acc r Calc.ttTm) z zs
+mkQmark :: [Calc.Reft] -> Calc.Reft
+mkQmark [] = Calc.unitTm
+mkQmark [z] = z
+mkQmark (z : zs) = foldl (\acc r -> Calc.QMark acc r Calc.ttTm) z zs
 
 -- TODO: does this also work for (nested) === operators with hints (using the ? combinator)?
-
-parseExpr :: Calc.Expr -> ParsedEqn
-parseExpr (Calc.Reft t) = parseReft t
-parseExpr other = error $ "Expected simple term or proof combinator but found " ++ show other
 
 parseReft :: Calc.Reft -> ParsedEqn
 parseReft (Calc.Pop Calc.PEq s t) = Eqn (Basic s) t
@@ -402,7 +376,7 @@ parseReft (Calc.QMark t h _) = Qmark h (parseReft t)
 parseReft t = Basic t
 
 -- | translate a parsed equational chain to the corresponding Calculus proof structure
-transEqns :: ParsedEqn -> Calc.Reft -> Calc.Expr
+transEqns :: ParsedEqn -> Calc.Reft -> Calc.Reft
 transEqns s' =
   {- traceFuncRet ["transEqns", show s', show t'] $ -}
   mkQmark . recurse s'
@@ -436,7 +410,7 @@ transCaseExpr :: Maybe Id -> Id -> Bool -> [Branch] -> Calc.Expr
 transCaseExpr = recurse []
   where
     recurse :: [(Id, (Id, [Id]))] -> Maybe Id -> Id -> Bool -> [Branch] -> Calc.Expr
-    recurse prevPats fO indVar isRec cases' =
+    recurse prevPats fO indVar _ cases' =
       {- traceFuncRet ["recurse", show prevPats, show fO, indVar, show isRec, show cases] $ -}
       Calc.substs (map (\(x, r) -> (r, x)) substs) res
       where
@@ -454,8 +428,7 @@ transCaseExpr = recurse []
         (cutCases, substs) = cutRedundantBranches indVar prevPats cases
         cleanedCases = map collapseUnproductiveMatches cutCases
         isRecursive :: Calc.Expr -> Bool
-        isRecursive e =
-          maybe False (`occursFreeIn` e) fO
+        isRecursive e = maybe False (`occursFreeIn` e) fO
         branches = map (modifyBrBody transBranchE) cleanedCases
         transBranchE :: Calc.Expr -> Calc.Expr
         transBranchE e = case e of
@@ -516,7 +489,7 @@ transCaseExpr = recurse []
         -- \| The translation of the only branch in which the pattern is consistent with the previously matched pattern matched against the same expression
         recO =
           ( \br -> case brBody br of
-              Nothing -> Just (undefinedExpr, [])
+              Nothing -> Just (Calc.Reft undefinedReft, [])
               Just body -> cutRedundantMatches prevPats body
           )
             =<< caseExpr
