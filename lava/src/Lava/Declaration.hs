@@ -16,7 +16,7 @@ import qualified Data.Set as Set
 import Debug.Trace (trace)
 import Lava.Calculus as LH
 import Lava.Coq as Coq
-import Lava.CoqSyntaxUtil
+import Lava.CoqSyntaxUtil as Coq
 import Lava.Names
 import Lava.Translation
 import Lava.TypingEnvironment as TypEnv
@@ -166,7 +166,7 @@ wfDecl eq tc alts =
     Match [Coq.Var "x"] Nothing (map mkBranch alts)
   where
     mkBranch :: (Id, RefType) -> ([(Id, [Id])], CoqTerm)
-    mkBranch (c, tp) = ([(unrefinedConstrName c, map fst args)], mkAnd (retRefT : map argProp args))
+    mkBranch (c, tp) = ([(unrefinedConstrName c, map fst args)], Coq.mkAnd (retRefT : map argProp args))
       where
         (args, (vv, _, retRef)) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
         -- Proposition for the refinement of the return type, with C x1 … xn in the refinement
