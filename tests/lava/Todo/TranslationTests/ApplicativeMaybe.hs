@@ -3,7 +3,7 @@
 {-@ LIQUID "--reflection" @-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module TranslationTests.ApplicativeMaybe where
+module Todo.TranslationTests.ApplicativeMaybe where
 
 {- HLInt ignore -}
 import Language.Haskell.Liquid.ProofCombinators
@@ -16,11 +16,11 @@ import Prelude hiding (Just, Maybe, Nothing, fmap, id, pure, seq)
 -- | interchange   u <*> pure y = pure ($ y) <*> u
 
 {-@ data MaybeInt  where
-      Nothing :: MaybeInt 
+      Nothing :: MaybeInt
       Just :: Int -> MaybeInt  @-}
 data MaybeInt  where
-  Nothing :: MaybeInt 
-  Just :: Int -> MaybeInt 
+  Nothing :: MaybeInt
+  Just :: Int -> MaybeInt
   deriving (Eq)
 
 {-@ data MaybeF where
