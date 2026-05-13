@@ -192,12 +192,27 @@ Tactic Notation "destrAppRes" ident(Res) :=
   | ?exp = _ => destrApp exp Res
   end; clear temp.
 
+(* Return the refinement on the domain of the given function, if the domain is a subset type,
+   otherwise return the ArgListT *)
 Ltac get_dom_ref f Res :=
   let temp := fresh "temp" in
   pose (fun x => f x) as temp;
   match type of temp with
   | {x:?b | ?p } -> _ => pose (fun x:b => p) as Res
+  | ArgList ?T -> _ => pose T as Res
   end; clear temp.
+
+Ltac isUArgList uargs :=
+  match uargs with
+  | ?hd ::U ?tl => idtac
+  | nilU => idtac
+  end.
+
+Ltac isArgList args :=
+  match args with
+  | _ ::R _ => idtac
+  | nilR => idtac
+  end.
 
 Ltac get_ret_tp tp Res :=
   match tp with

@@ -45,7 +45,7 @@ Global Ltac split_hyp :=
   end.
 
 Ltac quick_wff_wit :=
-  solve [repeat progress first [unshelve eauto with ref_constr_db wff_constr_db | split | split_hyp ]].
+  solve [repeat progress first [unshelve eauto with ref_constr_db wff_constr_db | split | split_hyp | easy]].
 
 (*From coqDeps Require Export Snipe.*)
 
@@ -380,15 +380,25 @@ Ltac shape_based := match goal with
   | |- (?l && ?r) = true => rewrite andb_true
   | [h: (?l && ?r) = true |- _] => rewrite andb_true in h
   | [h: (?w + ?z == ?x + ?z + ?y) |- _] => replace (x + z + y) with (x + y + z) in h by lia
+
   | [h: (?x ==? ?y) = true |- _ ] => isVar x; rewrite <- generic_equalb_eq in h; first [subst x | rewrite h in *; rewrite generic_equalb_eq in h]
   | [h: (?x =? ?y) = true |- _ ] => isVar x; rewrite Z.eqb_eq in h; first [subst x | rewrite h in *; rewrite <- Z.eqb_eq in h]
   | [h: (?x ==? ?tm) = true |- _ ] => isVar x; rewrite <- eqb_true in h; first [subst x | rewrite h in *; rewrite generic_equalb_eq in h]
   | [h: (?s ==? ?t) = true |- _ ] => rewrite <- eqb_true in h
-  | [h: ?x == ?tm |- _ ] => isVar x; rewrite <- generic_equalb_eq in h; first [subst x | rewrite h in *; rewrite generic_equalb_eq in h]
-  | [h: ?x == ?tm |- _ ] => isConstrAppl x; rewrite <- generic_equalb_eq in h; 
-    try invertCrAppEq h
-  | [h: ?tm == ?x |- _ ] => isVar x; rewrite <- generic_equalb_eq in h; first [symmetry in h; subst x | rewrite h in *; rewrite generic_equalb_eq in h]| |- (?s ==? ?t) = true => rewrite <- eqb_true
+
+  | [h: ?s == ?t |- _ ] => 
+    rewrite <- generic_equalb_eq in h;
+    try pose proof (generic_equalb_eq _ _ s t) as <-;
+    first [
+      isVar s; first [subst s | rewrite h in *]
+    | isVar t; first [symmetry in h; subst t | rewrite h in *]
+    | isConstrAppl s; try invertCrAppEq h
+    | idtac
+    ]
+
+  | |- (?s ==? ?t) = true => rewrite <- eqb_true
   | |- (?s == ?t) => rewrite <- generic_equalb_eq
+
   | [h: ?tm <> ?tm |- False] => apply h; reflexivity
   | [h: ?x = ?tm |- _ ] => isVar x; first [subst x | rewrite h in *]
   | [h: forall (_:?tm <> ?tm), _ |- _] => clear h
