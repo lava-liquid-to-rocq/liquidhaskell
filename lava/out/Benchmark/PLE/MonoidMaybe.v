@@ -70,23 +70,23 @@ Definition Nothing : MaybeInt :=
 
 #[global] Hint Unfold Nothing: ref_constr_db.
 
-Definition mappend_spec (lq_tmp0 lq_tmp1 : MaybeInt): Type :=
+Definition mappend_spec (ds_d48G y : MaybeInt): Type :=
   MaybeInt.
 
 #[global] Hint Unfold mappend_spec: lia_unfold.
 
-Definition mappend (lq_tmp0 lq_tmp1 : MaybeInt): mappend_spec lq_tmp0 lq_tmp1.
+Definition mappend (ds_d48G y : MaybeInt): mappend_spec ds_d48G y.
 Proof.
-  destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p].
-  destruct lq_tmp1 as [lq_tmp1 lq_tmp1_p].
-  destruct lq_tmp0 as [x|].
+  destruct ds_d48G as [ds_d48G ds_d48G_p].
+  destruct y as [y y_p].
+  destruct ds_d48G as [x|].
   - refine (Just (# x)).
-  - refine (exist (λ (lq_tmp1 : MaybeInt_u), MaybeInt_wf lq_tmp1 ∧ True) lq_tmp1 ltac:(solver)).
+  - refine (exist (λ (y : MaybeInt_u), MaybeInt_wf y ∧ True) y ltac:(solver)).
 Defined.
 
 Inductive mappend_rel: MaybeInt_u → MaybeInt_u → MaybeInt_u → Prop :=
-  | mappend_Nothing_x: ∀ lq_tmp1, mappend_rel Nothing_u lq_tmp1 lq_tmp1
-  | mappend_Just_x: ∀ x lq_tmp1, mappend_rel (Just_u x) lq_tmp1 (Just_u x).
+  | mappend_Just_x: ∀ x y, mappend_rel (Just_u x) y (Just_u x)
+  | mappend_Nothing_x: ∀ y, mappend_rel Nothing_u y y.
 
 #[global] Hint Constructors mappend_rel: core_hint_db.
 
@@ -94,41 +94,40 @@ Inductive mappend_rel: MaybeInt_u → MaybeInt_u → MaybeInt_u → Prop :=
 
 #[global] Instance mappend_getF: getFunc mappend_rel := { getF' := mappend }.
 
-Theorem mappend_rel_funct [lq_tmp0 lq_tmp1 : MaybeInt_u]:
-  ∀ (VV VV' : MaybeInt_u),
-  mappend_rel lq_tmp0 lq_tmp1 VV → (mappend_rel lq_tmp0 lq_tmp1 VV' → VV = VV').
+Theorem mappend_rel_funct [ds_d48G y : MaybeInt_u]:
+  ∀ (VV VV' : MaybeInt_u), mappend_rel ds_d48G y VV → (mappend_rel ds_d48G y VV' → VV = VV').
 Proof.
-  destruct lq_tmp0 as [x|]; rel_functionhood_body.
+  destruct ds_d48G as [x|]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve mappend_rel_funct: f_rel_funct_db.
 
-Theorem mappend_Nothing_x_lem lq_tmp1 mappend_Nothing_x_lem_res:
-  mappend_rel Nothing_u lq_tmp1 mappend_Nothing_x_lem_res ↔ mappend_Nothing_x_lem_res == lq_tmp1.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite mappend_Nothing_x_lem: f_rel_back.
-
-Theorem mappend_Just_x_lem lq_tmp1 x mappend_Just_x_lem_res:
-  mappend_rel (Just_u x) lq_tmp1 mappend_Just_x_lem_res ↔ mappend_Just_x_lem_res == Just_u x.
+Theorem mappend_Just_x_lem x y mappend_Just_x_lem_res:
+  mappend_rel (Just_u x) y mappend_Just_x_lem_res ↔ mappend_Just_x_lem_res == Just_u x.
 Proof.
   rel_back' _nil.
 Qed.
 
 #[global] Hint Rewrite mappend_Just_x_lem: f_rel_back.
 
+Theorem mappend_Nothing_x_lem y mappend_Nothing_x_lem_res:
+  mappend_rel Nothing_u y mappend_Nothing_x_lem_res ↔ mappend_Nothing_x_lem_res == y.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite mappend_Nothing_x_lem: f_rel_back.
+
 Theorem mappend_rel_ex
-  (lq_tmp0 : MaybeInt_u)
-  (lq_tmp0_p : MaybeInt_wf lq_tmp0 ∧ True)
-  (lq_tmp1 : MaybeInt_u)
-  (lq_tmp1_p : MaybeInt_wf lq_tmp1 ∧ True):
-  mappend_rel lq_tmp0 lq_tmp1 ⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋.
+  (ds_d48G : MaybeInt_u)
+  (ds_d48G_p : MaybeInt_wf ds_d48G ∧ True)
+  (y : MaybeInt_u)
+  (y_p : MaybeInt_wf y ∧ True):
+  mappend_rel ds_d48G y ⌊ mappend (exist _ ds_d48G ds_d48G_p) (exist _ y y_p) -⌋.
 Proof.
   Opaque mappend.
   existence_lemma_pre mappend;
-  destruct lq_tmp0 as [x|];
+  destruct ds_d48G as [x|];
   [fix_notations | fix_notations];
   simpl in *.
   Transparent mappend.
@@ -140,13 +139,12 @@ Qed.
 #[global] Opaque mappend.
 
 Theorem mappend__mappend_rel_rw
-  (lq_tmp0 : MaybeInt_u)
-  (lq_tmp0_p : MaybeInt_wf lq_tmp0 ∧ True)
-  (lq_tmp1 : MaybeInt_u)
-  (lq_tmp1_p : MaybeInt_wf lq_tmp1 ∧ True)
+  (ds_d48G : MaybeInt_u)
+  (ds_d48G_p : MaybeInt_wf ds_d48G ∧ True)
+  (y : MaybeInt_u)
+  (y_p : MaybeInt_wf y ∧ True)
   (VV : MaybeInt_u):
-  ⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋ = VV
-  ↔ mappend_rel lq_tmp0 lq_tmp1 VV.
+  ⌊ mappend (exist _ ds_d48G ds_d48G_p) (exist _ y y_p) -⌋ = VV ↔ mappend_rel ds_d48G y VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -158,37 +156,35 @@ Qed.
 #[global] Instance mappend_lookup_rw: dictionary rwLem mappend := {
     lookup' := mappend__mappend_rel_rw }.
 
-Theorem mappend__mappend_rel (lq_tmp0 lq_tmp1 : MaybeInt) (VV : MaybeInt_u):
-  ⌊ mappend lq_tmp0 lq_tmp1 -⌋ = VV ↔ mappend_rel ⌊ lq_tmp0 ⌋ ⌊ lq_tmp1 ⌋ VV.
+Theorem mappend__mappend_rel (ds_d48G y : MaybeInt) (VV : MaybeInt_u):
+  ⌊ mappend ds_d48G y -⌋ = VV ↔ mappend_rel ⌊ ds_d48G ⌋ ⌊ y ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite mappend__mappend_rel: f_rel_funct_db.
 
-Theorem mappend__mappend_rel'
-  (lq_tmp0_u lq_tmp1_u : MaybeInt_u) (lq_tmp0 lq_tmp1 : MaybeInt) (VV : MaybeInt_u):
-  lq_tmp0_u = ⌊ lq_tmp0 ⌋
-  → (lq_tmp1_u = ⌊ lq_tmp1 ⌋
-     → ⌊ mappend lq_tmp0 lq_tmp1 -⌋ = VV ↔ mappend_rel lq_tmp0_u lq_tmp1_u VV).
+Theorem mappend__mappend_rel' (ds_d48G_u y_u : MaybeInt_u) (ds_d48G y : MaybeInt) (VV : MaybeInt_u):
+  ds_d48G_u = ⌊ ds_d48G ⌋
+  → (y_u = ⌊ y ⌋ → ⌊ mappend ds_d48G y -⌋ = VV ↔ mappend_rel ds_d48G_u y_u VV).
 Proof.
-  intros -> ->. refine (mappend__mappend_rel lq_tmp0 lq_tmp1 VV).
+  intros -> ->. refine (mappend__mappend_rel ds_d48G y VV).
 Qed.
 
 #[global] Hint Resolve mappend__mappend_rel': f_rel_funct_db.
 
 Theorem mappend_rel_mk
-  (lq_tmp0 : MaybeInt_u)
-  (lq_tmp0_p : MaybeInt_wf lq_tmp0 ∧ True)
-  (lq_tmp1 : MaybeInt_u)
-  (lq_tmp1_p : MaybeInt_wf lq_tmp1 ∧ True):
-  {VV: _ | mappend_rel lq_tmp0 lq_tmp1 VV}.
+  (ds_d48G : MaybeInt_u)
+  (ds_d48G_p : MaybeInt_wf ds_d48G ∧ True)
+  (y : MaybeInt_u)
+  (y_p : MaybeInt_wf y ∧ True):
+  {VV: _ | mappend_rel ds_d48G y VV}.
 Proof.
   intros;
   refine (subsumptionCast
           _
-          (λ VV, mappend_rel lq_tmp0 lq_tmp1 VV)
-          (mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p))
+          (λ VV, mappend_rel ds_d48G y VV)
+          (mappend (exist _ ds_d48G ds_d48G_p) (exist _ y y_p))
           _);
   rewrite <- mappend__mappend_rel';
   quicksolve.
@@ -198,17 +194,16 @@ Qed.
 
 #[global] Instance mappend_pack:
   @Pack
-  (MaybeInt ::RT λ (lq_tmp0 : MaybeInt), MaybeInt ::RT λ (lq_tmp1 : MaybeInt), nilRT)
+  (MaybeInt ::RT λ (ds_d48G : MaybeInt), MaybeInt ::RT λ (y : MaybeInt), nilRT)
   (MaybeInt_u ::UT (MaybeInt_u ::UT nilUT))
   ltac:(mkProjectsArgListTG ((MaybeInt
-  ::RT λ (lq_tmp0 : MaybeInt),
-       MaybeInt ::RT λ (lq_tmp1 : MaybeInt), nilRT)) ((MaybeInt_u ::UT (MaybeInt_u ::UT nilUT))))
+  ::RT λ (ds_d48G : MaybeInt),
+       MaybeInt ::RT λ (y : MaybeInt), nilRT)) ((MaybeInt_u ::UT (MaybeInt_u ::UT nilUT))))
   MaybeInt_u
-  (λ (x_63413805 : ArgList (MaybeInt
-                            ::RT λ (lq_tmp0 : MaybeInt), MaybeInt ::RT λ (lq_tmp1 : MaybeInt), nilRT))
-     (v_x_63413805 : MaybeInt_u),
-   ltac:(flattenP (λ (lq_tmp0 lq_tmp1 : MaybeInt) (VV : MaybeInt_u),
- MaybeInt_wf VV ∧ True) x_63413805 v_x_63413805)).
+  (λ (x_53827607 : ArgList (MaybeInt
+                            ::RT λ (ds_d48G : MaybeInt), MaybeInt ::RT λ (y : MaybeInt), nilRT))
+     (v_x_53827607 : MaybeInt_u),
+   ltac:(flattenP (λ (ds_d48G y : MaybeInt) (VV : MaybeInt_u), MaybeInt_wf VV ∧ True) x_53827607 v_x_53827607)).
 Proof.
   buildPackG mappend mappend_rel mappend__mappend_rel mappend_rel_funct.
 Defined.
@@ -218,62 +213,62 @@ Proof.
   buildUPackG mappend_rel mappend_rel_funct.
 Defined.
 
-Definition mappend_assoc_spec (xs ys zs : MaybeInt): Type :=
+Definition mappend_assoc_spec (ds_d48D y z : MaybeInt): Type :=
   {{∃ (mappend_res : MaybeInt_u),
-    mappend_rel ⌊ xs ⌋ ⌊ ys ⌋ mappend_res
+    mappend_rel ⌊ ds_d48D ⌋ ⌊ y ⌋ mappend_res
     ∧ ∃ (mappend_res_2 : MaybeInt_u),
-      mappend_rel mappend_res ⌊ zs ⌋ mappend_res_2
+      mappend_rel mappend_res ⌊ z ⌋ mappend_res_2
       ∧ ∃ (mappend_res_3 : MaybeInt_u),
-        mappend_rel ⌊ ys ⌋ ⌊ zs ⌋ mappend_res_3
+        mappend_rel ⌊ y ⌋ ⌊ z ⌋ mappend_res_3
         ∧ ∃ (mappend_res_4 : MaybeInt_u),
-          mappend_rel ⌊ xs ⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4}}.
+          mappend_rel ⌊ ds_d48D ⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4}}.
 
 #[global] Hint Unfold mappend_assoc_spec: lia_unfold.
 
-Theorem mappend_assoc (xs ys zs : MaybeInt): mappend_assoc_spec xs ys zs.
+Theorem mappend_assoc (ds_d48D y z : MaybeInt): mappend_assoc_spec ds_d48D y z.
 Proof.
-  destruct xs as [xs xs_p].
-  destruct ys as [ys ys_p].
-  destruct zs as [zs zs_p].
-  destruct xs as [x|].
+  destruct ds_d48D as [ds_d48D ds_d48D_p].
+  destruct y as [y y_p].
+  destruct z as [z z_p].
+  destruct ds_d48D as [x|].
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (mappend_res : MaybeInt_u),
-             mappend_rel xs ys mappend_res
+             mappend_rel (Just_u x) y mappend_res
              ∧ ∃ (mappend_res_2 : MaybeInt_u),
-               mappend_rel mappend_res zs mappend_res_2
+               mappend_rel mappend_res z mappend_res_2
                ∧ ∃ (mappend_res_3 : MaybeInt_u),
-                 mappend_rel ys zs mappend_res_3
+                 mappend_rel y z mappend_res_3
                  ∧ ∃ (mappend_res_4 : MaybeInt_u),
-                   mappend_rel xs mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
+                   mappend_rel (Just_u x) mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
             (# unit)
             ltac:(solver)).
-  - destruct ys as [y|].
+  - destruct y as [y|].
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
                ∃ (mappend_res : MaybeInt_u),
-               mappend_rel xs ys mappend_res
+               mappend_rel Nothing_u (Just_u y) mappend_res
                ∧ ∃ (mappend_res_2 : MaybeInt_u),
-                 mappend_rel mappend_res zs mappend_res_2
+                 mappend_rel mappend_res z mappend_res_2
                  ∧ ∃ (mappend_res_3 : MaybeInt_u),
-                   mappend_rel ys zs mappend_res_3
+                   mappend_rel (Just_u y) z mappend_res_3
                    ∧ ∃ (mappend_res_4 : MaybeInt_u),
-                     mappend_rel xs mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
+                     mappend_rel Nothing_u mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
               (# unit)
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
                ∃ (mappend_res : MaybeInt_u),
-               mappend_rel xs ys mappend_res
+               mappend_rel Nothing_u Nothing_u mappend_res
                ∧ ∃ (mappend_res_2 : MaybeInt_u),
-                 mappend_rel mappend_res zs mappend_res_2
+                 mappend_rel mappend_res z mappend_res_2
                  ∧ ∃ (mappend_res_3 : MaybeInt_u),
-                   mappend_rel ys zs mappend_res_3
+                   mappend_rel Nothing_u z mappend_res_3
                    ∧ ∃ (mappend_res_4 : MaybeInt_u),
-                     mappend_rel xs mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
+                     mappend_rel Nothing_u mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
               (# unit)
               ltac:(solver)).
 Qed.
@@ -288,113 +283,45 @@ Proof.
   refine Nothing.
 Defined.
 
-Inductive mempty_rel: MaybeInt_u → Prop :=
-  | mempty_Constr: mempty_rel Nothing_u.
-
-#[global] Hint Constructors mempty_rel: core_hint_db.
-
-#[global] Instance mempty_lookup_rel: dictionary rel mempty := { lookup' := mempty_rel }.
-
-#[global] Instance mempty_getF: getFunc mempty_rel := { getF' := mempty }.
-
-Theorem mempty_rel_funct : ∀ (VV VV' : MaybeInt_u), mempty_rel VV → (mempty_rel VV' → VV = VV').
-Proof.
-  rel_functionhood_body.
-Qed.
-
-#[global] Hint Resolve mempty_rel_funct: f_rel_funct_db.
-
-Theorem mempty_inv_lem mempty_inv_lem_res:
-  mempty_rel mempty_inv_lem_res ↔ mempty_inv_lem_res == Nothing_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite mempty_inv_lem: f_rel_back.
-
-Theorem mempty_rel_ex : mempty_rel ⌊ mempty -⌋.
-Proof.
-  Opaque mempty.
-  existence_lemma_pre mempty; fix_notations; simpl in *.
-  Transparent mempty.
-  all: (existence_lemma_quicksolve mempty; f__f_rel_ex_body; f_rel_finish).
-Qed.
-
-#[global] Hint Resolve mempty_rel_ex: rel_ax_db.
-
-#[global] Opaque mempty.
-
-Theorem mempty__mempty_rel_rw (VV : MaybeInt_u): ⌊ mempty -⌋ = VV ↔ mempty_rel VV.
-Proof.
-  f__f_rel_rw.
-Qed.
-
-#[global] Hint Rewrite mempty__mempty_rel_rw: f_rel_funct_db.
-
-#[global] Hint Resolve mempty__mempty_rel_rw: rel_ax_db.
-
-#[global] Instance mempty_lookup_rw: dictionary rwLem mempty := {
-    lookup' := mempty__mempty_rel_rw }.
-
-Theorem mempty__mempty_rel (VV : MaybeInt_u): ⌊ mempty -⌋ = VV ↔ mempty_rel VV.
-Proof.
-  f__f_rel.
-Qed.
-
-#[global] Hint Rewrite mempty__mempty_rel: f_rel_funct_db.
-
-Theorem mempty__mempty_rel' (VV : MaybeInt_u): ⌊ mempty -⌋ = VV ↔ mempty_rel VV.
-Proof.
-  intros. refine (mempty__mempty_rel VV).
-Qed.
-
-#[global] Hint Resolve mempty__mempty_rel': f_rel_funct_db.
-
-Theorem mempty_rel_mk : {VV: _ | mempty_rel VV}.
-Proof.
-  intros;
-  refine (subsumptionCast _ (λ VV, mempty_rel VV) mempty _);
-  rewrite <- mempty__mempty_rel';
-  quicksolve.
-Qed.
-
-#[global] Hint Resolve mempty_rel_mk: f_rel_funct_db.
-
-Definition mempty_left_spec (x : MaybeInt): Type :=
-  {{∃ (mappend_res : MaybeInt_u), mappend_rel ⌊ mempty -⌋ ⌊ x ⌋ mappend_res ∧ mappend_res == ⌊ x ⌋}}.
+Definition mempty_left_spec (ds_d48F : MaybeInt): Type :=
+  {{∃ (mappend_res : MaybeInt_u),
+    mappend_rel ⌊ mempty -⌋ ⌊ ds_d48F ⌋ mappend_res ∧ mappend_res == ⌊ ds_d48F ⌋}}.
 
 #[global] Hint Unfold mempty_left_spec: lia_unfold.
 
-Theorem mempty_left (x : MaybeInt): mempty_left_spec x.
+Theorem mempty_left (ds_d48F : MaybeInt): mempty_left_spec ds_d48F.
 Proof.
-  destruct x as [x x_p].
+  destruct ds_d48F as [ds_d48F ds_d48F_p].
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ (mappend_res : MaybeInt_u), mappend_rel ⌊ mempty -⌋ x mappend_res ∧ mappend_res == x)
+           ∃ (mappend_res : MaybeInt_u), mappend_rel ⌊ mempty -⌋ ds_d48F mappend_res ∧ mappend_res == ds_d48F)
           (# unit)
           ltac:(solver)).
 Qed.
 
-Definition mempty_right_spec (x : MaybeInt): Type :=
-  {{∃ (mappend_res : MaybeInt_u), mappend_rel ⌊ x ⌋ ⌊ mempty -⌋ mappend_res ∧ mappend_res == ⌊ x ⌋}}.
+Definition mempty_right_spec (ds_d48E : MaybeInt): Type :=
+  {{∃ (mappend_res : MaybeInt_u),
+    mappend_rel ⌊ ds_d48E ⌋ ⌊ mempty -⌋ mappend_res ∧ mappend_res == ⌊ ds_d48E ⌋}}.
 
 #[global] Hint Unfold mempty_right_spec: lia_unfold.
 
-Theorem mempty_right (x : MaybeInt): mempty_right_spec x.
+Theorem mempty_right (ds_d48E : MaybeInt): mempty_right_spec ds_d48E.
 Proof.
-  destruct x as [x x_p].
-  destruct x as [x|].
+  destruct ds_d48E as [ds_d48E ds_d48E_p].
+  destruct ds_d48E as [x|].
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ (mappend_res : MaybeInt_u), mappend_rel x ⌊ mempty -⌋ mappend_res ∧ mappend_res == x)
+             ∃ (mappend_res : MaybeInt_u),
+             mappend_rel (Just_u x) ⌊ mempty -⌋ mappend_res ∧ mappend_res == Just_u x)
             (# unit)
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ (mappend_res : MaybeInt_u), mappend_rel x ⌊ mempty -⌋ mappend_res ∧ mappend_res == x)
+             ∃ (mappend_res : MaybeInt_u),
+             mappend_rel Nothing_u ⌊ mempty -⌋ mappend_res ∧ mappend_res == Nothing_u)
             (# unit)
             ltac:(solver)).
 Qed.

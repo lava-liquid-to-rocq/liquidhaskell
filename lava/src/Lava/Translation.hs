@@ -203,6 +203,7 @@ hypsRV :: Bool -> [(Reft, Id)] -> Bool -> CoqTerm -> CoqTerm
 hypsRV eq rv graphRel = \p -> foldr hyp p rv
   where
     -- hyp(f r1 … rn, z) p = forall z, (f_rel/get(U)PackRelName f) RtoU(r1) … RtoU(rn) z -> p
+    --                    or exists z, (f_rel/get(U)PackRelName f) RtoU(r1) … RtoU(rn) z /\ p
     hyp :: (Reft, Id) -> CoqTerm -> CoqTerm
     hyp (app, z) p =
       quantifier [(z, trBaseType tpz)] $
@@ -294,8 +295,10 @@ trReft _ (LH.FloatLit d) = Coq.FloatLiteral d
 trReft _ (LH.DC c) = Cr (trDC c)
 trReft eq (LH.Neg tm) = Coq.Neg RefOp $ trReft eq tm
 trReft eq (LH.Bop op tm1 tm2) = Coq.Bop (Binop (trBop op) RefOp) (trReft eq tm1) (trReft eq tm2)
+-- trReft _ qmark@(LH.QMark {}) | traceFunc "trReft" [text $ show qmark] = undefined
 trReft eq (LH.QMark tm hint prop) =
   Coq.Let "_" (Just . Prop $ utrReftProp eq prop) (Coq.mkProj Sig2 $ trReft eq hint) (trReft eq tm)
+-- trReft _ pop@(LH.Pop {}) | traceFunc "trReft" [text $ show pop] = undefined
 trReft eq (LH.Pop pop tm1 tm2) =
   let popProp = Just . Prop $ Coq.Bop (Binop (trBop $ popToBop pop) PropOp) (Coq.mkProj GenProj $ trReft eq tm1) (Coq.mkProj GenProj $ trReft eq tm2)
    in Coq.Let "_" popProp (PrfTerm Hole $ if eq then ProofHole else ByTac Oracle) (trReft eq tm2)

@@ -76,15 +76,15 @@ Defined.
 
 #[global] Hint Unfold Zero: ref_constr_db.
 
-Definition even_spec (n : Nats): Type :=
+Definition even_spec (ds_d1Zd : Nats): Type :=
   Bool.
 
 #[global] Hint Unfold even_spec: lia_unfold.
 
-Definition even (n : Nats): even_spec n.
+Definition even (ds_d1Zd : Nats): even_spec ds_d1Zd.
 Proof.
-  destruct n as [n n_p].
-  induction n as [n IH_n|].
+  destruct ds_d1Zd as [ds_d1Zd ds_d1Zd_p].
+  induction ds_d1Zd as [n IH_n|].
   - refine (subsumptionCast
             bool
             (λ (VV : bool), True)
@@ -94,8 +94,8 @@ Proof.
 Defined.
 
 Inductive even_rel: Nats_u → bool → Prop :=
-  | even_Zero: even_rel Zero_u true
-  | even_Suc: ∀ n (even_res : bool), even_rel n even_res → even_rel (Suc_u n) (negb even_res).
+  | even_Suc: ∀ n (even_res : bool), even_rel n even_res → even_rel (Suc_u n) (negb even_res)
+  | even_Zero: even_rel Zero_u true.
 
 #[global] Hint Constructors even_rel: core_hint_db.
 
@@ -103,20 +103,13 @@ Inductive even_rel: Nats_u → bool → Prop :=
 
 #[global] Instance even_getF: getFunc even_rel := { getF' := even }.
 
-Theorem even_rel_funct [n : Nats_u]: ∀ (VV VV' : bool), even_rel n VV → (even_rel n VV' → VV = VV').
+Theorem even_rel_funct [ds_d1Zd : Nats_u]:
+  ∀ (VV VV' : bool), even_rel ds_d1Zd VV → (even_rel ds_d1Zd VV' → VV = VV').
 Proof.
-  induction n as [n IH_n|]; rel_functionhood_body.
+  induction ds_d1Zd as [n IH_n|]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve even_rel_funct: f_rel_funct_db.
-
-Theorem even_Zero_lem even_Zero_lem_res:
-  even_rel Zero_u even_Zero_lem_res ↔ even_Zero_lem_res == true.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite even_Zero_lem: f_rel_back.
 
 Theorem even_Suc_lem n even_Suc_lem_res:
   even_rel (Suc_u n) even_Suc_lem_res
@@ -127,11 +120,20 @@ Qed.
 
 #[global] Hint Rewrite even_Suc_lem: f_rel_back.
 
-Theorem even_rel_ex (n : Nats_u) (n_p : Nats_wf n ∧ True): even_rel n ⌊ even (exist _ n n_p) -⌋.
+Theorem even_Zero_lem even_Zero_lem_res:
+  even_rel Zero_u even_Zero_lem_res ↔ even_Zero_lem_res == true.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite even_Zero_lem: f_rel_back.
+
+Theorem even_rel_ex (ds_d1Zd : Nats_u) (ds_d1Zd_p : Nats_wf ds_d1Zd ∧ True):
+  even_rel ds_d1Zd ⌊ even (exist _ ds_d1Zd ds_d1Zd_p) -⌋.
 Proof.
   Opaque even.
   existence_lemma_pre even;
-  induction n as [n IH_n|];
+  induction ds_d1Zd as [n IH_n|];
   [fix_notations; pose proof (IH_n ltac:(try clear IH_n; solver)) as IH_60635587; try clear IH_n |
    fix_notations];
   simpl in *.
@@ -143,8 +145,8 @@ Qed.
 
 #[global] Opaque even.
 
-Theorem even__even_rel_rw (n : Nats_u) (n_p : Nats_wf n ∧ True) (VV : bool):
-  ⌊ even (exist _ n n_p) -⌋ = VV ↔ even_rel n VV.
+Theorem even__even_rel_rw (ds_d1Zd : Nats_u) (ds_d1Zd_p : Nats_wf ds_d1Zd ∧ True) (VV : bool):
+  ⌊ even (exist _ ds_d1Zd ds_d1Zd_p) -⌋ = VV ↔ even_rel ds_d1Zd VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -155,25 +157,27 @@ Qed.
 
 #[global] Instance even_lookup_rw: dictionary rwLem even := { lookup' := even__even_rel_rw }.
 
-Theorem even__even_rel (n : Nats) (VV : bool): ⌊ even n -⌋ = VV ↔ even_rel ⌊ n ⌋ VV.
+Theorem even__even_rel (ds_d1Zd : Nats) (VV : bool):
+  ⌊ even ds_d1Zd -⌋ = VV ↔ even_rel ⌊ ds_d1Zd ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite even__even_rel: f_rel_funct_db.
 
-Theorem even__even_rel' (n_u : Nats_u) (n : Nats) (VV : bool):
-  n_u = ⌊ n ⌋ → ⌊ even n -⌋ = VV ↔ even_rel n_u VV.
+Theorem even__even_rel' (ds_d1Zd_u : Nats_u) (ds_d1Zd : Nats) (VV : bool):
+  ds_d1Zd_u = ⌊ ds_d1Zd ⌋ → ⌊ even ds_d1Zd -⌋ = VV ↔ even_rel ds_d1Zd_u VV.
 Proof.
-  intros ->. refine (even__even_rel n VV).
+  intros ->. refine (even__even_rel ds_d1Zd VV).
 Qed.
 
 #[global] Hint Resolve even__even_rel': f_rel_funct_db.
 
-Theorem even_rel_mk (n : Nats_u) (n_p : Nats_wf n ∧ True): {VV: _ | even_rel n VV}.
+Theorem even_rel_mk (ds_d1Zd : Nats_u) (ds_d1Zd_p : Nats_wf ds_d1Zd ∧ True):
+  {VV: _ | even_rel ds_d1Zd VV}.
 Proof.
   intros;
-  refine (subsumptionCast _ (λ VV, even_rel n VV) (even (exist _ n n_p)) _);
+  refine (subsumptionCast _ (λ VV, even_rel ds_d1Zd VV) (even (exist _ ds_d1Zd ds_d1Zd_p)) _);
   rewrite <- even__even_rel';
   quicksolve.
 Qed.
@@ -182,12 +186,12 @@ Qed.
 
 #[global] Instance even_pack:
   @Pack
-  (Nats ::RT λ (n : Nats), nilRT)
+  (Nats ::RT λ (ds_d1Zd : Nats), nilRT)
   (Nats_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Nats ::RT λ (n : Nats), nilRT)) ((Nats_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG ((Nats ::RT λ (ds_d1Zd : Nats), nilRT)) ((Nats_u ::UT nilUT)))
   bool
-  (λ (x_53997484 : ArgList (Nats ::RT λ (n : Nats), nilRT)) (v_x_53997484 : bool),
-   ltac:(flattenP (λ (n : Nats) (VV : bool), True) x_53997484 v_x_53997484)).
+  (λ (x_63381999 : ArgList (Nats ::RT λ (ds_d1Zd : Nats), nilRT)) (v_x_63381999 : bool),
+   ltac:(flattenP (λ (ds_d1Zd : Nats) (VV : bool), True) x_63381999 v_x_63381999)).
 Proof.
   buildPackG even even_rel even__even_rel even_rel_funct.
 Defined.

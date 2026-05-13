@@ -108,19 +108,18 @@ isLemma = (== "()") . typeName . snd3 . snd . Calc.arrs
 
 parseDef :: (Def, Maybe Calc.RefType, Bool) -> Calc.Decl
 parseDef (Def dname args body _, Just sig, b) =
-  Calc.Definition dname fullTp (Calc.substs renSubs body) b
+  Calc.Definition dname fullTp body b
   where
-    fullTp = foldr (\(n, t) acc -> Calc.ArrType n t acc) tp (map defaultBind sigArgs)
+    sig' = Calc.renameParams args sig
+    (sigArgs, sRes) = signatureToArgsRet sig'
     tp =
-      if isLemma sig
+      if isLemma sig'
         then case sRes of
           Calc.RefType _ _ reft -> Calc.RefType (dname ++ "_claim") Calc.unitTp reft
           _ -> error $ "Lemma " ++ dname ++ " has unexpected arrow return type"
         else sRes
-    (sigArgs, sRes) = signatureToArgsRet sig
-    renSubs = zipWith (\n arg -> (Calc.mkVar (refName arg), n)) args sigArgs
-    refName (Calc.RefType x _ _) = x
-    refName (Calc.ArrType x _ _) = x
+
+    fullTp = foldr (\(n, t) acc -> Calc.ArrType n t acc) tp (zip args sigArgs)
 parseDef (Def dname _ _ _, Nothing, _) = error $ "Top-level definition or lemma " ++ dname ++ " without signature is forbidden."
 
 -- | replace the names of variables v in refinement types {v:A|p} of arguments x by x
@@ -142,3 +141,4 @@ signatureToArgsRet sig = (args, ret)
 defaultBind :: Calc.RefType -> (Id, Calc.RefType)
 defaultBind r@(Calc.RefType nm _ _) = (nm, r)
 defaultBind a@(Calc.ArrType nm _ _) = (nm, a)
+

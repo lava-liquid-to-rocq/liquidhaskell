@@ -15,6 +15,7 @@ import Language.Fixpoint.Types (PPrint)
 import qualified Language.Fixpoint.Types as F
 import Language.Haskell.Liquid.Lava.Misc
 import Language.Haskell.Liquid.Types.RType (PVarV (PV), RTVar (RTVar), RTyCon (RTyCon), RTyVar (RTV), RTypeV (..), SpecType, UReft, UReftV (MkUReft))
+
 import qualified Lava.Calculus as Calc
 import Lava.Names (Id)
 
@@ -75,8 +76,6 @@ getFuncArgName modId symb = go sym
 
 transVarName :: (PPrint a) => Id -> a -> String
 transVarName modId x = case getFuncArgName modId x of
-  -- FIX: lq_tmp0 -> f just to make things work, but there's a problem somewhere
-  (_, "lq_tmp0") -> "f"
   (Just n, func) -> stripLegalName modId $ func ++ "." ++ n
   (Nothing, "") -> "illegalInternalName"
   (Nothing, func) -> func

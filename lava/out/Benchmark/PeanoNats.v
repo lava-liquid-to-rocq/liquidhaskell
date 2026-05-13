@@ -76,23 +76,23 @@ Defined.
 
 #[global] Hint Unfold Zero: ref_constr_db.
 
-Definition add_spec (m n : Nats): Type :=
+Definition add_spec (ds_d4mH n : Nats): Type :=
   Nats.
 
 #[global] Hint Unfold add_spec: lia_unfold.
 
-Definition add (m n : Nats): add_spec m n.
+Definition add (ds_d4mH n : Nats): add_spec ds_d4mH n.
 Proof.
-  destruct m as [m m_p].
+  destruct ds_d4mH as [ds_d4mH ds_d4mH_p].
   destruct n as [n n_p].
-  try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros.
+  try revert n_p; generalize dependent n; induction ds_d4mH as [m IH_m|]; intros.
   - refine (Suc (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver))).
   - refine (exist (λ (n : Nats_u), Nats_wf n ∧ True) n ltac:(solver)).
 Defined.
 
 Inductive add_rel: Nats_u → Nats_u → Nats_u → Prop :=
-  | add_Zero_x: ∀ n, add_rel Zero_u n n
-  | add_Suc_x: ∀ m n (add_res : Nats_u), add_rel m n add_res → add_rel (Suc_u m) n (Suc_u add_res).
+  | add_Suc_x: ∀ m n (add_res : Nats_u), add_rel m n add_res → add_rel (Suc_u m) n (Suc_u add_res)
+  | add_Zero_x: ∀ n, add_rel Zero_u n n.
 
 #[global] Hint Constructors add_rel: core_hint_db.
 
@@ -100,21 +100,14 @@ Inductive add_rel: Nats_u → Nats_u → Nats_u → Prop :=
 
 #[global] Instance add_getF: getFunc add_rel := { getF' := add }.
 
-Theorem add_rel_funct [m n : Nats_u]:
-  ∀ (VV VV' : Nats_u), add_rel m n VV → (add_rel m n VV' → VV = VV').
+Theorem add_rel_funct [ds_d4mH n : Nats_u]:
+  ∀ (VV VV' : Nats_u), add_rel ds_d4mH n VV → (add_rel ds_d4mH n VV' → VV = VV').
 Proof.
-  try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros; rel_functionhood_body.
+  try revert n_p; generalize dependent n; induction ds_d4mH as [m IH_m|]; intros;
+  rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve add_rel_funct: f_rel_funct_db.
-
-Theorem add_Zero_x_lem n add_Zero_x_lem_res:
-  add_rel Zero_u n add_Zero_x_lem_res ↔ add_Zero_x_lem_res == n.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite add_Zero_x_lem: f_rel_back.
 
 Theorem add_Suc_x_lem m n add_Suc_x_lem_res:
   add_rel (Suc_u m) n add_Suc_x_lem_res
@@ -125,12 +118,21 @@ Qed.
 
 #[global] Hint Rewrite add_Suc_x_lem: f_rel_back.
 
-Theorem add_rel_ex (m : Nats_u) (m_p : Nats_wf m ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True):
-  add_rel m n ⌊ add (exist _ m m_p) (exist _ n n_p) -⌋.
+Theorem add_Zero_x_lem n add_Zero_x_lem_res:
+  add_rel Zero_u n add_Zero_x_lem_res ↔ add_Zero_x_lem_res == n.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite add_Zero_x_lem: f_rel_back.
+
+Theorem add_rel_ex
+  (ds_d4mH : Nats_u) (ds_d4mH_p : Nats_wf ds_d4mH ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True):
+  add_rel ds_d4mH n ⌊ add (exist _ ds_d4mH ds_d4mH_p) (exist _ n n_p) -⌋.
 Proof.
   Opaque add.
   existence_lemma_pre add;
-  try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros;
+  try revert n_p; generalize dependent n; induction ds_d4mH as [m IH_m|]; intros;
   [fix_notations;
    pose proof (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver)) as IH_14792487;
    try clear IH_m |
@@ -145,8 +147,12 @@ Qed.
 #[global] Opaque add.
 
 Theorem add__add_rel_rw
-  (m : Nats_u) (m_p : Nats_wf m ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True) (VV : Nats_u):
-  ⌊ add (exist _ m m_p) (exist _ n n_p) -⌋ = VV ↔ add_rel m n VV.
+  (ds_d4mH : Nats_u)
+  (ds_d4mH_p : Nats_wf ds_d4mH ∧ True)
+  (n : Nats_u)
+  (n_p : Nats_wf n ∧ True)
+  (VV : Nats_u):
+  ⌊ add (exist _ ds_d4mH ds_d4mH_p) (exist _ n n_p) -⌋ = VV ↔ add_rel ds_d4mH n VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -157,26 +163,32 @@ Qed.
 
 #[global] Instance add_lookup_rw: dictionary rwLem add := { lookup' := add__add_rel_rw }.
 
-Theorem add__add_rel (m n : Nats) (VV : Nats_u): ⌊ add m n -⌋ = VV ↔ add_rel ⌊ m ⌋ ⌊ n ⌋ VV.
+Theorem add__add_rel (ds_d4mH n : Nats) (VV : Nats_u):
+  ⌊ add ds_d4mH n -⌋ = VV ↔ add_rel ⌊ ds_d4mH ⌋ ⌊ n ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite add__add_rel: f_rel_funct_db.
 
-Theorem add__add_rel' (m_u n_u : Nats_u) (m n : Nats) (VV : Nats_u):
-  m_u = ⌊ m ⌋ → (n_u = ⌊ n ⌋ → ⌊ add m n -⌋ = VV ↔ add_rel m_u n_u VV).
+Theorem add__add_rel' (ds_d4mH_u n_u : Nats_u) (ds_d4mH n : Nats) (VV : Nats_u):
+  ds_d4mH_u = ⌊ ds_d4mH ⌋ → (n_u = ⌊ n ⌋ → ⌊ add ds_d4mH n -⌋ = VV ↔ add_rel ds_d4mH_u n_u VV).
 Proof.
-  intros -> ->. refine (add__add_rel m n VV).
+  intros -> ->. refine (add__add_rel ds_d4mH n VV).
 Qed.
 
 #[global] Hint Resolve add__add_rel': f_rel_funct_db.
 
-Theorem add_rel_mk (m : Nats_u) (m_p : Nats_wf m ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True):
-  {VV: _ | add_rel m n VV}.
+Theorem add_rel_mk
+  (ds_d4mH : Nats_u) (ds_d4mH_p : Nats_wf ds_d4mH ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True):
+  {VV: _ | add_rel ds_d4mH n VV}.
 Proof.
   intros;
-  refine (subsumptionCast _ (λ VV, add_rel m n VV) (add (exist _ m m_p) (exist _ n n_p)) _);
+  refine (subsumptionCast
+          _
+          (λ VV, add_rel ds_d4mH n VV)
+          (add (exist _ ds_d4mH ds_d4mH_p) (exist _ n n_p))
+          _);
   rewrite <- add__add_rel';
   quicksolve.
 Qed.
@@ -185,13 +197,13 @@ Qed.
 
 #[global] Instance add_pack:
   @Pack
-  (Nats ::RT λ (m : Nats), Nats ::RT λ (n : Nats), nilRT)
+  (Nats ::RT λ (ds_d4mH : Nats), Nats ::RT λ (n : Nats), nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats ::RT λ (m : Nats), Nats ::RT λ (n : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG ((Nats ::RT λ (ds_d4mH : Nats), Nats ::RT λ (n : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   Nats_u
-  (λ (x_90321534 : ArgList (Nats ::RT λ (m : Nats), Nats ::RT λ (n : Nats), nilRT))
-     (v_x_90321534 : Nats_u),
-   ltac:(flattenP (λ (m n : Nats) (VV : Nats_u), Nats_wf VV ∧ True) x_90321534 v_x_90321534)).
+  (λ (x_34303546 : ArgList (Nats ::RT λ (ds_d4mH : Nats), Nats ::RT λ (n : Nats), nilRT))
+     (v_x_34303546 : Nats_u),
+   ltac:(flattenP (λ (ds_d4mH n : Nats) (VV : Nats_u), Nats_wf VV ∧ True) x_34303546 v_x_34303546)).
 Proof.
   buildPackG add add_rel add__add_rel add_rel_funct.
 Defined.
@@ -245,98 +257,105 @@ Proof.
           ltac:(solver)).
 Defined.
 
-Definition add_assoc_spec (m n o : Nats): Type :=
+Definition add_assoc_spec (ds_d4mB ds_d4mC ds_d4mD : Nats): Type :=
   {{∃ (add_res : Nats_u),
-    add_rel ⌊ n ⌋ ⌊ o ⌋ add_res
+    add_rel ⌊ ds_d4mC ⌋ ⌊ ds_d4mD ⌋ add_res
     ∧ ∃ (add_res_2 : Nats_u),
-      add_rel ⌊ m ⌋ add_res add_res_2
+      add_rel ⌊ ds_d4mB ⌋ add_res add_res_2
       ∧ ∃ (add_res_3 : Nats_u),
-        add_rel ⌊ m ⌋ ⌊ n ⌋ add_res_3
-        ∧ ∃ (add_res_4 : Nats_u), add_rel add_res_3 ⌊ o ⌋ add_res_4 ∧ add_res_2 == add_res_4}}.
+        add_rel ⌊ ds_d4mB ⌋ ⌊ ds_d4mC ⌋ add_res_3
+        ∧ ∃ (add_res_4 : Nats_u), add_rel add_res_3 ⌊ ds_d4mD ⌋ add_res_4 ∧ add_res_2 == add_res_4}}.
 
 #[global] Hint Unfold add_assoc_spec: lia_unfold.
 
-Theorem add_assoc (m n o : Nats): add_assoc_spec m n o.
+Theorem add_assoc (ds_d4mB ds_d4mC ds_d4mD : Nats): add_assoc_spec ds_d4mB ds_d4mC ds_d4mD.
 Proof.
-  destruct m as [m m_p].
-  destruct n as [n n_p].
-  destruct o as [o o_p].
-  try revert o_p; generalize dependent o; try revert n_p; generalize dependent n;
-  induction m as [m IH_m|];
+  destruct ds_d4mB as [ds_d4mB ds_d4mB_p].
+  destruct ds_d4mC as [ds_d4mC ds_d4mC_p].
+  destruct ds_d4mD as [ds_d4mD ds_d4mD_p].
+  try revert ds_d4mD_p; generalize dependent ds_d4mD;
+  try revert ds_d4mC_p; generalize dependent ds_d4mC;
+  induction ds_d4mB as [m IH_m|];
   intros.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (add_res : Nats_u),
-             add_rel n o add_res
+             add_rel ds_d4mC ds_d4mD add_res
              ∧ ∃ (add_res_2 : Nats_u),
-               add_rel m add_res add_res_2
+               add_rel (Suc_u m) add_res add_res_2
                ∧ ∃ (add_res_3 : Nats_u),
-                 add_rel m n add_res_3
-                 ∧ ∃ (add_res_4 : Nats_u), add_rel add_res_3 o add_res_4 ∧ add_res_2 == add_res_4)
-            (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver) o ltac:(try clear IH_m; solver))
+                 add_rel (Suc_u m) ds_d4mC add_res_3
+                 ∧ ∃ (add_res_4 : Nats_u), add_rel add_res_3 ds_d4mD add_res_4 ∧ add_res_2 == add_res_4)
+            (IH_m
+             ltac:(try clear IH_m; solver)
+             ds_d4mC
+             ltac:(try clear IH_m; solver)
+             ds_d4mD
+             ltac:(try clear IH_m; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (add_res : Nats_u),
-             add_rel n o add_res
+             add_rel ds_d4mC ds_d4mD add_res
              ∧ ∃ (add_res_2 : Nats_u),
-               add_rel m add_res add_res_2
+               add_rel Zero_u add_res add_res_2
                ∧ ∃ (add_res_3 : Nats_u),
-                 add_rel m n add_res_3
-                 ∧ ∃ (add_res_4 : Nats_u), add_rel add_res_3 o add_res_4 ∧ add_res_2 == add_res_4)
+                 add_rel Zero_u ds_d4mC add_res_3
+                 ∧ ∃ (add_res_4 : Nats_u), add_rel add_res_3 ds_d4mD add_res_4 ∧ add_res_2 == add_res_4)
             (# unit)
             ltac:(solver)).
 Qed.
 
-Definition add_suc_r_spec (m n : Nats): Type :=
+Definition add_suc_r_spec (ds_d4mq ds_d4mr : Nats): Type :=
   {{∃ (add_res : Nats_u),
-    add_rel ⌊ m ⌋ ⌊ n ⌋ add_res
-    ∧ ∃ (add_res_2 : Nats_u), add_rel ⌊ m ⌋ (Suc_u ⌊ n ⌋) add_res_2 ∧ Suc_u add_res == add_res_2}}.
+    add_rel ⌊ ds_d4mq ⌋ ⌊ ds_d4mr ⌋ add_res
+    ∧ ∃ (add_res_2 : Nats_u),
+      add_rel ⌊ ds_d4mq ⌋ (Suc_u ⌊ ds_d4mr ⌋) add_res_2 ∧ Suc_u add_res == add_res_2}}.
 
 #[global] Hint Unfold add_suc_r_spec: lia_unfold.
 
-Theorem add_suc_r (m n : Nats): add_suc_r_spec m n.
+Theorem add_suc_r (ds_d4mq ds_d4mr : Nats): add_suc_r_spec ds_d4mq ds_d4mr.
 Proof.
-  destruct m as [m m_p].
-  destruct n as [n n_p].
-  try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros.
+  destruct ds_d4mq as [ds_d4mq ds_d4mq_p].
+  destruct ds_d4mr as [ds_d4mr ds_d4mr_p].
+  try revert ds_d4mr_p; generalize dependent ds_d4mr; induction ds_d4mq as [m IH_m|]; intros.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (add_res : Nats_u),
-             add_rel m n add_res
-             ∧ ∃ (add_res_2 : Nats_u), add_rel m (Suc_u n) add_res_2 ∧ Suc_u add_res == add_res_2)
-            (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver))
+             add_rel (Suc_u m) ds_d4mr add_res
+             ∧ ∃ (add_res_2 : Nats_u), add_rel (Suc_u m) (Suc_u ds_d4mr) add_res_2 ∧ Suc_u add_res == add_res_2)
+            (IH_m ltac:(try clear IH_m; solver) ds_d4mr ltac:(try clear IH_m; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (add_res : Nats_u),
-             add_rel m n add_res
-             ∧ ∃ (add_res_2 : Nats_u), add_rel m (Suc_u n) add_res_2 ∧ Suc_u add_res == add_res_2)
+             add_rel Zero_u ds_d4mr add_res
+             ∧ ∃ (add_res_2 : Nats_u), add_rel Zero_u (Suc_u ds_d4mr) add_res_2 ∧ Suc_u add_res == add_res_2)
             (# unit)
             ltac:(solver)).
 Qed.
 
-Definition add_zero_l_spec (n : Nats): Type :=
-  {{∃ (add_res : Nats_u), add_rel Zero_u ⌊ n ⌋ add_res ∧ add_res == ⌊ n ⌋}}.
+Definition add_zero_l_spec (ds_d4mE : Nats): Type :=
+  {{∃ (add_res : Nats_u), add_rel Zero_u ⌊ ds_d4mE ⌋ add_res ∧ add_res == ⌊ ds_d4mE ⌋}}.
 
 #[global] Hint Unfold add_zero_l_spec: lia_unfold.
 
-Theorem add_zero_l (n : Nats): add_zero_l_spec n.
+Theorem add_zero_l (ds_d4mE : Nats): add_zero_l_spec ds_d4mE.
 Proof.
-  destruct n as [n n_p].
-  induction n as [n IH_n|].
+  destruct ds_d4mE as [ds_d4mE ds_d4mE_p].
+  induction ds_d4mE as [n IH_n|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel Zero_u n add_res ∧ add_res == n)
+            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel Zero_u (Suc_u n) add_res ∧ add_res == Suc_u n)
             (IH_n ltac:(try clear IH_n; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel Zero_u n add_res ∧ add_res == n)
+            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel Zero_u Zero_u add_res ∧ add_res == Zero_u)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -358,50 +377,50 @@ Proof.
           ltac:(solver)).
 Qed.
 
-Definition add_zero_r_spec (n : Nats): Type :=
-  {{∃ (add_res : Nats_u), add_rel ⌊ n ⌋ Zero_u add_res ∧ add_res == ⌊ n ⌋}}.
+Definition add_zero_r_spec (ds_d4ms : Nats): Type :=
+  {{∃ (add_res : Nats_u), add_rel ⌊ ds_d4ms ⌋ Zero_u add_res ∧ add_res == ⌊ ds_d4ms ⌋}}.
 
 #[global] Hint Unfold add_zero_r_spec: lia_unfold.
 
-Theorem add_zero_r (n : Nats): add_zero_r_spec n.
+Theorem add_zero_r (ds_d4ms : Nats): add_zero_r_spec ds_d4ms.
 Proof.
-  destruct n as [n n_p].
-  induction n as [n IH_n|].
+  destruct ds_d4ms as [ds_d4ms ds_d4ms_p].
+  induction ds_d4ms as [n IH_n|].
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel n Zero_u add_res ∧ add_res == n)
+            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel (Suc_u n) Zero_u add_res ∧ add_res == Suc_u n)
             (IH_n ltac:(try clear IH_n; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
-            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel n Zero_u add_res ∧ add_res == n)
+            (λ (VV : Unit), ∃ (add_res : Nats_u), add_rel Zero_u Zero_u add_res ∧ add_res == Zero_u)
             (# unit)
             ltac:(solver)).
 Qed.
 
-Definition eqN_spec (m n : Nats): Type :=
+Definition eqN_spec (ds_d4m4 ds_d4m5 : Nats): Type :=
   Bool.
 
 #[global] Hint Unfold eqN_spec: lia_unfold.
 
-Definition eqN (m n : Nats): eqN_spec m n.
+Definition eqN (ds_d4m4 ds_d4m5 : Nats): eqN_spec ds_d4m4 ds_d4m5.
 Proof.
-  destruct m as [m m_p].
-  destruct n as [n n_p].
-  try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros.
-  - destruct n as [n|].
+  destruct ds_d4m4 as [ds_d4m4 ds_d4m4_p].
+  destruct ds_d4m5 as [ds_d4m5 ds_d4m5_p].
+  try revert ds_d4m5_p; generalize dependent ds_d4m5; induction ds_d4m4 as [m IH_m|]; intros.
+  - destruct ds_d4m5 as [n|].
     + refine (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver)).
     + refine (# false).
-  - destruct n as [lq_anf7205759403792810467|].
+  - destruct ds_d4m5 as [lq_anf7205759403792810467|].
     + refine (# false).
     + refine (# true).
 Defined.
 
 Inductive eqN_rel: Nats_u → Nats_u → bool → Prop :=
-  | eqN_Zero_Zero: eqN_rel Zero_u Zero_u true
-  | eqN_Zero_Suc: ∀ lq_anf7205759403792810467, eqN_rel Zero_u (Suc_u lq_anf7205759403792810467) false
+  | eqN_Suc_Suc: ∀ m n (eqN_res : bool), eqN_rel m n eqN_res → eqN_rel (Suc_u m) (Suc_u n) eqN_res
   | eqN_Suc_Zero: ∀ m, eqN_rel (Suc_u m) Zero_u false
-  | eqN_Suc_Suc: ∀ m n (eqN_res : bool), eqN_rel m n eqN_res → eqN_rel (Suc_u m) (Suc_u n) eqN_res.
+  | eqN_Zero_Suc: ∀ lq_anf7205759403792810467, eqN_rel Zero_u (Suc_u lq_anf7205759403792810467) false
+  | eqN_Zero_Zero: eqN_rel Zero_u Zero_u true.
 
 #[global] Hint Constructors eqN_rel: core_hint_db.
 
@@ -409,40 +428,15 @@ Inductive eqN_rel: Nats_u → Nats_u → bool → Prop :=
 
 #[global] Instance eqN_getF: getFunc eqN_rel := { getF' := eqN }.
 
-Theorem eqN_rel_funct [m n : Nats_u]:
-  ∀ (VV VV' : bool), eqN_rel m n VV → (eqN_rel m n VV' → VV = VV').
+Theorem eqN_rel_funct [ds_d4m4 ds_d4m5 : Nats_u]:
+  ∀ (VV VV' : bool), eqN_rel ds_d4m4 ds_d4m5 VV → (eqN_rel ds_d4m4 ds_d4m5 VV' → VV = VV').
 Proof.
-  try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros;
-  [destruct n as [n|] | destruct n as [lq_anf7205759403792810467|]];
+  try revert ds_d4m5_p; generalize dependent ds_d4m5; induction ds_d4m4 as [m IH_m|]; intros;
+  [destruct ds_d4m5 as [n|] | destruct ds_d4m5 as [lq_anf7205759403792810467|]];
   rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve eqN_rel_funct: f_rel_funct_db.
-
-Theorem eqN_Zero_Zero_lem eqN_Zero_Zero_lem_res:
-  eqN_rel Zero_u Zero_u eqN_Zero_Zero_lem_res ↔ eqN_Zero_Zero_lem_res == true.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite eqN_Zero_Zero_lem: f_rel_back.
-
-Theorem eqN_Zero_Suc_lem lq_anf7205759403792810467 eqN_Zero_Suc_lem_res:
-  eqN_rel Zero_u (Suc_u lq_anf7205759403792810467) eqN_Zero_Suc_lem_res
-  ↔ eqN_Zero_Suc_lem_res == false.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite eqN_Zero_Suc_lem: f_rel_back.
-
-Theorem eqN_Suc_Zero_lem m eqN_Suc_Zero_lem_res:
-  eqN_rel (Suc_u m) Zero_u eqN_Suc_Zero_lem_res ↔ eqN_Suc_Zero_lem_res == false.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite eqN_Suc_Zero_lem: f_rel_back.
 
 Theorem eqN_Suc_Suc_lem m n eqN_Suc_Suc_lem_res:
   eqN_rel (Suc_u m) (Suc_u n) eqN_Suc_Suc_lem_res
@@ -453,18 +447,47 @@ Qed.
 
 #[global] Hint Rewrite eqN_Suc_Suc_lem: f_rel_back.
 
-Theorem eqN_rel_ex (m : Nats_u) (m_p : Nats_wf m ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True):
-  eqN_rel m n ⌊ eqN (exist _ m m_p) (exist _ n n_p) -⌋.
+Theorem eqN_Suc_Zero_lem m eqN_Suc_Zero_lem_res:
+  eqN_rel (Suc_u m) Zero_u eqN_Suc_Zero_lem_res ↔ eqN_Suc_Zero_lem_res == false.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite eqN_Suc_Zero_lem: f_rel_back.
+
+Theorem eqN_Zero_Suc_lem lq_anf7205759403792810467 eqN_Zero_Suc_lem_res:
+  eqN_rel Zero_u (Suc_u lq_anf7205759403792810467) eqN_Zero_Suc_lem_res
+  ↔ eqN_Zero_Suc_lem_res == false.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite eqN_Zero_Suc_lem: f_rel_back.
+
+Theorem eqN_Zero_Zero_lem eqN_Zero_Zero_lem_res:
+  eqN_rel Zero_u Zero_u eqN_Zero_Zero_lem_res ↔ eqN_Zero_Zero_lem_res == true.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite eqN_Zero_Zero_lem: f_rel_back.
+
+Theorem eqN_rel_ex
+  (ds_d4m4 : Nats_u)
+  (ds_d4m4_p : Nats_wf ds_d4m4 ∧ True)
+  (ds_d4m5 : Nats_u)
+  (ds_d4m5_p : Nats_wf ds_d4m5 ∧ True):
+  eqN_rel ds_d4m4 ds_d4m5 ⌊ eqN (exist _ ds_d4m4 ds_d4m4_p) (exist _ ds_d4m5 ds_d4m5_p) -⌋.
 Proof.
   Opaque eqN.
   existence_lemma_pre eqN;
-  try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros;
-  [destruct n as [n|];
+  try revert ds_d4m5_p; generalize dependent ds_d4m5; induction ds_d4m4 as [m IH_m|]; intros;
+  [destruct ds_d4m5 as [n|];
    [fix_notations;
     pose proof (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver)) as IH_14792487;
     try clear IH_m |
     fix_notations] |
-   destruct n as [lq_anf7205759403792810467|];
+   destruct ds_d4m5 as [lq_anf7205759403792810467|];
    [fix_notations | fix_notations]];
   simpl in *.
   Transparent eqN.
@@ -476,8 +499,12 @@ Qed.
 #[global] Opaque eqN.
 
 Theorem eqN__eqN_rel_rw
-  (m : Nats_u) (m_p : Nats_wf m ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True) (VV : bool):
-  ⌊ eqN (exist _ m m_p) (exist _ n n_p) -⌋ = VV ↔ eqN_rel m n VV.
+  (ds_d4m4 : Nats_u)
+  (ds_d4m4_p : Nats_wf ds_d4m4 ∧ True)
+  (ds_d4m5 : Nats_u)
+  (ds_d4m5_p : Nats_wf ds_d4m5 ∧ True)
+  (VV : bool):
+  ⌊ eqN (exist _ ds_d4m4 ds_d4m4_p) (exist _ ds_d4m5 ds_d4m5_p) -⌋ = VV ↔ eqN_rel ds_d4m4 ds_d4m5 VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -488,26 +515,36 @@ Qed.
 
 #[global] Instance eqN_lookup_rw: dictionary rwLem eqN := { lookup' := eqN__eqN_rel_rw }.
 
-Theorem eqN__eqN_rel (m n : Nats) (VV : bool): ⌊ eqN m n -⌋ = VV ↔ eqN_rel ⌊ m ⌋ ⌊ n ⌋ VV.
+Theorem eqN__eqN_rel (ds_d4m4 ds_d4m5 : Nats) (VV : bool):
+  ⌊ eqN ds_d4m4 ds_d4m5 -⌋ = VV ↔ eqN_rel ⌊ ds_d4m4 ⌋ ⌊ ds_d4m5 ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite eqN__eqN_rel: f_rel_funct_db.
 
-Theorem eqN__eqN_rel' (m_u n_u : Nats_u) (m n : Nats) (VV : bool):
-  m_u = ⌊ m ⌋ → (n_u = ⌊ n ⌋ → ⌊ eqN m n -⌋ = VV ↔ eqN_rel m_u n_u VV).
+Theorem eqN__eqN_rel' (ds_d4m4_u ds_d4m5_u : Nats_u) (ds_d4m4 ds_d4m5 : Nats) (VV : bool):
+  ds_d4m4_u = ⌊ ds_d4m4 ⌋
+  → (ds_d4m5_u = ⌊ ds_d4m5 ⌋ → ⌊ eqN ds_d4m4 ds_d4m5 -⌋ = VV ↔ eqN_rel ds_d4m4_u ds_d4m5_u VV).
 Proof.
-  intros -> ->. refine (eqN__eqN_rel m n VV).
+  intros -> ->. refine (eqN__eqN_rel ds_d4m4 ds_d4m5 VV).
 Qed.
 
 #[global] Hint Resolve eqN__eqN_rel': f_rel_funct_db.
 
-Theorem eqN_rel_mk (m : Nats_u) (m_p : Nats_wf m ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True):
-  {VV: _ | eqN_rel m n VV}.
+Theorem eqN_rel_mk
+  (ds_d4m4 : Nats_u)
+  (ds_d4m4_p : Nats_wf ds_d4m4 ∧ True)
+  (ds_d4m5 : Nats_u)
+  (ds_d4m5_p : Nats_wf ds_d4m5 ∧ True):
+  {VV: _ | eqN_rel ds_d4m4 ds_d4m5 VV}.
 Proof.
   intros;
-  refine (subsumptionCast _ (λ VV, eqN_rel m n VV) (eqN (exist _ m m_p) (exist _ n n_p)) _);
+  refine (subsumptionCast
+          _
+          (λ VV, eqN_rel ds_d4m4 ds_d4m5 VV)
+          (eqN (exist _ ds_d4m4 ds_d4m4_p) (exist _ ds_d4m5 ds_d4m5_p))
+          _);
   rewrite <- eqN__eqN_rel';
   quicksolve.
 Qed.
@@ -516,13 +553,14 @@ Qed.
 
 #[global] Instance eqN_pack:
   @Pack
-  (Nats ::RT λ (m : Nats), Nats ::RT λ (n : Nats), nilRT)
+  (Nats ::RT λ (ds_d4m4 : Nats), Nats ::RT λ (ds_d4m5 : Nats), nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats ::RT λ (m : Nats), Nats ::RT λ (n : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG ((Nats
+  ::RT λ (ds_d4m4 : Nats), Nats ::RT λ (ds_d4m5 : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   bool
-  (λ (x_90321534 : ArgList (Nats ::RT λ (m : Nats), Nats ::RT λ (n : Nats), nilRT))
-     (v_x_90321534 : bool),
-   ltac:(flattenP (λ (m n : Nats) (VV : bool), True) x_90321534 v_x_90321534)).
+  (λ (x_40690009 : ArgList (Nats ::RT λ (ds_d4m4 : Nats), Nats ::RT λ (ds_d4m5 : Nats), nilRT))
+     (v_x_40690009 : bool),
+   ltac:(flattenP (λ (ds_d4m4 ds_d4m5 : Nats) (VV : bool), True) x_40690009 v_x_40690009)).
 Proof.
   buildPackG eqN eqN_rel eqN__eqN_rel eqN_rel_funct.
 Defined.
@@ -560,19 +598,19 @@ Proof.
           ltac:(solver)).
 Defined.
 
-Definition geqN_spec (m n : Nats): Type :=
+Definition geqN_spec (ds_d4mj ds_d4mk : Nats): Type :=
   Bool.
 
 #[global] Hint Unfold geqN_spec: lia_unfold.
 
-Definition geqN (m n : Nats): geqN_spec m n.
+Definition geqN (ds_d4mj ds_d4mk : Nats): geqN_spec ds_d4mj ds_d4mk.
 Proof.
-  destruct m as [m m_p].
-  destruct n as [n n_p].
-  try revert m_p; generalize dependent m;
-  induction n as [lq_anf7205759403792810464 IH_lq_anf7205759403792810464|];
+  destruct ds_d4mj as [ds_d4mj ds_d4mj_p].
+  destruct ds_d4mk as [ds_d4mk ds_d4mk_p].
+  try revert ds_d4mj_p; generalize dependent ds_d4mj;
+  induction ds_d4mk as [lq_anf7205759403792810464 IH_lq_anf7205759403792810464|];
   intros.
-  - destruct m as [m|].
+  - destruct ds_d4mj as [m|].
     + refine (IH_lq_anf7205759403792810464
               ltac:(try clear IH_lq_anf7205759403792810464; solver)
               m
@@ -582,12 +620,12 @@ Proof.
 Defined.
 
 Inductive geqN_rel: Nats_u → Nats_u → bool → Prop :=
-  | geqN_x_Zero: ∀ m, geqN_rel m Zero_u true
-  | geqN_Zero_Suc: ∀ lq_anf7205759403792810464,
-                   geqN_rel Zero_u (Suc_u lq_anf7205759403792810464) false
   | geqN_Suc_Suc: ∀ m lq_anf7205759403792810464 (geqN_res : bool),
                   geqN_rel m lq_anf7205759403792810464 geqN_res
-                  → geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792810464) geqN_res.
+                  → geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792810464) geqN_res
+  | geqN_Zero_Suc: ∀ lq_anf7205759403792810464,
+                   geqN_rel Zero_u (Suc_u lq_anf7205759403792810464) false
+  | geqN_x_Zero: ∀ ds_d4mj, geqN_rel ds_d4mj Zero_u true.
 
 #[global] Hint Constructors geqN_rel: core_hint_db.
 
@@ -595,34 +633,17 @@ Inductive geqN_rel: Nats_u → Nats_u → bool → Prop :=
 
 #[global] Instance geqN_getF: getFunc geqN_rel := { getF' := geqN }.
 
-Theorem geqN_rel_funct [m n : Nats_u]:
-  ∀ (VV VV' : bool), geqN_rel m n VV → (geqN_rel m n VV' → VV = VV').
+Theorem geqN_rel_funct [ds_d4mj ds_d4mk : Nats_u]:
+  ∀ (VV VV' : bool), geqN_rel ds_d4mj ds_d4mk VV → (geqN_rel ds_d4mj ds_d4mk VV' → VV = VV').
 Proof.
-  try revert m_p; generalize dependent m;
-  induction n as [lq_anf7205759403792810464 IH_lq_anf7205759403792810464|];
+  try revert ds_d4mj_p; generalize dependent ds_d4mj;
+  induction ds_d4mk as [lq_anf7205759403792810464 IH_lq_anf7205759403792810464|];
   intros;
-  [destruct m as [m|] |];
+  [destruct ds_d4mj as [m|] |];
   rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve geqN_rel_funct: f_rel_funct_db.
-
-Theorem geqN_x_Zero_lem m geqN_x_Zero_lem_res:
-  geqN_rel m Zero_u geqN_x_Zero_lem_res ↔ geqN_x_Zero_lem_res == true.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite geqN_x_Zero_lem: f_rel_back.
-
-Theorem geqN_Zero_Suc_lem lq_anf7205759403792810464 geqN_Zero_Suc_lem_res:
-  geqN_rel Zero_u (Suc_u lq_anf7205759403792810464) geqN_Zero_Suc_lem_res
-  ↔ geqN_Zero_Suc_lem_res == false.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite geqN_Zero_Suc_lem: f_rel_back.
 
 Theorem geqN_Suc_Suc_lem lq_anf7205759403792810464 m geqN_Suc_Suc_lem_res:
   geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792810464) geqN_Suc_Suc_lem_res
@@ -634,15 +655,36 @@ Qed.
 
 #[global] Hint Rewrite geqN_Suc_Suc_lem: f_rel_back.
 
-Theorem geqN_rel_ex (m : Nats_u) (m_p : Nats_wf m ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True):
-  geqN_rel m n ⌊ geqN (exist _ m m_p) (exist _ n n_p) -⌋.
+Theorem geqN_Zero_Suc_lem lq_anf7205759403792810464 geqN_Zero_Suc_lem_res:
+  geqN_rel Zero_u (Suc_u lq_anf7205759403792810464) geqN_Zero_Suc_lem_res
+  ↔ geqN_Zero_Suc_lem_res == false.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite geqN_Zero_Suc_lem: f_rel_back.
+
+Theorem geqN_x_Zero_lem ds_d4mj geqN_x_Zero_lem_res:
+  geqN_rel ds_d4mj Zero_u geqN_x_Zero_lem_res ↔ geqN_x_Zero_lem_res == true.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite geqN_x_Zero_lem: f_rel_back.
+
+Theorem geqN_rel_ex
+  (ds_d4mj : Nats_u)
+  (ds_d4mj_p : Nats_wf ds_d4mj ∧ True)
+  (ds_d4mk : Nats_u)
+  (ds_d4mk_p : Nats_wf ds_d4mk ∧ True):
+  geqN_rel ds_d4mj ds_d4mk ⌊ geqN (exist _ ds_d4mj ds_d4mj_p) (exist _ ds_d4mk ds_d4mk_p) -⌋.
 Proof.
   Opaque geqN.
   existence_lemma_pre geqN;
-  try revert m_p; generalize dependent m;
-  induction n as [lq_anf7205759403792810464 IH_lq_anf7205759403792810464|];
+  try revert ds_d4mj_p; generalize dependent ds_d4mj;
+  induction ds_d4mk as [lq_anf7205759403792810464 IH_lq_anf7205759403792810464|];
   intros;
-  [destruct m as [m|];
+  [destruct ds_d4mj as [m|];
    [fix_notations;
     pose proof (IH_lq_anf7205759403792810464
                 ltac:(try clear IH_lq_anf7205759403792810464; solver)
@@ -661,8 +703,13 @@ Qed.
 #[global] Opaque geqN.
 
 Theorem geqN__geqN_rel_rw
-  (m : Nats_u) (m_p : Nats_wf m ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True) (VV : bool):
-  ⌊ geqN (exist _ m m_p) (exist _ n n_p) -⌋ = VV ↔ geqN_rel m n VV.
+  (ds_d4mj : Nats_u)
+  (ds_d4mj_p : Nats_wf ds_d4mj ∧ True)
+  (ds_d4mk : Nats_u)
+  (ds_d4mk_p : Nats_wf ds_d4mk ∧ True)
+  (VV : bool):
+  ⌊ geqN (exist _ ds_d4mj ds_d4mj_p) (exist _ ds_d4mk ds_d4mk_p) -⌋ = VV
+  ↔ geqN_rel ds_d4mj ds_d4mk VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -673,26 +720,36 @@ Qed.
 
 #[global] Instance geqN_lookup_rw: dictionary rwLem geqN := { lookup' := geqN__geqN_rel_rw }.
 
-Theorem geqN__geqN_rel (m n : Nats) (VV : bool): ⌊ geqN m n -⌋ = VV ↔ geqN_rel ⌊ m ⌋ ⌊ n ⌋ VV.
+Theorem geqN__geqN_rel (ds_d4mj ds_d4mk : Nats) (VV : bool):
+  ⌊ geqN ds_d4mj ds_d4mk -⌋ = VV ↔ geqN_rel ⌊ ds_d4mj ⌋ ⌊ ds_d4mk ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite geqN__geqN_rel: f_rel_funct_db.
 
-Theorem geqN__geqN_rel' (m_u n_u : Nats_u) (m n : Nats) (VV : bool):
-  m_u = ⌊ m ⌋ → (n_u = ⌊ n ⌋ → ⌊ geqN m n -⌋ = VV ↔ geqN_rel m_u n_u VV).
+Theorem geqN__geqN_rel' (ds_d4mj_u ds_d4mk_u : Nats_u) (ds_d4mj ds_d4mk : Nats) (VV : bool):
+  ds_d4mj_u = ⌊ ds_d4mj ⌋
+  → (ds_d4mk_u = ⌊ ds_d4mk ⌋ → ⌊ geqN ds_d4mj ds_d4mk -⌋ = VV ↔ geqN_rel ds_d4mj_u ds_d4mk_u VV).
 Proof.
-  intros -> ->. refine (geqN__geqN_rel m n VV).
+  intros -> ->. refine (geqN__geqN_rel ds_d4mj ds_d4mk VV).
 Qed.
 
 #[global] Hint Resolve geqN__geqN_rel': f_rel_funct_db.
 
-Theorem geqN_rel_mk (m : Nats_u) (m_p : Nats_wf m ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True):
-  {VV: _ | geqN_rel m n VV}.
+Theorem geqN_rel_mk
+  (ds_d4mj : Nats_u)
+  (ds_d4mj_p : Nats_wf ds_d4mj ∧ True)
+  (ds_d4mk : Nats_u)
+  (ds_d4mk_p : Nats_wf ds_d4mk ∧ True):
+  {VV: _ | geqN_rel ds_d4mj ds_d4mk VV}.
 Proof.
   intros;
-  refine (subsumptionCast _ (λ VV, geqN_rel m n VV) (geqN (exist _ m m_p) (exist _ n n_p)) _);
+  refine (subsumptionCast
+          _
+          (λ VV, geqN_rel ds_d4mj ds_d4mk VV)
+          (geqN (exist _ ds_d4mj ds_d4mj_p) (exist _ ds_d4mk ds_d4mk_p))
+          _);
   rewrite <- geqN__geqN_rel';
   quicksolve.
 Qed.
@@ -701,13 +758,14 @@ Qed.
 
 #[global] Instance geqN_pack:
   @Pack
-  (Nats ::RT λ (m : Nats), Nats ::RT λ (n : Nats), nilRT)
+  (Nats ::RT λ (ds_d4mj : Nats), Nats ::RT λ (ds_d4mk : Nats), nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats ::RT λ (m : Nats), Nats ::RT λ (n : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG ((Nats
+  ::RT λ (ds_d4mj : Nats), Nats ::RT λ (ds_d4mk : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   bool
-  (λ (x_90321534 : ArgList (Nats ::RT λ (m : Nats), Nats ::RT λ (n : Nats), nilRT))
-     (v_x_90321534 : bool),
-   ltac:(flattenP (λ (m n : Nats) (VV : bool), True) x_90321534 v_x_90321534)).
+  (λ (x_24036052 : ArgList (Nats ::RT λ (ds_d4mj : Nats), Nats ::RT λ (ds_d4mk : Nats), nilRT))
+     (v_x_24036052 : bool),
+   ltac:(flattenP (λ (ds_d4mj ds_d4mk : Nats) (VV : bool), True) x_24036052 v_x_24036052)).
 Proof.
   buildPackG geqN geqN_rel geqN__geqN_rel geqN_rel_funct.
 Defined.
@@ -717,27 +775,27 @@ Proof.
   buildUPackG geqN_rel geqN_rel_funct.
 Defined.
 
-Definition mult_spec (m n : Nats): Type :=
+Definition mult_spec (ds_d4mJ ds_d4mK : Nats): Type :=
   Nats.
 
 #[global] Hint Unfold mult_spec: lia_unfold.
 
-Definition mult (m n : Nats): mult_spec m n.
+Definition mult (ds_d4mJ ds_d4mK : Nats): mult_spec ds_d4mJ ds_d4mK.
 Proof.
-  destruct m as [m m_p].
-  destruct n as [n n_p].
-  try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros.
+  destruct ds_d4mJ as [ds_d4mJ ds_d4mJ_p].
+  destruct ds_d4mK as [ds_d4mK ds_d4mK_p].
+  try revert ds_d4mK_p; generalize dependent ds_d4mK; induction ds_d4mJ as [m IH_m|]; intros.
   - refine (add
-            (exist (λ (n : Nats_u), Nats_wf n ∧ True) n ltac:(solver))
-            (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver))).
+            (exist (λ (ds_d4mK : Nats_u), Nats_wf ds_d4mK ∧ True) ds_d4mK ltac:(solver))
+            (IH_m ltac:(try clear IH_m; solver) ds_d4mK ltac:(try clear IH_m; solver))).
   - refine Zero.
 Defined.
 
 Inductive mult_rel: Nats_u → Nats_u → Nats_u → Prop :=
-  | mult_Zero_x: ∀ n, mult_rel Zero_u n Zero_u
-  | mult_Suc_x: ∀ m n (mult_res : Nats_u),
-                mult_rel m n mult_res
-                → ∀ (add_res : Nats_u), add_rel n mult_res add_res → mult_rel (Suc_u m) n add_res.
+  | mult_Suc_x: ∀ m ds_d4mK (mult_res : Nats_u),
+                mult_rel m ds_d4mK mult_res
+                → ∀ (add_res : Nats_u), add_rel ds_d4mK mult_res add_res → mult_rel (Suc_u m) ds_d4mK add_res
+  | mult_Zero_x: ∀ ds_d4mK, mult_rel Zero_u ds_d4mK Zero_u.
 
 #[global] Hint Constructors mult_rel: core_hint_db.
 
@@ -745,41 +803,49 @@ Inductive mult_rel: Nats_u → Nats_u → Nats_u → Prop :=
 
 #[global] Instance mult_getF: getFunc mult_rel := { getF' := mult }.
 
-Theorem mult_rel_funct [m n : Nats_u]:
-  ∀ (VV VV' : Nats_u), mult_rel m n VV → (mult_rel m n VV' → VV = VV').
+Theorem mult_rel_funct [ds_d4mJ ds_d4mK : Nats_u]:
+  ∀ (VV VV' : Nats_u), mult_rel ds_d4mJ ds_d4mK VV → (mult_rel ds_d4mJ ds_d4mK VV' → VV = VV').
 Proof.
-  try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros; rel_functionhood_body.
+  try revert ds_d4mK_p; generalize dependent ds_d4mK; induction ds_d4mJ as [m IH_m|]; intros;
+  rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve mult_rel_funct: f_rel_funct_db.
 
-Theorem mult_Zero_x_lem n mult_Zero_x_lem_res:
-  mult_rel Zero_u n mult_Zero_x_lem_res ↔ mult_Zero_x_lem_res == Zero_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite mult_Zero_x_lem: f_rel_back.
-
-Theorem mult_Suc_x_lem m n mult_Suc_x_lem_res:
-  mult_rel (Suc_u m) n mult_Suc_x_lem_res
+Theorem mult_Suc_x_lem ds_d4mK m mult_Suc_x_lem_res:
+  mult_rel (Suc_u m) ds_d4mK mult_Suc_x_lem_res
   ↔ ∃ (mult_res : Nats_u),
-    mult_rel m n mult_res
-    ∧ ∃ (add_res : Nats_u), add_rel n mult_res add_res ∧ mult_Suc_x_lem_res == add_res.
+    mult_rel m ds_d4mK mult_res
+    ∧ ∃ (add_res : Nats_u), add_rel ds_d4mK mult_res add_res ∧ mult_Suc_x_lem_res == add_res.
 Proof.
   rel_back' _nil.
 Qed.
 
 #[global] Hint Rewrite mult_Suc_x_lem: f_rel_back.
 
-Theorem mult_rel_ex (m : Nats_u) (m_p : Nats_wf m ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True):
-  mult_rel m n ⌊ mult (exist _ m m_p) (exist _ n n_p) -⌋.
+Theorem mult_Zero_x_lem ds_d4mK mult_Zero_x_lem_res:
+  mult_rel Zero_u ds_d4mK mult_Zero_x_lem_res ↔ mult_Zero_x_lem_res == Zero_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite mult_Zero_x_lem: f_rel_back.
+
+Theorem mult_rel_ex
+  (ds_d4mJ : Nats_u)
+  (ds_d4mJ_p : Nats_wf ds_d4mJ ∧ True)
+  (ds_d4mK : Nats_u)
+  (ds_d4mK_p : Nats_wf ds_d4mK ∧ True):
+  mult_rel ds_d4mJ ds_d4mK ⌊ mult (exist _ ds_d4mJ ds_d4mJ_p) (exist _ ds_d4mK ds_d4mK_p) -⌋.
 Proof.
   Opaque mult.
   existence_lemma_pre mult;
-  try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros;
+  try revert ds_d4mK_p; generalize dependent ds_d4mK; induction ds_d4mJ as [m IH_m|]; intros;
   [fix_notations;
-   pose proof (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver)) as IH_14792487;
+   pose proof (IH_m
+               ltac:(try clear IH_m; solver)
+               ds_d4mK
+               ltac:(try clear IH_m; solver)) as IH_10580583;
    try clear IH_m |
    fix_notations];
   simpl in *.
@@ -792,8 +858,13 @@ Qed.
 #[global] Opaque mult.
 
 Theorem mult__mult_rel_rw
-  (m : Nats_u) (m_p : Nats_wf m ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True) (VV : Nats_u):
-  ⌊ mult (exist _ m m_p) (exist _ n n_p) -⌋ = VV ↔ mult_rel m n VV.
+  (ds_d4mJ : Nats_u)
+  (ds_d4mJ_p : Nats_wf ds_d4mJ ∧ True)
+  (ds_d4mK : Nats_u)
+  (ds_d4mK_p : Nats_wf ds_d4mK ∧ True)
+  (VV : Nats_u):
+  ⌊ mult (exist _ ds_d4mJ ds_d4mJ_p) (exist _ ds_d4mK ds_d4mK_p) -⌋ = VV
+  ↔ mult_rel ds_d4mJ ds_d4mK VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -804,26 +875,36 @@ Qed.
 
 #[global] Instance mult_lookup_rw: dictionary rwLem mult := { lookup' := mult__mult_rel_rw }.
 
-Theorem mult__mult_rel (m n : Nats) (VV : Nats_u): ⌊ mult m n -⌋ = VV ↔ mult_rel ⌊ m ⌋ ⌊ n ⌋ VV.
+Theorem mult__mult_rel (ds_d4mJ ds_d4mK : Nats) (VV : Nats_u):
+  ⌊ mult ds_d4mJ ds_d4mK -⌋ = VV ↔ mult_rel ⌊ ds_d4mJ ⌋ ⌊ ds_d4mK ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite mult__mult_rel: f_rel_funct_db.
 
-Theorem mult__mult_rel' (m_u n_u : Nats_u) (m n : Nats) (VV : Nats_u):
-  m_u = ⌊ m ⌋ → (n_u = ⌊ n ⌋ → ⌊ mult m n -⌋ = VV ↔ mult_rel m_u n_u VV).
+Theorem mult__mult_rel' (ds_d4mJ_u ds_d4mK_u : Nats_u) (ds_d4mJ ds_d4mK : Nats) (VV : Nats_u):
+  ds_d4mJ_u = ⌊ ds_d4mJ ⌋
+  → (ds_d4mK_u = ⌊ ds_d4mK ⌋ → ⌊ mult ds_d4mJ ds_d4mK -⌋ = VV ↔ mult_rel ds_d4mJ_u ds_d4mK_u VV).
 Proof.
-  intros -> ->. refine (mult__mult_rel m n VV).
+  intros -> ->. refine (mult__mult_rel ds_d4mJ ds_d4mK VV).
 Qed.
 
 #[global] Hint Resolve mult__mult_rel': f_rel_funct_db.
 
-Theorem mult_rel_mk (m : Nats_u) (m_p : Nats_wf m ∧ True) (n : Nats_u) (n_p : Nats_wf n ∧ True):
-  {VV: _ | mult_rel m n VV}.
+Theorem mult_rel_mk
+  (ds_d4mJ : Nats_u)
+  (ds_d4mJ_p : Nats_wf ds_d4mJ ∧ True)
+  (ds_d4mK : Nats_u)
+  (ds_d4mK_p : Nats_wf ds_d4mK ∧ True):
+  {VV: _ | mult_rel ds_d4mJ ds_d4mK VV}.
 Proof.
   intros;
-  refine (subsumptionCast _ (λ VV, mult_rel m n VV) (mult (exist _ m m_p) (exist _ n n_p)) _);
+  refine (subsumptionCast
+          _
+          (λ VV, mult_rel ds_d4mJ ds_d4mK VV)
+          (mult (exist _ ds_d4mJ ds_d4mJ_p) (exist _ ds_d4mK ds_d4mK_p))
+          _);
   rewrite <- mult__mult_rel';
   quicksolve.
 Qed.
@@ -832,13 +913,14 @@ Qed.
 
 #[global] Instance mult_pack:
   @Pack
-  (Nats ::RT λ (m : Nats), Nats ::RT λ (n : Nats), nilRT)
+  (Nats ::RT λ (ds_d4mJ : Nats), Nats ::RT λ (ds_d4mK : Nats), nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats ::RT λ (m : Nats), Nats ::RT λ (n : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG ((Nats
+  ::RT λ (ds_d4mJ : Nats), Nats ::RT λ (ds_d4mK : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   Nats_u
-  (λ (x_90321534 : ArgList (Nats ::RT λ (m : Nats), Nats ::RT λ (n : Nats), nilRT))
-     (v_x_90321534 : Nats_u),
-   ltac:(flattenP (λ (m n : Nats) (VV : Nats_u), Nats_wf VV ∧ True) x_90321534 v_x_90321534)).
+  (λ (x_18265935 : ArgList (Nats ::RT λ (ds_d4mJ : Nats), Nats ::RT λ (ds_d4mK : Nats), nilRT))
+     (v_x_18265935 : Nats_u),
+   ltac:(flattenP (λ (ds_d4mJ ds_d4mK : Nats) (VV : Nats_u), Nats_wf VV ∧ True) x_18265935 v_x_18265935)).
 Proof.
   buildPackG mult mult_rel mult__mult_rel mult_rel_funct.
 Defined.
@@ -848,86 +930,93 @@ Proof.
   buildUPackG mult_rel mult_rel_funct.
 Defined.
 
-Definition add_dist_rmult_spec (m n o : Nats): Type :=
+Definition add_dist_rmult_spec (ds_d4mL ds_d4mM ds_d4mN : Nats): Type :=
   {{∃ (add_res : Nats_u),
-    add_rel ⌊ m ⌋ ⌊ n ⌋ add_res
+    add_rel ⌊ ds_d4mL ⌋ ⌊ ds_d4mM ⌋ add_res
     ∧ ∃ (mult_res : Nats_u),
-      mult_rel add_res ⌊ o ⌋ mult_res
+      mult_rel add_res ⌊ ds_d4mN ⌋ mult_res
       ∧ ∃ (mult_res_2 : Nats_u),
-        mult_rel ⌊ n ⌋ ⌊ o ⌋ mult_res_2
+        mult_rel ⌊ ds_d4mM ⌋ ⌊ ds_d4mN ⌋ mult_res_2
         ∧ ∃ (mult_res_3 : Nats_u),
-          mult_rel ⌊ m ⌋ ⌊ o ⌋ mult_res_3
+          mult_rel ⌊ ds_d4mL ⌋ ⌊ ds_d4mN ⌋ mult_res_3
           ∧ ∃ (add_res_2 : Nats_u), add_rel mult_res_3 mult_res_2 add_res_2 ∧ mult_res == add_res_2}}.
 
 #[global] Hint Unfold add_dist_rmult_spec: lia_unfold.
 
-Theorem add_dist_rmult (m n o : Nats): add_dist_rmult_spec m n o.
+Theorem add_dist_rmult (ds_d4mL ds_d4mM ds_d4mN : Nats):
+  add_dist_rmult_spec ds_d4mL ds_d4mM ds_d4mN.
 Proof.
-  destruct m as [m m_p].
-  destruct n as [n n_p].
-  destruct o as [o o_p].
-  try revert o_p; generalize dependent o; try revert n_p; generalize dependent n;
-  induction m as [m IH_m|];
+  destruct ds_d4mL as [ds_d4mL ds_d4mL_p].
+  destruct ds_d4mM as [ds_d4mM ds_d4mM_p].
+  destruct ds_d4mN as [ds_d4mN ds_d4mN_p].
+  try revert ds_d4mN_p; generalize dependent ds_d4mN;
+  try revert ds_d4mM_p; generalize dependent ds_d4mM;
+  induction ds_d4mL as [m IH_m|];
   intros.
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (add_res : Nats_u),
-             add_rel m n add_res
+             add_rel (Suc_u m) ds_d4mM add_res
              ∧ ∃ (mult_res : Nats_u),
-               mult_rel add_res o mult_res
+               mult_rel add_res ds_d4mN mult_res
                ∧ ∃ (mult_res_2 : Nats_u),
-                 mult_rel n o mult_res_2
+                 mult_rel ds_d4mM ds_d4mN mult_res_2
                  ∧ ∃ (mult_res_3 : Nats_u),
-                   mult_rel m o mult_res_3
+                   mult_rel (Suc_u m) ds_d4mN mult_res_3
                    ∧ ∃ (add_res_2 : Nats_u), add_rel mult_res_3 mult_res_2 add_res_2 ∧ mult_res == add_res_2)
             (let _: ∃ (add_res : Nats_u),
                     add_rel
                     ⌊ mult
                       (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver))
-                      (exist (λ (o : Nats_u), Nats_wf o ∧ True) o ltac:(solver)) ⌋
+                      (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)) ⌋
                     ⌊ mult
-                      (exist (λ (n : Nats_u), Nats_wf n ∧ True) n ltac:(solver))
-                      (exist (λ (o : Nats_u), Nats_wf o ∧ True) o ltac:(solver)) ⌋
+                      (exist (λ (ds_d4mM : Nats_u), Nats_wf ds_d4mM ∧ True) ds_d4mM ltac:(solver))
+                      (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)) ⌋
                     add_res
                     ∧ ∃ (add_res_2 : Nats_u),
-                      add_rel o add_res add_res_2
+                      add_rel ds_d4mN add_res add_res_2
                       ∧ ∃ (add_res_3 : Nats_u),
                         add_rel
-                        o
+                        ds_d4mN
                         ⌊ mult
                           (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver))
-                          (exist (λ (o : Nats_u), Nats_wf o ∧ True) o ltac:(solver)) ⌋
+                          (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)) ⌋
                         add_res_3
                         ∧ ∃ (add_res_4 : Nats_u),
                           add_rel
                           add_res_3
                           ⌊ mult
-                            (exist (λ (n : Nats_u), Nats_wf n ∧ True) n ltac:(solver))
-                            (exist (λ (o : Nats_u), Nats_wf o ∧ True) o ltac:(solver)) ⌋
+                            (exist (λ (ds_d4mM : Nats_u), Nats_wf ds_d4mM ∧ True) ds_d4mM ltac:(solver))
+                            (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)) ⌋
                           add_res_4
                           ∧ add_res_2 == add_res_4 :=
              ⌈ add_assoc
-               (exist (λ (o : Nats_u), Nats_wf o ∧ True) o ltac:(solver))
+               (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver))
                (mult
                 (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver))
-                (exist (λ (o : Nats_u), Nats_wf o ∧ True) o ltac:(solver)))
+                (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)))
                (mult
-                (exist (λ (n : Nats_u), Nats_wf n ∧ True) n ltac:(solver))
-                (exist (λ (o : Nats_u), Nats_wf o ∧ True) o ltac:(solver))) ⌉ in
-             IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver) o ltac:(try clear IH_m; solver))
+                (exist (λ (ds_d4mM : Nats_u), Nats_wf ds_d4mM ∧ True) ds_d4mM ltac:(solver))
+                (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver))) ⌉ in
+             IH_m
+             ltac:(try clear IH_m; solver)
+             ds_d4mM
+             ltac:(try clear IH_m; solver)
+             ds_d4mN
+             ltac:(try clear IH_m; solver))
             ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (add_res : Nats_u),
-             add_rel m n add_res
+             add_rel Zero_u ds_d4mM add_res
              ∧ ∃ (mult_res : Nats_u),
-               mult_rel add_res o mult_res
+               mult_rel add_res ds_d4mN mult_res
                ∧ ∃ (mult_res_2 : Nats_u),
-                 mult_rel n o mult_res_2
+                 mult_rel ds_d4mM ds_d4mN mult_res_2
                  ∧ ∃ (mult_res_3 : Nats_u),
-                   mult_rel m o mult_res_3
+                   mult_rel Zero_u ds_d4mN mult_res_3
                    ∧ ∃ (add_res_2 : Nats_u), add_rel mult_res_3 mult_res_2 add_res_2 ∧ mult_res == add_res_2)
             (# unit)
             ltac:(solver)).
@@ -943,113 +1032,48 @@ Proof.
   refine (Suc Zero).
 Defined.
 
-Inductive one_rel: Nats_u → Prop :=
-  | one_Constr: one_rel (Suc_u Zero_u).
-
-#[global] Hint Constructors one_rel: core_hint_db.
-
-#[global] Instance one_lookup_rel: dictionary rel one := { lookup' := one_rel }.
-
-#[global] Instance one_getF: getFunc one_rel := { getF' := one }.
-
-Theorem one_rel_funct : ∀ (VV VV' : Nats_u), one_rel VV → (one_rel VV' → VV = VV').
-Proof.
-  rel_functionhood_body.
-Qed.
-
-#[global] Hint Resolve one_rel_funct: f_rel_funct_db.
-
-Theorem one_inv_lem one_inv_lem_res: one_rel one_inv_lem_res ↔ one_inv_lem_res == Suc_u Zero_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite one_inv_lem: f_rel_back.
-
-Theorem one_rel_ex : one_rel ⌊ one -⌋.
-Proof.
-  Opaque one.
-  existence_lemma_pre one; fix_notations; simpl in *.
-  Transparent one.
-  all: (existence_lemma_quicksolve one; f__f_rel_ex_body; f_rel_finish).
-Qed.
-
-#[global] Hint Resolve one_rel_ex: rel_ax_db.
-
-#[global] Opaque one.
-
-Theorem one__one_rel_rw (VV : Nats_u): ⌊ one -⌋ = VV ↔ one_rel VV.
-Proof.
-  f__f_rel_rw.
-Qed.
-
-#[global] Hint Rewrite one__one_rel_rw: f_rel_funct_db.
-
-#[global] Hint Resolve one__one_rel_rw: rel_ax_db.
-
-#[global] Instance one_lookup_rw: dictionary rwLem one := { lookup' := one__one_rel_rw }.
-
-Theorem one__one_rel (VV : Nats_u): ⌊ one -⌋ = VV ↔ one_rel VV.
-Proof.
-  f__f_rel.
-Qed.
-
-#[global] Hint Rewrite one__one_rel: f_rel_funct_db.
-
-Theorem one__one_rel' (VV : Nats_u): ⌊ one -⌋ = VV ↔ one_rel VV.
-Proof.
-  intros. refine (one__one_rel VV).
-Qed.
-
-#[global] Hint Resolve one__one_rel': f_rel_funct_db.
-
-Theorem one_rel_mk : {VV: _ | one_rel VV}.
-Proof.
-  intros; refine (subsumptionCast _ (λ VV, one_rel VV) one _); rewrite <- one__one_rel'; quicksolve.
-Qed.
-
-#[global] Hint Resolve one_rel_mk: f_rel_funct_db.
-
 Definition sub_spec
-  (m : Nats)
-  (n : {n: Nats_u | Nats_wf n ∧ ∃ (geqN_res : bool), geqN_rel ⌊ m ⌋ n geqN_res ∧ is_true geqN_res}):
+  (ds_d4lZ : Nats)
+  (ds_d4m0 : {ds_d4m0: Nats_u | Nats_wf ds_d4m0
+                                ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lZ ⌋ ds_d4m0 geqN_res ∧ is_true geqN_res}):
   Type :=
-  {o: Nats_u | Nats_wf o ∧ (o ≠ Zero_u ↔ ⌊ m ⌋ ≠ ⌊ n ⌋)}.
+  {o: Nats_u | Nats_wf o ∧ (o ≠ Zero_u ↔ ⌊ ds_d4lZ ⌋ ≠ ⌊ ds_d4m0 ⌋)}.
 
 #[global] Hint Unfold sub_spec: lia_unfold.
 
 Definition sub
-  (m : Nats)
-  (n : {n: Nats_u | Nats_wf n ∧ ∃ (geqN_res : bool), geqN_rel ⌊ m ⌋ n geqN_res ∧ is_true geqN_res}):
-  sub_spec m n.
+  (ds_d4lZ : Nats)
+  (ds_d4m0 : {ds_d4m0: Nats_u | Nats_wf ds_d4m0
+                                ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lZ ⌋ ds_d4m0 geqN_res ∧ is_true geqN_res}):
+  sub_spec ds_d4lZ ds_d4m0.
 Proof.
-  destruct m as [m m_p].
-  destruct n as [n n_p].
-  try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros.
-  - destruct n as [n|].
+  destruct ds_d4lZ as [ds_d4lZ ds_d4lZ_p].
+  destruct ds_d4m0 as [ds_d4m0 ds_d4m0_p].
+  try revert ds_d4m0_p; generalize dependent ds_d4m0; induction ds_d4lZ as [m IH_m|]; intros.
+  - destruct ds_d4m0 as [n|].
     + refine (subsumptionCast
               Nats_u
-              (λ (o : Nats_u), Nats_wf o ∧ (o ≠ Zero_u ↔ m ≠ n))
+              (λ (o : Nats_u), Nats_wf o ∧ (o ≠ Zero_u ↔ Suc_u m ≠ Suc_u n))
               (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver))
               ltac:(solver)).
     + refine (subsumptionCast
               Nats_u
-              (λ (o : Nats_u), Nats_wf o ∧ (o ≠ Zero_u ↔ m ≠ n))
+              (λ (o : Nats_u), Nats_wf o ∧ (o ≠ Zero_u ↔ Suc_u m ≠ Zero_u))
               (Suc (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver)))
               ltac:(solver)).
-  - destruct n as [lq_anf7205759403792810483|].
+  - destruct ds_d4m0 as [lq_anf7205759403792810483|].
     + intros; exfalso; solver.
     + refine (subsumptionCast
               Nats_u
-              (λ (o : Nats_u), Nats_wf o ∧ (o ≠ Zero_u ↔ m ≠ n))
+              (λ (o : Nats_u), Nats_wf o ∧ (o ≠ Zero_u ↔ Zero_u ≠ Zero_u))
               Zero
               ltac:(solver)).
 Defined.
 
 Inductive sub_rel: Nats_u → Nats_u → Nats_u → Prop :=
-  | sub_Zero_Zero: sub_rel Zero_u Zero_u Zero_u
+  | sub_Suc_Suc: ∀ m n (sub_res : Nats_u), sub_rel m n sub_res → sub_rel (Suc_u m) (Suc_u n) sub_res
   | sub_Suc_Zero: ∀ m, sub_rel (Suc_u m) Zero_u (Suc_u m)
-  | sub_Suc_Suc: ∀ m n (sub_res : Nats_u), sub_rel m n sub_res → sub_rel (Suc_u m) (Suc_u n) sub_res.
+  | sub_Zero_Zero: sub_rel Zero_u Zero_u Zero_u.
 
 #[global] Hint Constructors sub_rel: core_hint_db.
 
@@ -1057,30 +1081,15 @@ Inductive sub_rel: Nats_u → Nats_u → Nats_u → Prop :=
 
 #[global] Instance sub_getF: getFunc sub_rel := { getF' := sub }.
 
-Theorem sub_rel_funct [m n : Nats_u]: ∀ (o o' : Nats_u), sub_rel m n o → (sub_rel m n o' → o = o').
+Theorem sub_rel_funct [ds_d4lZ ds_d4m0 : Nats_u]:
+  ∀ (o o' : Nats_u), sub_rel ds_d4lZ ds_d4m0 o → (sub_rel ds_d4lZ ds_d4m0 o' → o = o').
 Proof.
-  try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros;
-  [destruct n as [n|] | destruct n as [lq_anf7205759403792810483|]];
+  try revert ds_d4m0_p; generalize dependent ds_d4m0; induction ds_d4lZ as [m IH_m|]; intros;
+  [destruct ds_d4m0 as [n|] | destruct ds_d4m0 as [lq_anf7205759403792810483|]];
   rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve sub_rel_funct: f_rel_funct_db.
-
-Theorem sub_Zero_Zero_lem sub_Zero_Zero_lem_res:
-  sub_rel Zero_u Zero_u sub_Zero_Zero_lem_res ↔ sub_Zero_Zero_lem_res == Zero_u.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite sub_Zero_Zero_lem: f_rel_back.
-
-Theorem sub_Suc_Zero_lem m sub_Suc_Zero_lem_res:
-  sub_rel (Suc_u m) Zero_u sub_Suc_Zero_lem_res ↔ sub_Suc_Zero_lem_res == Suc_u m.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite sub_Suc_Zero_lem: f_rel_back.
 
 Theorem sub_Suc_Suc_lem m n sub_Suc_Suc_lem_res:
   sub_rel (Suc_u m) (Suc_u n) sub_Suc_Suc_lem_res
@@ -1091,22 +1100,39 @@ Qed.
 
 #[global] Hint Rewrite sub_Suc_Suc_lem: f_rel_back.
 
+Theorem sub_Suc_Zero_lem m sub_Suc_Zero_lem_res:
+  sub_rel (Suc_u m) Zero_u sub_Suc_Zero_lem_res ↔ sub_Suc_Zero_lem_res == Suc_u m.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite sub_Suc_Zero_lem: f_rel_back.
+
+Theorem sub_Zero_Zero_lem sub_Zero_Zero_lem_res:
+  sub_rel Zero_u Zero_u sub_Zero_Zero_lem_res ↔ sub_Zero_Zero_lem_res == Zero_u.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite sub_Zero_Zero_lem: f_rel_back.
+
 Theorem sub_rel_ex
-  (m : Nats_u)
-  (m_p : Nats_wf m ∧ True)
-  (n : Nats_u)
-  (n_p : Nats_wf n ∧ ∃ (geqN_res : bool), geqN_rel m n geqN_res ∧ is_true geqN_res):
-  sub_rel m n ⌊ sub (exist _ m m_p) (exist _ n n_p) -⌋.
+  (ds_d4lZ : Nats_u)
+  (ds_d4lZ_p : Nats_wf ds_d4lZ ∧ True)
+  (ds_d4m0 : Nats_u)
+  (ds_d4m0_p : Nats_wf ds_d4m0
+               ∧ ∃ (geqN_res : bool), geqN_rel ds_d4lZ ds_d4m0 geqN_res ∧ is_true geqN_res):
+  sub_rel ds_d4lZ ds_d4m0 ⌊ sub (exist _ ds_d4lZ ds_d4lZ_p) (exist _ ds_d4m0 ds_d4m0_p) -⌋.
 Proof.
   Opaque sub.
   existence_lemma_pre sub;
-  try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros;
-  [destruct n as [n|];
+  try revert ds_d4m0_p; generalize dependent ds_d4m0; induction ds_d4lZ as [m IH_m|]; intros;
+  [destruct ds_d4m0 as [n|];
    [fix_notations;
     pose proof (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver)) as IH_14792487;
     try clear IH_m |
     fix_notations] |
-   destruct n as [lq_anf7205759403792810483|];
+   destruct ds_d4m0 as [lq_anf7205759403792810483|];
    [ | fix_notations]];
   simpl in *.
   Transparent sub.
@@ -1118,12 +1144,13 @@ Qed.
 #[global] Opaque sub.
 
 Theorem sub__sub_rel_rw
-  (m : Nats_u)
-  (m_p : Nats_wf m ∧ True)
-  (n : Nats_u)
-  (n_p : Nats_wf n ∧ ∃ (geqN_res : bool), geqN_rel m n geqN_res ∧ is_true geqN_res)
+  (ds_d4lZ : Nats_u)
+  (ds_d4lZ_p : Nats_wf ds_d4lZ ∧ True)
+  (ds_d4m0 : Nats_u)
+  (ds_d4m0_p : Nats_wf ds_d4m0
+               ∧ ∃ (geqN_res : bool), geqN_rel ds_d4lZ ds_d4m0 geqN_res ∧ is_true geqN_res)
   (o : Nats_u):
-  ⌊ sub (exist _ m m_p) (exist _ n n_p) -⌋ = o ↔ sub_rel m n o.
+  ⌊ sub (exist _ ds_d4lZ ds_d4lZ_p) (exist _ ds_d4m0 ds_d4m0_p) -⌋ = o ↔ sub_rel ds_d4lZ ds_d4m0 o.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -1135,10 +1162,11 @@ Qed.
 #[global] Instance sub_lookup_rw: dictionary rwLem sub := { lookup' := sub__sub_rel_rw }.
 
 Theorem sub__sub_rel
-  (m : Nats)
-  (n : {n: Nats_u | Nats_wf n ∧ ∃ (geqN_res : bool), geqN_rel ⌊ m ⌋ n geqN_res ∧ is_true geqN_res})
+  (ds_d4lZ : Nats)
+  (ds_d4m0 : {ds_d4m0: Nats_u | Nats_wf ds_d4m0
+                                ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lZ ⌋ ds_d4m0 geqN_res ∧ is_true geqN_res})
   (o : Nats_u):
-  ⌊ sub m n -⌋ = o ↔ sub_rel ⌊ m ⌋ ⌊ n ⌋ o.
+  ⌊ sub ds_d4lZ ds_d4m0 -⌋ = o ↔ sub_rel ⌊ ds_d4lZ ⌋ ⌊ ds_d4m0 ⌋ o.
 Proof.
   f__f_rel.
 Qed.
@@ -1146,26 +1174,33 @@ Qed.
 #[global] Hint Rewrite sub__sub_rel: f_rel_funct_db.
 
 Theorem sub__sub_rel'
-  (m_u n_u : Nats_u)
-  (m : Nats)
-  (n : {n: Nats_u | Nats_wf n ∧ ∃ (geqN_res : bool), geqN_rel ⌊ m ⌋ n geqN_res ∧ is_true geqN_res})
+  (ds_d4lZ_u ds_d4m0_u : Nats_u)
+  (ds_d4lZ : Nats)
+  (ds_d4m0 : {ds_d4m0: Nats_u | Nats_wf ds_d4m0
+                                ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lZ ⌋ ds_d4m0 geqN_res ∧ is_true geqN_res})
   (o : Nats_u):
-  m_u = ⌊ m ⌋ → (n_u = ⌊ n ⌋ → ⌊ sub m n -⌋ = o ↔ sub_rel m_u n_u o).
+  ds_d4lZ_u = ⌊ ds_d4lZ ⌋
+  → (ds_d4m0_u = ⌊ ds_d4m0 ⌋ → ⌊ sub ds_d4lZ ds_d4m0 -⌋ = o ↔ sub_rel ds_d4lZ_u ds_d4m0_u o).
 Proof.
-  intros -> ->. refine (sub__sub_rel m n o).
+  intros -> ->. refine (sub__sub_rel ds_d4lZ ds_d4m0 o).
 Qed.
 
 #[global] Hint Resolve sub__sub_rel': f_rel_funct_db.
 
 Theorem sub_rel_mk
-  (m : Nats_u)
-  (m_p : Nats_wf m ∧ True)
-  (n : Nats_u)
-  (n_p : Nats_wf n ∧ ∃ (geqN_res : bool), geqN_rel m n geqN_res ∧ is_true geqN_res):
-  {o: _ | sub_rel m n o}.
+  (ds_d4lZ : Nats_u)
+  (ds_d4lZ_p : Nats_wf ds_d4lZ ∧ True)
+  (ds_d4m0 : Nats_u)
+  (ds_d4m0_p : Nats_wf ds_d4m0
+               ∧ ∃ (geqN_res : bool), geqN_rel ds_d4lZ ds_d4m0 geqN_res ∧ is_true geqN_res):
+  {o: _ | sub_rel ds_d4lZ ds_d4m0 o}.
 Proof.
   intros;
-  refine (subsumptionCast _ (λ o, sub_rel m n o) (sub (exist _ m m_p) (exist _ n n_p)) _);
+  refine (subsumptionCast
+          _
+          (λ o, sub_rel ds_d4lZ ds_d4m0 o)
+          (sub (exist _ ds_d4lZ ds_d4lZ_p) (exist _ ds_d4m0 ds_d4m0_p))
+          _);
   rewrite <- sub__sub_rel';
   quicksolve.
 Qed.
@@ -1175,37 +1210,42 @@ Qed.
 #[global] Instance sub_pack:
   @Pack
   (Nats
-   ::RT λ (m : Nats),
-        {n: Nats_u | Nats_wf n ∧ ∃ (geqN_res : bool), geqN_rel ⌊ m ⌋ n geqN_res ∧ is_true geqN_res}
-        ::RT λ (n : {n: Nats_u | Nats_wf n
-                                 ∧ ∃ (geqN_res : bool), geqN_rel ⌊ m ⌋ n geqN_res ∧ is_true geqN_res}),
+   ::RT λ (ds_d4lZ : Nats),
+        {ds_d4m0: Nats_u | Nats_wf ds_d4m0
+                           ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lZ ⌋ ds_d4m0 geqN_res ∧ is_true geqN_res}
+        ::RT λ (ds_d4m0 : {ds_d4m0: Nats_u | Nats_wf ds_d4m0
+                                             ∧ ∃ (geqN_res : bool),
+                                               geqN_rel ⌊ ds_d4lZ ⌋ ds_d4m0 geqN_res ∧ is_true geqN_res}),
              nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
   ltac:(mkProjectsArgListTG ((Nats
-  ::RT λ (m : Nats),
-       {n: Nats_u | Nats_wf n
-                    ∧ ∃ (geqN_res : bool),
-                      geqN_rel ⌊ m ⌋ n geqN_res ∧ is_true geqN_res}
-       ::RT λ (n : {n: Nats_u | Nats_wf n
-                                ∧ ∃ (geqN_res : bool),
-                                  geqN_rel ⌊ m ⌋ n geqN_res ∧ is_true geqN_res}),
+  ::RT λ (ds_d4lZ : Nats),
+       {ds_d4m0: Nats_u | Nats_wf ds_d4m0
+                          ∧ ∃ (geqN_res : bool),
+                            geqN_rel ⌊ ds_d4lZ ⌋ ds_d4m0 geqN_res ∧ is_true geqN_res}
+       ::RT λ (ds_d4m0 : {ds_d4m0: Nats_u | Nats_wf ds_d4m0
+                                            ∧ ∃ (geqN_res : bool),
+                                              geqN_rel ⌊ ds_d4lZ ⌋ ds_d4m0 geqN_res
+                                              ∧ is_true geqN_res}),
             nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   Nats_u
-  (λ (x_49531134 : ArgList (Nats
-                            ::RT λ (m : Nats),
-                                 {n: Nats_u | Nats_wf n
-                                              ∧ ∃ (geqN_res : bool), geqN_rel ⌊ m ⌋ n geqN_res ∧ is_true geqN_res}
-                                 ::RT λ (n : {n: Nats_u | Nats_wf n
-                                                          ∧ ∃ (geqN_res : bool),
-                                                            geqN_rel ⌊ m ⌋ n geqN_res ∧ is_true geqN_res}),
+  (λ (x_24742908 : ArgList (Nats
+                            ::RT λ (ds_d4lZ : Nats),
+                                 {ds_d4m0: Nats_u | Nats_wf ds_d4m0
+                                                    ∧ ∃ (geqN_res : bool),
+                                                      geqN_rel ⌊ ds_d4lZ ⌋ ds_d4m0 geqN_res ∧ is_true geqN_res}
+                                 ::RT λ (ds_d4m0 : {ds_d4m0: Nats_u | Nats_wf ds_d4m0
+                                                                      ∧ ∃ (geqN_res : bool),
+                                                                        geqN_rel ⌊ ds_d4lZ ⌋ ds_d4m0 geqN_res
+                                                                        ∧ is_true geqN_res}),
                                       nilRT))
-     (v_x_49531134 : Nats_u),
-   ltac:(flattenP (λ (m : Nats)
-   (n : {n: Nats_u | Nats_wf n
-                     ∧ ∃ (geqN_res : bool),
-                       geqN_rel ⌊ m ⌋ n geqN_res ∧ is_true geqN_res})
+     (v_x_24742908 : Nats_u),
+   ltac:(flattenP (λ (ds_d4lZ : Nats)
+   (ds_d4m0 : {ds_d4m0: Nats_u | Nats_wf ds_d4m0
+                                 ∧ ∃ (geqN_res : bool),
+                                   geqN_rel ⌊ ds_d4lZ ⌋ ds_d4m0 geqN_res ∧ is_true geqN_res})
    (o : Nats_u),
- Nats_wf o ∧ (o ≠ Zero_u ↔ ⌊ m ⌋ ≠ ⌊ n ⌋)) x_49531134 v_x_49531134)).
+ Nats_wf o ∧ (o ≠ Zero_u ↔ ⌊ ds_d4lZ ⌋ ≠ ⌊ ds_d4m0 ⌋)) x_24742908 v_x_24742908)).
 Proof.
   buildPackG sub sub_rel sub__sub_rel sub_rel_funct.
 Defined.
@@ -1215,24 +1255,26 @@ Proof.
   buildUPackG sub_rel sub_rel_funct.
 Defined.
 
-Definition add_sub_spec (m n : Nats): Type :=
+Definition add_sub_spec (ds_d4mt ds_d4mu : Nats): Type :=
   {{∃ (add_res : Nats_u),
-    add_rel ⌊ m ⌋ ⌊ n ⌋ add_res
-    ∧ ∃ (sub_res : Nats_u), sub_rel add_res ⌊ n ⌋ sub_res ∧ sub_res == ⌊ m ⌋}}.
+    add_rel ⌊ ds_d4mt ⌋ ⌊ ds_d4mu ⌋ add_res
+    ∧ ∃ (sub_res : Nats_u), sub_rel add_res ⌊ ds_d4mu ⌋ sub_res ∧ sub_res == ⌊ ds_d4mt ⌋}}.
 
 #[global] Hint Unfold add_sub_spec: lia_unfold.
 
-Theorem add_sub (m n : Nats): add_sub_spec m n.
+Theorem add_sub (ds_d4mt ds_d4mu : Nats): add_sub_spec ds_d4mt ds_d4mu.
 Proof.
-  destruct m as [m m_p].
-  destruct n as [n n_p].
-  destruct m as [m|].
-  - induction n as [lq_anf7205759403792810453 IH_lq_anf7205759403792810453|].
+  destruct ds_d4mt as [ds_d4mt ds_d4mt_p].
+  destruct ds_d4mu as [ds_d4mu ds_d4mu_p].
+  destruct ds_d4mt as [m|].
+  - induction ds_d4mu as [lq_anf7205759403792810453 IH_lq_anf7205759403792810453|].
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
                ∃ (add_res : Nats_u),
-               add_rel m n add_res ∧ ∃ (sub_res : Nats_u), sub_rel add_res n sub_res ∧ sub_res == m)
+               add_rel (Suc_u m) (Suc_u lq_anf7205759403792810453) add_res
+               ∧ ∃ (sub_res : Nats_u),
+                 sub_rel add_res (Suc_u lq_anf7205759403792810453) sub_res ∧ sub_res == Suc_u m)
               (let _: ∃ (add_res : Nats_u),
                       add_rel (Suc_u m) lq_anf7205759403792810453 add_res
                       ∧ ∃ (sub_res : Nats_u), sub_rel add_res lq_anf7205759403792810453 sub_res ∧ sub_res == Suc_u m :=
@@ -1245,15 +1287,18 @@ Proof.
               Unit
               (λ (VV : Unit),
                ∃ (add_res : Nats_u),
-               add_rel m n add_res ∧ ∃ (sub_res : Nats_u), sub_rel add_res n sub_res ∧ sub_res == m)
+               add_rel (Suc_u m) Zero_u add_res
+               ∧ ∃ (sub_res : Nats_u), sub_rel add_res Zero_u sub_res ∧ sub_res == Suc_u m)
               (add_zero_r (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver)))
               ltac:(solver)).
-  - induction n as [lq_anf7205759403792810445 IH_lq_anf7205759403792810445|].
+  - induction ds_d4mu as [lq_anf7205759403792810445 IH_lq_anf7205759403792810445|].
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
                ∃ (add_res : Nats_u),
-               add_rel m n add_res ∧ ∃ (sub_res : Nats_u), sub_rel add_res n sub_res ∧ sub_res == m)
+               add_rel Zero_u (Suc_u lq_anf7205759403792810445) add_res
+               ∧ ∃ (sub_res : Nats_u),
+                 sub_rel add_res (Suc_u lq_anf7205759403792810445) sub_res ∧ sub_res == Zero_u)
               (let _: ∃ (add_res : Nats_u),
                       add_rel Zero_u lq_anf7205759403792810445 add_res
                       ∧ ∃ (sub_res : Nats_u), sub_rel add_res lq_anf7205759403792810445 sub_res ∧ sub_res == Zero_u :=
@@ -1264,42 +1309,43 @@ Proof.
               Unit
               (λ (VV : Unit),
                ∃ (add_res : Nats_u),
-               add_rel m n add_res ∧ ∃ (sub_res : Nats_u), sub_rel add_res n sub_res ∧ sub_res == m)
+               add_rel Zero_u Zero_u add_res
+               ∧ ∃ (sub_res : Nats_u), sub_rel add_res Zero_u sub_res ∧ sub_res == Zero_u)
               (# unit)
               ltac:(solver)).
 Qed.
 
-Definition sub_self_spec (m n : Nats): Type :=
-  {{∃ (eqN_res : bool), eqN_rel ⌊ m ⌋ ⌊ n ⌋ eqN_res ∧ is_true eqN_res
-    → ∃ (sub_res : Nats_u), sub_rel ⌊ m ⌋ ⌊ n ⌋ sub_res ∧ sub_res == Zero_u}}.
+Definition sub_self_spec (ds_d4lT ds_d4lU : Nats): Type :=
+  {{∃ (eqN_res : bool), eqN_rel ⌊ ds_d4lT ⌋ ⌊ ds_d4lU ⌋ eqN_res ∧ is_true eqN_res
+    → ∃ (sub_res : Nats_u), sub_rel ⌊ ds_d4lT ⌋ ⌊ ds_d4lU ⌋ sub_res ∧ sub_res == Zero_u}}.
 
 #[global] Hint Unfold sub_self_spec: lia_unfold.
 
-Theorem sub_self (m n : Nats): sub_self_spec m n.
+Theorem sub_self (ds_d4lT ds_d4lU : Nats): sub_self_spec ds_d4lT ds_d4lU.
 Proof.
-  destruct m as [m m_p].
-  destruct n as [n n_p].
-  try revert n_p; generalize dependent n; induction m as [m IH_m|]; intros.
-  - destruct n as [n|].
+  destruct ds_d4lT as [ds_d4lT ds_d4lT_p].
+  destruct ds_d4lU as [ds_d4lU ds_d4lU_p].
+  try revert ds_d4lU_p; generalize dependent ds_d4lU; induction ds_d4lT as [m IH_m|]; intros.
+  - destruct ds_d4lU as [n|].
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ (eqN_res : bool), eqN_rel m n eqN_res ∧ is_true eqN_res
-               → ∃ (sub_res : Nats_u), sub_rel m n sub_res ∧ sub_res == Zero_u)
+               ∃ (eqN_res : bool), eqN_rel (Suc_u m) (Suc_u n) eqN_res ∧ is_true eqN_res
+               → ∃ (sub_res : Nats_u), sub_rel (Suc_u m) (Suc_u n) sub_res ∧ sub_res == Zero_u)
               (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver))
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ (eqN_res : bool), eqN_rel m n eqN_res ∧ is_true eqN_res
-               → ∃ (sub_res : Nats_u), sub_rel m n sub_res ∧ sub_res == Zero_u)
+               ∃ (eqN_res : bool), eqN_rel (Suc_u m) Zero_u eqN_res ∧ is_true eqN_res
+               → ∃ (sub_res : Nats_u), sub_rel (Suc_u m) Zero_u sub_res ∧ sub_res == Zero_u)
               (# unit)
               ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ (eqN_res : bool), eqN_rel m n eqN_res ∧ is_true eqN_res
-             → ∃ (sub_res : Nats_u), sub_rel m n sub_res ∧ sub_res == Zero_u)
+             ∃ (eqN_res : bool), eqN_rel Zero_u ds_d4lU eqN_res ∧ is_true eqN_res
+             → ∃ (sub_res : Nats_u), sub_rel Zero_u ds_d4lU sub_res ∧ sub_res == Zero_u)
             (# unit)
             ltac:(solver)).
 Qed.
@@ -1313,70 +1359,3 @@ Definition two : two_spec.
 Proof.
   refine (Suc one).
 Defined.
-
-Inductive two_rel: Nats_u → Prop :=
-  | two_Constr: two_rel (Suc_u ⌊ one -⌋).
-
-#[global] Hint Constructors two_rel: core_hint_db.
-
-#[global] Instance two_lookup_rel: dictionary rel two := { lookup' := two_rel }.
-
-#[global] Instance two_getF: getFunc two_rel := { getF' := two }.
-
-Theorem two_rel_funct : ∀ (VV VV' : Nats_u), two_rel VV → (two_rel VV' → VV = VV').
-Proof.
-  rel_functionhood_body.
-Qed.
-
-#[global] Hint Resolve two_rel_funct: f_rel_funct_db.
-
-Theorem two_inv_lem two_inv_lem_res: two_rel two_inv_lem_res ↔ two_inv_lem_res == Suc_u ⌊ one -⌋.
-Proof.
-  rel_back' _nil.
-Qed.
-
-#[global] Hint Rewrite two_inv_lem: f_rel_back.
-
-Theorem two_rel_ex : two_rel ⌊ two -⌋.
-Proof.
-  Opaque two.
-  existence_lemma_pre two; fix_notations; simpl in *.
-  Transparent two.
-  all: (existence_lemma_quicksolve two; f__f_rel_ex_body; f_rel_finish).
-Qed.
-
-#[global] Hint Resolve two_rel_ex: rel_ax_db.
-
-#[global] Opaque two.
-
-Theorem two__two_rel_rw (VV : Nats_u): ⌊ two -⌋ = VV ↔ two_rel VV.
-Proof.
-  f__f_rel_rw.
-Qed.
-
-#[global] Hint Rewrite two__two_rel_rw: f_rel_funct_db.
-
-#[global] Hint Resolve two__two_rel_rw: rel_ax_db.
-
-#[global] Instance two_lookup_rw: dictionary rwLem two := { lookup' := two__two_rel_rw }.
-
-Theorem two__two_rel (VV : Nats_u): ⌊ two -⌋ = VV ↔ two_rel VV.
-Proof.
-  f__f_rel.
-Qed.
-
-#[global] Hint Rewrite two__two_rel: f_rel_funct_db.
-
-Theorem two__two_rel' (VV : Nats_u): ⌊ two -⌋ = VV ↔ two_rel VV.
-Proof.
-  intros. refine (two__two_rel VV).
-Qed.
-
-#[global] Hint Resolve two__two_rel': f_rel_funct_db.
-
-Theorem two_rel_mk : {VV: _ | two_rel VV}.
-Proof.
-  intros; refine (subsumptionCast _ (λ VV, two_rel VV) two _); rewrite <- two__two_rel'; quicksolve.
-Qed.
-
-#[global] Hint Resolve two_rel_mk: f_rel_funct_db.

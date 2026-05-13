@@ -57,8 +57,8 @@ Definition Val (n : {n: Z | True}): Identity :=
 #[global] Hint Unfold Val: ref_constr_db.
 
 Definition compose_spec
-  (vx : Identity)
-  (x : @Pack
+  (ds_d3Ba : Identity)
+  (f : @Pack
        ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
        ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
@@ -72,8 +72,8 @@ Definition compose_spec
 #[global] Hint Unfold compose_spec: lia_unfold.
 
 Definition compose
-  (vx : Identity)
-  (x : @Pack
+  (ds_d3Ba : Identity)
+  (f : @Pack
        ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
        ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
@@ -81,16 +81,16 @@ Definition compose
        (λ (x_32508782 : ArgList ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT))
           (v_x_32508782 : Identity_u),
         ltac:(flattenP (λ (x : {VV: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_32508782 v_x_32508782))):
-  compose_spec vx x.
+  compose_spec ds_d3Ba f.
 Proof.
-  destruct vx as [vx vx_p].
-  destruct vx as [x_1].
-  - refine (getPackF x (# x_1)).
+  destruct ds_d3Ba as [ds_d3Ba ds_d3Ba_p].
+  destruct ds_d3Ba as [x].
+  - refine (getPackF f (# x)).
 Defined.
 
 Inductive compose_rel: Identity_u → @uPack (Z ::UT nilUT) Identity_u → Identity_u → Prop :=
-  | compose_Val_x: ∀ x_1 (x : @uPack (Z ::UT nilUT) Identity_u) (x_res : Identity_u),
-                   getUPackRel x x_1 x_res → compose_rel (Val_u x_1) x x_res.
+  | compose_Val_x: ∀ x (f : @uPack (Z ::UT nilUT) Identity_u) (f_res : Identity_u),
+                   getUPackRel f x f_res → compose_rel (Val_u x) f f_res.
 
 #[global] Hint Constructors compose_rel: core_hint_db.
 
@@ -98,17 +98,17 @@ Inductive compose_rel: Identity_u → @uPack (Z ::UT nilUT) Identity_u → Ident
 
 #[global] Instance compose_getF: getFunc compose_rel := { getF' := compose }.
 
-Theorem compose_rel_funct [vx : Identity_u] [x : @uPack (Z ::UT nilUT) Identity_u]:
-  ∀ (VV VV' : Identity_u), compose_rel vx x VV → (compose_rel vx x VV' → VV = VV').
+Theorem compose_rel_funct [ds_d3Ba : Identity_u] [f : @uPack (Z ::UT nilUT) Identity_u]:
+  ∀ (VV VV' : Identity_u), compose_rel ds_d3Ba f VV → (compose_rel ds_d3Ba f VV' → VV = VV').
 Proof.
-  destruct vx as [x_1]; rel_functionhood_body.
+  destruct ds_d3Ba as [x]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve compose_rel_funct: f_rel_funct_db.
 
-Theorem compose_Val_x_lem x x_1 compose_Val_x_lem_res:
-  compose_rel (Val_u x_1) x compose_Val_x_lem_res
-  ↔ ∃ (x_res : Identity_u), getUPackRel x x_1 x_res ∧ compose_Val_x_lem_res == x_res.
+Theorem compose_Val_x_lem f x compose_Val_x_lem_res:
+  compose_rel (Val_u x) f compose_Val_x_lem_res
+  ↔ ∃ (f_res : Identity_u), getUPackRel f x f_res ∧ compose_Val_x_lem_res == f_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -116,9 +116,9 @@ Qed.
 #[global] Hint Rewrite compose_Val_x_lem: f_rel_back.
 
 Theorem compose_rel_ex
-  (vx : Identity_u)
-  (vx_p : Identity_wf vx ∧ True)
-  (x : @Pack
+  (ds_d3Ba : Identity_u)
+  (ds_d3Ba_p : Identity_wf ds_d3Ba ∧ True)
+  (f : @Pack
        ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
        (Z ::UT nilUT)
        ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
@@ -126,11 +126,11 @@ Theorem compose_rel_ex
        (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT))
           (v_x_11473763 : Identity_u),
         ltac:(flattenP (λ (x : {x: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_11473763 v_x_11473763))):
-  compose_rel vx ⌊ x ⌋ ⌊ compose (exist _ vx vx_p) x -⌋.
+  compose_rel ds_d3Ba ⌊ f ⌋ ⌊ compose (exist _ ds_d3Ba ds_d3Ba_p) f -⌋.
 Proof.
   Opaque compose.
   existence_lemma_pre compose;
-  destruct vx as [x_1];
+  destruct ds_d3Ba as [x];
   [fix_notations];
   simpl in *.
   Transparent compose.
@@ -142,9 +142,9 @@ Qed.
 #[global] Opaque compose.
 
 Theorem compose__compose_rel_rw
-  (vx : Identity_u)
-  (vx_p : Identity_wf vx ∧ True)
-  (x : @Pack
+  (ds_d3Ba : Identity_u)
+  (ds_d3Ba_p : Identity_wf ds_d3Ba ∧ True)
+  (f : @Pack
        ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
        (Z ::UT nilUT)
        ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
@@ -153,7 +153,7 @@ Theorem compose__compose_rel_rw
           (v_x_11473763 : Identity_u),
         ltac:(flattenP (λ (x : {x: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_11473763 v_x_11473763)))
   (VV : Identity_u):
-  ⌊ compose (exist _ vx vx_p) x -⌋ = VV ↔ compose_rel vx ⌊ x ⌋ VV.
+  ⌊ compose (exist _ ds_d3Ba ds_d3Ba_p) f -⌋ = VV ↔ compose_rel ds_d3Ba ⌊ f ⌋ VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -166,8 +166,8 @@ Qed.
     lookup' := compose__compose_rel_rw }.
 
 Theorem compose__compose_rel
-  (vx : Identity)
-  (x : @Pack
+  (ds_d3Ba : Identity)
+  (f : @Pack
        ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
        ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
@@ -176,7 +176,7 @@ Theorem compose__compose_rel
           (v_x_32508782 : Identity_u),
         ltac:(flattenP (λ (x : {VV: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_32508782 v_x_32508782)))
   (VV : Identity_u):
-  ⌊ compose vx x -⌋ = VV ↔ compose_rel ⌊ vx ⌋ ⌊ x ⌋ VV.
+  ⌊ compose ds_d3Ba f -⌋ = VV ↔ compose_rel ⌊ ds_d3Ba ⌋ ⌊ f ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -184,10 +184,10 @@ Qed.
 #[global] Hint Rewrite compose__compose_rel: f_rel_funct_db.
 
 Theorem compose__compose_rel'
-  (vx_u : Identity_u)
-  (x_u : @uPack (Z ::UT nilUT) Identity_u)
-  (vx : Identity)
-  (x : @Pack
+  (ds_d3Ba_u : Identity_u)
+  (f_u : @uPack (Z ::UT nilUT) Identity_u)
+  (ds_d3Ba : Identity)
+  (f : @Pack
        ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
        ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
@@ -196,17 +196,18 @@ Theorem compose__compose_rel'
           (v_x_32508782 : Identity_u),
         ltac:(flattenP (λ (x : {VV: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_32508782 v_x_32508782)))
   (VV : Identity_u):
-  vx_u = ⌊ vx ⌋ → (x_u = ⌊ x ⌋ → ⌊ compose vx x -⌋ = VV ↔ compose_rel vx_u x_u VV).
+  ds_d3Ba_u = ⌊ ds_d3Ba ⌋
+  → (f_u = ⌊ f ⌋ → ⌊ compose ds_d3Ba f -⌋ = VV ↔ compose_rel ds_d3Ba_u f_u VV).
 Proof.
-  intros -> ->. refine (compose__compose_rel vx x VV).
+  intros -> ->. refine (compose__compose_rel ds_d3Ba f VV).
 Qed.
 
 #[global] Hint Resolve compose__compose_rel': f_rel_funct_db.
 
 Theorem compose_rel_mk
-  (vx : Identity_u)
-  (vx_p : Identity_wf vx ∧ True)
-  (x : @Pack
+  (ds_d3Ba : Identity_u)
+  (ds_d3Ba_p : Identity_wf ds_d3Ba ∧ True)
+  (f : @Pack
        ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
        (Z ::UT nilUT)
        ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
@@ -214,10 +215,14 @@ Theorem compose_rel_mk
        (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT))
           (v_x_11473763 : Identity_u),
         ltac:(flattenP (λ (x : {x: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_11473763 v_x_11473763))):
-  {VV: _ | compose_rel vx (packProj x) VV}.
+  {VV: _ | compose_rel ds_d3Ba (packProj f) VV}.
 Proof.
   intros;
-  refine (subsumptionCast _ (λ VV, compose_rel vx (packProj x) VV) (compose (exist _ vx vx_p) x) _);
+  refine (subsumptionCast
+          _
+          (λ VV, compose_rel ds_d3Ba (packProj f) VV)
+          (compose (exist _ ds_d3Ba ds_d3Ba_p) f)
+          _);
   rewrite <- compose__compose_rel';
   quicksolve.
 Qed.
@@ -330,13 +335,14 @@ Defined.
 Definition leftIdentity_spec
   (x : {x: Z | True})
   (f : @Pack
-       ({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT)
+       ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
        Identity_u
-       (λ (x_46517173 : ArgList ({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT))
-          (v_x_46517173 : Identity_u),
-        ltac:(flattenP (λ (f : {VV: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_46517173 v_x_46517173))):
+       (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
+          (v_x_44453395 : Identity_u),
+        ltac:(flattenP (λ (lq_tmp0 : {VV: Z | True}) (VV : Identity_u),
+ Identity_wf VV ∧ True) x_44453395 v_x_44453395))):
   Type :=
   {{∃ (retrn_res : Identity_u),
     retrn_rel ⌊ x ⌋ retrn_res
@@ -349,13 +355,14 @@ Definition leftIdentity_spec
 Theorem leftIdentity
   (x : {x: Z | True})
   (f : @Pack
-       ({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT)
+       ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
        Identity_u
-       (λ (x_46517173 : ArgList ({VV: Z | True} ::RT λ (f : {VV: Z | True}), nilRT))
-          (v_x_46517173 : Identity_u),
-        ltac:(flattenP (λ (f : {VV: Z | True}) (VV : Identity_u), Identity_wf VV ∧ True) x_46517173 v_x_46517173))):
+       (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
+          (v_x_44453395 : Identity_u),
+        ltac:(flattenP (λ (lq_tmp0 : {VV: Z | True}) (VV : Identity_u),
+ Identity_wf VV ∧ True) x_44453395 v_x_44453395))):
   leftIdentity_spec x f.
 Proof.
   destruct x as [x x_p].
@@ -371,19 +378,21 @@ Proof.
           ltac:(solver)).
 Qed.
 
-Definition rightIdentity_spec (x : Identity): Type :=
-  {{∃ (compose_res : Identity_u), compose_rel ⌊ x ⌋ retrn_upack compose_res ∧ compose_res == ⌊ x ⌋}}.
+Definition rightIdentity_spec (ds_d3B9 : Identity): Type :=
+  {{∃ (compose_res : Identity_u),
+    compose_rel ⌊ ds_d3B9 ⌋ retrn_upack compose_res ∧ compose_res == ⌊ ds_d3B9 ⌋}}.
 
 #[global] Hint Unfold rightIdentity_spec: lia_unfold.
 
-Theorem rightIdentity (x : Identity): rightIdentity_spec x.
+Theorem rightIdentity (ds_d3B9 : Identity): rightIdentity_spec ds_d3B9.
 Proof.
-  destruct x as [x x_p].
-  destruct x as [x].
+  destruct ds_d3B9 as [ds_d3B9 ds_d3B9_p].
+  destruct ds_d3B9 as [x].
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ (compose_res : Identity_u), compose_rel x retrn_upack compose_res ∧ compose_res == x)
+             ∃ (compose_res : Identity_u),
+             compose_rel (Val_u x) retrn_upack compose_res ∧ compose_res == Val_u x)
             (# unit)
             ltac:(solver)).
 Qed.

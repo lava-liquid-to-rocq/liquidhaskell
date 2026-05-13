@@ -150,11 +150,6 @@ isSubtype (ArrType _ tp11 tp12) (ArrType _ tp21 tp22) =
   isSubtype tp21 tp11 && isSubtype tp12 tp22
 isSubtype _ _ = False
 
--- | Check if the type is a unit proof type {{P}}, i.e. its base type is unitTp.
-isUnitRefType :: RefType -> Bool
-isUnitRefType (RefType _ a _) = a == unitTp
-isUnitRefType _ = False
-
 -- * Well-formedness of types
 
 wfRefType :: TypEnv -> RefType -> Either TypeError RefType
@@ -251,7 +246,7 @@ removeRedundantMatches e@(Case r branches genVars) =
     (DC c, argsc) ->
       let br = filter ((==) c . fst . fst) branches
        in case br of
-            -- TODO: We should use Maybe in the translation from Core rather than "undefined"
+            -- Encodes patError
             (_, Just (Reft (Var "undefined" _ _))) : _ -> e
             ((_, ys), Just ebr) : _ -> removeRedundantMatches $ substs (zip argsc (map fst ys)) ebr
             _ -> recurse
@@ -345,15 +340,15 @@ synReft γ r@(Pop pop r1 r2) = do
   case tp1 of
     ArrType {} -> Left . SynErr $ "Proof combinators on higher-order values is not defined, in the type synthesis of" <+> pPrint r
     RefType x a reft1
-      | isUnitRefType tp1 -> do
+      | a == unitTp -> do
           (tp2, r2') <- synReft γ r2
           return (tp2, Pop pop r1' r2')
       | otherwise -> do
           let xvar = Var x Nothing Local
-              reft2 = Bop And reft1 (Bop (popToBop pop) xvar (mkProj r1'))
+              reft2 = mkAnd [reft1, Bop (popToBop pop) xvar (mkProj r1')]
           r2' <- checkReft γ r2 (RefType x a reft2)
-          let reft3' = Bop And reft1 (Bop Eq xvar (mkProj r2'))
-              reft3 = case pop of PEq -> Bop And reft3' (Bop Eq xvar (mkProj r1')); _ -> reft3'
+          let reft3' = mkAnd [reft1, Bop Eq xvar (mkProj r2')]
+              reft3 = case pop of PEq -> mkAnd [reft3', Bop Eq xvar (mkProj r1')]; _ -> reft3'
           return (RefType x a reft3, Pop pop r1' r2')
 synReft _ (Sub {}) = error "Constructor Sub found before elaboration"
 synReft _ (Inj {}) = error "Constructor Inj found before elaboration"
@@ -395,8 +390,9 @@ checkExpr _ _ e@(Let {}) _ = Left . CheckingErr $ "Type annotation expected for 
 checkExpr γ state e0@(Case r branches _) tp = do
   (tpr, r') <- synReft γ r
   case tpr of
-    RefType _ (TC _) _ -> do
-      (branches', indVars) <- second Set.unions <$> mapAndUnzipM (checkBranch r') branches
+    RefType _ (TC tc) _ -> do
+      sortedBranches <- sortBranches tc branches
+      (branches', indVars) <- second Set.unions <$> mapAndUnzipM (checkBranch r') sortedBranches
       let -- In an induct, we generalize the other parameters that have not been destructed already
           -- the set indVars being non empty tells us that we use induction rather than destruct
           genVars = if Set.null indVars then Nothing else Just $ reverse [z | (Param z _) <- state']
@@ -418,11 +414,21 @@ checkExpr γ state e0@(Case r branches _) tp = do
     state' =
       let updateState (_, pos) = take pos state ++ Destructed : drop (pos + 1) state
        in maybe state updateState matchedParamAndPos
+    -- Reorder branches to correspond to the order of the definition in the type
+    sortBranches :: Id -> [((Id, [(Id, Bool)]), Maybe Expr)] -> Either TypeError [((Id, [(Id, Bool)]), Maybe Expr)]
+    sortBranches tc brs = do
+      tpConstrs <- map fst <$> lookupTC tc γ
+      return $ map fdBranch tpConstrs
+      where
+        fdBranch c = case lookup c brs' of
+          Just (ys, ebr) -> ((c, ys), ebr)
+          Nothing -> error $ "Missing branch for constructor " ++ c ++ " not detected as patErr."
+        brs' = map (\((c, ys), ebr) -> (c, (ys, ebr))) brs
 
     -- Returns the elaborated branch and a boolean to indicate if a subterm uses
     -- an induction hypothesis one of the introduced variables
     checkBranch :: Reft -> ((Id, [(Id, Bool)]), Maybe Expr) -> Either TypeError (((Id, [(Id, Bool)]), Maybe Expr), Set Id)
-    -- TODO: we should not use a variable name to translate from Core, we should not have this case
+    -- Encodes patError
     checkBranch _ (c, Just (Reft (Var "undefined" _ _))) = return ((c, Nothing), Set.empty)
     checkBranch _ (c, Nothing) = return ((c, Nothing), Set.empty)
     checkBranch matched ((c, ys), Just e) = do
@@ -435,26 +441,27 @@ checkExpr γ state e0@(Case r branches _) tp = do
           -- We look for applications where one of the potentialInductives can be
           -- used as inductive variable and instantiate the head of those applications
           (e', indVars) = instRec potentialInductives e
-          -- We remove projections from the types of the variables
-          -- introduced by the patterns, as these are considered unrefined
-          γ' = insertLocalVars (map (second removeFOArgProjs) argsc) $ case matched of
-            -- if we match on a variable xMatch, we replace the variable in the context
-            -- by the variables introduced by the pattern
-            -- and we substitute all occurences of xMatch by the pattern
+          -- If we match on a variable xMatch, we replace the variable in the context
+          -- by the variables introduced by the pattern
+          -- and we substitute all occurences of xMatch by the pattern.
+          -- We also replace the occurences of xMatch in the type to be checked.
+          (γ'', tp') = case matched of
             Inj (Var xMatch Nothing Local) _ ->
               let pat = foldl App (DC c) (map (mkVar . fst) ys)
-               in substInEnv pat xMatch $ Env.delete xMatch γ
+               in (substInEnv pat xMatch $ Env.delete xMatch γ, subst pat xMatch tp)
             -- If we match on an application or a constant, we keep the same context:
             -- in particular, we do not add an equality between the matched term and the pattern:
             -- this equality is useful for occurence typing when checking the VC, but will never appear in elaboration
-            _ -> γ
-      e'' <- checkExpr γ' state' e' tp
+            _ -> (γ, tp)
+          -- We remove projections from the types of the variables
+          -- introduced by the patterns, as these are considered unrefined
+          γ' = insertLocalVars (map (second removeFOArgProjs) argsc) γ''
+      e'' <- checkExpr γ' state' e' tp'
       return (((c, ys), Just e''), indVars)
       where
         -- Given a list of potential inductive variables `inds` introduced by the
         -- pattern matching, instantiate relevant recursive calls using those variable as basis for induction.
         -- Returns the instantiated term and the set of variables that are used for an induction
-
         instRec :: [Id] -> Expr -> (Expr, Set Id)
         instRec [] tm = (tm, Set.empty)
         instRec inds (Reft tm) = first Reft $ instRecReft inds tm

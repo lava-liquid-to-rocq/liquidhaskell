@@ -184,15 +184,15 @@ Defined.
 
 #[global] Hint Unfold Z: ref_constr_db.
 
-Definition rbinToBin_spec (b : RBin): Type :=
+Definition rbinToBin_spec (ds_d4Ff : RBin): Type :=
   Bin.
 
 #[global] Hint Unfold rbinToBin_spec: lia_unfold.
 
-Definition rbinToBin (b : RBin): rbinToBin_spec b.
+Definition rbinToBin (ds_d4Ff : RBin): rbinToBin_spec ds_d4Ff.
 Proof.
-  destruct b as [b b_p].
-  induction b as [n IH_n| n IH_n|].
+  destruct ds_d4Ff as [ds_d4Ff ds_d4Ff_p].
+  induction ds_d4Ff as [n IH_n| n IH_n|].
   - refine (B0 (IH_n ltac:(try clear IH_n; solver))).
   - refine (B1 (IH_n ltac:(try clear IH_n; solver))).
   - refine Z.
