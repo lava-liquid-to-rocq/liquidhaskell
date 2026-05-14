@@ -27,6 +27,7 @@ coqDeps/LiquidPreludeUtil.v
 # manual/Benchmark/SFGradeExample.v
 
 # manual/Benchmark/PLE/Append.v
+manual/ltac_bug.v
 out/Benchmark/PLE/Lists.v
 # out/Benchmark/PLE/Compose.v
 

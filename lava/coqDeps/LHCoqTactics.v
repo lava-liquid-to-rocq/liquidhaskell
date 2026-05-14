@@ -678,6 +678,12 @@ Ltac axiomatize_ho_term :=
 (* replace projections of refined terms in hypothesis or goal by unrefined variables axiomatized using the graph relations *)
 Ltac axiomatize_terms := tryif (repeat_or_fail axiomatize_next_term) then idtac else fail "No terms to axiomatize".
 
+Ltac result_var_unification v w h1 h2 :=
+  first [
+    unshelve eauto with f_rel_funct_db
+  | now (refine (_ v w h1 h2); unshelve eauto with f_rel_funct_db)
+  ].
+
 (* "unify" context variables axiomatized to correspond to the same unrefined values via graph relations,
   also do various other simpler unification steps to unify/remove redundant hypothesis *)
 Ltac simplify_hyp :=
@@ -708,7 +714,7 @@ Ltac simplify_hyp :=
     | [h1: ?f_rel_ap ?w |- _] => match goal with
       | [h2:f_rel_ap ?v |- _] => first [isVar v | isVar w]; neq_fail h1 h2;
         let temp := fresh "H" in
-        assert (v = w) as temp by (unshelve eauto with f_rel_funct_db); 
+        assert (v = w) as temp by (result_var_unification v w h2 h1); 
         (* rewrite variable to term, or keep both around *)
         first [
           isVar v; rewriteAll temp; replace h2 with h1 in * by (auto with pi_db); clear h2
@@ -738,25 +744,23 @@ Ltac simplify_hyp :=
         | _ => isVar w; try clear w resEq
         end
     end
-    | [g: ?rel ?s ?t ?u |- _] => isRelAppl rel; match goal with
-      | [h: ?rel ?s' ?t' ?v |- u = ?v] => tryif eq_fail u v then reflexivity else 
-        concat_either (non_branching_inversion g) (non_branching_inversion h); 
-        repeat_or_fail simplify_hyp;
-        idtac "Trying to unify variables axiomatized in hypotheses " g h " to solve goal asserting their equality. "; reflexivity
-      end
-    | [h1: ?frel ?uargs ?v |- _] => isVar v;
+    | [g: ?rel ?s ?t ?u, h: ?rel ?s' ?t' ?v |- ?u = ?v] => isRelAppl rel; 
+      tryif eq_fail u v then reflexivity else 
+      tryif (neq_fail s s'; neq_fail t t') then 
+      (concat_either (non_branching_inversion g) (non_branching_inversion h); 
+      repeat_or_fail simplify_hyp;
+      idtac "Trying to unify variables " u v "axiomatized in hypotheses " g h " to solve goal asserting their equality. "; 
+      reflexivity) else fail
+    | [h1: ?frel ?uargs ?v, h2: ?frel ?uargs ?w |- _] => isVar v; neq_fail v w; isUArgList uargs;
       match goal with
-        | [h2: frel uargs ?w |- _] => neq_fail v w;
-          match goal with
-          | [funct: forall (uargs_ : UArgList ?uargTps) (u u' : ?resTp),
-            frel uargs_ u -> frel uargs_ u' -> u = u' |- _] =>
-            let uargsTp := type of uargs in
-            eq_fail uargTps uargsTp;
-            let vTp := type of v in
-            eq_fail vTp resTp;
-            pose proof (funct uargs v w h1 h2) as ->
-          end
-        end
+      | [funct: forall (uargs_ : UArgList ?uargTps) (u u' : ?resTp),
+        frel uargs_ u -> frel uargs_ u' -> u = u' |- _] =>
+        let uargsTp := type of uargs in
+        eq_fail uargTps uargsTp;
+        let vTp := type of v in
+        eq_fail vTp resTp;
+        pose proof (funct uargs v w h1 h2) as ->
+      end
     | _ => fail "no axiomatized variables to unify"
   end.
 
@@ -2781,7 +2785,7 @@ Ltac f__f_rel_rw :=
     match goal with
     | |- ?tm = _ => set tm in *
     | _ => idtac
-    end; now unify_vars
+    end; try now unify_vars
   ].
 
 (* tactic to prove the theorem ralation f with its relation using the rewrite and functionhood lemmata *)
