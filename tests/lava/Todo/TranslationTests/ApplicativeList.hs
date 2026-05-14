@@ -3,7 +3,7 @@
 {-@ LIQUID "--reflection" @-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module TranslationTests.ApplicativeList where
+module Todo.TranslationTests.ApplicativeList where
 
 {- HLInt ignore -}
 import Language.Haskell.Liquid.ProofCombinators

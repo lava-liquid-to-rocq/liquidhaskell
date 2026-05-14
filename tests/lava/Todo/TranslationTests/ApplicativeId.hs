@@ -4,7 +4,7 @@
 {-@ LIQUID "--reflection" @-}
 {-# LANGUAGE IncoherentInstances #-}
 
-module TranslationTests.ApplicativeId where
+module Todo.TranslationTests.ApplicativeId where
 
 {- HLInt ignore -}
 import Language.Haskell.Liquid.ProofCombinators
