@@ -76,15 +76,15 @@ Defined.
 
 #[global] Hint Unfold Zero: ref_constr_db.
 
-Definition even_spec (ds_d1Zd : Nats): Type :=
+Definition even_spec (ds_d1Za : Nats): Type :=
   Bool.
 
 #[global] Hint Unfold even_spec: lia_unfold.
 
-Definition even (ds_d1Zd : Nats): even_spec ds_d1Zd.
+Definition even (ds_d1Za : Nats): even_spec ds_d1Za.
 Proof.
-  destruct ds_d1Zd as [ds_d1Zd ds_d1Zd_p].
-  induction ds_d1Zd as [n IH_n|].
+  destruct ds_d1Za as [ds_d1Za ds_d1Za_p].
+  induction ds_d1Za as [n IH_n|].
   - refine (subsumptionCast
             bool
             (λ (VV : bool), True)
@@ -103,10 +103,10 @@ Inductive even_rel: Nats_u → bool → Prop :=
 
 #[global] Instance even_getF: getFunc even_rel := { getF' := even }.
 
-Theorem even_rel_funct [ds_d1Zd : Nats_u]:
-  ∀ (VV VV' : bool), even_rel ds_d1Zd VV → (even_rel ds_d1Zd VV' → VV = VV').
+Theorem even_rel_funct [ds_d1Za : Nats_u]:
+  ∀ (VV VV' : bool), even_rel ds_d1Za VV → (even_rel ds_d1Za VV' → VV = VV').
 Proof.
-  induction ds_d1Zd as [n IH_n|]; rel_functionhood_body.
+  induction ds_d1Za as [n IH_n|]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve even_rel_funct: f_rel_funct_db.
@@ -128,12 +128,12 @@ Qed.
 
 #[global] Hint Rewrite even_Zero_lem: f_rel_back.
 
-Theorem even_rel_ex (ds_d1Zd : Nats_u) (ds_d1Zd_p : Nats_wf ds_d1Zd ∧ True):
-  even_rel ds_d1Zd ⌊ even (exist _ ds_d1Zd ds_d1Zd_p) -⌋.
+Theorem even_rel_ex (ds_d1Za : Nats_u) (ds_d1Za_p : Nats_wf ds_d1Za ∧ True):
+  even_rel ds_d1Za ⌊ even (exist _ ds_d1Za ds_d1Za_p) -⌋.
 Proof.
   Opaque even.
   existence_lemma_pre even;
-  induction ds_d1Zd as [n IH_n|];
+  induction ds_d1Za as [n IH_n|];
   [fix_notations; pose proof (IH_n ltac:(try clear IH_n; solver)) as IH_60635587; try clear IH_n |
    fix_notations];
   simpl in *.
@@ -145,8 +145,8 @@ Qed.
 
 #[global] Opaque even.
 
-Theorem even__even_rel_rw (ds_d1Zd : Nats_u) (ds_d1Zd_p : Nats_wf ds_d1Zd ∧ True) (VV : bool):
-  ⌊ even (exist _ ds_d1Zd ds_d1Zd_p) -⌋ = VV ↔ even_rel ds_d1Zd VV.
+Theorem even__even_rel_rw (ds_d1Za : Nats_u) (ds_d1Za_p : Nats_wf ds_d1Za ∧ True) (VV : bool):
+  ⌊ even (exist _ ds_d1Za ds_d1Za_p) -⌋ = VV ↔ even_rel ds_d1Za VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -157,27 +157,27 @@ Qed.
 
 #[global] Instance even_lookup_rw: dictionary rwLem even := { lookup' := even__even_rel_rw }.
 
-Theorem even__even_rel (ds_d1Zd : Nats) (VV : bool):
-  ⌊ even ds_d1Zd -⌋ = VV ↔ even_rel ⌊ ds_d1Zd ⌋ VV.
+Theorem even__even_rel (ds_d1Za : Nats) (VV : bool):
+  ⌊ even ds_d1Za -⌋ = VV ↔ even_rel ⌊ ds_d1Za ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite even__even_rel: f_rel_funct_db.
 
-Theorem even__even_rel' (ds_d1Zd_u : Nats_u) (ds_d1Zd : Nats) (VV : bool):
-  ds_d1Zd_u = ⌊ ds_d1Zd ⌋ → ⌊ even ds_d1Zd -⌋ = VV ↔ even_rel ds_d1Zd_u VV.
+Theorem even__even_rel' (ds_d1Za_u : Nats_u) (ds_d1Za : Nats) (VV : bool):
+  ds_d1Za_u = ⌊ ds_d1Za ⌋ → ⌊ even ds_d1Za -⌋ = VV ↔ even_rel ds_d1Za_u VV.
 Proof.
-  intros ->. refine (even__even_rel ds_d1Zd VV).
+  intros ->. refine (even__even_rel ds_d1Za VV).
 Qed.
 
 #[global] Hint Resolve even__even_rel': f_rel_funct_db.
 
-Theorem even_rel_mk (ds_d1Zd : Nats_u) (ds_d1Zd_p : Nats_wf ds_d1Zd ∧ True):
-  {VV: _ | even_rel ds_d1Zd VV}.
+Theorem even_rel_mk (ds_d1Za : Nats_u) (ds_d1Za_p : Nats_wf ds_d1Za ∧ True):
+  {VV: _ | even_rel ds_d1Za VV}.
 Proof.
   intros;
-  refine (subsumptionCast _ (λ VV, even_rel ds_d1Zd VV) (even (exist _ ds_d1Zd ds_d1Zd_p)) _);
+  refine (subsumptionCast _ (λ VV, even_rel ds_d1Za VV) (even (exist _ ds_d1Za ds_d1Za_p)) _);
   rewrite <- even__even_rel';
   quicksolve.
 Qed.
@@ -186,12 +186,12 @@ Qed.
 
 #[global] Instance even_pack:
   @Pack
-  (Nats ::RT λ (ds_d1Zd : Nats), nilRT)
+  (Nats ::RT λ (ds_d1Za : Nats), nilRT)
   (Nats_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Nats ::RT λ (ds_d1Zd : Nats), nilRT)) ((Nats_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG ((Nats ::RT λ (ds_d1Za : Nats), nilRT)) ((Nats_u ::UT nilUT)))
   bool
-  (λ (x_63381999 : ArgList (Nats ::RT λ (ds_d1Zd : Nats), nilRT)) (v_x_63381999 : bool),
-   ltac:(flattenP (λ (ds_d1Zd : Nats) (VV : bool), True) x_63381999 v_x_63381999)).
+  (λ (x_18566717 : ArgList (Nats ::RT λ (ds_d1Za : Nats), nilRT)) (v_x_18566717 : bool),
+   ltac:(flattenP (λ (ds_d1Za : Nats) (VV : bool), True) x_18566717 v_x_18566717)).
 Proof.
   buildPackG even even_rel even__even_rel even_rel_funct.
 Defined.

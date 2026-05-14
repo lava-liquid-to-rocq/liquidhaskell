@@ -1511,7 +1511,11 @@ Tactic Notation "recreate_var" constr(relApp) ident(vRes) :=
   | _ =>
     let fAppl_res := fresh "fAppl_res" in
     recreate_refined_term relApp fAppl_res;
-    simpl_proj; (* simpl in fAppl_res; *)
+    match relApp with
+    | ?rel _ _ => localIsRel rel;
+      simpl_proj
+    | _ => simpl in fAppl_res
+    end;
     idtac "Sucessfully generated refined result term in recreate_var"; 
     
     let Res := fresh "fAppl_Res" in
