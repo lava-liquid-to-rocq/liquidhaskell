@@ -189,19 +189,4 @@ Theorem compose__compose_rel_rw
   ⌊ compose f g (exist _ x x_p) -⌋ = VV ↔ compose_rel ⌊ f ⌋ ⌊ g ⌋ x VV.
 Proof.
   f__f_rel_rw.
-  set ⌊ f ⌋ as fu in *; set ⌊ g ⌋ as gu in *.
-  clearbody fu gu z. clear f g x_p.
-  (* 1 goal
-  x, VV, z : Z
-  fu, gu : uPack (Z ::UT nilUT) Z
-  H : compose_rel fu gu x z
-  H0 : compose_rel fu gu x VV
-  ______________________________________(1/1)
-  z = VV
-  *)
-  assert_succeeds (apply (compose_rel_funct _ _ H H0)).
-  assert_succeeds (exact (compose_rel_funct z VV H H0)).
-  refine (_ z VV H H0).
-  assert_fails (exact compose_rel_funct).
-  Undo. Undo. exact (compose_rel_funct z VV H H0).
 Qed.

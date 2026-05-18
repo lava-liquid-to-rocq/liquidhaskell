@@ -2174,7 +2174,7 @@ Proof.
               (λ (ds_d2AE : Unit),
                ∃ (append_res : L_u),
                append_rel
-               ⌊ reverse (exist (λ (VV : L_u), L_wf VV ∧ True) xs ltac:(solver)) ⌋
+               ⌊ reverse (exist (λ (VV : L_u), L_wf VV ∧ True) xs ltac:(solver)) -⌋
                (App_u x Emp_u)
                append_res
                ∧ append_res == Emp_u)

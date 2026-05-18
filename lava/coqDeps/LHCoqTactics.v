@@ -1147,16 +1147,15 @@ Ltac assert_wit v pred wit_name := (*idtac "assert_wit" v pred wit_name; *)
               end
             ];
             let arg_wit_tp := type of arg_wit_name in
-            idtac "recursive call created witness " arg_wit_name " : " arg_wit_tp ". "; 
+            (*idtac "recursive call created witness " arg_wit_name " : " arg_wit_tp ". "; *)
             pose (fApp' (exist _ t arg_wit_name)) as fApp;
             try subst arg_wit_name; subst fApp'; simpl_proj;
             pose tail as tl
           end; clear tlEq
-        ); idtac "finish main loop"; clear tl;
+        ); (*idtac "finish main loop";*) clear tl;
         (* we now have a fully applied version of f in fApp, we destruct it to get the refinement witness for it *)
         let appl_wit := fresh "appl_wit_" in
         pose proof (⌈ fApp ⌉) as appl_wit; subst fApp; simpl_proj; 
-        idtac "ha";
         
         let fApplTp := type of appl_wit in
         try axProjTm fApplTp;
@@ -1198,7 +1197,7 @@ Ltac assert_wit v pred wit_name := (*idtac "assert_wit" v pred wit_name; *)
           match type of remUArgsRefl with
           | ?uarg ::U ?uargsTl = _ => clear remUArgsRefl; pose uargsTl as remUArgs; 
             match hdT with
-            | sig ?pApp => idtac "Need to synthesize witness of " pApp uarg;
+            | sig ?pApp => (*idtac "Need to synthesize witness of " pApp uarg;*)
               (* let dom_ref := fresh "dom_ref" in
               pose pApp as dom_ref;*)
               let hd_wit := fresh "hd_wit" in
@@ -1214,7 +1213,7 @@ Ltac assert_wit v pred wit_name := (*idtac "assert_wit" v pred wit_name; *)
             end
           end
       end
-      )|]; idtac "Synthesized refined argument list " wit_name;
+      )|]; (*idtac "Synthesized refined argument list " wit_name;*)
       try simpl in wit_name
     end
   end.
