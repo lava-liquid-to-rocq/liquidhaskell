@@ -199,7 +199,7 @@ Qed.
   @Pack
   (Nats ::RT λ (ds_d4mE : Nats), Nats ::RT λ (n : Nats), nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats ::RT λ (ds_d4mE : Nats), Nats ::RT λ (n : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Nats ::RT λ (ds_d4mE : Nats), Nats ::RT λ (n : Nats), nilRT) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   Nats_u
   (λ (x_44855413 : ArgList (Nats ::RT λ (ds_d4mE : Nats), Nats ::RT λ (n : Nats), nilRT))
      (v_x_44855413 : Nats_u),
@@ -555,8 +555,7 @@ Qed.
   @Pack
   (Nats ::RT λ (ds_d4m1 : Nats), Nats ::RT λ (ds_d4m2 : Nats), nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats
-  ::RT λ (ds_d4m1 : Nats), Nats ::RT λ (ds_d4m2 : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Nats ::RT λ (ds_d4m1 : Nats), Nats ::RT λ (ds_d4m2 : Nats), nilRT) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   bool
   (λ (x_41244053 : ArgList (Nats ::RT λ (ds_d4m1 : Nats), Nats ::RT λ (ds_d4m2 : Nats), nilRT))
      (v_x_41244053 : bool),
@@ -760,8 +759,7 @@ Qed.
   @Pack
   (Nats ::RT λ (ds_d4mg : Nats), Nats ::RT λ (ds_d4mh : Nats), nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats
-  ::RT λ (ds_d4mg : Nats), Nats ::RT λ (ds_d4mh : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Nats ::RT λ (ds_d4mg : Nats), Nats ::RT λ (ds_d4mh : Nats), nilRT) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   bool
   (λ (x_35960879 : ArgList (Nats ::RT λ (ds_d4mg : Nats), Nats ::RT λ (ds_d4mh : Nats), nilRT))
      (v_x_35960879 : bool),
@@ -915,8 +913,7 @@ Qed.
   @Pack
   (Nats ::RT λ (ds_d4mG : Nats), Nats ::RT λ (ds_d4mH : Nats), nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats
-  ::RT λ (ds_d4mG : Nats), Nats ::RT λ (ds_d4mH : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Nats ::RT λ (ds_d4mG : Nats), Nats ::RT λ (ds_d4mH : Nats), nilRT) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   Nats_u
   (λ (x_75073885 : ArgList (Nats ::RT λ (ds_d4mG : Nats), Nats ::RT λ (ds_d4mH : Nats), nilRT))
      (v_x_75073885 : Nats_u),
@@ -1218,16 +1215,16 @@ Qed.
                                                geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res ∧ is_true geqN_res}),
              nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats
-  ::RT λ (ds_d4lW : Nats),
-       {ds_d4lX: Nats_u | Nats_wf ds_d4lX
-                          ∧ ∃ (geqN_res : bool),
-                            geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res ∧ is_true geqN_res}
-       ::RT λ (ds_d4lX : {ds_d4lX: Nats_u | Nats_wf ds_d4lX
-                                            ∧ ∃ (geqN_res : bool),
-                                              geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res
-                                              ∧ is_true geqN_res}),
-            nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Nats
+ ::RT λ (ds_d4lW : Nats),
+      {ds_d4lX: Nats_u | Nats_wf ds_d4lX
+                         ∧ ∃ (geqN_res : bool),
+                           geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res ∧ is_true geqN_res}
+      ::RT λ (ds_d4lX : {ds_d4lX: Nats_u | Nats_wf ds_d4lX
+                                           ∧ ∃ (geqN_res : bool),
+                                             geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res
+                                             ∧ is_true geqN_res}),
+           nilRT) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   Nats_u
   (λ (x_10146466 : ArgList (Nats
                             ::RT λ (ds_d4lW : Nats),

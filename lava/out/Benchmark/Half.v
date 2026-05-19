@@ -188,7 +188,7 @@ Qed.
   @Pack
   (Nats ::RT λ (ds_d1Za : Nats), nilRT)
   (Nats_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Nats ::RT λ (ds_d1Za : Nats), nilRT)) ((Nats_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Nats ::RT λ (ds_d1Za : Nats), nilRT) ((Nats_u ::UT nilUT)))
   bool
   (λ (x_18566717 : ArgList (Nats ::RT λ (ds_d1Za : Nats), nilRT)) (v_x_18566717 : bool),
    ltac:(flattenP (λ (ds_d1Za : Nats) (VV : bool), True) x_18566717 v_x_18566717)).

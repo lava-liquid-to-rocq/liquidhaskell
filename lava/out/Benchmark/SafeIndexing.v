@@ -200,7 +200,7 @@ Qed.
   @Pack
   (IList ::RT λ (ds_d4Wo : IList), nilRT)
   (IList_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((IList ::RT λ (ds_d4Wo : IList), nilRT)) ((IList_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (IList ::RT λ (ds_d4Wo : IList), nilRT) ((IList_u ::UT nilUT)))
   Z
   (λ (x_81875763 : ArgList (IList ::RT λ (ds_d4Wo : IList), nilRT)) (v_x_81875763 : Z),
    ltac:(flattenP (λ (ds_d4Wo : IList) (v : Z), gebZ_rel v 0 true) x_81875763 v_x_81875763)).
@@ -383,8 +383,7 @@ Qed.
   @Pack
   (IList ::RT λ (ds_d4Wg : IList), IList ::RT λ (ys : IList), nilRT)
   (IList_u ::UT (IList_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((IList
-  ::RT λ (ds_d4Wg : IList), IList ::RT λ (ys : IList), nilRT)) ((IList_u ::UT (IList_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (IList ::RT λ (ds_d4Wg : IList), IList ::RT λ (ys : IList), nilRT) ((IList_u ::UT (IList_u ::UT nilUT))))
   IList_u
   (λ (x_91745749 : ArgList (IList ::RT λ (ds_d4Wg : IList), IList ::RT λ (ys : IList), nilRT))
      (v_x_91745749 : IList_u),
@@ -570,15 +569,15 @@ Qed.
                               ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4Wl ⌋ llen_res ∧ ltbZ_rel i' llen_res true}),
              nilRT)
   (IList_u ::UT (Z ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((IList
-  ::RT λ (ds_d4Wl : IList),
-       {i': Z | lebZ_rel 0 i' true
-                ∧ ∃ (llen_res : Z),
-                  llen_rel ⌊ ds_d4Wl ⌋ llen_res ∧ ltbZ_rel i' llen_res true}
-       ::RT λ (i' : {i': Z | lebZ_rel 0 i' true
-                             ∧ ∃ (llen_res : Z),
-                               llen_rel ⌊ ds_d4Wl ⌋ llen_res ∧ ltbZ_rel i' llen_res true}),
-            nilRT)) ((IList_u ::UT (Z ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (IList
+ ::RT λ (ds_d4Wl : IList),
+      {i': Z | lebZ_rel 0 i' true
+               ∧ ∃ (llen_res : Z),
+                 llen_rel ⌊ ds_d4Wl ⌋ llen_res ∧ ltbZ_rel i' llen_res true}
+      ::RT λ (i' : {i': Z | lebZ_rel 0 i' true
+                            ∧ ∃ (llen_res : Z),
+                              llen_rel ⌊ ds_d4Wl ⌋ llen_res ∧ ltbZ_rel i' llen_res true}),
+           nilRT) ((IList_u ::UT (Z ::UT nilUT))))
   Z
   (λ (x_41293191 : ArgList (IList
                             ::RT λ (ds_d4Wl : IList),

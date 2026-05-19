@@ -198,7 +198,7 @@ Qed.
   @Pack
   (L ::RT λ (ds_d3Io : L), L ::RT λ (ys : L), nilRT)
   (L_u ::UT (L_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((L ::RT λ (ds_d3Io : L), L ::RT λ (ys : L), nilRT)) ((L_u ::UT (L_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d3Io : L), L ::RT λ (ys : L), nilRT) ((L_u ::UT (L_u ::UT nilUT))))
   L_u
   (λ (x_84885443 : ArgList (L ::RT λ (ds_d3Io : L), L ::RT λ (ys : L), nilRT)) (v_x_84885443 : L_u),
    ltac:(flattenP (λ (ds_d3Io ys : L) (VV : L_u), L_wf VV ∧ True) x_84885443 v_x_84885443)).
@@ -216,7 +216,7 @@ Definition bind_spec
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
           (v_x_10329927 : L_u),
@@ -231,7 +231,7 @@ Definition bind
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
           (v_x_10329927 : L_u),
@@ -294,8 +294,7 @@ Theorem bind_rel_ex
   (f : @Pack
        ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
           (v_x_82647028 : L_u),
@@ -324,8 +323,7 @@ Theorem bind__bind_rel_rw
   (f : @Pack
        ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
           (v_x_82647028 : L_u),
@@ -347,7 +345,7 @@ Theorem bind__bind_rel
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
           (v_x_10329927 : L_u),
@@ -367,7 +365,7 @@ Theorem bind__bind_rel'
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
           (v_x_10329927 : L_u),
@@ -386,8 +384,7 @@ Theorem bind_rel_mk
   (f : @Pack
        ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
           (v_x_82647028 : L_u),
@@ -515,7 +512,7 @@ Qed.
   @Pack
   ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
   (Z ::UT nilUT)
-  ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
+  ltac:(mkProjectsArgListTG ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT) ((Z ::UT nilUT)))
   L_u
   (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) (v_x_11473763 : L_u),
    ltac:(flattenP (λ (x : {x: Z | True}) (VV : L_u), L_wf VV ∧ True) x_11473763 v_x_11473763)).
@@ -533,7 +530,7 @@ Definition left_identity_spec
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
           (v_x_44453395 : L_u),
@@ -552,7 +549,7 @@ Theorem left_identity
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
           (v_x_44453395 : L_u),

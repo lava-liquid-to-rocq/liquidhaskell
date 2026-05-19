@@ -9,9 +9,9 @@ Definition flip_spec
        ({VV: Z | True}
         ::RT λ (lq_tmp0 : {VV: Z | True}), {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({VV: Z | True}
-  ::RT λ (lq_tmp0 : {VV: Z | True}),
-       {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({VV: Z | True}
+ ::RT λ (lq_tmp0 : {VV: Z | True}),
+      {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_41814097 : ArgList ({VV: Z | True}
                                  ::RT λ (lq_tmp0 : {VV: Z | True}),
@@ -30,9 +30,9 @@ Definition flip
        ({VV: Z | True}
         ::RT λ (lq_tmp0 : {VV: Z | True}), {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({VV: Z | True}
-  ::RT λ (lq_tmp0 : {VV: Z | True}),
-       {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({VV: Z | True}
+ ::RT λ (lq_tmp0 : {VV: Z | True}),
+      {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_41814097 : ArgList ({VV: Z | True}
                                  ::RT λ (lq_tmp0 : {VV: Z | True}),
@@ -79,9 +79,9 @@ Theorem flip_rel_ex
         ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
              {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({lq_tmp0: Z | True}
-  ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
-       {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({lq_tmp0: Z | True}
+ ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
+      {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_15576161 : ArgList ({lq_tmp0: Z | True}
                                  ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
@@ -113,9 +113,9 @@ Theorem flip__flip_rel_rw
         ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
              {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({lq_tmp0: Z | True}
-  ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
-       {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({lq_tmp0: Z | True}
+ ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
+      {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_15576161 : ArgList ({lq_tmp0: Z | True}
                                  ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
@@ -146,9 +146,9 @@ Theorem flip__flip_rel
        ({VV: Z | True}
         ::RT λ (lq_tmp0 : {VV: Z | True}), {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({VV: Z | True}
-  ::RT λ (lq_tmp0 : {VV: Z | True}),
-       {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({VV: Z | True}
+ ::RT λ (lq_tmp0 : {VV: Z | True}),
+      {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_41814097 : ArgList ({VV: Z | True}
                                  ::RT λ (lq_tmp0 : {VV: Z | True}),
@@ -172,9 +172,9 @@ Theorem flip__flip_rel'
        ({VV: Z | True}
         ::RT λ (lq_tmp0 : {VV: Z | True}), {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({VV: Z | True}
-  ::RT λ (lq_tmp0 : {VV: Z | True}),
-       {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({VV: Z | True}
+ ::RT λ (lq_tmp0 : {VV: Z | True}),
+      {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_41814097 : ArgList ({VV: Z | True}
                                  ::RT λ (lq_tmp0 : {VV: Z | True}),
@@ -197,9 +197,9 @@ Theorem flip_rel_mk
         ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
              {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({lq_tmp0: Z | True}
-  ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
-       {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({lq_tmp0: Z | True}
+ ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
+      {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_15576161 : ArgList ({lq_tmp0: Z | True}
                                  ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
@@ -514,8 +514,7 @@ Qed.
   @Pack
   (Nats ::RT λ (ds_d2z5 : Nats), Nats ::RT λ (ds_d2z6 : Nats), nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats
-  ::RT λ (ds_d2z5 : Nats), Nats ::RT λ (ds_d2z6 : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Nats ::RT λ (ds_d2z5 : Nats), Nats ::RT λ (ds_d2z6 : Nats), nilRT) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   bool
   (λ (x_72154431 : ArgList (Nats ::RT λ (ds_d2z5 : Nats), Nats ::RT λ (ds_d2z6 : Nats), nilRT))
      (v_x_72154431 : bool),
@@ -718,7 +717,7 @@ Qed.
   @Pack
   (L2 ::RT λ (ds_d2zL : L2), nilRT)
   (L2_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((L2 ::RT λ (ds_d2zL : L2), nilRT)) ((L2_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (L2 ::RT λ (ds_d2zL : L2), nilRT) ((L2_u ::UT nilUT)))
   Nats_u
   (λ (x_46871589 : ArgList (L2 ::RT λ (ds_d2zL : L2), nilRT)) (v_x_46871589 : Nats_u),
    ltac:(flattenP (λ (ds_d2zL : L2) (VV : Nats_u), Nats_wf VV ∧ True) x_46871589 v_x_46871589)).
@@ -1034,7 +1033,7 @@ Qed.
   @Pack
   (L ::RT λ (ds_d2AM : L), L ::RT λ (ys : L), nilRT)
   (L_u ::UT (L_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((L ::RT λ (ds_d2AM : L), L ::RT λ (ys : L), nilRT)) ((L_u ::UT (L_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d2AM : L), L ::RT λ (ys : L), nilRT) ((L_u ::UT (L_u ::UT nilUT))))
   L_u
   (λ (x_10790280 : ArgList (L ::RT λ (ds_d2AM : L), L ::RT λ (ys : L), nilRT)) (v_x_10790280 : L_u),
    ltac:(flattenP (λ (ds_d2AM ys : L) (VV : L_u), L_wf VV ∧ True) x_10790280 v_x_10790280)).
@@ -1129,7 +1128,7 @@ Definition concatMap_spec
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_40877513 : ArgList ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT))
           (v_x_40877513 : L_u),
@@ -1144,7 +1143,7 @@ Definition concatMap
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_40877513 : ArgList ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT))
           (v_x_40877513 : L_u),
@@ -1208,8 +1207,7 @@ Theorem concatMap_rel_ex
   (f : @Pack
        ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({lq_tmp1: Z | True}
-  ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_86795196 : ArgList ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
           (v_x_86795196 : L_u),
@@ -1238,8 +1236,7 @@ Theorem concatMap__concatMap_rel_rw
   (f : @Pack
        ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({lq_tmp1: Z | True}
-  ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_86795196 : ArgList ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
           (v_x_86795196 : L_u),
@@ -1263,7 +1260,7 @@ Theorem concatMap__concatMap_rel
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_40877513 : ArgList ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT))
           (v_x_40877513 : L_u),
@@ -1283,7 +1280,7 @@ Theorem concatMap__concatMap_rel'
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_40877513 : ArgList ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT))
           (v_x_40877513 : L_u),
@@ -1302,8 +1299,7 @@ Theorem concatMap_rel_mk
   (f : @Pack
        ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({lq_tmp1: Z | True}
-  ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_86795196 : ArgList ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
           (v_x_86795196 : L_u),
@@ -1439,7 +1435,7 @@ Qed.
   @Pack
   (L2 ::RT λ (ds_d2zv : L2), nilRT)
   (L2_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((L2 ::RT λ (ds_d2zv : L2), nilRT)) ((L2_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (L2 ::RT λ (ds_d2zv : L2), nilRT) ((L2_u ::UT nilUT)))
   L_u
   (λ (x_18492815 : ArgList (L2 ::RT λ (ds_d2zv : L2), nilRT)) (v_x_18492815 : L_u),
    ltac:(flattenP (λ (ds_d2zv : L2) (VV : L_u), L_wf VV ∧ True) x_18492815 v_x_18492815)).
@@ -1567,7 +1563,7 @@ Qed.
   @Pack
   (L2 ::RT λ (ds_d2zq : L2), nilRT)
   (L2_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((L2 ::RT λ (ds_d2zq : L2), nilRT)) ((L2_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (L2 ::RT λ (ds_d2zq : L2), nilRT) ((L2_u ::UT nilUT)))
   L_u
   (λ (x_69046463 : ArgList (L2 ::RT λ (ds_d2zq : L2), nilRT)) (v_x_69046463 : L_u),
    ltac:(flattenP (λ (ds_d2zq : L2) (VV : L_u), L_wf VV ∧ True) x_69046463 v_x_69046463)).
@@ -1690,7 +1686,7 @@ Qed.
   @Pack
   (L ::RT λ (ds_d2zO : L), nilRT)
   (L_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((L ::RT λ (ds_d2zO : L), nilRT)) ((L_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d2zO : L), nilRT) ((L_u ::UT nilUT)))
   Nats_u
   (λ (x_34783676 : ArgList (L ::RT λ (ds_d2zO : L), nilRT)) (v_x_34783676 : Nats_u),
    ltac:(flattenP (λ (ds_d2zO : L) (VV : Nats_u), Nats_wf VV ∧ True) x_34783676 v_x_34783676)).
@@ -1777,7 +1773,7 @@ Definition map_spec
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Z
        (λ (x_40877513 : ArgList ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT))
           (v_x_40877513 : Z),
@@ -1792,7 +1788,7 @@ Definition map
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Z
        (λ (x_40877513 : ArgList ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT))
           (v_x_40877513 : Z),
@@ -1850,8 +1846,7 @@ Theorem map_rel_ex
   (f : @Pack
        ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({lq_tmp1: Z | True}
-  ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
        Z
        (λ (x_86795196 : ArgList ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
           (v_x_86795196 : Z),
@@ -1880,8 +1875,7 @@ Theorem map__map_rel_rw
   (f : @Pack
        ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({lq_tmp1: Z | True}
-  ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
        Z
        (λ (x_86795196 : ArgList ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
           (v_x_86795196 : Z),
@@ -1904,7 +1898,7 @@ Theorem map__map_rel
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Z
        (λ (x_40877513 : ArgList ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT))
           (v_x_40877513 : Z),
@@ -1924,7 +1918,7 @@ Theorem map__map_rel'
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Z
        (λ (x_40877513 : ArgList ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT))
           (v_x_40877513 : Z),
@@ -1942,8 +1936,7 @@ Theorem map_rel_mk
   (f : @Pack
        ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({lq_tmp1: Z | True}
-  ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
        Z
        (λ (x_86795196 : ArgList ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
           (v_x_86795196 : Z),
@@ -1968,7 +1961,7 @@ Definition length_map_spec
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Z
        (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
           (v_x_44453395 : Z),
@@ -1987,7 +1980,7 @@ Theorem length_map
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Z
        (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
           (v_x_44453395 : Z),
@@ -2134,7 +2127,7 @@ Qed.
   @Pack
   (L ::RT λ (ds_d2AQ : L), nilRT)
   (L_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((L ::RT λ (ds_d2AQ : L), nilRT)) ((L_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d2AQ : L), nilRT) ((L_u ::UT nilUT)))
   L_u
   (λ (x_45607300 : ArgList (L ::RT λ (ds_d2AQ : L), nilRT)) (v_x_45607300 : L_u),
    ltac:(flattenP (λ (ds_d2AQ : L) (VV : L_u), L_wf VV ∧ True) x_45607300 v_x_45607300)).
@@ -2174,7 +2167,7 @@ Proof.
               (λ (ds_d2AE : Unit),
                ∃ (append_res : L_u),
                append_rel
-               ⌊ reverse (exist (λ (VV : L_u), L_wf VV ∧ True) xs ltac:(solver)) -⌋
+               ⌊ reverse (exist (λ (VV : L_u), L_wf VV ∧ True) xs ltac:(solver)) ⌋
                (App_u x Emp_u)
                append_res
                ∧ append_res == Emp_u)
@@ -2359,7 +2352,7 @@ Qed.
   @Pack
   (Nats ::RT λ (ds_d2zc : Nats), L ::RT λ (ds_d2zd : L), nilRT)
   (Nats_u ::UT (L_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats ::RT λ (ds_d2zc : Nats), L ::RT λ (ds_d2zd : L), nilRT)) ((Nats_u ::UT (L_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Nats ::RT λ (ds_d2zc : Nats), L ::RT λ (ds_d2zd : L), nilRT) ((Nats_u ::UT (L_u ::UT nilUT))))
   L_u
   (λ (x_76939463 : ArgList (Nats ::RT λ (ds_d2zc : Nats), L ::RT λ (ds_d2zd : L), nilRT))
      (v_x_76939463 : L_u),
@@ -2583,7 +2576,7 @@ Qed.
   @Pack
   (L ::RT λ (ds_d2Ac : L), L ::RT λ (ds_d2Ad : L), nilRT)
   (L_u ::UT (L_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((L ::RT λ (ds_d2Ac : L), L ::RT λ (ds_d2Ad : L), nilRT)) ((L_u ::UT (L_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d2Ac : L), L ::RT λ (ds_d2Ad : L), nilRT) ((L_u ::UT (L_u ::UT nilUT))))
   L2_u
   (λ (x_70116171 : ArgList (L ::RT λ (ds_d2Ac : L), L ::RT λ (ds_d2Ad : L), nilRT))
      (v_x_70116171 : L2_u),
@@ -2662,9 +2655,9 @@ Definition length_zipWith_spec
        ({VV: Z | True}
         ::RT λ (lq_tmp0 : {VV: Z | True}), {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({VV: Z | True}
-  ::RT λ (lq_tmp0 : {VV: Z | True}),
-       {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({VV: Z | True}
+ ::RT λ (lq_tmp0 : {VV: Z | True}),
+      {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_41814097 : ArgList ({VV: Z | True}
                                  ::RT λ (lq_tmp0 : {VV: Z | True}),
@@ -2688,9 +2681,9 @@ Theorem length_zipWith
        ({VV: Z | True}
         ::RT λ (lq_tmp0 : {VV: Z | True}), {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({VV: Z | True}
-  ::RT λ (lq_tmp0 : {VV: Z | True}),
-       {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({VV: Z | True}
+ ::RT λ (lq_tmp0 : {VV: Z | True}),
+      {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_41814097 : ArgList ({VV: Z | True}
                                  ::RT λ (lq_tmp0 : {VV: Z | True}),
@@ -2748,9 +2741,9 @@ Definition zipWith_spec
        ({VV: Z | True}
         ::RT λ (lq_tmp0 : {VV: Z | True}), {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({VV: Z | True}
-  ::RT λ (lq_tmp0 : {VV: Z | True}),
-       {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({VV: Z | True}
+ ::RT λ (lq_tmp0 : {VV: Z | True}),
+      {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_41814097 : ArgList ({VV: Z | True}
                                  ::RT λ (lq_tmp0 : {VV: Z | True}),
@@ -2768,9 +2761,9 @@ Definition zipWith
        ({VV: Z | True}
         ::RT λ (lq_tmp0 : {VV: Z | True}), {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({VV: Z | True}
-  ::RT λ (lq_tmp0 : {VV: Z | True}),
-       {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({VV: Z | True}
+ ::RT λ (lq_tmp0 : {VV: Z | True}),
+      {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_41814097 : ArgList ({VV: Z | True}
                                  ::RT λ (lq_tmp0 : {VV: Z | True}),
@@ -2879,9 +2872,9 @@ Theorem zipWith_rel_ex
         ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
              {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({lq_tmp0: Z | True}
-  ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
-       {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({lq_tmp0: Z | True}
+ ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
+      {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_15576161 : ArgList ({lq_tmp0: Z | True}
                                  ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
@@ -2931,9 +2924,9 @@ Theorem zipWith__zipWith_rel_rw
         ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
              {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({lq_tmp0: Z | True}
-  ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
-       {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({lq_tmp0: Z | True}
+ ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
+      {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_15576161 : ArgList ({lq_tmp0: Z | True}
                                  ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
@@ -2966,9 +2959,9 @@ Theorem zipWith__zipWith_rel
        ({VV: Z | True}
         ::RT λ (lq_tmp0 : {VV: Z | True}), {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({VV: Z | True}
-  ::RT λ (lq_tmp0 : {VV: Z | True}),
-       {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({VV: Z | True}
+ ::RT λ (lq_tmp0 : {VV: Z | True}),
+      {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_41814097 : ArgList ({VV: Z | True}
                                  ::RT λ (lq_tmp0 : {VV: Z | True}),
@@ -2991,9 +2984,9 @@ Theorem zipWith__zipWith_rel'
        ({VV: Z | True}
         ::RT λ (lq_tmp0 : {VV: Z | True}), {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({VV: Z | True}
-  ::RT λ (lq_tmp0 : {VV: Z | True}),
-       {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({VV: Z | True}
+ ::RT λ (lq_tmp0 : {VV: Z | True}),
+      {VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_41814097 : ArgList ({VV: Z | True}
                                  ::RT λ (lq_tmp0 : {VV: Z | True}),
@@ -3018,9 +3011,9 @@ Theorem zipWith_rel_mk
         ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
              {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
        (Z ::UT (Z ::UT nilUT))
-       ltac:(mkProjectsArgListTG (({lq_tmp0: Z | True}
-  ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
-       {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)) ((Z ::UT (Z ::UT nilUT))))
+       ltac:(mkProjectsArgListTG ({lq_tmp0: Z | True}
+ ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),
+      {lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT (Z ::UT nilUT))))
        Z
        (λ (x_15576161 : ArgList ({lq_tmp0: Z | True}
                                  ::RT λ (lq_tmp0 : {lq_tmp0: Z | True}),

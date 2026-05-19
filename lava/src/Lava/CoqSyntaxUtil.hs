@@ -124,15 +124,6 @@ mkOpaque :: Id -> Decl
 -- mkOpaque x | trace ("mkOpaque(" ++ x ++ ")") False = undefined
 mkOpaque x = ChangeVisibility x Opaque
 
-argListCorT :: ArgListT -> UArgListT -> RocqType
-argListCorT argList uargList = Prop $ App (Def "projectsArgListT") [mkArgListT argList, mkUArgListT uargList]
-
-argListCorPrf :: ArgListT -> UArgListT -> CoqTerm
-argListCorPrf argTps uargTps =
-  PrfTerm
-    (argListCorT argTps uargTps)
-    (ByTac . Custom . unwords $ ["mkProjectsArgListTG", render . parens $ pPrint argTps, render . parens $ pPrint uargTps])
-
 mkLam :: [(Id, RocqType)] -> CoqTerm -> CoqTerm
 mkLam [] tm = tm
 mkLam ((x, xTp) : xTs) tm = Lambda x xTp $ mkLam xTs tm

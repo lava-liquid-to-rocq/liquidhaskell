@@ -175,6 +175,17 @@ wfDecl eq tc alts =
         argProp (x, tpArg) =
           case trRefType eq tpArg of
             Subset _ _ p -> p
+            Pack argTps _ (Coq.ArgListCor argTps' uargTps) _ p | (Coq.ArgListTArg argTps) == argTps' -> 
+              Coq.Let argTs Nothing argTps' .
+                Coq.Let prf Nothing p .
+                  Coq.Let z (Just (Coq.Prop $ Coq.App (Coq.Def "projectsArgListT") [Coq.Var argTs, mkUArgListT uargTps])) (Coq.ArgListCor (Coq.Var argTs) uargTps) .
+                    Coq.App (Def uPackWfName) $ 
+                      [Coq.Var argTs, Coq.Var z, (Coq.Var prf), Coq.Var x]
+              where
+                usedNames = Set.fromList $ map fst args
+                argTs = freshVar "argTps" usedNames
+                prf = freshVar "p" usedNames
+                z = freshVar "z" usedNames
             Pack argTps _ z _ p -> Coq.App (Def uPackWfName) [mkArgListT argTps, z, p, Coq.Var x] -- TODO: add required conditions
             _ -> PropLit True
 

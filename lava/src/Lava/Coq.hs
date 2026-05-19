@@ -225,6 +225,8 @@ data CoqTerm
     LetDes (Id, Id) CoqTerm CoqTerm
   | TermHole
   | PrfTerm RocqType ProofTerm
+  | ArgListCor CoqTerm UArgListT
+  | ArgListTArg ArgListT
   | InlineInstance [(Id, CoqTerm)]
   | TypeArg RocqType
   deriving (Data, Eq, Show)
@@ -696,7 +698,9 @@ instance Pretty CoqTerm where
   pPrintPrec l p (TypeArg tp) = pPrintPrec l p tp
   pPrintPrec _ _ TermHole = char '_'
   pPrintPrec l p (PrfTerm _ z) = pPrintPrec l p z
-
+  pPrintPrec l p (ArgListCor argTps uargTps) = pPrintPrec l p (PrfTerm Hole
+    (ByTac . Custom . unwords $ ["mkProjectsArgListTG", render . parens $ pPrint argTps, render . parens $ pPrint uargTps]))
+  pPrintPrec l p (ArgListTArg argTps) = pPrintPrec l p argTps
   pPrint = pPrintPrec prettyNormal 200
 
 instance Show Binop where

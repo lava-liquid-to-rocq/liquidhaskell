@@ -196,9 +196,8 @@ Qed.
   @Pack
   (MaybeInt ::RT λ (ds_d48D : MaybeInt), MaybeInt ::RT λ (y : MaybeInt), nilRT)
   (MaybeInt_u ::UT (MaybeInt_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((MaybeInt
-  ::RT λ (ds_d48D : MaybeInt),
-       MaybeInt ::RT λ (y : MaybeInt), nilRT)) ((MaybeInt_u ::UT (MaybeInt_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (MaybeInt
+ ::RT λ (ds_d48D : MaybeInt), MaybeInt ::RT λ (y : MaybeInt), nilRT) ((MaybeInt_u ::UT (MaybeInt_u ::UT nilUT))))
   MaybeInt_u
   (λ (x_69485096 : ArgList (MaybeInt
                             ::RT λ (ds_d48D : MaybeInt), MaybeInt ::RT λ (y : MaybeInt), nilRT))

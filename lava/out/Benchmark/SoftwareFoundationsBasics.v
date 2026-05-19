@@ -184,7 +184,7 @@ Qed.
   @Pack
   (SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT)
   (SFBool_u ::UT (SFBool_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT)) ((SFBool_u ::UT (SFBool_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT) ((SFBool_u ::UT (SFBool_u ::UT nilUT))))
   SFBool_u
   (λ (x_89922389 : ArgList (SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT))
      (v_x_89922389 : SFBool_u),
@@ -388,11 +388,10 @@ Qed.
    ::RT λ (ds_d7WN : SFBool),
         SFBool ::RT λ (ds_d7WO : SFBool), SFBool ::RT λ (ds_d7WP : SFBool), nilRT)
   (SFBool_u ::UT (SFBool_u ::UT (SFBool_u ::UT nilUT)))
-  ltac:(mkProjectsArgListTG ((SFBool
-  ::RT λ (ds_d7WN : SFBool),
-       SFBool
-       ::RT λ (ds_d7WO : SFBool),
-            SFBool ::RT λ (ds_d7WP : SFBool), nilRT)) ((SFBool_u ::UT (SFBool_u ::UT (SFBool_u ::UT nilUT)))))
+  ltac:(mkProjectsArgListTG (SFBool
+ ::RT λ (ds_d7WN : SFBool),
+      SFBool
+      ::RT λ (ds_d7WO : SFBool), SFBool ::RT λ (ds_d7WP : SFBool), nilRT) ((SFBool_u ::UT (SFBool_u ::UT (SFBool_u ::UT nilUT)))))
   SFBool_u
   (λ (x_10337575 : ArgList (SFBool
                             ::RT λ (ds_d7WN : SFBool),
@@ -549,14 +548,14 @@ Definition identity_fn_applied_twice_spec
   (f : @Pack
        (SFBool ::RT λ (lq_tmp0 : SFBool), nilRT)
        (SFBool_u ::UT nilUT)
-       ltac:(mkProjectsArgListTG ((SFBool ::RT λ (lq_tmp0 : SFBool), nilRT)) ((SFBool_u ::UT nilUT)))
+       ltac:(mkProjectsArgListTG (SFBool ::RT λ (lq_tmp0 : SFBool), nilRT) ((SFBool_u ::UT nilUT)))
        SFBool_u
        (λ (x_80611037 : ArgList (SFBool ::RT λ (lq_tmp0 : SFBool), nilRT)) (v_x_80611037 : SFBool_u),
         ltac:(flattenP (λ (lq_tmp0 : SFBool) (VV : SFBool_u), SFBool_wf VV ∧ True) x_80611037 v_x_80611037)))
   (h : @Pack
        (SFBool ::RT λ (x : SFBool), nilRT)
        (SFBool_u ::UT nilUT)
-       ltac:(mkProjectsArgListTG ((SFBool ::RT λ (x : SFBool), nilRT)) ((SFBool_u ::UT nilUT)))
+       ltac:(mkProjectsArgListTG (SFBool ::RT λ (x : SFBool), nilRT) ((SFBool_u ::UT nilUT)))
        Unit
        (λ (x_44180694 : ArgList (SFBool ::RT λ (x : SFBool), nilRT)) (v_x_44180694 : Unit),
         ltac:(flattenP (λ (x : SFBool) (VV : Unit),
@@ -572,14 +571,14 @@ Theorem identity_fn_applied_twice
   (f : @Pack
        (SFBool ::RT λ (lq_tmp0 : SFBool), nilRT)
        (SFBool_u ::UT nilUT)
-       ltac:(mkProjectsArgListTG ((SFBool ::RT λ (lq_tmp0 : SFBool), nilRT)) ((SFBool_u ::UT nilUT)))
+       ltac:(mkProjectsArgListTG (SFBool ::RT λ (lq_tmp0 : SFBool), nilRT) ((SFBool_u ::UT nilUT)))
        SFBool_u
        (λ (x_80611037 : ArgList (SFBool ::RT λ (lq_tmp0 : SFBool), nilRT)) (v_x_80611037 : SFBool_u),
         ltac:(flattenP (λ (lq_tmp0 : SFBool) (VV : SFBool_u), SFBool_wf VV ∧ True) x_80611037 v_x_80611037)))
   (h : @Pack
        (SFBool ::RT λ (x : SFBool), nilRT)
        (SFBool_u ::UT nilUT)
-       ltac:(mkProjectsArgListTG ((SFBool ::RT λ (x : SFBool), nilRT)) ((SFBool_u ::UT nilUT)))
+       ltac:(mkProjectsArgListTG (SFBool ::RT λ (x : SFBool), nilRT) ((SFBool_u ::UT nilUT)))
        Unit
        (λ (x_44180694 : ArgList (SFBool ::RT λ (x : SFBool), nilRT)) (v_x_44180694 : Unit),
         ltac:(flattenP (λ (x : SFBool) (VV : Unit),
@@ -762,9 +761,8 @@ Qed.
   @Pack
   (SFBool ::RT λ (ds_d7WU : SFBool), SFBool ::RT λ (ds_d7WV : SFBool), nilRT)
   (SFBool_u ::UT (SFBool_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((SFBool
-  ::RT λ (ds_d7WU : SFBool),
-       SFBool ::RT λ (ds_d7WV : SFBool), nilRT)) ((SFBool_u ::UT (SFBool_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (SFBool
+ ::RT λ (ds_d7WU : SFBool), SFBool ::RT λ (ds_d7WV : SFBool), nilRT) ((SFBool_u ::UT (SFBool_u ::UT nilUT))))
   SFBool_u
   (λ (x_78736776 : ArgList (SFBool
                             ::RT λ (ds_d7WU : SFBool), SFBool ::RT λ (ds_d7WV : SFBool), nilRT))
@@ -945,7 +943,7 @@ Qed.
   @Pack
   (SFBool ::RT λ (ds_d7X2 : SFBool), nilRT)
   (SFBool_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((SFBool ::RT λ (ds_d7X2 : SFBool), nilRT)) ((SFBool_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (SFBool ::RT λ (ds_d7X2 : SFBool), nilRT) ((SFBool_u ::UT nilUT)))
   SFBool_u
   (λ (x_41424875 : ArgList (SFBool ::RT λ (ds_d7X2 : SFBool), nilRT)) (v_x_41424875 : SFBool_u),
    ltac:(flattenP (λ (ds_d7X2 : SFBool) (VV : SFBool_u), SFBool_wf VV ∧ True) x_41424875 v_x_41424875)).
@@ -1112,7 +1110,7 @@ Qed.
   @Pack
   (SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT)
   (SFBool_u ::UT (SFBool_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT)) ((SFBool_u ::UT (SFBool_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT) ((SFBool_u ::UT (SFBool_u ::UT nilUT))))
   SFBool_u
   (λ (x_89922389 : ArgList (SFBool ::RT λ (b1 : SFBool), SFBool ::RT λ (b2 : SFBool), nilRT))
      (v_x_89922389 : SFBool_u),
@@ -1552,7 +1550,7 @@ Qed.
   @Pack
   (SFBin ::RT λ (ds_d7US : SFBin), nilRT)
   (SFBin_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((SFBin ::RT λ (ds_d7US : SFBin), nilRT)) ((SFBin_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (SFBin ::RT λ (ds_d7US : SFBin), nilRT) ((SFBin_u ::UT nilUT)))
   Z
   (λ (x_55213976 : ArgList (SFBin ::RT λ (ds_d7US : SFBin), nilRT)) (v_x_55213976 : Z),
    ltac:(flattenP (λ (ds_d7US : SFBin) (VV : Z), True) x_55213976 v_x_55213976)).
@@ -1700,7 +1698,7 @@ Qed.
   @Pack
   (SFBin ::RT λ (ds_d7UT : SFBin), nilRT)
   (SFBin_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((SFBin ::RT λ (ds_d7UT : SFBin), nilRT)) ((SFBin_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (SFBin ::RT λ (ds_d7UT : SFBin), nilRT) ((SFBin_u ::UT nilUT)))
   SFBin_u
   (λ (x_58302526 : ArgList (SFBin ::RT λ (ds_d7UT : SFBin), nilRT)) (v_x_58302526 : SFBin_u),
    ltac:(flattenP (λ (ds_d7UT : SFBin) (VV : SFBin_u), SFBin_wf VV ∧ True) x_58302526 v_x_58302526)).
@@ -2309,8 +2307,8 @@ Qed.
   @Pack
   (MyNat ::RT λ (ds_d7W1 : MyNat), MyNat ::RT λ (ds_d7W2 : MyNat), nilRT)
   (MyNat_u ::UT (MyNat_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((MyNat
-  ::RT λ (ds_d7W1 : MyNat), MyNat ::RT λ (ds_d7W2 : MyNat), nilRT)) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (MyNat
+ ::RT λ (ds_d7W1 : MyNat), MyNat ::RT λ (ds_d7W2 : MyNat), nilRT) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
   SFBool_u
   (λ (x_62371638 : ArgList (MyNat ::RT λ (ds_d7W1 : MyNat), MyNat ::RT λ (ds_d7W2 : MyNat), nilRT))
      (v_x_62371638 : SFBool_u),
@@ -2468,8 +2466,8 @@ Qed.
   @Pack
   (MyNat ::RT λ (ds_d7VZ : MyNat), MyNat ::RT λ (ds_d7W0 : MyNat), nilRT)
   (MyNat_u ::UT (MyNat_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((MyNat
-  ::RT λ (ds_d7VZ : MyNat), MyNat ::RT λ (ds_d7W0 : MyNat), nilRT)) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (MyNat
+ ::RT λ (ds_d7VZ : MyNat), MyNat ::RT λ (ds_d7W0 : MyNat), nilRT) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
   SFBool_u
   (λ (x_65538014 : ArgList (MyNat ::RT λ (ds_d7VZ : MyNat), MyNat ::RT λ (ds_d7W0 : MyNat), nilRT))
      (v_x_65538014 : SFBool_u),
@@ -2638,8 +2636,8 @@ Qed.
   @Pack
   (MyNat ::RT λ (ds_d7VX : MyNat), MyNat ::RT λ (ds_d7VY : MyNat), nilRT)
   (MyNat_u ::UT (MyNat_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((MyNat
-  ::RT λ (ds_d7VX : MyNat), MyNat ::RT λ (ds_d7VY : MyNat), nilRT)) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (MyNat
+ ::RT λ (ds_d7VX : MyNat), MyNat ::RT λ (ds_d7VY : MyNat), nilRT) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
   SFBool_u
   (λ (x_30813728 : ArgList (MyNat ::RT λ (ds_d7VX : MyNat), MyNat ::RT λ (ds_d7VY : MyNat), nilRT))
      (v_x_30813728 : SFBool_u),
@@ -2808,8 +2806,8 @@ Qed.
   @Pack
   (MyNat ::RT λ (ds_d7W3 : MyNat), MyNat ::RT λ (ds_d7W4 : MyNat), nilRT)
   (MyNat_u ::UT (MyNat_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((MyNat
-  ::RT λ (ds_d7W3 : MyNat), MyNat ::RT λ (ds_d7W4 : MyNat), nilRT)) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (MyNat
+ ::RT λ (ds_d7W3 : MyNat), MyNat ::RT λ (ds_d7W4 : MyNat), nilRT) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
   MyNat_u
   (λ (x_73057671 : ArgList (MyNat ::RT λ (ds_d7W3 : MyNat), MyNat ::RT λ (ds_d7W4 : MyNat), nilRT))
      (v_x_73057671 : MyNat_u),
@@ -2971,7 +2969,7 @@ Qed.
   @Pack
   (MyNat ::RT λ (ds_d7Wi : MyNat), MyNat ::RT λ (m : MyNat), nilRT)
   (MyNat_u ::UT (MyNat_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((MyNat ::RT λ (ds_d7Wi : MyNat), MyNat ::RT λ (m : MyNat), nilRT)) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (MyNat ::RT λ (ds_d7Wi : MyNat), MyNat ::RT λ (m : MyNat), nilRT) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
   MyNat_u
   (λ (x_31548077 : ArgList (MyNat ::RT λ (ds_d7Wi : MyNat), MyNat ::RT λ (m : MyNat), nilRT))
      (v_x_31548077 : MyNat_u),
@@ -3208,8 +3206,8 @@ Qed.
   @Pack
   (MyNat ::RT λ (ds_d7Wk : MyNat), MyNat ::RT λ (ds_d7Wl : MyNat), nilRT)
   (MyNat_u ::UT (MyNat_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((MyNat
-  ::RT λ (ds_d7Wk : MyNat), MyNat ::RT λ (ds_d7Wl : MyNat), nilRT)) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (MyNat
+ ::RT λ (ds_d7Wk : MyNat), MyNat ::RT λ (ds_d7Wl : MyNat), nilRT) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
   MyNat_u
   (λ (x_55799983 : ArgList (MyNat ::RT λ (ds_d7Wk : MyNat), MyNat ::RT λ (ds_d7Wl : MyNat), nilRT))
      (v_x_55799983 : MyNat_u),
@@ -3345,7 +3343,7 @@ Qed.
   @Pack
   (MyNat ::RT λ (ds_d7Wp : MyNat), nilRT)
   (MyNat_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((MyNat ::RT λ (ds_d7Wp : MyNat), nilRT)) ((MyNat_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (MyNat ::RT λ (ds_d7Wp : MyNat), nilRT) ((MyNat_u ::UT nilUT)))
   MyNat_u
   (λ (x_53519964 : ArgList (MyNat ::RT λ (ds_d7Wp : MyNat), nilRT)) (v_x_53519964 : MyNat_u),
    ltac:(flattenP (λ (ds_d7Wp : MyNat) (VV : MyNat_u), MyNat_wf VV ∧ True) x_53519964 v_x_53519964)).
@@ -3706,7 +3704,7 @@ Qed.
   @Pack
   (MyNat ::RT λ (ds_d7Ww : MyNat), nilRT)
   (MyNat_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((MyNat ::RT λ (ds_d7Ww : MyNat), nilRT)) ((MyNat_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (MyNat ::RT λ (ds_d7Ww : MyNat), nilRT) ((MyNat_u ::UT nilUT)))
   MyNat_u
   (λ (x_85872010 : ArgList (MyNat ::RT λ (ds_d7Ww : MyNat), nilRT)) (v_x_85872010 : MyNat_u),
    ltac:(flattenP (λ (ds_d7Ww : MyNat) (VV : MyNat_u), MyNat_wf VV ∧ True) x_85872010 v_x_85872010)).
@@ -3862,8 +3860,8 @@ Qed.
   @Pack
   (MyNat ::RT λ (ds_d7Wm : MyNat), MyNat ::RT λ (ds_d7Wn : MyNat), nilRT)
   (MyNat_u ::UT (MyNat_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((MyNat
-  ::RT λ (ds_d7Wm : MyNat), MyNat ::RT λ (ds_d7Wn : MyNat), nilRT)) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (MyNat
+ ::RT λ (ds_d7Wm : MyNat), MyNat ::RT λ (ds_d7Wn : MyNat), nilRT) ((MyNat_u ::UT (MyNat_u ::UT nilUT))))
   MyNat_u
   (λ (x_26709023 : ArgList (MyNat ::RT λ (ds_d7Wm : MyNat), MyNat ::RT λ (ds_d7Wn : MyNat), nilRT))
      (v_x_26709023 : MyNat_u),
@@ -4450,7 +4448,7 @@ Qed.
   @Pack
   (Letter ::RT λ (ds_d7V2 : Letter), nilRT)
   (Letter_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Letter ::RT λ (ds_d7V2 : Letter), nilRT)) ((Letter_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Letter ::RT λ (ds_d7V2 : Letter), nilRT) ((Letter_u ::UT nilUT)))
   Letter_u
   (λ (x_41183052 : ArgList (Letter ::RT λ (ds_d7V2 : Letter), nilRT)) (v_x_41183052 : Letter_u),
    ltac:(flattenP (λ (ds_d7V2 : Letter) (VV : Letter_u), Letter_wf VV ∧ True) x_41183052 v_x_41183052)).
@@ -4744,7 +4742,7 @@ Qed.
   @Pack
   (Grades ::RT λ (ds_d7V3 : Grades), nilRT)
   (Grades_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Grades ::RT λ (ds_d7V3 : Grades), nilRT)) ((Grades_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Grades ::RT λ (ds_d7V3 : Grades), nilRT) ((Grades_u ::UT nilUT)))
   Grades_u
   (λ (x_28390227 : ArgList (Grades ::RT λ (ds_d7V3 : Grades), nilRT)) (v_x_28390227 : Grades_u),
    ltac:(flattenP (λ (ds_d7V3 : Grades) (VV : Grades_u), Grades_wf VV ∧ True) x_28390227 v_x_28390227)).
@@ -4941,9 +4939,9 @@ Qed.
   ({late_days: Z | True}
    ::RT λ (late_days : {late_days: Z | True}), Grades ::RT λ (g : Grades), nilRT)
   (Z ::UT (Grades_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG (({late_days: Z | True}
-  ::RT λ (late_days : {late_days: Z | True}),
-       Grades ::RT λ (g : Grades), nilRT)) ((Z ::UT (Grades_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG ({late_days: Z | True}
+ ::RT λ (late_days : {late_days: Z | True}),
+      Grades ::RT λ (g : Grades), nilRT) ((Z ::UT (Grades_u ::UT nilUT))))
   Grades_u
   (λ (x_47115878 : ArgList ({late_days: Z | True}
                             ::RT λ (late_days : {late_days: Z | True}), Grades ::RT λ (g : Grades), nilRT))
@@ -5363,7 +5361,7 @@ Qed.
   @Pack
   (Day ::RT λ (ds_d7X3 : Day), nilRT)
   (Day_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Day ::RT λ (ds_d7X3 : Day), nilRT)) ((Day_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Day ::RT λ (ds_d7X3 : Day), nilRT) ((Day_u ::UT nilUT)))
   Day_u
   (λ (x_43471556 : ArgList (Day ::RT λ (ds_d7X3 : Day), nilRT)) (v_x_43471556 : Day_u),
    ltac:(flattenP (λ (ds_d7X3 : Day) (VV : Day_u), Day_wf VV ∧ True) x_43471556 v_x_43471556)).
@@ -5860,9 +5858,8 @@ Qed.
   @Pack
   (Letter ::RT λ (ds_d7Vr : Letter), Letter ::RT λ (ds_d7Vs : Letter), nilRT)
   (Letter_u ::UT (Letter_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Letter
-  ::RT λ (ds_d7Vr : Letter),
-       Letter ::RT λ (ds_d7Vs : Letter), nilRT)) ((Letter_u ::UT (Letter_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Letter
+ ::RT λ (ds_d7Vr : Letter), Letter ::RT λ (ds_d7Vs : Letter), nilRT) ((Letter_u ::UT (Letter_u ::UT nilUT))))
   Comparison_u
   (λ (x_47902458 : ArgList (Letter
                             ::RT λ (ds_d7Vr : Letter), Letter ::RT λ (ds_d7Vs : Letter), nilRT))
@@ -6226,9 +6223,9 @@ Qed.
   @Pack
   (Modifier ::RT λ (ds_d7Vi : Modifier), Modifier ::RT λ (ds_d7Vj : Modifier), nilRT)
   (Modifier_u ::UT (Modifier_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Modifier
-  ::RT λ (ds_d7Vi : Modifier),
-       Modifier ::RT λ (ds_d7Vj : Modifier), nilRT)) ((Modifier_u ::UT (Modifier_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Modifier
+ ::RT λ (ds_d7Vi : Modifier),
+      Modifier ::RT λ (ds_d7Vj : Modifier), nilRT) ((Modifier_u ::UT (Modifier_u ::UT nilUT))))
   Comparison_u
   (λ (x_30874010 : ArgList (Modifier
                             ::RT λ (ds_d7Vi : Modifier), Modifier ::RT λ (ds_d7Vj : Modifier), nilRT))
@@ -6468,7 +6465,7 @@ Qed.
   @Pack
   (Color ::RT λ (ds_d7WM : Color), nilRT)
   (Color_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Color ::RT λ (ds_d7WM : Color), nilRT)) ((Color_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Color ::RT λ (ds_d7WM : Color), nilRT) ((Color_u ::UT nilUT)))
   SFBool_u
   (λ (x_48492733 : ArgList (Color ::RT λ (ds_d7WM : Color), nilRT)) (v_x_48492733 : SFBool_u),
    ltac:(flattenP (λ (ds_d7WM : Color) (VV : SFBool_u), SFBool_wf VV ∧ True) x_48492733 v_x_48492733)).

@@ -167,7 +167,7 @@ Qed.
   @Pack
   (Natprod ::RT λ (ds_d9fR : Natprod), nilRT)
   (Natprod_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Natprod ::RT λ (ds_d9fR : Natprod), nilRT)) ((Natprod_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Natprod ::RT λ (ds_d9fR : Natprod), nilRT) ((Natprod_u ::UT nilUT)))
   MyNat_u
   (λ (x_28056445 : ArgList (Natprod ::RT λ (ds_d9fR : Natprod), nilRT)) (v_x_28056445 : MyNat_u),
    ltac:(flattenP (λ (ds_d9fR : Natprod) (VV : MyNat_u), MyNat_wf VV ∧ True) x_28056445 v_x_28056445)).
@@ -277,7 +277,7 @@ Qed.
   @Pack
   (Natprod ::RT λ (ds_d9fQ : Natprod), nilRT)
   (Natprod_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Natprod ::RT λ (ds_d9fQ : Natprod), nilRT)) ((Natprod_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Natprod ::RT λ (ds_d9fQ : Natprod), nilRT) ((Natprod_u ::UT nilUT)))
   MyNat_u
   (λ (x_28203475 : ArgList (Natprod ::RT λ (ds_d9fQ : Natprod), nilRT)) (v_x_28203475 : MyNat_u),
    ltac:(flattenP (λ (ds_d9fQ : Natprod) (VV : MyNat_u), MyNat_wf VV ∧ True) x_28203475 v_x_28203475)).
@@ -440,7 +440,7 @@ Qed.
   @Pack
   (Natprod ::RT λ (ds_d9fN : Natprod), nilRT)
   (Natprod_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Natprod ::RT λ (ds_d9fN : Natprod), nilRT)) ((Natprod_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Natprod ::RT λ (ds_d9fN : Natprod), nilRT) ((Natprod_u ::UT nilUT)))
   Natprod_u
   (λ (x_41774634 : ArgList (Natprod ::RT λ (ds_d9fN : Natprod), nilRT)) (v_x_41774634 : Natprod_u),
    ltac:(flattenP (λ (ds_d9fN : Natprod) (VV : Natprod_u), Natprod_wf VV ∧ True) x_41774634 v_x_41774634)).

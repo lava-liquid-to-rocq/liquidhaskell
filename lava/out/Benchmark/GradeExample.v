@@ -323,7 +323,7 @@ Qed.
   @Pack
   (Letter ::RT λ (ds_d153 : Letter), nilRT)
   (Letter_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Letter ::RT λ (ds_d153 : Letter), nilRT)) ((Letter_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Letter ::RT λ (ds_d153 : Letter), nilRT) ((Letter_u ::UT nilUT)))
   Letter_u
   (λ (x_90789449 : ArgList (Letter ::RT λ (ds_d153 : Letter), nilRT)) (v_x_90789449 : Letter_u),
    ltac:(flattenP (λ (ds_d153 : Letter) (VV : Letter_u), Letter_wf VV ∧ True) x_90789449 v_x_90789449)).
@@ -616,7 +616,7 @@ Qed.
   @Pack
   (Grades ::RT λ (ds_d154 : Grades), nilRT)
   (Grades_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Grades ::RT λ (ds_d154 : Grades), nilRT)) ((Grades_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Grades ::RT λ (ds_d154 : Grades), nilRT) ((Grades_u ::UT nilUT)))
   Grades_u
   (λ (x_65119381 : ArgList (Grades ::RT λ (ds_d154 : Grades), nilRT)) (v_x_65119381 : Grades_u),
    ltac:(flattenP (λ (ds_d154 : Grades) (VV : Grades_u), Grades_wf VV ∧ True) x_65119381 v_x_65119381)).
@@ -806,9 +806,9 @@ Qed.
   @Pack
   ({lateDays: Z | True} ::RT λ (lateDays : {lateDays: Z | True}), Grades ::RT λ (g : Grades), nilRT)
   (Z ::UT (Grades_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG (({lateDays: Z | True}
-  ::RT λ (lateDays : {lateDays: Z | True}),
-       Grades ::RT λ (g : Grades), nilRT)) ((Z ::UT (Grades_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG ({lateDays: Z | True}
+ ::RT λ (lateDays : {lateDays: Z | True}),
+      Grades ::RT λ (g : Grades), nilRT) ((Z ::UT (Grades_u ::UT nilUT))))
   Grades_u
   (λ (x_58156632 : ArgList ({lateDays: Z | True}
                             ::RT λ (lateDays : {lateDays: Z | True}), Grades ::RT λ (g : Grades), nilRT))
@@ -1382,9 +1382,8 @@ Qed.
   @Pack
   (Letter ::RT λ (ds_d15A : Letter), Letter ::RT λ (ds_d15B : Letter), nilRT)
   (Letter_u ::UT (Letter_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Letter
-  ::RT λ (ds_d15A : Letter),
-       Letter ::RT λ (ds_d15B : Letter), nilRT)) ((Letter_u ::UT (Letter_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Letter
+ ::RT λ (ds_d15A : Letter), Letter ::RT λ (ds_d15B : Letter), nilRT) ((Letter_u ::UT (Letter_u ::UT nilUT))))
   Comparison_u
   (λ (x_46193732 : ArgList (Letter
                             ::RT λ (ds_d15A : Letter), Letter ::RT λ (ds_d15B : Letter), nilRT))
@@ -1742,9 +1741,9 @@ Qed.
   @Pack
   (Modifier ::RT λ (ds_d15r : Modifier), Modifier ::RT λ (ds_d15s : Modifier), nilRT)
   (Modifier_u ::UT (Modifier_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Modifier
-  ::RT λ (ds_d15r : Modifier),
-       Modifier ::RT λ (ds_d15s : Modifier), nilRT)) ((Modifier_u ::UT (Modifier_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Modifier
+ ::RT λ (ds_d15r : Modifier),
+      Modifier ::RT λ (ds_d15s : Modifier), nilRT) ((Modifier_u ::UT (Modifier_u ::UT nilUT))))
   Comparison_u
   (λ (x_90108088 : ArgList (Modifier
                             ::RT λ (ds_d15r : Modifier), Modifier ::RT λ (ds_d15s : Modifier), nilRT))

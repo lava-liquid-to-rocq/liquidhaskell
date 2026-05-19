@@ -198,7 +198,7 @@ Qed.
   @Pack
   (L ::RT λ (ds_d3ZP : L), L ::RT λ (ys : L), nilRT)
   (L_u ::UT (L_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((L ::RT λ (ds_d3ZP : L), L ::RT λ (ys : L), nilRT)) ((L_u ::UT (L_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d3ZP : L), L ::RT λ (ys : L), nilRT) ((L_u ::UT (L_u ::UT nilUT))))
   L_u
   (λ (x_83637771 : ArgList (L ::RT λ (ds_d3ZP : L), L ::RT λ (ys : L), nilRT)) (v_x_83637771 : L_u),
    ltac:(flattenP (λ (ds_d3ZP ys : L) (VV : L_u), L_wf VV ∧ True) x_83637771 v_x_83637771)).

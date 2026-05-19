@@ -198,7 +198,7 @@ wfDecls γ (Data tc constrs : decls) = do
     checkFOandTC :: RefType -> Either TypeError ()
     checkFOandTC tp =
       let (args, (_, tc', _)) = arrs tp
-       in if any ((\case RefType {} -> False; _ -> True) . snd) args
+       in if False {-any ((\case RefType {} -> False; _ -> True) . snd) args -}
             then Left . WfErr $ "The constructor type" <+> pPrint tp <+> "is higher-order, which is forbidden"
             else when (tc' /= TC tc) . Left . WfErr $ "The constructor type" <+> pPrint tp <+> "must return a refinement of" <+> text tc
 -- (WF-DDef)

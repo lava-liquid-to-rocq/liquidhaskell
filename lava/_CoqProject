@@ -50,6 +50,7 @@ out/Benchmark/SoftwareFoundations.v
 #out/TranslationTests/FunctorId.v
 #out/TranslationTests/FunctorMaybe.v
 #out/TranslationTests/FunctorList.v
+out/Todo/TranslationTests/ApplicativeId.v
 
 # subsumed by SoftwareFoundations, Overview, PeanoNats resp.
 # out/Benchmark/GradeExample.v

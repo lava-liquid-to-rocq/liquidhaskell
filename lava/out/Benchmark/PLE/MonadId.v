@@ -61,7 +61,7 @@ Definition compose_spec
   (f : @Pack
        ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_32508782 : ArgList ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT))
           (v_x_32508782 : Identity_u),
@@ -76,7 +76,7 @@ Definition compose
   (f : @Pack
        ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_32508782 : ArgList ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT))
           (v_x_32508782 : Identity_u),
@@ -121,7 +121,7 @@ Theorem compose_rel_ex
   (f : @Pack
        ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT))
           (v_x_11473763 : Identity_u),
@@ -147,7 +147,7 @@ Theorem compose__compose_rel_rw
   (f : @Pack
        ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT))
           (v_x_11473763 : Identity_u),
@@ -170,7 +170,7 @@ Theorem compose__compose_rel
   (f : @Pack
        ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_32508782 : ArgList ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT))
           (v_x_32508782 : Identity_u),
@@ -190,7 +190,7 @@ Theorem compose__compose_rel'
   (f : @Pack
        ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_32508782 : ArgList ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT))
           (v_x_32508782 : Identity_u),
@@ -210,7 +210,7 @@ Theorem compose_rel_mk
   (f : @Pack
        ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT))
           (v_x_11473763 : Identity_u),
@@ -318,7 +318,7 @@ Qed.
   @Pack
   ({v: Z | True} ::RT λ (v : {v: Z | True}), nilRT)
   (Z ::UT nilUT)
-  ltac:(mkProjectsArgListTG (({v: Z | True} ::RT λ (v : {v: Z | True}), nilRT)) ((Z ::UT nilUT)))
+  ltac:(mkProjectsArgListTG ({v: Z | True} ::RT λ (v : {v: Z | True}), nilRT) ((Z ::UT nilUT)))
   Identity_u
   (λ (x_82100618 : ArgList ({v: Z | True} ::RT λ (v : {v: Z | True}), nilRT))
      (v_x_82100618 : Identity_u),
@@ -337,7 +337,7 @@ Definition leftIdentity_spec
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
           (v_x_44453395 : Identity_u),
@@ -357,7 +357,7 @@ Theorem leftIdentity
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
           (v_x_44453395 : Identity_u),

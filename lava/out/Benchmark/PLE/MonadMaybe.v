@@ -75,7 +75,7 @@ Definition bind_spec
   (ds_d3S5 : @Pack
              ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
              (Z ::UT nilUT)
-             ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+             ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
              MaybeInt_u
              (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
                 (v_x_10329927 : MaybeInt_u),
@@ -91,7 +91,7 @@ Definition bind
   (ds_d3S5 : @Pack
              ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
              (Z ::UT nilUT)
-             ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+             ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
              MaybeInt_u
              (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
                 (v_x_10329927 : MaybeInt_u),
@@ -149,8 +149,7 @@ Theorem bind_rel_ex
   (ds_d3S5 : @Pack
              ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
              (Z ::UT nilUT)
-             ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
+             ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
              MaybeInt_u
              (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
                 (v_x_82647028 : MaybeInt_u),
@@ -177,8 +176,7 @@ Theorem bind__bind_rel_rw
   (ds_d3S5 : @Pack
              ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
              (Z ::UT nilUT)
-             ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
+             ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
              MaybeInt_u
              (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
                 (v_x_82647028 : MaybeInt_u),
@@ -201,7 +199,7 @@ Theorem bind__bind_rel
   (ds_d3S5 : @Pack
              ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
              (Z ::UT nilUT)
-             ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+             ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
              MaybeInt_u
              (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
                 (v_x_10329927 : MaybeInt_u),
@@ -222,7 +220,7 @@ Theorem bind__bind_rel'
   (ds_d3S5 : @Pack
              ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
              (Z ::UT nilUT)
-             ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+             ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
              MaybeInt_u
              (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
                 (v_x_10329927 : MaybeInt_u),
@@ -243,8 +241,7 @@ Theorem bind_rel_mk
   (ds_d3S5 : @Pack
              ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
              (Z ::UT nilUT)
-             ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
+             ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
              MaybeInt_u
              (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
                 (v_x_82647028 : MaybeInt_u),
@@ -353,7 +350,7 @@ Qed.
   @Pack
   ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
   (Z ::UT nilUT)
-  ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
+  ltac:(mkProjectsArgListTG ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT) ((Z ::UT nilUT)))
   MaybeInt_u
   (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT))
      (v_x_11473763 : MaybeInt_u),
@@ -372,7 +369,7 @@ Definition left_identity_spec
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        MaybeInt_u
        (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
           (v_x_44453395 : MaybeInt_u),
@@ -392,7 +389,7 @@ Theorem left_identity
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        MaybeInt_u
        (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
           (v_x_44453395 : MaybeInt_u),

@@ -200,7 +200,7 @@ Qed.
   @Pack
   (IList ::RT λ (ds_d4QY : IList), nilRT)
   (IList_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((IList ::RT λ (ds_d4QY : IList), nilRT)) ((IList_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (IList ::RT λ (ds_d4QY : IList), nilRT) ((IList_u ::UT nilUT)))
   Z
   (λ (x_21409491 : ArgList (IList ::RT λ (ds_d4QY : IList), nilRT)) (v_x_21409491 : Z),
    ltac:(flattenP (λ (ds_d4QY : IList) (v : Z), gebZ_rel v 0 true) x_21409491 v_x_21409491)).
@@ -376,15 +376,15 @@ Qed.
                               ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true}),
              nilRT)
   (IList_u ::UT (Z ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((IList
-  ::RT λ (ds_d4QV : IList),
-       {i': Z | lebZ_rel 0 i' true
-                ∧ ∃ (llen_res : Z),
-                  llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true}
-       ::RT λ (i' : {i': Z | lebZ_rel 0 i' true
-                             ∧ ∃ (llen_res : Z),
-                               llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true}),
-            nilRT)) ((IList_u ::UT (Z ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (IList
+ ::RT λ (ds_d4QV : IList),
+      {i': Z | lebZ_rel 0 i' true
+               ∧ ∃ (llen_res : Z),
+                 llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true}
+      ::RT λ (i' : {i': Z | lebZ_rel 0 i' true
+                            ∧ ∃ (llen_res : Z),
+                              llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true}),
+           nilRT) ((IList_u ::UT (Z ::UT nilUT))))
   Z
   (λ (x_59913007 : ArgList (IList
                             ::RT λ (ds_d4QV : IList),

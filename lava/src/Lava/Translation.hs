@@ -248,7 +248,7 @@ trRefType eq (RefType x tp r) =
       (LH.TC tc) -> Coq.Bop (Binop Coq.And PropOp) (Coq.App (Def $ wfTCName tc) [Coq.Var x]) (utrReftProp eq r)
 -- TODO: I think if we have an arrtype of a unit type, we do not translate it to a pack
 trRefType eq tp@(ArrType {}) =
-  Pack argTps uargTps (argListCorPrf argTps uargTps) tpx p_
+  Pack argTps uargTps (ArgListCor (Coq.ArgListTArg argTps) uargTps) tpx p_
   where
     {- substs = map (\(w, _) -> (removeSuffix "_r" w, projectTm $ Var w)) args_
        cleanupSubst substs_ = subst substs_
