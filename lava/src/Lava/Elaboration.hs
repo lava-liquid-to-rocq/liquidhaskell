@@ -373,8 +373,8 @@ checkExpr γ state (Let x (Just tpx) ex e) tp = do
   _ <- wfRefType γ tp -- check that tp does not depend on x
   tpx' <- wfRefType γ tpx
   let (args, ret) = second mkRefType $ arrs tpx'
-  let γx = insertLocalVars args γ
-  ex' <- checkExpr γx state ex ret
+  let γx = insertLocalVars (map (second removeFOArgProjs) args) γ
+  ex' <- checkExpr γx state ex (removeFOArgProjs ret)
   let γ' = insertLocalVar (x, tpx') γ
   e' <- checkExpr γ' state e tp
   return (Let x (Just tpx') ex' e')

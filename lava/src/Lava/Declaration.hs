@@ -77,6 +77,8 @@ unrefTCDecl tc alts =
 -- | Declarations related to the equality on unrefined constructors
 tcEqDecls :: Id -> [(Id, RefType)] -> [Coq.Decl]
 -- tcEqDecls tc _ | traceTC "tcEqDecls" tc = undefined
+tcEqDecls tc alts | any isHOConstr alts = [] where 
+  isHOConstr _ = False -- TODO: Implement this
 tcEqDecls tc alts = eqDecl tc alts : eqReflLem tc ++ eqbEqLem tc ++ [eqbInstanceDecl tc]
 
 -- | Fixpoint definition of equality of two inductives
@@ -229,7 +231,7 @@ mkPseudoConstr eq tc (c, tp) =
     retT = trRefType eq (mkRefType ret)
     -- C proj(x1) … proj(xn) (in LH), that translates to C_u proj1_sig(x1) … proj1_sig(x_n)
     unrefCrApp = foldl LH.App (DC c) (map LH.mkProj $ tpArgsArLoc tp)
-    bodyLem = ProofBody [Custom "repeat first [split; solver]"]
+    bodyLem = ProofBody [Custom "repeat first [split | solver]"]
     -- The translated refinement of the return type of C, where x is replaced by Cu proj1_sig(args)
     -- NOTE: instead of inlining the translation of the refinement of an
     -- inductive type, we could use a substitution in Rocq, but I want to avoid

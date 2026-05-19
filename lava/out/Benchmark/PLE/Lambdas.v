@@ -17,7 +17,7 @@ Proof.
   { intros [y y_p];
     refine (subsumptionCast
             Z
-            (λ (v : Z), ∃ (addZ_res : Z), addZ_rel x ⌊ y ⌋ addZ_res ∧ v == addZ_res)
+            (λ (v : Z), ∃ (addZ_res : Z), addZ_rel x y addZ_res ∧ v == addZ_res)
             (# x +Z # y)
             ltac:(solver)). }
   unshelve refine (let f: ltac:(buildPackG_spec f_73466906) :=
@@ -35,7 +35,7 @@ Definition appId (x : {x: Z | True}): appId_spec x.
 Proof.
   destruct x as [x x_p].
   assert (f_70768816 : ∀ (y : {VV: Z | True}), {v: Z | v == ⌊ y ⌋}).
-  { intros [y y_p]; refine (subsumptionCast Z (λ (v : Z), v == ⌊ y ⌋) (# y) ltac:(solver)). }
+  { intros [y y_p]; refine (subsumptionCast Z (λ (v : Z), v == y) (# y) ltac:(solver)). }
   unshelve refine (let f: ltac:(buildPackG_spec f_70768816) :=
                  ltac:(fun_to_pack f_70768816) in
                  _).

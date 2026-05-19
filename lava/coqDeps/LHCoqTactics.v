@@ -2416,6 +2416,21 @@ Ltac lia_preprocessor_step := match goal with
   | [h: ?relAp _ |- _] => isRelAppl relAp;
     inversion_precheck h; 
     do_nonbranching (strong_inversion h; try (exfalso; timeout 10 quicksolve))
+
+  | |- ?wf (?cr_u
+     (packPr_proj ?pack)) => 
+    concat_either (unpack_all) (unfold wf);
+    match goal with
+    | |- uPack_wf _ _ _ (packPr_proj ?pack) => idtac
+    end
+  | |- uPack_wf ?argTps ?z ?p (packPr_proj ?pack) => 
+    match pack with
+    | {| f := ?g; frel := _; f_frel := ?f_frel_; funct := _ |} => exists g;
+      try apply f_frel_
+    | _ => isVar pack; exists (pack.(f)); try apply (pack.(f_frel))
+    end
+
+  | |- _ => progress unpack_all
   | |- exists v, ?relAp v => isRelAppl relAp; 
     idtac "Final desperate attempt to solve existential using strong_oracle to solve subgoals";
     first [
