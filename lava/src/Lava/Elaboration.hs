@@ -335,21 +335,12 @@ synReft γ r0@(QMark r rh _) = do
       return (tp, QMark r' rh' rp)
     _ -> Left . SynErr $ "Higher-order value found as a hint in" <+> pPrint r0
 -- Not in the paper
-synReft γ r@(Pop pop r1 r2) = do
-  (tp1, r1') <- synReft γ r1
-  case tp1 of
-    ArrType {} -> Left . SynErr $ "Proof combinators on higher-order values is not defined, in the type synthesis of" <+> pPrint r
-    RefType x a reft1
-      | a == unitTp -> do
-          (tp2, r2') <- synReft γ r2
-          return (tp2, Pop pop r1' r2')
-      | otherwise -> do
-          let xvar = Var x Nothing Local
-              reft2 = mkAnd [reft1, Bop (popToBop pop) xvar (mkProj r1')]
-          r2' <- checkReft γ r2 (RefType x a reft2)
-          let reft3' = mkAnd [reft1, Bop Eq xvar (mkProj r2')]
-              reft3 = case pop of PEq -> mkAnd [reft3', Bop Eq xvar (mkProj r1')]; _ -> reft3'
-          return (RefType x a reft3, Pop pop r1' r2')
+-- We only check that the terms of the equalities have the same type,
+-- since we do not use the refinements in the translation
+synReft γ (Pop pop r1 r2) = do
+  (tp, r1') <- synReft γ r1
+  r2' <- checkReft γ r2 tp
+  return (tp, Pop pop r1' r2')
 synReft _ (Sub {}) = error "Constructor Sub found before elaboration"
 synReft _ (Inj {}) = error "Constructor Inj found before elaboration"
 synReft _ (Proj {}) = error "Constructor Proj found before elaboration"
