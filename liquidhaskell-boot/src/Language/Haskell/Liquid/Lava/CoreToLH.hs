@@ -99,22 +99,11 @@ transBind modId infTypes binds = case binds of
        in Def (f b) args body False
     f b = stripLegalName modId $ show b
 
-data ParsedEqn
-  = Basic Calc.Reft
-  | Eqn ParsedEqn Calc.Reft
-  | Qmark Calc.Reft ParsedEqn
-  deriving (Eq, Show)
-
-instance Pretty ParsedEqn where
-  pPrint (Basic r) = pPrint r
-  pPrint (Eqn eqs r) = pPrint eqs <+> text "===" <+> pPrint r
-  pPrint (Qmark r eqs) = pPrint r <+> char '?' <+> pPrint eqs
-
 -- | Classification of application head symbols.
 data HeadSymbol
   = HNot
   | HLambda
-  | HEqChain
+  | HEqChain Calc.ProofOp
   | HCast
   | HQmark
   | HPatError
@@ -123,12 +112,15 @@ data HeadSymbol
   | HBinOp Calc.Bop
   | HGeneric Id
   | HDC Id
+  deriving (Show)
 
 -- | Classify an application head name into a 'HeadSymbol'.
 classifyHead :: Id -> HeadSymbol
 classifyHead "not" = HNot
 classifyHead "lambda" = HLambda
-classifyHead "===" = HEqChain
+classifyHead "===" = HEqChain Calc.PEq
+classifyHead "=<=" = HEqChain Calc.PLeq
+classifyHead "=>=" = HEqChain Calc.PGeq
 classifyHead "***" = HCast
 classifyHead "?" = HQmark
 classifyHead "patError" = HPatError
@@ -138,22 +130,16 @@ classifyHead n
   | Just op <- M.lookup n SLH.bops = HBinOp op
   | otherwise = HGeneric n
 
-hasEqn :: Calc.Reft -> Bool
-hasEqn (Calc.Pop {}) = True
-hasEqn (Calc.QMark {}) = True
-hasEqn _ = False
-
--- | Cast an equational chain/value expression into an explicit Unit proof witness.
--- Models `tm *** QED` as `unit ? (tm proves True)`.
-asProofReft :: Calc.Reft -> Calc.Reft
-asProofReft tm = Calc.QMark Calc.unitTm tm Calc.ttTm
-
 -- | The head of a flattened Core application.
 data AppHead
   = -- | a classified variable
     VarHead HeadSymbol
   | -- | a non-variable expression
     ReftHead Calc.Reft
+
+instance Pretty AppHead where
+  pPrint (VarHead sym) = text "VarHead" <+> text (show sym)
+  pPrint (ReftHead r) = text "ReftHead" <+> pPrint r
 
 -- | Flatten and translate an application, returning a structured head and
 -- surrounding let-bindings used to extract expressions from refinements
@@ -191,22 +177,14 @@ transFlattenedApp (VarHead (HBinOp op)) (_ : _ : a : b : _) = Calc.Bop op a b
 transFlattenedApp (VarHead (HConst tm)) _ = tm
 transFlattenedApp (VarHead HUnbox) [singleArg] = singleArg
 transFlattenedApp (VarHead HPatError) _ = undefinedReft
-transFlattenedApp (VarHead HEqChain) args@[_, fstTerm, lstTerm] | Calc.traceFunc "transFlattenedApp: VarHead HEqChain" (map pPrint args) = undefined
-transFlattenedApp (VarHead HEqChain) [_, fstTerm, lstTerm] = transEqns (parseReft fstTerm) lstTerm
-transFlattenedApp (VarHead HCast) args@[_, eqChain, Calc.DC "QED"] | Calc.traceFunc "transFlattenedApp: VarHead HCast" (map pPrint args) = undefined
-transFlattenedApp (VarHead HCast) [_, eqChain, Calc.DC "QED"] =
-  asProofReft $ case parseReft eqChain of
-    Eqn firstTerm lastTerm -> transEqns firstTerm lastTerm
-    _ -> eqChain
-transFlattenedApp (VarHead HQmark) args@(_ : _ : firstArg : secondArg : _) | Calc.traceFunc "transFlattenedApp: VarHead HQMark" (map pPrint args) = undefined
-transFlattenedApp (VarHead HQmark) (_ : _ : firstArg : secondArg : _)
-  | hasEqn firstArg || hasEqn secondArg =
-      mkQmark (prevEqns firstArg ++ [mkQmarkPair secondArg (collectReft firstArg)])
-  | otherwise =
-      mkQmark (prevEqns firstArg ++ [mkQmarkPair firstArg (collectReft secondArg)])
+transFlattenedApp (VarHead (HEqChain pop)) [_, fstTerm, lstTerm] = Calc.Pop pop fstTerm lstTerm
+transFlattenedApp (VarHead HCast) [_, tm, Calc.DC "QED"] =
+  Calc.QMark Calc.unitTm tm Calc.ttTm
+transFlattenedApp (VarHead HQmark) (_ : _ : firstArg : secondArg : _) =
+  Calc.QMark firstArg secondArg Calc.ttTm
 transFlattenedApp (VarHead HNot) args = unexpected "not" args
 transFlattenedApp (VarHead HLambda) args = unexpected "lambda" args
-transFlattenedApp (VarHead HEqChain) args = unexpected "===" args
+transFlattenedApp (VarHead (HEqChain pop)) args = unexpected (prettyShow pop) args
 transFlattenedApp (VarHead HCast) args = unexpected "***" args
 transFlattenedApp (VarHead HQmark) args = unexpected "?" args
 transFlattenedApp (VarHead HUnbox) args = unexpected "unbox" args
@@ -259,17 +237,6 @@ transApp :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> Calc.Exp
 transApp modId infTypes f app = letBinders . Calc.Reft $ transFlattenedApp appHead sArgs
   where
     (letBinders, (appHead, sArgs)) = flattenCoreApp modId infTypes f app
-
--- | Collect the last Reft from an equational chain expression
-collectReft :: Calc.Reft -> Calc.Reft
-collectReft (Calc.Pop _ _ t) = t
-collectReft (Calc.QMark _ r _) = r
-collectReft r = r
-
-prevEqns :: Calc.Reft -> [Calc.Reft]
-prevEqns r@(Calc.Pop {}) = [r]
-prevEqns (Calc.QMark r _ _) = prevEqns r
-prevEqns _ = []
 
 -- | Translate case expressions.
 transCase :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> [Alt b] -> Calc.Expr
@@ -345,40 +312,6 @@ altToClause modId infTypes f (Alt con bs e) =
 flattenFun :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> ([Id], Calc.Expr)
 flattenFun modId infTypes f (Lam b e) = first ((stripLegalName modId . show) b :) $ flattenFun modId infTypes f e
 flattenFun modId infTypes f e = ([], trans modId infTypes f e)
-
--- | Build a QMark Reft pairing a proof/hint with a term
-mkQmarkPair :: Calc.Reft -> Calc.Reft -> Calc.Reft
-mkQmarkPair hint proof = Calc.QMark hint proof Calc.ttTm
-
--- | Combine a list of Refts into a single Expr using QMark
-mkQmark :: [Calc.Reft] -> Calc.Reft
-mkQmark [] = Calc.unitTm
-mkQmark [z] = z
-mkQmark (z : zs) = foldl (\acc r -> Calc.QMark acc r Calc.ttTm) z zs
-
--- TODO: does this also work for (nested) === operators with hints (using the ? combinator)?
-
-parseReft :: Calc.Reft -> ParsedEqn
-parseReft (Calc.Pop Calc.PEq s t) = Eqn (Basic s) t
-parseReft (Calc.QMark eq@(Calc.Pop {}) (Calc.QMark h t _) _) = Qmark eq (Qmark h (parseReft t))
-parseReft (Calc.QMark t h _) = Qmark h (parseReft t)
-parseReft t = Basic t
-
--- | translate a parsed equational chain to the corresponding Calculus proof structure
-transEqns :: ParsedEqn -> Calc.Reft -> Calc.Reft
-transEqns s t | Calc.traceFunc "transEqns" [pPrint s, pPrint t] = undefined
-transEqns s' t' = mkQmark $ recurse s' t'
-  where
-    recurse :: ParsedEqn -> Calc.Reft -> [Calc.Reft]
-    recurse (Basic s) v = [Calc.Pop Calc.PEq s v]
-    recurse (Qmark eq@(Calc.Pop {}) s) v = eq : recurse s v
-    recurse (Qmark nextHint (Qmark nextHint' s)) v = recurse (Qmark (Calc.QMark nextHint nextHint' Calc.ttTm) s) v
-    recurse (Qmark nextHint (Basic nextTerm)) v = [Calc.QMark (Calc.Pop Calc.PEq nextTerm v) nextHint Calc.ttTm]
-    recurse (Qmark h s@Eqn {}) v = h : recurse s v
-    recurse (Eqn (Basic s) t) v = [Calc.Pop Calc.PEq s t, Calc.Pop Calc.PEq t v]
-    recurse (Eqn (Qmark nextHint (Qmark nextHint' s)) t) v = recurse (Eqn (Qmark (Calc.QMark nextHint nextHint' Calc.ttTm) s) t) v
-    recurse (Eqn (Qmark nextHint s) t) v = recurse s t ++ [Calc.QMark (Calc.Pop Calc.PEq t v) nextHint Calc.ttTm]
-    recurse (Eqn (Eqn s t) u) v = recurse s t ++ [Calc.Pop Calc.PEq t u, Calc.Pop Calc.PEq u v]
 
 {- The following is based on code liquidhaskell-boot Transforms/CoreToLogic -}
 

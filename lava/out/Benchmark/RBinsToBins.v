@@ -46,7 +46,7 @@ Global Notation RBin := {x: RBin_u | RBin_wf x ∧ True}.
 
 Definition RB0_lem (n : {n: RBin_u | RBin_wf n ∧ n ≠ RZ_u}): RBin_wf (RB0_u ⌊ n ⌋) ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition RB0 (n : {n: RBin_u | RBin_wf n ∧ n ≠ RZ_u}): RBin :=
@@ -54,7 +54,7 @@ Definition RB0 (n : {n: RBin_u | RBin_wf n ∧ n ≠ RZ_u}): RBin :=
 
 Definition RB1_lem (n : RBin): RBin_wf (RB1_u ⌊ n ⌋) ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition RB1 (n : RBin): RBin :=
@@ -62,7 +62,7 @@ Definition RB1 (n : RBin): RBin :=
 
 Definition RZ_lem : RBin_wf RZ_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition RZ : RBin :=
@@ -136,7 +136,7 @@ Global Notation Bin := {x: Bin_u | Bin_wf x ∧ True}.
 
 Definition B0_lem (n : Bin): Bin_wf (B0_u ⌊ n ⌋) ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition B0 (n : Bin): Bin :=
@@ -144,7 +144,7 @@ Definition B0 (n : Bin): Bin :=
 
 Definition B1_lem (n : Bin): Bin_wf (B1_u ⌊ n ⌋) ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition B1 (n : Bin): Bin :=
@@ -152,7 +152,7 @@ Definition B1 (n : Bin): Bin :=
 
 Definition Z_lem : Bin_wf Z_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Z : Bin :=
@@ -184,15 +184,15 @@ Defined.
 
 #[global] Hint Unfold Z: ref_constr_db.
 
-Definition rbinToBin_spec (ds_d4Fc : RBin): Type :=
+Definition rbinToBin_spec (ds_d4Ff : RBin): Type :=
   Bin.
 
 #[global] Hint Unfold rbinToBin_spec: lia_unfold.
 
-Definition rbinToBin (ds_d4Fc : RBin): rbinToBin_spec ds_d4Fc.
+Definition rbinToBin (ds_d4Ff : RBin): rbinToBin_spec ds_d4Ff.
 Proof.
-  destruct ds_d4Fc as [ds_d4Fc ds_d4Fc_p].
-  induction ds_d4Fc as [n IH_n| n IH_n|].
+  destruct ds_d4Ff as [ds_d4Ff ds_d4Ff_p].
+  induction ds_d4Ff as [n IH_n| n IH_n|].
   - refine (B0 (IH_n ltac:(try clear IH_n; solver))).
   - refine (B1 (IH_n ltac:(try clear IH_n; solver))).
   - refine Z.

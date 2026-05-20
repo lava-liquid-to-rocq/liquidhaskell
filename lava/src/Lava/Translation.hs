@@ -215,8 +215,9 @@ hypsRV eq rv graphRel = \p -> foldr hyp p rv
         (hdT, tpz) = case hd of
           -- f -> f_rel for global functions (includes operators in `operatorsWithGraph`)
           LH.Var f (Just tp) Global -> (Coq.Def $ relDefName f, tp)
-          -- f -> getUPackRelName f for local HO variables
-          LH.Var f (Just tp) Local -> (upackGetRel $ Coq.Def f, tp)
+          -- f -> getPackRelName f for local HO variables
+          -- TODO: verify that this is what we have in the paper
+          LH.Var f (Just tp) Local -> (packGetRel $ Coq.Def f, tp)
           -- TODO: this is not correct, but is a placeholder that does not
           -- prevent translation since this only appears in places that are not
           -- printed in Rocq (inside casts) or inside specifications, but no
@@ -295,13 +296,9 @@ trReft _ (LH.FloatLit d) = Coq.FloatLiteral d
 trReft _ (LH.DC c) = Cr (trDC c)
 trReft eq (LH.Neg tm) = Coq.Neg RefOp $ trReft eq tm
 trReft eq (LH.Bop op tm1 tm2) = Coq.Bop (Binop (trBop op) RefOp) (trReft eq tm1) (trReft eq tm2)
--- trReft _ qmark@(LH.QMark {}) | traceFunc "trReft" [text $ show qmark] = undefined
-trReft eq (LH.QMark tm hint prop) =
-  Coq.Let "_" (Just . Prop $ utrReftProp eq prop) (Coq.mkProj Sig2 $ trReft eq hint) (trReft eq tm)
--- trReft _ pop@(LH.Pop {}) | traceFunc "trReft" [text $ show pop] = undefined
-trReft eq (LH.Pop pop tm1 tm2) =
-  let popProp = Just . Prop $ Coq.Bop (Binop (trBop $ popToBop pop) PropOp) (Coq.mkProj GenProj $ trReft eq tm1) (Coq.mkProj GenProj $ trReft eq tm2)
-   in Coq.Let "_" popProp (PrfTerm Hole $ if eq then ProofHole else ByTac Oracle) (trReft eq tm2)
+trReft eq r@(LH.QMark {}; LH.Pop {}) =
+  let (r', proofs) = parseProofTerm r
+   in trProofCombinators eq proofs (trReft eq r')
 trReft eq (LH.Sub tm from to) = Coq.SubCast (trRefType eq to) (trRefType eq from) (trReft eq tm) (if eq then ProofHole else ByTac Oracle)
 trReft eq (LH.Inj tm tp) = mkExist eq (trRefType eq tp) (trReft eq tm)
 trReft _ tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
@@ -431,3 +428,44 @@ mkMatching eq trans tm alts genVars =
         -- Whether y is used as an inductive variable, by checking the
         -- information contained in the localization of the recursive variables
         isIndVar y = any (\case (_, Recursive y' _) -> y == y'; _ -> False) (freeVarsAnnot e)
+
+-- *** Translation of proof combinators
+
+-- | A proof term of Liquid Haskell:
+--   either a hint with the proposition it proves or an (in)equation
+data Proof = Hint Reft Reft | Eqn ProofOp Reft Reft [Proof]
+
+-- | Translate a hint or (in)equation into a let-binding with a hole
+trProofCombinators :: Bool -> [Proof] -> CoqTerm -> CoqTerm
+trProofCombinators eq proofs tm = foldr ($) tm (map trProofCombinator proofs)
+  where
+    trProofCombinator :: Proof -> CoqTerm -> CoqTerm
+    trProofCombinator (Hint rh rp) =
+      Coq.Let "_" (Just . Prop $ utrReftProp eq rp) (Coq.mkProj Sig2 $ trReft eq rh)
+    trProofCombinator (Eqn pop r1 r2 proofs') =
+      let trans = Coq.mkProj GenProj . trReft eq
+          popT = Binop (trBop $ popToBop pop) PropOp
+          popProp = Just . Prop $ Coq.Bop popT (trans r1) (trans r2)
+          hole = PrfTerm Hole $ if eq then ProofHole else ByTac Oracle
+       in Coq.Let "_" popProp (trProofCombinators eq proofs' hole)
+
+-- | Given a term r ? h1 ? … ? hn where the hi's can be either hints or (in)equations
+--   and r is minimal, return (r, [h1, …, hn])
+qmarks :: Reft -> (Reft, [Proof])
+qmarks (QMark r rh@(Pop {}) _) =
+  let (_, eqns) = parseProofTerm rh
+   in second (++ eqns) $ qmarks r
+qmarks (QMark r rh rp) = second (++ [Hint rh rp]) $ qmarks r
+qmarks r = (r, [])
+
+-- | Retrieve the top-level hints and (in)equations from a term
+parseProofTerm :: Reft -> (Reft, [Proof])
+parseProofTerm (Pop pop r1 r2) =
+  let (r1', hints1) = qmarks r1
+      (r1'', proofs) = parseProofTerm r1'
+      (r2', proofs2) = qmarks r2
+   in (r2', proofs ++ [Eqn pop r1'' r2' hints1] ++ proofs2)
+parseProofTerm r@(QMark {}) =
+  let (r', hints) = qmarks r
+   in second (++ hints) $ parseProofTerm r'
+parseProofTerm r = (r, [])
