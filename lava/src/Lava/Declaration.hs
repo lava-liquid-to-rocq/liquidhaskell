@@ -77,8 +77,9 @@ unrefTCDecl tc alts =
 -- | Declarations related to the equality on unrefined constructors
 tcEqDecls :: Id -> [(Id, RefType)] -> [Coq.Decl]
 -- tcEqDecls tc _ | traceTC "tcEqDecls" tc = undefined
-tcEqDecls tc alts | any isHOConstr alts = [] where 
-  isHOConstr _ = False -- TODO: Implement this
+tcEqDecls _ alts | any isHOConstr alts = []
+  where
+    isHOConstr _ = False -- TODO: Implement this
 tcEqDecls tc alts = eqDecl tc alts : eqReflLem tc ++ eqbEqLem tc ++ [eqbInstanceDecl tc]
 
 -- | Fixpoint definition of equality of two inductives
@@ -233,7 +234,7 @@ mkPseudoConstr eq tc (c, tp) =
     argsT = map ((,False) . second (trRefType eq)) args
     retT = trRefType eq (mkRefType ret)
     -- C proj(x1) … proj(xn) (in LH), that translates to C_u proj1_sig(x1) … proj1_sig(x_n)
-    unrefCrApp = foldl LH.App (DC c) (map LH.mkProj $ tpArgsArLoc tp)
+    unrefCrApp = foldl LH.App (DC c) (map (LH.mkProj Sig1) $ tpArgsArLoc tp)
     bodyLem = ProofBody [Custom "repeat first [split | solver]"]
     -- The translated refinement of the return type of C, where x is replaced by Cu proj1_sig(args)
     -- NOTE: instead of inlining the translation of the refinement of an
@@ -618,9 +619,10 @@ pathConstrName f pats additional =
 relFunctionhoodLemma :: FuncData -> [Coq.Decl]
 -- relFunctionhoodLemma f | traceF "relFunctionhoodLemma" f = undefined
 relFunctionhoodLemma f =
-  [functionhoodLemma, 
+  [ functionhoodLemma,
     AddHint ResolveHint (funcHoodLemName $ name f) GraphRelDB,
-    Coq.Instance (name f ++ "_lookup_funct") ["dictionary", "functionhood", name f] [("lookup'", Coq.Def (funcHoodLemName $ name f))]]
+    Coq.Instance (name f ++ "_lookup_funct") ["dictionary", "functionhood", name f] [("lookup'", Coq.Def (funcHoodLemName $ name f))]
+  ]
   where
     functionhoodLemma =
       Coq.Definition
@@ -874,4 +876,4 @@ mkIndSkel _ (Reft r) specIhs =
     findRecCalls (Pop _ r1 r2) = findRecCalls r1 `union` findRecCalls r2
     findRecCalls (Sub r' _ _) = findRecCalls r'
     findRecCalls (Inj r' _) = findRecCalls r'
-    findRecCalls (LH.Proj r') = findRecCalls r'
+    findRecCalls (LH.Proj _ r') = findRecCalls r'

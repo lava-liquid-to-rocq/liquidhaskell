@@ -108,7 +108,7 @@ utrReft eq r0 = case r0 of
   LH.Pop _ _ r -> utrReft eq r
   LH.Sub r _ _ -> utrReft eq r
   LH.Inj r _ -> utrReft eq r
-  LH.Proj r -> Coq.mkProj GenProj $ trReft eq r
+  LH.Proj k r -> Coq.mkProj k $ trReft eq r
 
 -- | Translation of refinements to propositions
 --   Function RtoP (def 3.4) of the paper
@@ -166,7 +166,7 @@ extractApps r0 = go [] r0
         -- but must use either the IH or the function itself
         -- (DC _; LH.Var _ _ (Recursive {})) -> extractInAppArgs
         DC _ -> extractInAppArgs
-        (LH.Var {}; LH.Proj (LH.Var {})) -> extractApp
+        (LH.Var {}; LH.Proj _ (LH.Var {})) -> extractApp
         _ -> error . render $ text "LH application" <+> pPrint r <+> text "not starting with an identifier."
         where
           (hd, args) = apps r
@@ -224,7 +224,7 @@ hypsRV eq rv graphRel = \p -> foldr hyp p rv
           -- specifications uses the name of the function being defined
           LH.Var f (Just tp) (Recursive {}) -> (Coq.Def $ relDefName f, tp)
           -- proj f -> getPackRelName f for local HO variables
-          LH.Proj (LH.Var f (Just tp) _) -> (packGetRel (Coq.Def f), tp)
+          LH.Proj _ (LH.Var f (Just tp) _) -> (packGetRel (Coq.Def f), tp)
           _ -> error . render $ text "Unexpected extract term" <+> pPrint app <+> text "in Translation.hypsRV."
 
 -- * Refined translations
@@ -301,7 +301,7 @@ trReft eq r@(LH.QMark {}; LH.Pop {}) =
    in trProofCombinators eq proofs (trReft eq r')
 trReft eq (LH.Sub tm from to) = Coq.SubCast (trRefType eq to) (trRefType eq from) (trReft eq tm) (if eq then ProofHole else ByTac Oracle)
 trReft eq (LH.Inj tm tp) = mkExist eq (trRefType eq tp) (trReft eq tm)
-trReft _ tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
+trReft _ tm@(LH.Proj {}) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
 -- TODO: we do not use packs for theorems, maybe we need to change that
 trReft eq tm@(LH.App {}) = case apps tm of
   -- recursive call
