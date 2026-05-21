@@ -680,8 +680,35 @@ Ltac axiomatize_terms := tryif (repeat_or_fail axiomatize_next_term) then idtac 
 
 Ltac result_var_unification v w h1 h2 :=
   first [
-    unshelve eauto with f_rel_funct_db
+    now unshelve eauto with f_rel_funct_db
   | now (refine (_ v w h1 h2); unshelve eauto with f_rel_funct_db)
+  | 
+    let rel := fresh "rel" in
+    match type of h1 with
+    | ?relApp => 
+      let fAppD := fresh "fAppD" in
+      destrApp relApp fAppD;
+      let fAppRefl := fresh "fAppRefl" in
+      assRefl fAppD as fAppRefl;
+      match type of fAppRefl with
+      | ((?rel _::_ _nil) _::_ ?ts) = _ => clear fAppRefl; is_rel rel;
+        let functLem := fresh "functLem" in
+        lookupFunctLem rel functLem;
+        try unfold lookup in functLem; 
+        simpl in functLem;
+        let functRefl := fresh "functRefl" in
+        assRefl functLem as functRefl;
+        match type of functRefl with
+        | ?funct = _ => clear functRefl; idtac funct; 
+          let functTp := type of funct in
+          idtac ": " functTp ts;
+          let functApp := fresh "functApp" in
+          mkAppl funct ts functApp;
+          specialize (functApp w h1 h2);
+          apply functApp
+        end
+      end
+    end
   ].
 
 (* "unify" context variables axiomatized to correspond to the same unrefined values via graph relations,

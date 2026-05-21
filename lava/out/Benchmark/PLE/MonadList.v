@@ -76,16 +76,16 @@ Defined.
 
 #[global] Hint Unfold Emp: ref_constr_db.
 
-Definition append_spec (ds_d3Ir ys : L): Type :=
+Definition append_spec (ds_d3Io ys : L): Type :=
   L.
 
 #[global] Hint Unfold append_spec: lia_unfold.
 
-Definition append (ds_d3Ir ys : L): append_spec ds_d3Ir ys.
+Definition append (ds_d3Io ys : L): append_spec ds_d3Io ys.
 Proof.
-  destruct ds_d3Ir as [ds_d3Ir ds_d3Ir_p].
+  destruct ds_d3Io as [ds_d3Io ds_d3Io_p].
   destruct ys as [ys ys_p].
-  try revert ys_p; generalize dependent ys; induction ds_d3Ir as [x xs IH_xs|]; intros.
+  try revert ys_p; generalize dependent ys; induction ds_d3Io as [x xs IH_xs|]; intros.
   - refine (C (# x) (IH_xs ltac:(try clear IH_xs; solver) ys ltac:(try clear IH_xs; solver))).
   - refine (exist (λ (ys : L_u), L_wf ys ∧ True) ys ltac:(solver)).
 Defined.
@@ -101,14 +101,17 @@ Inductive append_rel: L_u → L_u → L_u → Prop :=
 
 #[global] Instance append_getF: getFunc append_rel := { getF' := append }.
 
-Theorem append_rel_funct [ds_d3Ir ys : L_u]:
-  ∀ (VV VV' : L_u), append_rel ds_d3Ir ys VV → (append_rel ds_d3Ir ys VV' → VV = VV').
+Theorem append_rel_funct [ds_d3Io ys : L_u]:
+  ∀ (VV VV' : L_u), append_rel ds_d3Io ys VV → (append_rel ds_d3Io ys VV' → VV = VV').
 Proof.
-  try revert ys_p; generalize dependent ys; induction ds_d3Ir as [x xs IH_xs|]; intros;
+  try revert ys_p; generalize dependent ys; induction ds_d3Io as [x xs IH_xs|]; intros;
   rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve append_rel_funct: f_rel_funct_db.
+
+#[global] Instance append_lookup_funct: dictionary functionhood append := {
+    lookup' := append_rel_funct }.
 
 Theorem append_C_x_lem x xs ys append_C_x_lem_res:
   append_rel (C_u x xs) ys append_C_x_lem_res
@@ -128,12 +131,12 @@ Qed.
 #[global] Hint Rewrite append_Emp_x_lem: f_rel_back.
 
 Theorem append_rel_ex
-  (ds_d3Ir : L_u) (ds_d3Ir_p : L_wf ds_d3Ir ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
-  append_rel ds_d3Ir ys ⌊ append (exist _ ds_d3Ir ds_d3Ir_p) (exist _ ys ys_p) -⌋.
+  (ds_d3Io : L_u) (ds_d3Io_p : L_wf ds_d3Io ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
+  append_rel ds_d3Io ys ⌊ append (exist _ ds_d3Io ds_d3Io_p) (exist _ ys ys_p) -⌋.
 Proof.
   Opaque append.
   existence_lemma_pre append;
-  try revert ys_p; generalize dependent ys; induction ds_d3Ir as [x xs IH_xs|]; intros;
+  try revert ys_p; generalize dependent ys; induction ds_d3Io as [x xs IH_xs|]; intros;
   [fix_notations;
    pose proof (IH_xs ltac:(try clear IH_xs; solver) ys ltac:(try clear IH_xs; solver)) as IH_47088561;
    try clear IH_xs |
@@ -148,8 +151,8 @@ Qed.
 #[global] Opaque append.
 
 Theorem append__append_rel_rw
-  (ds_d3Ir : L_u) (ds_d3Ir_p : L_wf ds_d3Ir ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True) (VV : L_u):
-  ⌊ append (exist _ ds_d3Ir ds_d3Ir_p) (exist _ ys ys_p) -⌋ = VV ↔ append_rel ds_d3Ir ys VV.
+  (ds_d3Io : L_u) (ds_d3Io_p : L_wf ds_d3Io ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True) (VV : L_u):
+  ⌊ append (exist _ ds_d3Io ds_d3Io_p) (exist _ ys ys_p) -⌋ = VV ↔ append_rel ds_d3Io ys VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -161,32 +164,32 @@ Qed.
 #[global] Instance append_lookup_rw: dictionary rwLem append := {
     lookup' := append__append_rel_rw }.
 
-Theorem append__append_rel (ds_d3Ir ys : L) (VV : L_u):
-  ⌊ append ds_d3Ir ys -⌋ = VV ↔ append_rel ⌊ ds_d3Ir ⌋ ⌊ ys ⌋ VV.
+Theorem append__append_rel (ds_d3Io ys : L) (VV : L_u):
+  ⌊ append ds_d3Io ys -⌋ = VV ↔ append_rel ⌊ ds_d3Io ⌋ ⌊ ys ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite append__append_rel: f_rel_funct_db.
 
-Theorem append__append_rel' (ds_d3Ir_u ys_u : L_u) (ds_d3Ir ys : L) (VV : L_u):
-  ds_d3Ir_u = ⌊ ds_d3Ir ⌋
-  → (ys_u = ⌊ ys ⌋ → ⌊ append ds_d3Ir ys -⌋ = VV ↔ append_rel ds_d3Ir_u ys_u VV).
+Theorem append__append_rel' (ds_d3Io_u ys_u : L_u) (ds_d3Io ys : L) (VV : L_u):
+  ds_d3Io_u = ⌊ ds_d3Io ⌋
+  → (ys_u = ⌊ ys ⌋ → ⌊ append ds_d3Io ys -⌋ = VV ↔ append_rel ds_d3Io_u ys_u VV).
 Proof.
-  intros -> ->. refine (append__append_rel ds_d3Ir ys VV).
+  intros -> ->. refine (append__append_rel ds_d3Io ys VV).
 Qed.
 
 #[global] Hint Resolve append__append_rel': f_rel_funct_db.
 
 Theorem append_rel_mk
-  (ds_d3Ir : L_u) (ds_d3Ir_p : L_wf ds_d3Ir ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
-  {VV: _ | append_rel ds_d3Ir ys VV}.
+  (ds_d3Io : L_u) (ds_d3Io_p : L_wf ds_d3Io ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
+  {VV: _ | append_rel ds_d3Io ys VV}.
 Proof.
   intros;
   refine (subsumptionCast
           _
-          (λ VV, append_rel ds_d3Ir ys VV)
-          (append (exist _ ds_d3Ir ds_d3Ir_p) (exist _ ys ys_p))
+          (λ VV, append_rel ds_d3Io ys VV)
+          (append (exist _ ds_d3Io ds_d3Io_p) (exist _ ys ys_p))
           _);
   rewrite <- append__append_rel';
   quicksolve.
@@ -196,12 +199,12 @@ Qed.
 
 #[global] Instance append_pack:
   @Pack
-  (L ::RT λ (ds_d3Ir : L), L ::RT λ (ys : L), nilRT)
+  (L ::RT λ (ds_d3Io : L), L ::RT λ (ys : L), nilRT)
   (L_u ::UT (L_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d3Ir : L), L ::RT λ (ys : L), nilRT) ((L_u ::UT (L_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d3Io : L), L ::RT λ (ys : L), nilRT) ((L_u ::UT (L_u ::UT nilUT))))
   L_u
-  (λ (x_66014485 : ArgList (L ::RT λ (ds_d3Ir : L), L ::RT λ (ys : L), nilRT)) (v_x_66014485 : L_u),
-   ltac:(flattenP (λ (ds_d3Ir ys : L) (VV : L_u), L_wf VV ∧ True) x_66014485 v_x_66014485)).
+  (λ (x_84885443 : ArgList (L ::RT λ (ds_d3Io : L), L ::RT λ (ys : L), nilRT)) (v_x_84885443 : L_u),
+   ltac:(flattenP (λ (ds_d3Io ys : L) (VV : L_u), L_wf VV ∧ True) x_84885443 v_x_84885443)).
 Proof.
   buildPackG append append_rel append__append_rel append_rel_funct.
 Defined.
@@ -212,7 +215,7 @@ Proof.
 Defined.
 
 Definition bind_spec
-  (ds_d3Iu : L)
+  (ds_d3Ir : L)
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
@@ -227,7 +230,7 @@ Definition bind_spec
 #[global] Hint Unfold bind_spec: lia_unfold.
 
 Definition bind
-  (ds_d3Iu : L)
+  (ds_d3Ir : L)
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
@@ -236,10 +239,10 @@ Definition bind
        (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
           (v_x_10329927 : L_u),
         ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : L_u), L_wf VV ∧ True) x_10329927 v_x_10329927))):
-  bind_spec ds_d3Iu f.
+  bind_spec ds_d3Ir f.
 Proof.
-  destruct ds_d3Iu as [ds_d3Iu ds_d3Iu_p].
-  try revert f_p; generalize dependent f; induction ds_d3Iu as [x xs IH_xs|]; intros.
+  destruct ds_d3Ir as [ds_d3Ir ds_d3Ir_p].
+  try revert f_p; generalize dependent f; induction ds_d3Ir as [x xs IH_xs|]; intros.
   - refine (append (getPackF f (# x)) (IH_xs ltac:(try clear IH_xs; solver) f)).
   - refine Emp.
 Defined.
@@ -258,14 +261,17 @@ Inductive bind_rel: L_u → @uPack (Z ::UT nilUT) L_u → L_u → Prop :=
 
 #[global] Instance bind_getF: getFunc bind_rel := { getF' := bind }.
 
-Theorem bind_rel_funct [ds_d3Iu : L_u] [f : @uPack (Z ::UT nilUT) L_u]:
-  ∀ (VV VV' : L_u), bind_rel ds_d3Iu f VV → (bind_rel ds_d3Iu f VV' → VV = VV').
+Theorem bind_rel_funct [ds_d3Ir : L_u] [f : @uPack (Z ::UT nilUT) L_u]:
+  ∀ (VV VV' : L_u), bind_rel ds_d3Ir f VV → (bind_rel ds_d3Ir f VV' → VV = VV').
 Proof.
-  try revert f_p; generalize dependent f; induction ds_d3Iu as [x xs IH_xs|]; intros;
+  try revert f_p; generalize dependent f; induction ds_d3Ir as [x xs IH_xs|]; intros;
   rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve bind_rel_funct: f_rel_funct_db.
+
+#[global] Instance bind_lookup_funct: dictionary functionhood bind := {
+    lookup' := bind_rel_funct }.
 
 Theorem bind_C_x_lem f x xs bind_C_x_lem_res:
   bind_rel (C_u x xs) f bind_C_x_lem_res
@@ -289,8 +295,8 @@ Qed.
 #[global] Hint Rewrite bind_Emp_x_lem: f_rel_back.
 
 Theorem bind_rel_ex
-  (ds_d3Iu : L_u)
-  (ds_d3Iu_p : L_wf ds_d3Iu ∧ True)
+  (ds_d3Ir : L_u)
+  (ds_d3Ir_p : L_wf ds_d3Ir ∧ True)
   (f : @Pack
        ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
        (Z ::UT nilUT)
@@ -299,11 +305,11 @@ Theorem bind_rel_ex
        (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
           (v_x_82647028 : L_u),
         ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : L_u), L_wf VV ∧ True) x_82647028 v_x_82647028))):
-  bind_rel ds_d3Iu ⌊ f ⌋ ⌊ bind (exist _ ds_d3Iu ds_d3Iu_p) f -⌋.
+  bind_rel ds_d3Ir ⌊ f ⌋ ⌊ bind (exist _ ds_d3Ir ds_d3Ir_p) f -⌋.
 Proof.
   Opaque bind.
   existence_lemma_pre bind;
-  try revert f_p; generalize dependent f; induction ds_d3Iu as [x xs IH_xs|]; intros;
+  try revert f_p; generalize dependent f; induction ds_d3Ir as [x xs IH_xs|]; intros;
   [fix_notations;
    pose proof (IH_xs ltac:(try clear IH_xs; solver) f) as IH_29745491;
    try clear IH_xs |
@@ -318,8 +324,8 @@ Qed.
 #[global] Opaque bind.
 
 Theorem bind__bind_rel_rw
-  (ds_d3Iu : L_u)
-  (ds_d3Iu_p : L_wf ds_d3Iu ∧ True)
+  (ds_d3Ir : L_u)
+  (ds_d3Ir_p : L_wf ds_d3Ir ∧ True)
   (f : @Pack
        ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
        (Z ::UT nilUT)
@@ -329,7 +335,7 @@ Theorem bind__bind_rel_rw
           (v_x_82647028 : L_u),
         ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : L_u), L_wf VV ∧ True) x_82647028 v_x_82647028)))
   (VV : L_u):
-  ⌊ bind (exist _ ds_d3Iu ds_d3Iu_p) f -⌋ = VV ↔ bind_rel ds_d3Iu ⌊ f ⌋ VV.
+  ⌊ bind (exist _ ds_d3Ir ds_d3Ir_p) f -⌋ = VV ↔ bind_rel ds_d3Ir ⌊ f ⌋ VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -341,7 +347,7 @@ Qed.
 #[global] Instance bind_lookup_rw: dictionary rwLem bind := { lookup' := bind__bind_rel_rw }.
 
 Theorem bind__bind_rel
-  (ds_d3Iu : L)
+  (ds_d3Ir : L)
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
@@ -351,7 +357,7 @@ Theorem bind__bind_rel
           (v_x_10329927 : L_u),
         ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : L_u), L_wf VV ∧ True) x_10329927 v_x_10329927)))
   (VV : L_u):
-  ⌊ bind ds_d3Iu f -⌋ = VV ↔ bind_rel ⌊ ds_d3Iu ⌋ ⌊ f ⌋ VV.
+  ⌊ bind ds_d3Ir f -⌋ = VV ↔ bind_rel ⌊ ds_d3Ir ⌋ ⌊ f ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -359,9 +365,9 @@ Qed.
 #[global] Hint Rewrite bind__bind_rel: f_rel_funct_db.
 
 Theorem bind__bind_rel'
-  (ds_d3Iu_u : L_u)
+  (ds_d3Ir_u : L_u)
   (f_u : @uPack (Z ::UT nilUT) L_u)
-  (ds_d3Iu : L)
+  (ds_d3Ir : L)
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
@@ -371,16 +377,16 @@ Theorem bind__bind_rel'
           (v_x_10329927 : L_u),
         ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : L_u), L_wf VV ∧ True) x_10329927 v_x_10329927)))
   (VV : L_u):
-  ds_d3Iu_u = ⌊ ds_d3Iu ⌋ → (f_u = ⌊ f ⌋ → ⌊ bind ds_d3Iu f -⌋ = VV ↔ bind_rel ds_d3Iu_u f_u VV).
+  ds_d3Ir_u = ⌊ ds_d3Ir ⌋ → (f_u = ⌊ f ⌋ → ⌊ bind ds_d3Ir f -⌋ = VV ↔ bind_rel ds_d3Ir_u f_u VV).
 Proof.
-  intros -> ->. refine (bind__bind_rel ds_d3Iu f VV).
+  intros -> ->. refine (bind__bind_rel ds_d3Ir f VV).
 Qed.
 
 #[global] Hint Resolve bind__bind_rel': f_rel_funct_db.
 
 Theorem bind_rel_mk
-  (ds_d3Iu : L_u)
-  (ds_d3Iu_p : L_wf ds_d3Iu ∧ True)
+  (ds_d3Ir : L_u)
+  (ds_d3Ir_p : L_wf ds_d3Ir ∧ True)
   (f : @Pack
        ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
        (Z ::UT nilUT)
@@ -389,13 +395,13 @@ Theorem bind_rel_mk
        (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
           (v_x_82647028 : L_u),
         ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : L_u), L_wf VV ∧ True) x_82647028 v_x_82647028))):
-  {VV: _ | bind_rel ds_d3Iu (packProj f) VV}.
+  {VV: _ | bind_rel ds_d3Ir (packProj f) VV}.
 Proof.
   intros;
   refine (subsumptionCast
           _
-          (λ VV, bind_rel ds_d3Iu (packProj f) VV)
-          (bind (exist _ ds_d3Iu ds_d3Iu_p) f)
+          (λ VV, bind_rel ds_d3Ir (packProj f) VV)
+          (bind (exist _ ds_d3Ir ds_d3Ir_p) f)
           _);
   rewrite <- bind__bind_rel';
   quicksolve.
@@ -403,15 +409,15 @@ Qed.
 
 #[global] Hint Resolve bind_rel_mk: f_rel_funct_db.
 
-Definition prop_append_neutral_spec (ds_d3Ip : L): Type :=
-  {{∃ (append_res : L_u), append_rel ⌊ ds_d3Ip ⌋ Emp_u append_res ∧ append_res == ⌊ ds_d3Ip ⌋}}.
+Definition prop_append_neutral_spec (ds_d3Im : L): Type :=
+  {{∃ (append_res : L_u), append_rel ⌊ ds_d3Im ⌋ Emp_u append_res ∧ append_res == ⌊ ds_d3Im ⌋}}.
 
 #[global] Hint Unfold prop_append_neutral_spec: lia_unfold.
 
-Theorem prop_append_neutral (ds_d3Ip : L): prop_append_neutral_spec ds_d3Ip.
+Theorem prop_append_neutral (ds_d3Im : L): prop_append_neutral_spec ds_d3Im.
 Proof.
-  destruct ds_d3Ip as [ds_d3Ip ds_d3Ip_p].
-  induction ds_d3Ip as [x xs IH_xs|].
+  destruct ds_d3Im as [ds_d3Im ds_d3Im_p].
+  induction ds_d3Im as [x xs IH_xs|].
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
@@ -450,6 +456,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve retrn_rel_funct: f_rel_funct_db.
+
+#[global] Instance retrn_lookup_funct: dictionary functionhood retrn := {
+    lookup' := retrn_rel_funct }.
 
 Theorem retrn_inv_lem x retrn_inv_lem_res:
   retrn_rel x retrn_inv_lem_res ↔ retrn_inv_lem_res == C_u x Emp_u.
@@ -568,15 +577,15 @@ Proof.
           ltac:(solver)).
 Qed.
 
-Definition right_identity_spec (ds_d3Iq : L): Type :=
-  {{∃ (bind_res : L_u), bind_rel ⌊ ds_d3Iq ⌋ retrn_upack bind_res ∧ bind_res == ⌊ ds_d3Iq ⌋}}.
+Definition right_identity_spec (ds_d3In : L): Type :=
+  {{∃ (bind_res : L_u), bind_rel ⌊ ds_d3In ⌋ retrn_upack bind_res ∧ bind_res == ⌊ ds_d3In ⌋}}.
 
 #[global] Hint Unfold right_identity_spec: lia_unfold.
 
-Theorem right_identity (ds_d3Iq : L): right_identity_spec ds_d3Iq.
+Theorem right_identity (ds_d3In : L): right_identity_spec ds_d3In.
 Proof.
-  destruct ds_d3Iq as [ds_d3Iq ds_d3Iq_p].
-  induction ds_d3Iq as [x xs IH_xs|].
+  destruct ds_d3In as [ds_d3In ds_d3In_p].
+  induction ds_d3In as [x xs IH_xs|].
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit), ∃ (bind_res : L_u), bind_rel (C_u x xs) retrn_upack bind_res ∧ bind_res == C_u x xs)

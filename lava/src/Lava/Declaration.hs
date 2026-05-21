@@ -611,10 +611,13 @@ pathConstrName f pats additional =
 --
 -- > Definition f_rel_funct [args] (v v': Z) : f_rel [args] v -> f_rel [args] v' -> v = v'.
 -- > #[global] Hint Resolve f_rel_funct : f_rel_funct_db.
+-- > #[global] Instance f_lookup_funct : dictionary functionhood f := { lookup' := f_rel_funct }.
 relFunctionhoodLemma :: FuncData -> [Coq.Decl]
 -- relFunctionhoodLemma f | traceF "relFunctionhoodLemma" f = undefined
 relFunctionhoodLemma f =
-  [functionhoodLemma, AddHint ResolveHint (funcHoodLemName $ name f) GraphRelDB]
+  [functionhoodLemma, 
+    AddHint ResolveHint (funcHoodLemName $ name f) GraphRelDB,
+    Coq.Instance (name f ++ "_lookup_funct") ["dictionary", "functionhood", name f] [("lookup'", Coq.Def (funcHoodLemName $ name f))]]
   where
     functionhoodLemma =
       Coq.Definition
