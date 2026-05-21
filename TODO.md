@@ -4,6 +4,7 @@
 - [ ] ensure projections of full function applications in Rocq output use projection for subset types
 - [ ] add required substitutions in translations following destructs, intros with [x xp] intro patterns and inductions
 - [ ] test automation tactics on fixed translation output
+# TODO for extension with higher-order datatypes
 - [ ] add support for nested packs in functions and data types, modulo boolean equality instances (and anything that depends on those missing instances)
 - [ ] utilize Leibnitz equality whereever possible instead of boolean equality to minimize these limitations
 - [ ] add lookup instances for functionhood lemmas (in the presence of higher-order arguments eauto sometimes fails to infer implicit arguments and we 
