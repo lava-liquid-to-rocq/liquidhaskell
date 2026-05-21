@@ -6,6 +6,7 @@
 - [ ] test automation tactics on fixed translation output
 - [ ] add support for nested packs in functions and data types, modulo boolean equality instances (and anything that depends on those missing instances)
 - [ ] utilize Leibnitz equality whereever possible instead of boolean equality to minimize these limitations
+- [ ] add lookup instances for functionhood lemmas (in the presence of higher-order arguments eauto sometimes fails to infer implicit arguments and we 
 
 ## ISSUE: why does bounds stuff take so long?
 
