@@ -3,6 +3,7 @@
 - [ ] fix translation of proof combinators
 - [ ] ensure projections of full function applications in Rocq output use projection for subset types
 - [ ] add required substitutions in translations following destructs, intros with [x xp] intro patterns and inductions
+- [ ] fix `getPackRel` being used on upacks instead of the correct `getUPackRel`
 - [ ] test automation tactics on fixed translation output
 # TODO for extension with higher-order datatypes
 - [ ] add support for nested packs in functions and data types, modulo boolean equality instances (and anything that depends on those missing instances)
