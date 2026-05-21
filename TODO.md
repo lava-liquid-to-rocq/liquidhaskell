@@ -1,5 +1,5 @@
 # TODO
-- [ ] fix implementation and move minimize dependencies in liquidhaskell
+- [ ] merge implementation and minimize dependencies in liquidhaskell
 - [ ] fix translation of proof combinators
 - [ ] ensure projections of full function applications in Rocq output use projection for subset types
 - [ ] add required substitutions in translations following destructs, intros with [x xp] intro patterns and inductions
