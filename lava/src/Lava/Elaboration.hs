@@ -34,7 +34,11 @@ litType tp l = RefType "VV" (Builtin tp) (Bop Eq (Var "VV" Nothing Local) l)
 
 -- | Type of negation, with singleton return type
 negType :: RefType
-negType = ArrType "x" (RefType "x" boolTp ttTm) (RefType "VV" boolTp (Bop Eq (Var "VV" Nothing Local) (Neg . Proj $ Var "x" Nothing Local)))
+negType =
+  ArrType
+    "x"
+    (RefType "x" boolTp ttTm)
+    (RefType "VV" boolTp (Bop Eq (Var "VV" Nothing Local) (Neg . Proj Sig1 $ Var "x" Nothing Local)))
 
 -- | Types of binary operators, with singleton return type
 bopTypes :: [(Bop, RefType)]
@@ -66,7 +70,7 @@ mkBopType :: Bop -> BaseType -> BaseType -> Reft -> BaseType -> RefType
 mkBopType bop a1 a2 r2 a3 =
   ArrType "x_1" (RefType "x_1" a1 ttTm) $
     ArrType "x_2" (RefType "x_2" a2 r2) $
-      RefType "VV" a3 (Bop Eq (Var "VV" Nothing Local) (Bop bop (Proj $ Var "x_1" Nothing Local) (Proj $ Var "x_2" Nothing Local)))
+      RefType "VV" a3 (Bop Eq (Var "VV" Nothing Local) (Bop bop (Proj Sig1 $ Var "x_1" Nothing Local) (Proj Sig1 $ Var "x_2" Nothing Local)))
 
 -- * Simple types, used for typing type refinements
 
@@ -137,7 +141,7 @@ smpTpCheck γ r@(Bop bop r1 r2) = do
   if tp1' == tp1 && tp2' == tp2
     then return (tp, Bop bop r1' r2')
     else Left . SmpTpErr $ "Wrong types for the arguments of the operator" <+> pPrint r
-smpTpCheck γ (Proj r) = second Proj <$> smpTpCheck γ r
+smpTpCheck γ (Proj k r) = second (Proj k) <$> smpTpCheck γ r
 smpTpCheck _ r@(Sub {}; Inj {}; QMark {}; Pop {}) =
   error . render $ "Unexpected term" <+> pPrint r <+> "found in type refinement"
 
@@ -168,7 +172,8 @@ wfRefType γ (ArrType x tpx tp) = do
   tpx' <- wfRefType γ tpx
   let γ' = insertLocalVar (x, tpx') γ
   tp' <- wfRefType γ' tp
-  return $ ArrType x tpx' (subst (Proj (mkVarWithAnnot x tpx' Local)) x tp')
+  let projkind = case tpx of ArrType {} -> GenProj; RefType {} -> Sig1
+  return $ ArrType x tpx' (subst (Proj projkind (mkVarWithAnnot x tpx' Local)) x tp')
 
 -- * Well-formedness of declarations
 
@@ -528,7 +533,7 @@ checkExpr γ state e0@(Case r branches _) tp = do
             let (r'', indVars1) = instRecReft inds r'
                 (tp'', indVars2) = instRecRefType inds tp'
              in (Inj r'' tp'', indVars1 `Set.union` indVars2)
-          Proj r' -> first Proj $ instRecReft inds r'
+          Proj k r' -> first (Proj k) $ instRecReft inds r'
 
         -- Given the potential inductive variables `inds` and a list of arguments,
         -- return Just y if y is both in `inds` and the ith argument, where i is the

@@ -37,7 +37,7 @@ instance Dependencies LH.Reft where
   dependsOn (LH.Pop _ r1 r2) name = dependsOn r1 name || dependsOn r2 name
   dependsOn (LH.Sub r _ _) name = dependsOn r name
   dependsOn (LH.Inj r _) name = dependsOn r name
-  dependsOn (LH.Proj r) name = dependsOn r name
+  dependsOn (LH.Proj _ r) name = dependsOn r name
   dependsOn _ _ = False
 
 instance Dependencies LH.RefType where

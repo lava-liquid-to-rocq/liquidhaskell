@@ -1,8 +1,7 @@
 # TODO
 
 - [ ] merge implementation and minimize dependencies in liquidhaskell
-- [ ] ensure projections of full function applications in Rocq output use projection for subset types
-- [ ] something with SoftwareFoundations.identitify_fn_applied_twice, where a subsumption might be necessary
+- [ ] something with SoftwareFoundations.identity_fn_applied_twice, where a subsumption might be necessary
 - [ ] fix `getPackRel` being used on upacks instead of the correct `getUPackRel`
 - [ ] merge inversion lemmas that can have the same result
 - [ ] test automation tactics on fixed translation output

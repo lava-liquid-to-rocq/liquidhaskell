@@ -20,6 +20,7 @@ import Data.Data
 import Data.List (isSuffixOf, stripPrefix, unsnoc)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (isNothing)
+import Lava.Calculus (ProjKind (..))
 import Lava.Names
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
@@ -230,11 +231,6 @@ data CoqTerm
   | InlineInstance [(Id, CoqTerm)]
   | TypeArg RocqType
   deriving (Data, Eq, Show)
-
--- | The different kinds of projections:
--- `proj` from the generalized projections typeclass,
--- Rocq's `proj1_sig1` and `proj2_sig`
-data ProjKind = GenProj | Sig1 | Sig2 deriving (Data, Eq, Show)
 
 data Binop = Binop BaseBop OpKind deriving (Data, Eq)
 

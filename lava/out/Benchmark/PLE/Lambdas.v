@@ -12,16 +12,16 @@ Definition fvInLambda_spec (x : {x: Z | True}): Type :=
 Definition fvInLambda (x : {x: Z | True}): fvInLambda_spec x.
 Proof.
   destruct x as [x x_p].
-  assert (f_73466906 : ∀ (y : {VV: Z | True}),
-                       {v: Z | ∃ (addZ_res : Z), addZ_rel x ⌊ y ⌋ addZ_res ∧ v == addZ_res}).
+  assert (f_14072909 : ∀ (y : {VV: Z | True}),
+                       {v: Z | ∃ (addZ_res : Z), addZ_rel x ⌊ y -⌋ addZ_res ∧ v == addZ_res}).
   { intros [y y_p];
     refine (subsumptionCast
             Z
             (λ (v : Z), ∃ (addZ_res : Z), addZ_rel x y addZ_res ∧ v == addZ_res)
             (# x +Z # y)
             ltac:(solver)). }
-  unshelve refine (let f: ltac:(buildPackG_spec f_73466906) :=
-                 ltac:(fun_to_pack f_73466906) in
+  unshelve refine (let f: ltac:(buildPackG_spec f_14072909) :=
+                 ltac:(fun_to_pack f_14072909) in
                  _).
   refine (subsumptionCast Z (λ (VV : Z), True) (getPackF f (# x)) ltac:(solver)).
 Defined.
@@ -34,10 +34,10 @@ Definition appId_spec (x : {x: Z | True}): Type :=
 Definition appId (x : {x: Z | True}): appId_spec x.
 Proof.
   destruct x as [x x_p].
-  assert (f_70768816 : ∀ (y : {VV: Z | True}), {v: Z | v == ⌊ y ⌋}).
+  assert (f_87506985 : ∀ (y : {VV: Z | True}), {v: Z | v == ⌊ y -⌋}).
   { intros [y y_p]; refine (subsumptionCast Z (λ (v : Z), v == y) (# y) ltac:(solver)). }
-  unshelve refine (let f: ltac:(buildPackG_spec f_70768816) :=
-                 ltac:(fun_to_pack f_70768816) in
+  unshelve refine (let f: ltac:(buildPackG_spec f_87506985) :=
+                 ltac:(fun_to_pack f_87506985) in
                  _).
   refine (subsumptionCast Z (λ (VV : Z), True) (getPackF f (# x)) ltac:(solver)).
 Defined.
