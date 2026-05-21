@@ -882,6 +882,10 @@ Ltac getPackRel_Aux pack_rel :=
 Global Notation getPackRel pack := ltac:(getPackRel_Aux pack.(frel)).
 Global Notation getUPackRel upack := ltac:(getPackRel_Aux upack.(rel_u)).
 
+(* Ltac getUPackF upack := 
+  match goal with
+  | [h: ?wf (?cr_u upack) ∧ _ => *)
+
 Ltac getPackRel_spec uargTps T :=
   let remUArgTps := fresh "remUArgTps" in
   pose uargTps as remUArgTps;

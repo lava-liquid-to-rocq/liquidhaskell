@@ -264,7 +264,7 @@ trRefType eq tp@(ArrType {}) =
     p = mkLam argsT (Lambda x tpx rx)
     argsNm = "x_" ++ hashName argTps
     v = "v_" ++ argsNm
-    p_ = Lambda argsNm (ArgumentList argTps) (Lambda v tpx pBody)
+    p_ = Lambda argsNm (ArgumentList (ArgListTArg argTps)) (Lambda v tpx pBody)
     pBody = PrfTerm Hole (ByTac . Custom $ unwords ["flattenP", render $ parens (pPrint p), argsNm, v])
 
 -- | Translation of refinement types at top-level (with foralls)

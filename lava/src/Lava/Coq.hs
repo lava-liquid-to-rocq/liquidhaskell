@@ -157,7 +157,7 @@ data RocqType
   | -- | unrefined Packs
     UPack UArgListT RocqType
   | Pack ArgListT UArgListT CoqTerm RocqType CoqTerm
-  | ArgumentList ArgListT
+  | ArgumentList CoqTerm
   | Hole
   deriving (Eq, Data, Show)
 

@@ -76,6 +76,7 @@ packName = "@Pack"
 upackName = "@uPack"
 projPackName = "packProj"
 funToPackName = "fun_to_pack"
+argListTName = "ArgListT"
 
 subsetWitnessNm :: Id -> Id
 subsetWitnessNm x = x ++ "_p"

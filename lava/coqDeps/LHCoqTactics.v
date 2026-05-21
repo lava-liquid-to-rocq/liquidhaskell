@@ -2836,7 +2836,7 @@ Ltac f__f_rel :=
   [ match goal with
     | [h: _ = ?v |- ?rel ?v] => rewrite <- h; unshelve eauto with rel_ax_db f_rel_funct_db
     end
-    | unshelve eauto with rel_ax_db f_rel_funct_db
+    | unshelve eauto with rel_ax_db f_rel_funct_db; try now autorewrite with f_rel_funct_db
   ].
 
 Ltac eq_refl :=

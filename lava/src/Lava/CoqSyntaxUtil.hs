@@ -148,3 +148,6 @@ upackGetRel upack = App (Def getUPackRelName) [upack]
 
 upackGetFunct :: CoqTerm -> CoqTerm
 upackGetFunct upack = App (Def getUPackFunctName) [upack]
+
+argListTTp :: RocqType
+argListTTp = TC argListTName []
