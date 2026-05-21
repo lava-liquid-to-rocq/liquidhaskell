@@ -31,9 +31,6 @@ https://github.com/ucsd-progsys/liquidhaskell/issues/1120
 
 
 
-<<<<<<< HEAD
-
-
 ## no-adt
 
 #1150 -- FUNCTION
@@ -42,8 +39,6 @@ https://github.com/ucsd-progsys/liquidhaskell/issues/1120
 
 Don't encode non-encodable ADTs (by default)
 
-=======
->>>>>>> 102b3384caff33c1d722dcbb96eb20913bcbb064
 ## Fix: SpecDependencyGraph
 
 1. Implement `Bare.SpecDep` 
