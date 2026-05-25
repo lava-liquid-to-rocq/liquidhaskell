@@ -7,6 +7,7 @@ Class GeneralizedProjection {A A':Type} := {
   po: forall (x y:A'), proj x = proj y -> x = y (* "proof irrelevance" for the "refined" type w.r.t. proj *)
 }.
 Global Notation "⌊ x ⌋" := (proj x) (at level 1).
+Global Notation "⌊- x -⌋" := (projT1 x) (at level 1).
 
 #[global] Instance refinement_proj {A:Type} {p:A -> Prop} : @GeneralizedProjection A {x:A | p x} := { 
 	proj := @proj1_sig A p;
@@ -22,6 +23,7 @@ Proof.
   exact xp.
 Defined.
 Notation "⌈ x ⌉" := (refWitness _ _ x) (at level 1).
+Notation "⌈- x -⌉" := (projT2 x) (at level 1).
 
 Inductive sub : Type -> Type -> Type :=
 | sub_refl : forall A: Type, sub A A
@@ -74,6 +76,11 @@ Definition subsumptionCast (A:Type) [G:A -> Prop] (H: A -> Prop) (x: {x: A | G x
 Proof.
   (* apply (subCast {x': A | G x' /\ x' = ` x} {y:A | H y} (exist _ (` x) (conj ⌈ x ⌉ eq_refl)) (subCast' A G H x p)). *)
   exact (exist H (` x) (p ⌈ x ⌉)).
+Defined. 
+Definition subsumptionCastT (A:Type) [G:A -> Type] (H: A -> Prop) (x: sigT (fun x: A => G x)) (p: G ⌊- x -⌋ -> H ⌊- x -⌋) : {y:A | H y}.
+Proof.
+  (* apply (subCast {x': A | G x' /\ x' = ` x} {y:A | H y} (exist _ (` x) (conj ⌈ x ⌉ eq_refl)) (subCast' A G H x p)). *)
+  exact (exist H ⌊- x -⌋ (p ⌈- x -⌉)).
 Defined. 
 
 (* Defined by Loïc, injections and subsumption with two arguments only to be closer to paper *)

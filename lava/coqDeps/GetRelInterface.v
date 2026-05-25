@@ -71,11 +71,12 @@ destruct args.
     refine ((prX.(proj) x) ::U (prArgList (tlT x) args uargTps (p x))).
 Defined.
 
+Export SigTNotations.
 Definition uPack_wf (argTps:ArgListT) {uargTps:UArgListT} (z:projectsArgListT argTps uargTps)
   {T: Type} (p: forall (args: ArgList argTps), T -> Prop)
-  (upack:uPack uargTps T): Prop :=
-  exists (f: forall (args:ArgList argTps), {v:T | p args v}),
-    forall (args:ArgList argTps) (v:T), proj1_sig (f args) = v <-> upack.(rel_u) (prArgList args uargTps z) v.
+  (upack:uPack uargTps T): Type :=
+  { f: forall (args:ArgList argTps), {v:T | p args v} | 
+    forall (args:ArgList argTps) (v:T), proj1_sig (f args) = v <-> upack.(rel_u) (prArgList args uargTps z) v}.
 
 Class Pack (argTps:ArgListT) {uargTps:UArgListT} {z:projectsArgListT argTps uargTps}
   (T: Type) (p: forall (args: ArgList argTps), T -> Prop) : Type := {

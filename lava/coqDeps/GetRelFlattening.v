@@ -110,21 +110,13 @@ Qed.
 (*Axiom forallb: forall [T:Type], (T -> bool) -> bool.
 Axiom forallb_def: forall [T:Type] (p: T -> bool), is_true (forallb p) <-> forall x, is_true (p x).*)
 
-Ltac uPack_wf :=
+Ltac uPack_wf_ :=
   match goal with
   | [f_frel : (forall (args : ArgList ?argTps) (v : ?tp), ⌊ ?f args _⌋ = v <->
       ?frel (prArgList args ?uargTps _) v) |- uPack_wf ?argTps ?z ?p ?upack] => 
     exists f;
     exact f_frel
   end.
-
-Definition uPack_wf_ {uargTps:UArgListT}
-  {T: Type} (upack:uPack uargTps T): Prop :=
-  exists (argTps:ArgListT) (z:projectsArgListT argTps uargTps) 
-    (p: forall (args: ArgList argTps), T -> Prop) 
-    (f: forall (args:ArgList argTps), {v:T | p args v}),
-    forall (args:ArgList argTps) (v:T), proj1_sig (f args) = v <-> upack.(rel_u) (prArgList args uargTps z) v.
-
 
 (* Since destruct and inversion cannot handle ArgLists correctly *)
 Lemma existT_inj {A:Type} {P:A->Type} (x:A) (p q:P x):
@@ -882,9 +874,36 @@ Ltac getPackRel_Aux pack_rel :=
 Global Notation getPackRel pack := ltac:(getPackRel_Aux pack.(frel)).
 Global Notation getUPackRel upack := ltac:(getPackRel_Aux upack.(rel_u)).
 
-(* Ltac getUPackF upack := 
+Definition getPackUPack' {argTps:ArgListT} {uargTps:UArgListT} {z:projectsArgListT argTps uargTps} 
+  {T: Type} {p: forall (args: ArgList argTps), T -> Prop} (upack: @uPack uargTps T)
+  (upack_p: uPack_wf argTps z p upack): @Pack argTps uargTps z T p :=
+  {|  f :=  ⌊ upack_p -⌋; frel := upack.(rel_u); 
+      f_frel := ⌈ upack_p ⌉; funct := upack.(funct_u) |}.
+Definition getUPackF' {argTps:ArgListT} {uargTps:UArgListT} {z:projectsArgListT argTps uargTps} 
+  {T: Type} {p: forall (args: ArgList argTps), T -> Prop} (upack: @uPack uargTps T)
+  (upack_p: uPack_wf argTps z p upack): forall (args:ArgList argTps), {v:T | p args v} :=
+  ⌊ upack_p -⌋.
+
+Ltac getUPackWit upack := 
   match goal with
-  | [h: ?wf (?cr_u upack) ∧ _ => *)
+  | [h: ?wf _ |- _] => unfold wf in h; 
+    match type of h with
+    | uPack_wf _ _ _ upack => exact h
+    end
+  | [h: {_:?wf _ | _} |- _] => destruct h as [h ?]; unfold wf in h; 
+    match type of h with
+    | uPack_wf _ _ _ upack => exact h
+    end    
+  end.
+Ltac getPackUPack upack := first [
+    exact (getPackUPack' upack (ltac:(assumption)))
+  | exact (getPackUPack' upack (ltac:(getUPackWit upack)))].
+Ltac getUPackF upack := first [
+    exact (getUPackF' upack (ltac:(assumption)))
+  | exact (getUPackF' upack (ltac:(getUPackWit upack)))].
+
+Global Notation getPackUPack upack := ltac:(getPackUPack upack).
+Global Notation getUPackF upack := ltac:(getUPackF upack).
 
 Ltac getPackRel_spec uargTps T :=
   let remUArgTps := fresh "remUArgTps" in
@@ -1947,6 +1966,10 @@ Definition buildPack1'_ : @Pack (X' ::RT (fun (x: X') => nilRT)) (X ::UT nilUT) 
 Proof.
   buildSemiGenericPack F Rel F_Rel Funct.
 Defined.
+Definition unreflectedPack1': ltac:(buildPackG_spec F).
+Proof.
+  fun_to_pack F.
+Defined.
 End SemiGenericTest1. 
 Global Notation buildPack1' F Rel F_Rel Rel_Funct:= (buildPack1'_ _ _ _ _ _ F Rel F_Rel Rel_Funct).
 Section SemiGenericTest2.
@@ -1971,6 +1994,10 @@ Definition buildPack2'_ : @Pack
   (X ::UT Y ::UT nilUT))) Z (fun _ => PZ).
 Proof.
   buildSemiGenericPack F Rel F_Rel Funct.
+Defined.
+Definition unreflectedPack2': ltac:(buildPackG_spec F).
+Proof.
+  fun_to_pack F.
 Defined.
 End SemiGenericTest2. 
 Global Notation buildPack2' F Rel F_Rel Rel_Funct:= (buildPack2'_ _ _ _ _ _ _ _ _ F Rel F_Rel Rel_Funct).
@@ -2000,6 +2027,10 @@ Definition buildPack3'_ : @Pack
   (X ::UT Y ::UT Z ::UT nilUT))) T (fun _ => PT).
 Proof.
   buildSemiGenericPack F Rel F_Rel Funct.
+Defined.
+Definition unreflectedPack3': ltac:(buildPackG_spec F).
+Proof.
+  fun_to_pack F.
 Defined.
 End SemiGenericTest3.
 Global Notation buildPack3' F Rel F_Rel Rel_Funct:= (buildPack3'_ _ _ _ _ _ _ _ _ _ _ _ F Rel F_Rel Rel_Funct).
@@ -2033,6 +2064,10 @@ Definition buildPack4'_ : @Pack
 Proof.
   buildSemiGenericPack F Rel F_Rel Funct.
 Defined.
+Definition unreflectedPack4': ltac:(buildPackG_spec F).
+Proof.
+  fun_to_pack F.
+Defined.
 End SemiGenericTest4.
 Global Notation buildPack4' F Rel F_Rel Rel_Funct:= (buildPack4'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ F Rel F_Rel Rel_Funct).
 
@@ -2051,6 +2086,10 @@ Definition buildPack1''_ : @Pack (X' ::RT (fun _ => nilRT)) (X ::UT nilUT) (ltac
   (mkProjectsArgListTG (X' ::RT (fun _ => nilRT)) (X ::UT nilUT))) Z (fun _ => PZ).
 Proof.
   buildSemiGenericPack F Rel F_Rel Funct.
+Defined.
+Definition unreflectedPack1'': ltac:(buildPackG_spec F).
+Proof.
+  fun_to_pack F.
 Defined.
 End IndepTypedGenericTest1. 
 Global Notation buildPack1'' F Rel F_Rel Rel_Funct:= (buildPack1''_ _ _ _ _ _ F Rel F_Rel Rel_Funct).
@@ -2076,6 +2115,10 @@ Definition buildPack2''_ : @Pack
   (X ::UT Y ::UT nilUT))) Z (fun _ => PZ).
 Proof.
   buildSemiGenericPack F Rel F_Rel Funct.
+Defined.
+Definition unreflectedPack2'': ltac:(buildPackG_spec F).
+Proof.
+  fun_to_pack F.
 Defined.
 End IndepTypedGenericTest2. 
 Global Notation buildPack2'' F Rel F_Rel Rel_Funct:= (buildPack2''_ _ _ _ _ _ _ _ _ F Rel F_Rel Rel_Funct).
@@ -2105,6 +2148,10 @@ Definition buildPack3''_ : @Pack
   (X ::UT Y ::UT Z ::UT nilUT))) T (fun _ => PT).
 Proof.
   buildSemiGenericPack F Rel F_Rel Funct.
+Defined.
+Definition unreflectedPack3'': ltac:(buildPackG_spec F).
+Proof.
+  fun_to_pack F.
 Defined.
 End IndepTypedGenericTest3.
 Global Notation buildPack3'' F Rel F_Rel Rel_Funct:= (buildPack3''_ _ _ _ _ _ _ _ _ _ _ _ F Rel F_Rel Rel_Funct).
@@ -2137,6 +2184,10 @@ Definition buildPack4''_ : @Pack
   (W ::UT X ::UT Y ::UT Z ::UT nilUT))) T (fun _ => PT).
 Proof.
   buildSemiGenericPack F Rel F_Rel Funct.
+Defined.
+Definition unreflectedPack4'': ltac:(buildPackG_spec F).
+Proof.
+  fun_to_pack F.
 Defined.
 End IndepTypedGenericTest4.
 Global Notation buildPack4'' F Rel F_Rel Rel_Funct:= (buildPack4''_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ F Rel F_Rel Rel_Funct).
@@ -2294,3 +2345,23 @@ Global Ltac buildPackG F Rel F_Rel Funct :=
       buildPackG_ F_ Rel_ F_Rel_ Funct_ ]
   end.
 
+Definition PartialApp {X X': Type} {prX: (X' ⤖ X)} {argTps:forall (x:X'), ArgListT} 
+  {uargTps:UArgListT} {z:projectsArgListT (@consArgsT X X' prX argTps) (X ::UT uargTps)} 
+  {T: Type} {p: forall (args: ArgList (@consArgsT X X' prX argTps)), T -> Prop} 
+  (pack:@Pack (@consArgsT X X' prX argTps) (X ::UT uargTps) z T p) (x:X')
+  {q: projectsArgListT (argTps x) uargTps}: 
+  @Pack (argTps x) uargTps q T (fun args => p (x ::R args)).
+Proof.
+  unshelve refine {| f := fun args => f (x ::R args); frel := _; 
+              f_frel := _; funct := fun uargs => funct (⌊ x ⌋ ::U uargs) |};
+  destruct pack as [f rel f_frel funct].
+  refine (fun args => _). 
+  replace q with (projectsArgListCons x uargTps z) by (auto with pi_db).
+  rewrite <- prArgListCons.
+  exact (f_frel (x ::R args)).
+Defined.
+
+Definition FinalApp {X X': Type} {prX: (X' ⤖ X)} 
+  {T: Type} {p: forall (args: ArgList (@consArgsT X X' prX (fun _ => nilRT))), T -> Prop} 
+  (pack:@Pack (@consArgsT X X' prX (fun _ => nilRT)) (X ::UT nilUT) ltac:(easy) T p) (x:X'): 
+  {v:T | p (x ::R nilR) v} := pack.(f) (x ::R nilR).
