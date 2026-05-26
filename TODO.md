@@ -11,6 +11,7 @@
 - [ ] add support for nested packs in functions and data types, modulo boolean equality instances (and anything that depends on those missing instances)
 - [ ] utilize Leibnitz equality whereever possible instead of boolean equality to avoid missing equality instances preventing us from producing inversion lemmas
 - [x] add lookup instances for functionhood lemmas (in the presence of higher-order arguments eauto sometimes fails to infer implicit arguments and we need to explicitely apply the functionhood lemma explicitely instantiating the implicit arguments)
+- [ ] figure out how best to encode higher-order packs in data constructors (either packs or upacks with appropriate wf condition), the former might work better if it can be done on a per-constructor basis
 
 ## Inversion lemmas
 
