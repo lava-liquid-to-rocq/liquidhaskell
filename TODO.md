@@ -4,9 +4,12 @@
 
 - [ ] merge implementation and minimize dependencies in liquidhaskell
 - [ ] something with SoftwareFoundations.identity_fn_applied_twice, where a subsumption might be necessary
-- [ ] fix `getPackRel` being used on upacks instead of the correct `getUPackRel`
+- [ ] fix `getUPackRel` in SoftwareFoundations.identity_fn_applied_twice
 - [ ] test automation tactics on fixed translation output
 - [ ] figure out why axiomatize_next_term loops (or just takes a long time) in foldrUniversal
+- [ ] do not create pack for function arguments that are of unit return type
+- [ ] fix position of assertions using proof combinators
+- [ ] fix type annotation in andb_commutative
 
 ## Possible improvements (non-priorities)
 
