@@ -21,21 +21,23 @@ import qualified Data.Map.Strict as M
 import Data.Maybe (mapMaybe)
 import qualified Data.Set as S
 import qualified Data.Text as Text
+import Text.PrettyPrint.HughesPJClass hiding (first)
+
 import Debug.Trace (trace)
 import GHC.Core
 import GHC.Core.TyCo.Rep
 import GHC.Types.Literal
 import GHC.Types.Name (NamedThing, getSrcSpan)
 import GHC.Utils.Outputable (ppr, showSDocUnsafe)
-import Language.Haskell.Liquid.GHC.Misc (isDataConId)
-import Language.Haskell.Liquid.Lava.Misc
-import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
-import Language.Haskell.Liquid.Types.RType (SpecType)
-import Language.Haskell.Liquid.Types.Types (AnnInfo (..))
+import           Language.Haskell.Liquid.GHC.Misc (isDataConId)
+import           Language.Haskell.Liquid.Types.RType (SpecType)
+import           Language.Haskell.Liquid.Types.Types (AnnInfo (..))
 import qualified Language.Haskell.Liquid.Types.Types ()
-import qualified Lava.Calculus as Calc
-import Lava.Names (Id, hashName)
-import Text.PrettyPrint.HughesPJClass hiding (first)
+
+import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
+import           Language.Haskell.Liquid.Lava.Misc
+import           Language.Haskell.Liquid.Lava.Names (Id, hashName)
+import qualified Language.Haskell.Liquid.Lava.Calculus as Calc
 
 -- | Constraint synonym for GHC Core binder variables
 type CoreBinder b = (Data b, Show b, NamedThing b)

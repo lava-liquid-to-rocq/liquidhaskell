@@ -5,13 +5,19 @@
 
 -- | This module defines the Dependencies and Binder classes and instances, used
 -- to export a sort function respecting dependencies order
-module Lava.TopologicalSort (topologicalSort) where
+module Lava.TopologicalSort
+  ( Dependencies (..)
+  , Binder (..)
+  , topologicalSort
+  ) where
 
-import Data.Graph
-import qualified Lava.Calculus as LH
-import qualified Lava.Coq as Coq
-import Lava.Names (Id)
 import Prelude
+import Data.Graph
+
+import           Language.Haskell.Liquid.Lava.Names (Id)
+import qualified Language.Haskell.Liquid.Lava.Calculus as LH
+
+import qualified Lava.Coq as Coq
 
 -- * 'Dependencies' class and instances, 'Binder class' and instance for 'LHDecl'
 
@@ -68,20 +74,20 @@ instance Binder LH.Decl where
   bindName (LH.Definition n _ _ _) = n
   bindName (LH.Import n _) = n
 
+-- TODO: seems unused, as there is no 'Dependencies Coq.Decl' instance, which 'topologicalSort' needs
 instance Binder Coq.Decl where
-  bindName d = case d of
-    Coq.Fix n _ _ _ -> n
-    Coq.Definition f _ _ _ _ -> f
-    Coq.CoqInductive tc _ _ _ -> tc
-    Coq.CoqNewType t _ -> t
-    Coq.Equations f _ _ _ -> f
-    -- \| load, visibility modifier, hint
-    (Coq.AddHint {}; Coq.ChangeVisibility {}; Coq.Load {}; Coq.Instance {}; Coq.TacInstance {}) -> ""
+  bindName (Coq.Fix n _ _ _) = n
+  bindName (Coq.Definition f _ _ _ _) = f
+  bindName (Coq.CoqInductive tc _ _ _) = tc
+  bindName (Coq.CoqNewType t _) = t
+  bindName (Coq.Equations f _ _ _) = f
+  -- \| load, visibility modifier, hint
+  bindName (Coq.AddHint {}; Coq.ChangeVisibility {}; Coq.Load {}; Coq.Instance {}; Coq.TacInstance {}) = ""
 
 -- * Topological sort for declarations using 'Dependencies' and 'Binder' instances
 
 -- | Topologically sort the declarations in dependency order
-topologicalSort :: (Dependencies a) => (Binder a) => [a] -> [a]
+topologicalSort :: (Dependencies a, Binder a) => [a] -> [a]
 topologicalSort l = flattenSCCs $ stronglyConnComp graph
   where
     keys = map bindName l

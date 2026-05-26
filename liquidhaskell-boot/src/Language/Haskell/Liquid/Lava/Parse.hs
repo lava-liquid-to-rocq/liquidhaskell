@@ -20,21 +20,22 @@ where
 
 import Control.Monad (filterM)
 -- import GHC.Core.DataCon
-
 import Data.Bifunctor (first)
 import Data.List (sortOn)
 import Data.Set (fromList)
 import Data.Tuple.Extra (snd3)
-import GHC.Types.Var (Var, varName)
-import qualified Language.Fixpoint.Types as F (Located (..))
-import Language.Haskell.Liquid.Lava.CoreToLH (Def (..))
-import Language.Haskell.Liquid.Lava.Misc
-import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
-import qualified Language.Haskell.Liquid.Types.RType as LhLib
-import qualified Lava.Calculus as Calc
-import Lava.Names (Id, freshVar)
 import System.Directory (doesFileExist)
 import System.FilePath (joinPath, (<.>), (</>))
+
+import GHC.Types.Var (Var, varName)
+import qualified Language.Fixpoint.Types as F (Located (..))
+import qualified Language.Haskell.Liquid.Types.RType as LhLib
+
+import           Language.Haskell.Liquid.Lava.Misc
+import           Language.Haskell.Liquid.Lava.Names (Id, freshVar)
+import qualified Language.Haskell.Liquid.Lava.Calculus as Calc
+import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
+import           Language.Haskell.Liquid.Lava.CoreToLH (Def (..))
 
 -- ** LH -> Calculus parsing
 

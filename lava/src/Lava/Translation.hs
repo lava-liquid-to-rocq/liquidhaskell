@@ -10,13 +10,14 @@ module Lava.Translation where
 
 import Data.Bifunctor (bimap, second)
 -- import Debug.Trace (trace)
-
 import Data.Maybe (fromMaybe)
-import Lava.Calculus as LH
+import Text.PrettyPrint.HughesPJClass as PP
+
+import Language.Haskell.Liquid.Lava.Names
+import Language.Haskell.Liquid.Lava.Calculus as LH
+
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil
-import Lava.Names
-import Text.PrettyPrint.HughesPJClass as PP
 
 -- * Generic translations
 

@@ -1,23 +1,30 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OrPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | Grammars, printer and suable functions for ILH
-module Lava.Calculus where
+module Language.Haskell.Liquid.Lava.Calculus where
 
+import Prelude hiding (lookup, (<>))
 import Data.Bifunctor (first)
+import Data.Binary (Binary)
 import Data.Data
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Debug.Trace (trace)
-import Lava.Names (Id, freshVar)
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
-import Prelude hiding (lookup, (<>))
+
+import Debug.Trace (trace)
+
+import GHC.Generics (Generic)
+
+import Language.Haskell.Liquid.Lava.Names (Id, freshVar)
 
 -- * The grammar
 
@@ -29,12 +36,12 @@ import Prelude hiding (lookup, (<>))
 -- Strings for simplicity). Other GHC.Core literals are not relevant for us
 --
 -- > B ::= Integer | Double | String
-data Builtin = Integer | Double | String deriving (Data, Eq, Show)
+data Builtin = Integer | Double | String deriving (Data, Eq, Show, Generic, Binary)
 
 -- | Base Types
 --
 -- > A ::= B | TC
-data BaseType = Builtin Builtin | TC Id deriving (Data, Eq, Show)
+data BaseType = Builtin Builtin | TC Id deriving (Data, Eq, Show, Generic, Binary)
 
 -- | Refinement types
 --
@@ -42,7 +49,7 @@ data BaseType = Builtin Builtin | TC Id deriving (Data, Eq, Show)
 data RefType
   = RefType Id BaseType Reft
   | ArrType Id RefType RefType
-  deriving (Data, Show)
+  deriving (Data, Show, Generic, Binary)
 
 -- ** Declaration-level grammar
 
@@ -57,7 +64,7 @@ data Decl
     Definition Id RefType Expr Bool
   | -- | imported module: module name and its declarations
     Import Id [Decl]
-  deriving (Data, Eq, Show)
+  deriving (Data, Eq, Show, Generic, Binary)
 
 -- | Structural expressions
 --
@@ -76,7 +83,7 @@ data Expr
     --   The last element indicates if the case must be translated to
     --   destruct (Nothing) or induction, in which case we have the list of variables to generalize
     Case Reft [((Id, [(Id, Bool)]), Maybe Expr)] (Maybe [Id])
-  deriving (Data, Show)
+  deriving (Data, Show, Generic, Binary)
 
 -- | Simple LH terms including formulas.
 --   Terms of this type can occur as (sub)terms in refinements
@@ -105,18 +112,18 @@ data Reft
   | Sub Reft RefType RefType
   | Inj Reft RefType
   | Proj Reft
-  deriving (Data, Eq, Show)
+  deriving (Data, Eq, Show, Generic, Binary)
 
 -- | Localization of the variables.
 -- The recursive variables take the name of the induction variable
 -- (this is used to clean up unused IHs) and the current branch pattern
 --
 -- loc ::= L | G | Y (x, σ)
-data Localization = Local | Global | Recursive Id [DesState] deriving (Data, Eq, Show)
+data Localization = Local | Global | Recursive Id [DesState] deriving (Data, Eq, Show, Generic, Binary)
 
 -- | State of the parameters: either intact (with name and arity) or destructed
 -- This state is used to elaborate pattern matching and recursive variables, and to translate recursive calls
-data DesState = Param Id Integer | Destructed deriving (Data, Eq, Show)
+data DesState = Param Id Integer | Destructed deriving (Data, Eq, Show, Generic, Binary)
 
 -- | Builtin binary operators (@op@)
 data Bop
@@ -135,12 +142,12 @@ data Bop
   | Or
   | Impl
   | Iff
-  deriving (Data, Eq)
+  deriving (Data, Eq, Generic, Binary)
 
 -- | Binary proof operators
 --
 -- > pop ::= === | =<= | =>=
-data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq)
+data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq, Generic, Binary)
 
 -- Builtin type and data constructors
 

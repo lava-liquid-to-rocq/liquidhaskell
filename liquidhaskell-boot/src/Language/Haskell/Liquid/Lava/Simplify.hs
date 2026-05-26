@@ -8,10 +8,12 @@ import Control.Monad.State.Strict
 import Data.Bifunctor (second)
 import Data.List (isPrefixOf)
 import qualified Data.Map.Strict as M
+
 import GHC.Core
 import GHC.Types.Var
 -- needed for Show Var instance
 import Language.Haskell.Liquid.GHC.Misc ()
+
 import Language.Haskell.Liquid.Lava.Misc (showStripped)
 
 class Simplifiable a where

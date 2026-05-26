@@ -11,13 +11,14 @@ import Data.Char (isUpper)
 import Data.List (isInfixOf)
 import qualified Data.Map.Strict as M
 import Data.Maybe (fromMaybe)
-import Language.Fixpoint.Types (PPrint)
-import qualified Language.Fixpoint.Types as F
-import Language.Haskell.Liquid.Lava.Misc
-import Language.Haskell.Liquid.Types.RType (PVarV (PV), RTVar (RTVar), RTyCon (RTyCon), RTyVar (RTV), RTypeV (..), SpecType, UReft, UReftV (MkUReft))
 
-import qualified Lava.Calculus as Calc
-import Lava.Names (Id)
+import           Language.Fixpoint.Types (PPrint)
+import qualified Language.Fixpoint.Types as F
+import           Language.Haskell.Liquid.Types.RType (PVarV (PV), RTVar (RTVar), RTyCon (RTyCon), RTyVar (RTV), RTypeV (..), SpecType, UReft, UReftV (MkUReft))
+
+import           Language.Haskell.Liquid.Lava.Misc
+import           Language.Haskell.Liquid.Lava.Names (Id)
+import qualified Language.Haskell.Liquid.Lava.Calculus as Calc
 
 -- | Helper for unsupported constructs
 unsupported :: String -> a

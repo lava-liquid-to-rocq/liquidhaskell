@@ -15,15 +15,16 @@
 -- - (E)Coq grammar, printer to .ecoq file and suable functions
 module Lava.Coq where
 
+import Prelude hiding ((<>))
 import Data.Bifunctor
 import Data.Data
 import Data.List (isSuffixOf, stripPrefix, unsnoc)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (isNothing)
-import Lava.Names
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
-import Prelude hiding ((<>))
+
+import Language.Haskell.Liquid.Lava.Names
 
 {- ORMOLU_DISABLE -}
 unitTmName :: Id

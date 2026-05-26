@@ -13,15 +13,18 @@ import Data.List (groupBy, mapAccumL, nub, union, (\\))
 import qualified Data.Map as Map
 import Data.Maybe (isNothing)
 import qualified Data.Set as Set
-import Debug.Trace (trace)
-import Lava.Calculus as LH
-import Lava.Coq as Coq
-import Lava.CoqSyntaxUtil as Coq
-import Lava.Names
-import Lava.Translation
-import Lava.TypingEnvironment as TypEnv
 import Text.PrettyPrint as PP
 import Text.PrettyPrint.HughesPJClass hiding (first)
+
+import Debug.Trace (trace)
+
+import Language.Haskell.Liquid.Lava.Names
+import Language.Haskell.Liquid.Lava.Calculus as LH
+
+import Lava.Coq as Coq
+import Lava.CoqSyntaxUtil as Coq
+import Lava.Translation
+import Lava.TypingEnvironment as TypEnv
 
 -- | Main function for the translation of declarations.
 --   The boolean is True to use Equations

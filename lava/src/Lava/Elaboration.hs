@@ -6,19 +6,21 @@
 -- | Well-formedness and typing of initial λr terms plus elaboration
 module Lava.Elaboration where
 
+import Prelude hiding ((<>))
 import Control.Monad (foldM, mapAndUnzipM, when)
 import Data.Bifunctor (first, second)
 import Data.List (delete, elemIndex, (!?), (\\))
 import Data.Maybe (fromJust, isJust)
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Lava.Calculus
-import Lava.Names (Id)
-import Lava.TypingEnvironment hiding (delete)
-import qualified Lava.TypingEnvironment as Env
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
-import Prelude hiding ((<>))
+
+import Language.Haskell.Liquid.Lava.Names (Id)
+import Language.Haskell.Liquid.Lava.Calculus
+
+import Lava.TypingEnvironment hiding (delete)
+import qualified Lava.TypingEnvironment as Env
 
 -- * Entry point for elaboration and typing
 

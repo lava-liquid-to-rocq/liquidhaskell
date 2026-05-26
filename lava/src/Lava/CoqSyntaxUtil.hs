@@ -5,9 +5,11 @@
 -- | Utility functions manipulating Rocq terms and types
 module Lava.CoqSyntaxUtil where
 
-import Lava.Coq
-import Lava.Names
 import Text.PrettyPrint.HughesPJClass
+
+import Language.Haskell.Liquid.Lava.Names
+
+import Lava.Coq
 
 -- * Tactic names for "projections" out of packs
 
