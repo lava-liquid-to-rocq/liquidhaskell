@@ -433,21 +433,32 @@ mkMatching eq trans tm alts genVars =
 
 -- | A proof term of Liquid Haskell:
 --   either a hint with the proposition it proves or an (in)equation
-data Proof = Hint Reft Reft | Eqn ProofOp Reft Reft [Proof]
+data Proof = Hint Reft Reft | Eqn ProofOp Reft Reft [Proof] deriving (Eq, Show)
+
+instance Pretty Proof where
+  pPrint (Hint rh rp) = pPrint rh <+> char '?' <+> parens (pPrint rp)
+  pPrint (Eqn pop r1 r2 hints) =
+    parens (parens (pPrint r1) <+> pPrint pop <+> parens (pPrint r2))
+      <+> char '?'
+      <+> pPrint hints
 
 -- | Translate a hint or (in)equation into a let-binding with a hole
 trProofCombinators :: Bool -> [Proof] -> CoqTerm -> CoqTerm
 trProofCombinators eq proofs tm = foldr ($) tm (map trProofCombinator proofs)
   where
     trProofCombinator :: Proof -> CoqTerm -> CoqTerm
-    trProofCombinator (Hint rh rp) =
-      Coq.Let "_" (Just . Prop $ utrReftProp eq rp) (Coq.mkProj Sig2 $ trReft eq rh)
-    trProofCombinator (Eqn pop r1 r2 proofs') =
+    trProofCombinator p@(Hint rh rp) =
+      Coq.Let hypName (Just . Prop $ utrReftProp eq rp) (Coq.mkProj Sig2 $ trReft eq rh)
+      where
+        hypName = "H_" ++ hashName p
+    trProofCombinator p@(Eqn pop r1 r2 proofs') =
       let trans = Coq.mkProj GenProj . trReft eq
           popT = Binop (trBop $ popToBop pop) PropOp
           popProp = Just . Prop $ Coq.Bop popT (trans r1) (trans r2)
           hole = PrfTerm Hole $ if eq then ProofHole else ByTac Oracle
-       in Coq.Let "_" popProp (trProofCombinators eq proofs' hole)
+       in Coq.Let hypName popProp (trProofCombinators eq proofs' hole)
+      where
+        hypName = "H_" ++ hashName p
 
 -- | Given a term r ? h1 ? … ? hn where the hi's can be either hints or (in)equations
 --   and r is minimal, return (r, [h1, …, hn])
