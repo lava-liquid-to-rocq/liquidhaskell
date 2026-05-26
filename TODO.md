@@ -6,6 +6,7 @@
 - [ ] something with SoftwareFoundations.identity_fn_applied_twice, where a subsumption might be necessary
 - [ ] fix `getPackRel` being used on upacks instead of the correct `getUPackRel`
 - [ ] test automation tactics on fixed translation output
+- [ ] figure out why axiomatize_next_term loops (or just takes a long time) in foldrUniversal
 
 ## Possible improvements (non-priorities)
 
