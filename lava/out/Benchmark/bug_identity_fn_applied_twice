@@ -1,0 +1,37 @@
+In environment
+
+f : Pack (SFBool ::RT λ _ : SFBool, nilRT) SFBool_u (λ (_ : ArgList (SFBool ::RT λ _ : SFBool, nilRT)) (v_x_80611037 : SFBool_u), let PZRefl : (λ (_ : SFBool) (VV : SFBool_u), SFBool_wf VV ∧ True) = λ (_ : SFBool) (VV : SFBool_u), SFBool_wf VV ∧ True := eq_refl in SFBool_wf v_x_80611037 ∧ True)
+-> f : Pack (SFBool -> SFBool) SFBool_u
+       (λ _ v, let PZRefl : (λ _ VV, SFBool_wf VV /\ True = λ _ VV, SFBool_wf VV /\ True) := eq_refl in
+        SFBool_wf v /\ True)
+-> f : Pack (SFBool -> SFBool) quoi
+
+h : Pack (SFBool ::RT λ _ : SFBool, nilRT) Unit (λ (x_44180694 : ArgList (SFBool ::RT λ _ : SFBool, nilRT))  (v_x_44180694 : Unit), let PZRefl : (λ (x : SFBool) (_ : Unit), ∃ f_res : SFBool_u, (λ x0 : SFBool_u, (λ xs : UArgList nilUT, frel (x0 ::U xs)) nilU) ⌊ x -⌋ f_res ∧ f_res == ⌊ x -⌋) = λ (x : SFBool) (_ : Unit), ∃ f_res : SFBool_u, (λ x0 : SFBool_u, (λ xs : UArgList nilUT, frel (x0 ::U xs)) nilU) ⌊ x -⌋ f_res ∧ f_res == ⌊ x -⌋ := eq_refl in let pz := λ (x : SFBool) (_ : Unit), ∃ f_res : SFBool_u, (λ x0 : SFBool_u, (λ xs : UArgList nilUT, frel (x0 ::U xs)) nilU) ⌊ x -⌋ f_res ∧ f_res == ⌊ x -⌋ in let a := x_44180694 in let aRefl : a = a := eq_refl in let e_p : x_44180694 = projT1 (uncons x_44180694) ::R projT2 (uncons x_44180694) := uncons_correct x_44180694 in let e := uncons x_44180694 in let s := e in let E : e = s := eq_refl in (let (x, a0) as s0 return (e = s0 → Prop) := s in (λ (x_ : SFBool) (tl : ArgList nilRT) (E0 :  e = existT (λ _ : SFBool, ArgList nilRT) x_ tl), let temp : uncons x_44180694 = e := eq_refl in let e_p0 : x_44180694 = projT1 e ::R projT2 e := eq_ind (uncons x_44180694) (λ s0 : {_ : SFBool & ArgList nilRT}, x_44180694 = projT1 s0 ::R projT2 s0) e_p e temp in let e_p1 : x_44180694 = projT1 (existT (λ _ : SFBool, ArgList nilRT) x_ tl) ::R projT2 (existT (λ _ : SFBool, ArgList nilRT) x_ tl) := eq_ind e (λ e0 : {_ : SFBool & ArgList nilRT}, x_44180694 = projT1 e0 ::R projT2 e0) e_p0 (existT (λ _ : SFBool, ArgList nilRT) x_ tl) E0 in (λ _ : x_44180694 = x_ ::R tl, let a1 := tl in let pz0 := pz x_ in pz0 v_x_44180694) e_p1) x a0) E)
+h : Pack (SFBool -> {Unit}) Unit (…)
+
+b : SFBool_u
+b_p : SFBool_wf b ∧ True
+
+The term
+"⌈ getPackF h (getPackF f (exist (λ b : SFBool_u, SFBool_wf b ∧ True) b (b_p : (λ b : SFBool_u, SFBool_wf b ∧ True) b))) ⌉"
+
+has type
+"let PZRefl : (λ (x : SFBool) (_ : Unit), ∃ f_res : SFBool_u, frel (⌊ x -⌋ ::U nilU) f_res ∧ f_res == ⌊ x -⌋) = λ (x : SFBool) (_ : Unit), ∃ f_res : SFBool_u, frel (⌊ x -⌋ ::U nilU) f_res ∧ f_res == ⌊ x -⌋ := eq_refl in
+let pz := λ (x : SFBool) (_ : Unit), ∃ f_res : SFBool_u, frel (⌊ x -⌋ ::U nilU) f_res ∧ f_res == ⌊ x -⌋ in
+let a := getPackF f (exist (λ b : SFBool_u, SFBool_wf b ∧ True) b b_p) ::R nilR in
+let aRefl : a = a := eq_refl in
+let e_p : getPackF f (exist (λ b : SFBool_u, SFBool_wf b ∧ True) b b_p) ::R nilR = projT1 (uncons (getPackF f (exist (λ b : SFBool_u, SFBool_wf b ∧ True) b b_p) ::R nilR)) ::R projT2 (uncons (getPackF f (exist (λ b : SFBool_u, SFBool_wf b ∧ True) b b_p) ::R nilR)) := uncons_correct (getPackF f (exist (λ b : SFBool_u, SFBool_wf b ∧ True) b b_p) ::R nilR) in
+let e := uncons (getPackF f (exist (λ b : SFBool_u, SFBool_wf b ∧ True) b b_p) ::R nilR) in
+let s := e in
+let E : e = s := eq_refl in (
+  let (x, a0) as s0 return (e = s0 → Prop) := s in
+  λ E0 : e =
+    existT (λ _ : SFBool, ArgList nilRT) x a0,
+    let temp : uncons (getPackF f (exist (λ b : SFBool_u, SFBool_wf b ∧ True) b b_p) ::R nilR) = e := eq_refl in
+    let e_p0 : getPackF f (exist (λ b : SFBool_u, SFBool_wf b ∧ True) b b_p) ::R nilR = projT1 e ::R projT2 e := eq_ind (uncons (getPackF f (exist (λ b : SFBool_u, SFBool_wf b ∧ True) b b_p) ::R nilR)) (λ s0 : {_ : SFBool & ArgList nilRT}, getPackF f (exist (λ b : SFBool_u, SFBool_wf b ∧ True) b b_p) ::R nilR = projT1 s0 ::R projT2 s0) e_p e temp
+    in let e_p1 : getPackF f (exist (λ b : SFBool_u, SFBool_wf b ∧ True) b b_p) ::R nilR = projT1 (existT (λ _ : SFBool, ArgList nilRT) x a0) ::R projT2 (existT (λ _ : SFBool, ArgList nilRT) x a0) := eq_ind e (λ e0 : {_ : SFBool & ArgList nilRT}, getPackF f (exist (λ b : SFBool_u, SFBool_wf b ∧ True) b b_p) ::R nilR = projT1 e0 ::R projT2 e0) e_p0 (existT (λ _ : SFBool, ArgList nilRT) x a0) E0 in let a1 := a0
+    in let pz0 := pz x
+    in pz0 ⌊ getPackF h (getPackF f (exist (λ b : SFBool_u, SFBool_wf b ∧ True) b b_p)) -⌋) E"
+
+while it is expected to have type
+"∃ f_res : SFBool_u, frel (b ::U nilU) f_res ∧ ∃ f_res_2 : SFBool_u, frel (f_res ::U nilU) f_res_2 ∧ f_res_2 == f_res".
