@@ -5,6 +5,7 @@
 - [ ] fix `getPackRel` being used on upacks instead of the correct `getUPackRel`
 - [ ] merge inversion lemmas that can have the same result
 - [ ] test automation tactics on fixed translation output
+- [ ] cleanup inversion lemmas by splitting for results of different shape and factorizing common assumption in disjuncts
 
 # TODO for extension with higher-order datatypes
 
