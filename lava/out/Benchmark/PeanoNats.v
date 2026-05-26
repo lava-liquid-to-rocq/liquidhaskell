@@ -972,32 +972,32 @@ Proof.
                  ∧ ∃ (mult_res_3 : Nats_u),
                    mult_rel (Suc_u m) ds_d4mN mult_res_3
                    ∧ ∃ (add_res_2 : Nats_u), add_rel mult_res_3 mult_res_2 add_res_2 ∧ mult_res == add_res_2)
-            (let _: ∃ (add_res : Nats_u),
-                    add_rel
-                    ⌊ mult
-                      (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver))
-                      (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)) -⌋
-                    ⌊ mult
-                      (exist (λ (ds_d4mM : Nats_u), Nats_wf ds_d4mM ∧ True) ds_d4mM ltac:(solver))
-                      (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)) -⌋
-                    add_res
-                    ∧ ∃ (add_res_2 : Nats_u),
-                      add_rel ds_d4mN add_res add_res_2
-                      ∧ ∃ (add_res_3 : Nats_u),
-                        add_rel
-                        ds_d4mN
-                        ⌊ mult
-                          (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver))
-                          (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)) -⌋
-                        add_res_3
-                        ∧ ∃ (add_res_4 : Nats_u),
-                          add_rel
-                          add_res_3
-                          ⌊ mult
-                            (exist (λ (ds_d4mM : Nats_u), Nats_wf ds_d4mM ∧ True) ds_d4mM ltac:(solver))
-                            (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)) -⌋
-                          add_res_4
-                          ∧ add_res_2 == add_res_4 :=
+            (let H_55779234: ∃ (add_res : Nats_u),
+                             add_rel
+                             ⌊ mult
+                               (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver))
+                               (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)) -⌋
+                             ⌊ mult
+                               (exist (λ (ds_d4mM : Nats_u), Nats_wf ds_d4mM ∧ True) ds_d4mM ltac:(solver))
+                               (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)) -⌋
+                             add_res
+                             ∧ ∃ (add_res_2 : Nats_u),
+                               add_rel ds_d4mN add_res add_res_2
+                               ∧ ∃ (add_res_3 : Nats_u),
+                                 add_rel
+                                 ds_d4mN
+                                 ⌊ mult
+                                   (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver))
+                                   (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)) -⌋
+                                 add_res_3
+                                 ∧ ∃ (add_res_4 : Nats_u),
+                                   add_rel
+                                   add_res_3
+                                   ⌊ mult
+                                     (exist (λ (ds_d4mM : Nats_u), Nats_wf ds_d4mM ∧ True) ds_d4mM ltac:(solver))
+                                     (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)) -⌋
+                                   add_res_4
+                                   ∧ add_res_2 == add_res_4 :=
              ⌈ add_assoc
                (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver))
                (mult
@@ -1284,9 +1284,10 @@ Proof.
                add_rel (Suc_u m) (Suc_u lq_anf7205759403792810453) add_res
                ∧ ∃ (sub_res : Nats_u),
                  sub_rel add_res (Suc_u lq_anf7205759403792810453) sub_res ∧ sub_res == Suc_u m)
-              (let _: ∃ (add_res : Nats_u),
-                      add_rel (Suc_u m) lq_anf7205759403792810453 add_res
-                      ∧ ∃ (sub_res : Nats_u), sub_rel add_res lq_anf7205759403792810453 sub_res ∧ sub_res == Suc_u m :=
+              (let H_27835136: ∃ (add_res : Nats_u),
+                               add_rel (Suc_u m) lq_anf7205759403792810453 add_res
+                               ∧ ∃ (sub_res : Nats_u),
+                                 sub_rel add_res lq_anf7205759403792810453 sub_res ∧ sub_res == Suc_u m :=
                ⌈ IH_lq_anf7205759403792810453 ltac:(try clear IH_lq_anf7205759403792810453; solver) ⌉ in
                add_suc_r
                (Suc (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver)))
@@ -1308,9 +1309,10 @@ Proof.
                add_rel Zero_u (Suc_u lq_anf7205759403792810445) add_res
                ∧ ∃ (sub_res : Nats_u),
                  sub_rel add_res (Suc_u lq_anf7205759403792810445) sub_res ∧ sub_res == Zero_u)
-              (let _: ∃ (add_res : Nats_u),
-                      add_rel Zero_u lq_anf7205759403792810445 add_res
-                      ∧ ∃ (sub_res : Nats_u), sub_rel add_res lq_anf7205759403792810445 sub_res ∧ sub_res == Zero_u :=
+              (let H_70230881: ∃ (add_res : Nats_u),
+                               add_rel Zero_u lq_anf7205759403792810445 add_res
+                               ∧ ∃ (sub_res : Nats_u),
+                                 sub_rel add_res lq_anf7205759403792810445 sub_res ∧ sub_res == Zero_u :=
                ⌈ IH_lq_anf7205759403792810445 ltac:(try clear IH_lq_anf7205759403792810445; solver) ⌉ in
                add_suc_r Zero (exist (λ (n : Nats_u), Nats_wf n ∧ True) lq_anf7205759403792810445 ltac:(solver)))
               ltac:(solver)).

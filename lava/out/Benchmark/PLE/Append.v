@@ -48,7 +48,7 @@ Defined.
 
 Inductive flip_rel: @uPack (Z ::UT (Z ::UT nilUT)) Z → Z → Z → Z → Prop :=
   | flip_Constr: ∀ (f : @uPack (Z ::UT (Z ::UT nilUT)) Z) x y (f_res : Z),
-                 getPackRel f y x f_res → flip_rel f x y f_res.
+                 getUPackRel f y x f_res → flip_rel f x y f_res.
 
 #[global] Hint Constructors flip_rel: core_hint_db.
 
@@ -68,7 +68,8 @@ Qed.
     lookup' := flip_rel_funct }.
 
 Theorem flip_inv_lem f x y flip_inv_lem_res:
-  flip_rel f x y flip_inv_lem_res ↔ ∃ (f_res : Z), getPackRel f y x f_res ∧ flip_inv_lem_res == f_res.
+  flip_rel f x y flip_inv_lem_res
+  ↔ ∃ (f_res : Z), getUPackRel f y x f_res ∧ flip_inv_lem_res == f_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -1172,7 +1173,7 @@ Inductive concatMap_rel: @uPack (Z ::UT nilUT) L_u → L_u → L_u → Prop :=
   | concatMap_x_App: ∀ (f : @uPack (Z ::UT nilUT) L_u) x xs (concatMap_res : L_u),
                      concatMap_rel f xs concatMap_res
                      → ∀ (f_res : L_u),
-                       getPackRel f x f_res
+                       getUPackRel f x f_res
                        → ∀ (append_res : L_u),
                          append_rel f_res concatMap_res append_res → concatMap_rel f (App_u x xs) append_res
   | concatMap_x_Emp: ∀ (f : @uPack (Z ::UT nilUT) L_u), concatMap_rel f Emp_u Emp_u.
@@ -1200,7 +1201,7 @@ Theorem concatMap_x_App_lem f x xs concatMap_x_App_lem_res:
   ↔ ∃ (concatMap_res : L_u),
     concatMap_rel f xs concatMap_res
     ∧ ∃ (f_res : L_u),
-      getPackRel f x f_res
+      getUPackRel f x f_res
       ∧ ∃ (append_res : L_u),
         append_rel f_res concatMap_res append_res ∧ concatMap_x_App_lem_res == append_res.
 Proof.
@@ -1828,7 +1829,7 @@ Defined.
 Inductive map_rel: @uPack (Z ::UT nilUT) Z → L_u → L_u → Prop :=
   | map_x_App: ∀ (f : @uPack (Z ::UT nilUT) Z) x xs (map_res : L_u),
                map_rel f xs map_res
-               → ∀ (f_res : Z), getPackRel f x f_res → map_rel f (App_u x xs) (App_u f_res map_res)
+               → ∀ (f_res : Z), getUPackRel f x f_res → map_rel f (App_u x xs) (App_u f_res map_res)
   | map_x_Emp: ∀ (f : @uPack (Z ::UT nilUT) Z), map_rel f Emp_u Emp_u.
 
 #[global] Hint Constructors map_rel: core_hint_db.
@@ -1852,7 +1853,7 @@ Theorem map_x_App_lem f x xs map_x_App_lem_res:
   map_rel f (App_u x xs) map_x_App_lem_res
   ↔ ∃ (map_res : L_u),
     map_rel f xs map_res
-    ∧ ∃ (f_res : Z), getPackRel f x f_res ∧ map_x_App_lem_res == App_u f_res map_res.
+    ∧ ∃ (f_res : Z), getUPackRel f x f_res ∧ map_x_App_lem_res == App_u f_res map_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -2829,7 +2830,7 @@ Inductive zipWith_rel: @uPack (Z ::UT (Z ::UT nilUT)) Z → L_u → L_u → L_u 
                          (zipWith_res : L_u),
                        zipWith_rel f lq_anf7205759403792803752 lq_anf7205759403792803750 zipWith_res
                        → ∀ (f_res : Z),
-                         getPackRel f lq_anf7205759403792803751 lq_anf7205759403792803749 f_res
+                         getUPackRel f lq_anf7205759403792803751 lq_anf7205759403792803749 f_res
                          → zipWith_rel
                            f
                            (App_u lq_anf7205759403792803751 lq_anf7205759403792803752)
@@ -2872,7 +2873,7 @@ Theorem zipWith_x_App_App_lem
   ↔ ∃ (zipWith_res : L_u),
     zipWith_rel f lq_anf7205759403792803752 lq_anf7205759403792803750 zipWith_res
     ∧ ∃ (f_res : Z),
-      getPackRel f lq_anf7205759403792803751 lq_anf7205759403792803749 f_res
+      getUPackRel f lq_anf7205759403792803751 lq_anf7205759403792803749 f_res
       ∧ zipWith_x_App_App_lem_res == App_u f_res zipWith_res.
 Proof.
   rel_back' _nil.
@@ -3152,22 +3153,23 @@ Proof.
                    ∧ ∃ (take_res_2 : L_u),
                      take_rel length_res_2 Emp_u take_res_2
                      ∧ ∃ (zip_res_2 : L2_u), zip_rel take_res_2 take_res zip_res_2 ∧ zip_res == zip_res_2)
-            (let _: ⌊ zip Emp (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver)) ⌋ == ⌊ zip Emp Emp ⌋ :=
+            (let H_59619593: ⌊ zip Emp (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver)) ⌋
+                             == ⌊ zip Emp Emp ⌋ :=
              ltac:(solver) in
-             let _: ⌊ zip Emp Emp ⌋
-                    == ⌊ zip (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp) Emp ⌋ :=
+             let H_26013249: ⌊ zip Emp Emp ⌋
+                             == ⌊ zip (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp) Emp ⌋ :=
              ltac:(solver) in
-             let _: ⌊ zip (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp) Emp ⌋
-                    == ⌊ zip
-                         (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp)
-                         (take Zero (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) ⌋ :=
+             let H_90026285: ⌊ zip (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp) Emp ⌋
+                             == ⌊ zip
+                                  (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp)
+                                  (take Zero (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) ⌋ :=
              ltac:(solver) in
-             let _: ⌊ zip
-                      (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp)
-                      (take Zero (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) ⌋
-                    == ⌊ zip
-                         (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp)
-                         (take (length Emp) (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) ⌋ :=
+             let H_26027000: ⌊ zip
+                               (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp)
+                               (take Zero (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) ⌋
+                             == ⌊ zip
+                                  (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp)
+                                  (take (length Emp) (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) ⌋ :=
              ltac:(solver) in
              # unit)
             ltac:(solver)).

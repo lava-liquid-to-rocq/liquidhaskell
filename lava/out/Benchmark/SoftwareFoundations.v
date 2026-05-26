@@ -599,14 +599,17 @@ Proof.
           (λ (VV : Unit),
            ∃ (f_res : SFBool_u),
            getPackRel f b f_res ∧ ∃ (f_res_2 : SFBool_u), getPackRel f f_res f_res_2 ∧ f_res_2 == b)
-          (let _: ⌊ getPackF f (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌋
-                  == ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋ :=
-           let _: ∃ (f_res : SFBool_u),
-                  getPackRel f b f_res ∧ ∃ (f_res_2 : SFBool_u), getPackRel f f_res f_res_2 ∧ f_res_2 == f_res :=
+          (let H_11452468: ⌊ getPackF f
+                             (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌋
+                           == ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋ :=
+           let H_63478593: ∃ (f_res : SFBool_u),
+                           getUPackRel f b f_res
+                           ∧ ∃ (f_res_2 : SFBool_u), getPackRel f f_res f_res_2 ∧ f_res_2 == f_res :=
            ⌈ getPackF h (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌉ in
            ltac:(solver) in
-           let _: ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋ == b :=
-           let _: ∃ (f_res : SFBool_u), getPackRel f b f_res ∧ f_res == b :=
+           let H_30888203: ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋
+                           == b :=
+           let H_26651953: ∃ (f_res : SFBool_u), getPackRel f b f_res ∧ f_res == b :=
            ⌈ getPackF h (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌉ in
            ltac:(solver) in
            # unit)
@@ -3802,7 +3805,7 @@ Proof.
            ∧ ∃ (mult_res_2 : MyNat_u),
              mult_rel p O_u mult_res_2
              ∧ ∃ (plus_res : MyNat_u), plus_rel mult_res_2 mult_res plus_res ∧ plus_res == O_u)
-          (let _: ∃ (mult_res : MyNat_u), mult_rel q O_u mult_res ∧ O_u == mult_res :=
+          (let H_19900718: ∃ (mult_res : MyNat_u), mult_rel q O_u mult_res ∧ O_u == mult_res :=
            ⌈ mult_n_O (exist (λ (q : MyNat_u), MyNat_wf q ∧ True) q ltac:(solver)) ⌉ in
            mult_n_O (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)))
           ltac:(solver)).
@@ -3841,25 +3844,25 @@ Proof.
              ∧ ∃ (plus_res : MyNat_u),
                plus_rel mult_res (S_u n') plus_res
                ∧ ∃ (mult_res_2 : MyNat_u), mult_rel (S_u n') (S_u ds_d5TK) mult_res_2 ∧ plus_res == mult_res_2)
-            (let _: ∃ (plus_res : MyNat_u),
-                    plus_rel
-                    ⌊ plus
-                      (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver))
-                      (mult
-                       (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
-                       (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver))) -⌋
-                    (S_u n')
-                    plus_res
-                    ∧ ∃ (plus_res_2 : MyNat_u),
-                      plus_rel
-                      ⌊ plus
-                        (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver))
-                        (mult
-                         (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
-                         (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver))) -⌋
-                      n'
-                      plus_res_2
-                      ∧ plus_res == S_u plus_res_2 :=
+            (let H_65037785: ∃ (plus_res : MyNat_u),
+                             plus_rel
+                             ⌊ plus
+                               (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver))
+                               (mult
+                                (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
+                                (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver))) -⌋
+                             (S_u n')
+                             plus_res
+                             ∧ ∃ (plus_res_2 : MyNat_u),
+                               plus_rel
+                               ⌊ plus
+                                 (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver))
+                                 (mult
+                                  (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
+                                  (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver))) -⌋
+                               n'
+                               plus_res_2
+                               ∧ plus_res == S_u plus_res_2 :=
              ⌈ add_succ_r
                (plus
                 (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver))
@@ -3867,23 +3870,24 @@ Proof.
                  (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
                  (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver))))
                (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)) ⌉ in
-             let _: ∃ (plus_res : MyNat_u),
-                    plus_rel
-                    ⌊ mult
-                      (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
-                      (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver)) -⌋
-                    n'
-                    plus_res
-                    ∧ ∃ (plus_res_2 : MyNat_u),
-                      plus_rel ds_d5TK plus_res plus_res_2
-                      ∧ ∃ (plus_res_3 : MyNat_u),
-                        plus_rel
-                        ds_d5TK
-                        ⌊ mult
-                          (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
-                          (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver)) -⌋
-                        plus_res_3
-                        ∧ ∃ (plus_res_4 : MyNat_u), plus_rel plus_res_3 n' plus_res_4 ∧ plus_res_2 == plus_res_4 :=
+             let H_42434228: ∃ (plus_res : MyNat_u),
+                             plus_rel
+                             ⌊ mult
+                               (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
+                               (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver)) -⌋
+                             n'
+                             plus_res
+                             ∧ ∃ (plus_res_2 : MyNat_u),
+                               plus_rel ds_d5TK plus_res plus_res_2
+                               ∧ ∃ (plus_res_3 : MyNat_u),
+                                 plus_rel
+                                 ds_d5TK
+                                 ⌊ mult
+                                   (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
+                                   (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver)) -⌋
+                                 plus_res_3
+                                 ∧ ∃ (plus_res_4 : MyNat_u),
+                                   plus_rel plus_res_3 n' plus_res_4 ∧ plus_res_2 == plus_res_4 :=
              ⌈ add_assoc
                (exist (λ (ds_d5TK : MyNat_u), MyNat_wf ds_d5TK ∧ True) ds_d5TK ltac:(solver))
                (mult
@@ -3905,7 +3909,7 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel p ⌊ one -⌋ mult_res ∧ mult_res == p)
-          (let _: ∃ (mult_res : MyNat_u), mult_rel p O_u mult_res ∧ O_u == mult_res :=
+          (let H_24755952: ∃ (mult_res : MyNat_u), mult_rel p O_u mult_res ∧ O_u == mult_res :=
            ⌈ mult_n_O (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)) ⌉ in
            mult_n_Sm (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)) O)
           ltac:(solver)).
@@ -4066,9 +4070,9 @@ Proof.
              ∃ (plus_res : MyNat_u),
              plus_rel (S_u n') m plus_res
              ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m (S_u n') plus_res_2 ∧ plus_res == plus_res_2)
-            (let _: ∃ (plus_res : MyNat_u),
-                    plus_rel n' m plus_res
-                    ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m n' plus_res_2 ∧ plus_res == plus_res_2 :=
+            (let H_91091155: ∃ (plus_res : MyNat_u),
+                             plus_rel n' m plus_res
+                             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m n' plus_res_2 ∧ plus_res == plus_res_2 :=
              ⌈ IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver) ⌉ in
              plus_n_Sm
              (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))

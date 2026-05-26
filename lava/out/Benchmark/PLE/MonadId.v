@@ -90,7 +90,7 @@ Defined.
 
 Inductive compose_rel: Identity_u → @uPack (Z ::UT nilUT) Identity_u → Identity_u → Prop :=
   | compose_Val_x: ∀ x (f : @uPack (Z ::UT nilUT) Identity_u) (f_res : Identity_u),
-                   getPackRel f x f_res → compose_rel (Val_u x) f f_res.
+                   getUPackRel f x f_res → compose_rel (Val_u x) f f_res.
 
 #[global] Hint Constructors compose_rel: core_hint_db.
 
@@ -111,7 +111,7 @@ Qed.
 
 Theorem compose_Val_x_lem f x compose_Val_x_lem_res:
   compose_rel (Val_u x) f compose_Val_x_lem_res
-  ↔ ∃ (f_res : Identity_u), getPackRel f x f_res ∧ compose_Val_x_lem_res == f_res.
+  ↔ ∃ (f_res : Identity_u), getUPackRel f x f_res ∧ compose_Val_x_lem_res == f_res.
 Proof.
   rel_back' _nil.
 Qed.

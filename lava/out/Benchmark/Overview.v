@@ -661,7 +661,7 @@ Defined.
 
 Inductive applyToFirst_rel: @uPack (Z ::UT nilUT) Z → IList_u → Z → Prop :=
   | applyToFirst_x_Cons: ∀ (f : @uPack (Z ::UT nilUT) Z) l' x (f_res : Z),
-                         getPackRel f x f_res → applyToFirst_rel f (Cons_u x l') f_res.
+                         getUPackRel f x f_res → applyToFirst_rel f (Cons_u x l') f_res.
 
 #[global] Hint Constructors applyToFirst_rel: core_hint_db.
 
@@ -683,7 +683,7 @@ Qed.
 
 Theorem applyToFirst_x_Cons_lem f l' x applyToFirst_x_Cons_lem_res:
   applyToFirst_rel f (Cons_u x l') applyToFirst_x_Cons_lem_res
-  ↔ ∃ (f_res : Z), getPackRel f x f_res ∧ applyToFirst_x_Cons_lem_res == f_res.
+  ↔ ∃ (f_res : Z), getUPackRel f x f_res ∧ applyToFirst_x_Cons_lem_res == f_res.
 Proof.
   rel_back' _nil.
 Qed.
@@ -885,27 +885,27 @@ Proof.
                  ∧ ∃ (append_res : IList_u),
                    append_rel (Cons_u y ys) ds_d27M append_res
                    ∧ ∃ (get_res_2 : Z), get_rel append_res addZ_res get_res_2 ∧ get_res == get_res_2)
-            (let _: ∃ (get_res : Z),
-                    get_rel
-                    ⌊ append
-                      (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver))
-                      (exist (λ (ds_d27M : IList_u), IList_wf ds_d27M ∧ True) ds_d27M ltac:(solver)) -⌋
-                    (ds_d27O + ⌊ llen (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver)) -⌋)
-                    get_res
-                    ∧ ∃ (addZ_res : Z),
-                      addZ_rel
-                      (ds_d27O + ⌊ llen (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver)) -⌋)
-                      1
-                      addZ_res
-                      ∧ ∃ (get_res_2 : Z),
-                        get_rel
-                        (Cons_u y
-                         ⌊ append
-                           (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver))
-                           (exist (λ (ds_d27M : IList_u), IList_wf ds_d27M ∧ True) ds_d27M ltac:(solver)) -⌋)
-                        addZ_res
-                        get_res_2
-                        ∧ get_res == get_res_2 :=
+            (let H_72367564: ∃ (get_res : Z),
+                             get_rel
+                             ⌊ append
+                               (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver))
+                               (exist (λ (ds_d27M : IList_u), IList_wf ds_d27M ∧ True) ds_d27M ltac:(solver)) -⌋
+                             (ds_d27O + ⌊ llen (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver)) -⌋)
+                             get_res
+                             ∧ ∃ (addZ_res : Z),
+                               addZ_rel
+                               (ds_d27O + ⌊ llen (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver)) -⌋)
+                               1
+                               addZ_res
+                               ∧ ∃ (get_res_2 : Z),
+                                 get_rel
+                                 (Cons_u y
+                                  ⌊ append
+                                    (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver))
+                                    (exist (λ (ds_d27M : IList_u), IList_wf ds_d27M ∧ True) ds_d27M ltac:(solver)) -⌋)
+                                 addZ_res
+                                 get_res_2
+                                 ∧ get_res == get_res_2 :=
              ⌈ thm1
                (subsumptionCast
                 IList_u

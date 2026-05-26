@@ -107,7 +107,7 @@ Defined.
 
 Inductive bind_rel: MaybeInt_u → @uPack (Z ::UT nilUT) MaybeInt_u → MaybeInt_u → Prop :=
   | bind_Just_x: ∀ m (ds_d3S8 : @uPack (Z ::UT nilUT) MaybeInt_u) (ds_d3S8_res : MaybeInt_u),
-                 getPackRel ds_d3S8 m ds_d3S8_res → bind_rel (Just_u m) ds_d3S8 ds_d3S8_res
+                 getUPackRel ds_d3S8 m ds_d3S8_res → bind_rel (Just_u m) ds_d3S8 ds_d3S8_res
   | bind_Nothing_x: ∀ (ds_d3S8 : @uPack (Z ::UT nilUT) MaybeInt_u),
                     bind_rel Nothing_u ds_d3S8 Nothing_u.
 
@@ -131,7 +131,7 @@ Qed.
 Theorem bind_Just_x_lem ds_d3S8 m bind_Just_x_lem_res:
   bind_rel (Just_u m) ds_d3S8 bind_Just_x_lem_res
   ↔ ∃ (ds_d3S8_res : MaybeInt_u),
-    getPackRel ds_d3S8 m ds_d3S8_res ∧ bind_Just_x_lem_res == ds_d3S8_res.
+    getUPackRel ds_d3S8 m ds_d3S8_res ∧ bind_Just_x_lem_res == ds_d3S8_res.
 Proof.
   rel_back' _nil.
 Qed.

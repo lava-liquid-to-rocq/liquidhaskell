@@ -251,7 +251,7 @@ Inductive bind_rel: L_u → @uPack (Z ::UT nilUT) L_u → L_u → Prop :=
   | bind_C_x: ∀ x xs (f : @uPack (Z ::UT nilUT) L_u) (bind_res : L_u),
               bind_rel xs f bind_res
               → ∀ (f_res : L_u),
-                getPackRel f x f_res
+                getUPackRel f x f_res
                 → ∀ (append_res : L_u), append_rel f_res bind_res append_res → bind_rel (C_u x xs) f append_res
   | bind_Emp_x: ∀ (f : @uPack (Z ::UT nilUT) L_u), bind_rel Emp_u f Emp_u.
 
@@ -278,7 +278,7 @@ Theorem bind_C_x_lem f x xs bind_C_x_lem_res:
   ↔ ∃ (bind_res : L_u),
     bind_rel xs f bind_res
     ∧ ∃ (f_res : L_u),
-      getPackRel f x f_res
+      getUPackRel f x f_res
       ∧ ∃ (append_res : L_u), append_rel f_res bind_res append_res ∧ bind_C_x_lem_res == append_res.
 Proof.
   rel_back' _nil.

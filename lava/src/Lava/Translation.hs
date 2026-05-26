@@ -215,9 +215,9 @@ hypsRV eq rv graphRel = \p -> foldr hyp p rv
         (hdT, tpz) = case hd of
           -- f -> f_rel for global functions (includes operators in `operatorsWithGraph`)
           LH.Var f (Just tp) Global -> (Coq.Def $ relDefName f, tp)
-          -- f -> getPackRelName f for local HO variables
+          -- f -> getPackRelName f for local HO variables that are not inside a projection
           -- TODO: verify that this is what we have in the paper
-          LH.Var f (Just tp) Local -> (packGetRel $ Coq.Def f, tp)
+          LH.Var f (Just tp) Local -> (upackGetRel $ Coq.Def f, tp)
           -- TODO: this is not correct, but is a placeholder that does not
           -- prevent translation since this only appears in places that are not
           -- printed in Rocq (inside casts) or inside specifications, but no
@@ -279,7 +279,7 @@ trRefTypeTop eq (ArrType x tpx tp) = Coq.FAType (x, trRefType eq tpx) (trRefType
 -- >   = ([(x: Z) (x_p: geq_rel x 0 true) (f: Pack(Int -> Int))], {v: Z | (getPackRel f) x v})
 trRefTypeSplit :: Bool -> LH.RefType -> ([(Id, RocqType)], RocqType)
 trRefTypeSplit eq tp =
-  let (args, ret) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
+  let (args, ret) = arrs . removeArgProjs False $ harmonizeBinderNames tp
    in (concatMap (splitIfFO . second (trRefType eq)) args, trRefType eq $ mkRefType ret)
   where
     splitIfFO (x, Subset _ tpx p) = [(x, tpx), (subsetWitnessNm x, Prop p)]
