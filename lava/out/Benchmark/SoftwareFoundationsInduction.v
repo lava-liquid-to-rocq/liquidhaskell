@@ -122,9 +122,9 @@ Proof.
              ∃ (plus_res : MyNat_u),
              plus_rel (S_u n') m plus_res
              ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m (S_u n') plus_res_2 ∧ plus_res == plus_res_2)
-            (let _: ∃ (plus_res : MyNat_u),
-                    plus_rel n' m plus_res
-                    ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m n' plus_res_2 ∧ plus_res == plus_res_2 :=
+            (let H_91091155: ∃ (plus_res : MyNat_u),
+                             plus_rel n' m plus_res
+                             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m n' plus_res_2 ∧ plus_res == plus_res_2 :=
              ⌈ IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver) ⌉ in
              plus_n_Sm
              (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))

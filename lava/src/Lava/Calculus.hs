@@ -314,24 +314,24 @@ renameParams = aux []
     aux σ (y : ys) (ArrType x tpx tp) =
       ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
 
--- Remove projections around the *first-order* arguments of the constructor, in
--- a context where FO arguments are given unrefined types
+-- Remove projections Proj around first-order terms in the type.
+-- If the flag is True, remove them also around higher-order ones.
 -- This function should be used at top-level, where only variables appear inside projections
-removeFOArgProjs :: RefType -> RefType
-removeFOArgProjs (ArrType x tpx tp) = ArrType x (removeFOArgProjs tpx) (removeFOArgProjs tp)
-removeFOArgProjs (RefType y a reft) = RefType y a (aux reft)
+removeArgProjs :: Bool -> RefType -> RefType
+removeArgProjs hoToo (ArrType x tpx tp) = ArrType x (removeArgProjs hoToo tpx) (removeArgProjs hoToo tp)
+removeArgProjs hoToo (RefType y a reft) = RefType y a (aux reft)
   where
     aux (Proj _ (Var x Nothing loc)) = Var x Nothing loc
-    aux f@(Proj _ (Var _ (Just _) _)) = f
+    aux projf@(Proj _ f@(Var _ (Just _) _)) = if hoToo then f else projf
     aux p@(Proj {}) =
-      error $ "Calculus.removeFOArgProjs should only be used at top-level, when projections are made only on local variables. Found term: " ++ prettyShow p
+      error $ "Calculus.removeArgProjs should only be used at top-level, when projections are made only on local variables. Found term: " ++ prettyShow p
     aux r@(Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = r
     aux (App r1 r2) = App (aux r1) (aux r2)
     aux (Neg r) = Neg (aux r)
     aux (Bop bop r1 r2) = Bop bop (aux r1) (aux r2)
     aux (QMark r rh rp) = QMark (aux r) (aux rh) (aux rp)
     aux (Pop pop r1 r2) = Pop pop (aux r1) (aux r2)
-    aux (Sub {}; Inj {}) = error "Subsumption or injection cast found in type refinement."
+    aux (Sub {}; Inj {}) = error "Subsumption or injection cast found in type refinement in Calculus.removeArgProjs."
 
 -- * Typeclass related to free variables
 

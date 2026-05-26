@@ -171,19 +171,19 @@ wfDecl eq tc alts =
     mkBranch :: (Id, RefType) -> ([(Id, [Id])], CoqTerm)
     mkBranch (c, tp) = ([(unrefinedConstrName c, map fst args)], Coq.mkAnd (retRefT : map argProp args))
       where
-        (args, (vv, _, retRef)) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
+        (args, (vv, _, retRef)) = arrs . removeArgProjs True $ harmonizeBinderNames tp
         -- Proposition for the refinement of the return type, with C x1 … xn in the refinement
         retRefT = utrReftProp eq (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef)
         -- Proposition for each argument
         argProp (x, tpArg) =
           case trRefType eq tpArg of
             Subset _ _ p -> p
-            Pack argTps _ (Coq.ArgListCor argTps' uargTps) t p | (Coq.ArgListTArg argTps) == argTps' -> 
-              Coq.Let argTs (Just argListTTp) argTps' .
-                Coq.Let prf (Just pTp) p .
-                  Coq.Let z (Just zTp) (Coq.ArgListCor (Coq.Var argTs) uargTps) .
-                    Coq.App (Def uPackWfName) $ 
-                      [Coq.Var argTs, Coq.Var z, (Coq.Var prf), Coq.Var x]
+            Pack argTps _ (Coq.ArgListCor argTps' uargTps) t p
+              | Coq.ArgListTArg argTps == argTps' ->
+                  Coq.Let argTs (Just argListTTp) argTps'
+                    . Coq.Let prf (Just pTp) p
+                    . Coq.Let z (Just zTp) (Coq.ArgListCor (Coq.Var argTs) uargTps)
+                    $ Coq.App (Def uPackWfName) (map Coq.Var [argTs, z, prf, x])
               where
                 usedNames = Set.fromList $ map fst args
                 argTs = freshVar "argTps" usedNames
