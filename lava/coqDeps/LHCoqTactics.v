@@ -1019,7 +1019,7 @@ Ltac nonbranching_invert_axiomatization :=
       let htp := type of h in
       tryif (non_branching_inversion h) then 
         (idtac "Inverted the axiomatization " h ": " htp;
-        repeat axiomatize_next_term)
+        repeat progress timeout 15 axiomatize_next_term)
        else 
         fail 
     | _ => fail "No hypothesis to invert"

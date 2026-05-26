@@ -5,78 +5,78 @@ Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 
 Inductive IdentityF2_u: Type :=
-  | ValF2_u: @uPack (@uPack (Z ::UT nilUT) Z ::UT (Z ::UT nilUT)) Z → IdentityF2_u.
-
-Fixpoint IdentityF2_wf (x : IdentityF2_u): Type :=
-  match x with
-  | ValF2_u lq_tmp0 => let argTps :=
-                       @Pack
+  | ValF2_u: 
+    let argTps :=
+      @Pack ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
+      (Z ::UT nilUT)
+      ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
+      Z
+      (λ (x_86795196 : ArgList ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
+        (v_x_86795196 : Z),
+      ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196))
+      ::RT λ (lq_tmp0 : @Pack
                        ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
                        (Z ::UT nilUT)
                        ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
                        Z
-                       (λ (x_86795196 : ArgList ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
+                       (λ (x_86795196 : ArgList ({lq_tmp1: Z | True}
+                                                 ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
                           (v_x_86795196 : Z),
-                        ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196))
-                       ::RT λ (lq_tmp0 : @Pack
-                                         ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
-                                         (Z ::UT nilUT)
-                                         ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
-                                         Z
-                                         (λ (x_86795196 : ArgList ({lq_tmp1: Z | True}
-                                                                   ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
-                                            (v_x_86795196 : Z),
-                                          ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196))),
-                            {lq_tmp3: Z | True} ::RT λ (lq_tmp3 : {lq_tmp3: Z | True}), nilRT in
-                       let p : forall (args: ArgList argTps), _ -> Prop :=
-                       λ (x_83955502 : ArgList (@Pack
-                                                ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
-                                                (Z ::UT nilUT)
-                                                ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
-                                                Z
-                                                (λ (x_86795196 : ArgList ({lq_tmp1: Z | True}
-                                                                          ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}),
-                                                                               nilRT))
-                                                   (v_x_86795196 : Z),
-                                                 ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196))
-                                                ::RT λ (lq_tmp0 : @Pack
-                                                                  ({lq_tmp1: Z | True}
-                                                                   ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
-                                                                  (Z ::UT nilUT)
-                                                                  ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
-                                                                  Z
-                                                                  (λ (x_86795196 : ArgList ({lq_tmp1: Z | True}
-                                                                                            ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}),
-                                                                                                 nilRT))
-                                                                     (v_x_86795196 : Z),
-                                                                   ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196))),
-                                                     {lq_tmp3: Z | True} ::RT λ (lq_tmp3 : {lq_tmp3: Z | True}), nilRT))
-                         (v_x_83955502 : Z),
-                       ltac:(flattenP (λ (lq_tmp0 : @Pack
-              ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
-              (Z ::UT nilUT)
-              ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
-              Z
-              (λ (x_86795196 : ArgList ({lq_tmp1: Z | True}
-                                        ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
-                 (v_x_86795196 : Z),
-               ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196)))
-   (lq_tmp3 : {lq_tmp3: Z | True})
-   (VV : Z),
- True) x_83955502 v_x_83955502) in
-                       let z: projectsArgListT argTps (@uPack (Z ::UT nilUT) Z ::UT (Z ::UT nilUT)) :=
-                       ltac:(mkProjectsArgListTG (argTps) ((@uPack (Z ::UT nilUT) Z ::UT (Z ::UT nilUT)))) in
-                       uPack_wf argTps z p lq_tmp0
+                        ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196))),
+          {lq_tmp3: Z | True} ::RT λ (lq_tmp3 : {lq_tmp3: Z | True}), nilRT in
+    let p : forall (args: ArgList argTps), _ -> Prop :=
+      λ (x_83955502 : ArgList (@Pack
+        ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
+        (Z ::UT nilUT)
+        ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
+        Z
+        (λ (x_86795196 : ArgList ({lq_tmp1: Z | True}
+                                  ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}),
+                                       nilRT))
+           (v_x_86795196 : Z),
+         ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196))
+        ::RT λ (lq_tmp0 : @Pack
+                          ({lq_tmp1: Z | True}
+                           ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
+                          (Z ::UT nilUT)
+                          ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
+                          Z
+                          (λ (x_86795196 : ArgList ({lq_tmp1: Z | True}
+                                                    ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}),
+                                                         nilRT))
+                             (v_x_86795196 : Z),
+                           ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196))),
+             {lq_tmp3: Z | True} ::RT λ (lq_tmp3 : {lq_tmp3: Z | True}), nilRT))
+       (v_x_83955502 : Z),
+      ltac:(flattenP (λ (lq_tmp0 : @Pack
+      ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
+      (Z ::UT nilUT)
+      ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
+      Z
+      (λ (x_86795196 : ArgList ({lq_tmp1: Z | True}
+                      ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
+      (v_x_86795196 : Z),
+      ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196)))
+      (lq_tmp3 : {lq_tmp3: Z | True})
+      (VV : Z),
+      True) x_83955502 v_x_83955502) in
+    let z: projectsArgListT argTps (@uPack (Z ::UT nilUT) Z ::UT (Z ::UT nilUT)) :=
+      ltac:(mkProjectsArgListTG (argTps) ((@uPack (Z ::UT nilUT) Z ::UT (Z ::UT nilUT)))) in
+    @Pack argTps (@uPack (Z ::UT nilUT) Z ::UT (Z ::UT nilUT)) z Z p → IdentityF2_u.
+
+Fixpoint IdentityF2_wf (x : IdentityF2_u): Prop :=
+  match x with
+  | ValF2_u lq_tmp0 => True
   end.
 
 Theorem IdentityF2_wf_ref
-  [p : IdentityF2_u → Prop] (tm : sigT (fun v: IdentityF2_u => {_:IdentityF2_wf v | p v})):
-  IdentityF2_wf ⌊- tm -⌋.
+  [p : IdentityF2_u → Prop] (tm : {v: IdentityF2_u | IdentityF2_wf v ∧ p v}):
+  IdentityF2_wf ⌊ tm -⌋.
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
 
-Global Notation IdentityF2 := (sigT (fun x: IdentityF2_u => IdentityF2_wf x)).
+Global Notation IdentityF2 := (sig (fun x: IdentityF2_u => IdentityF2_wf x)).
 
 Definition ValF2_lem
   (lq_tmp0 : @Pack
@@ -151,7 +151,7 @@ Definition ValF2_lem
    (lq_tmp3 : {VV: Z | True})
    (VV : Z),
  True) x_31985188 v_x_31985188))):
-  IdentityF2_wf (ValF2_u ⌊ lq_tmp0 ⌋).
+  IdentityF2_wf (ValF2_u lq_tmp0).
 Proof.
   repeat first [split | solver].
 Defined.
@@ -230,7 +230,7 @@ Definition ValF2
    (VV : Z),
  True) x_31985188 v_x_31985188))):
   IdentityF2 :=
-  existT _ (ValF2_u ⌊ lq_tmp0 ⌋) (ValF2_lem lq_tmp0).
+  exist _ (ValF2_u lq_tmp0) (ValF2_lem lq_tmp0).
 
 #[global] Hint Resolve IdentityF2_wf_ref: wf_constr_db.
 
@@ -239,7 +239,77 @@ Definition ValF2
 #[global] Hint Unfold ValF2: ref_constr_db.
 
 Inductive IdentityF1_u: Type :=
-  | ValF1_u: @uPack (@uPack (Z ::UT nilUT) Z ::UT nilUT) Z → IdentityF1_u.
+  | ValF1_u: @Pack
+             (@Pack
+              ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
+              (Z ::UT nilUT)
+              ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+              Z
+              (λ (x_40877513 : ArgList ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT))
+                 (v_x_40877513 : Z),
+               ltac:(flattenP (λ (lq_tmp1 : {VV: Z | True}) (VV : Z), True) x_40877513 v_x_40877513))
+              ::RT λ (lq_tmp0 : @Pack
+                                ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
+                                (Z ::UT nilUT)
+                                ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+                                Z
+                                (λ (x_40877513 : ArgList ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT))
+                                   (v_x_40877513 : Z),
+                                 ltac:(flattenP (λ (lq_tmp1 : {VV: Z | True}) (VV : Z), True) x_40877513 v_x_40877513))),
+                   nilRT)
+             (@uPack (Z ::UT nilUT) Z ::UT nilUT)
+             ltac:(mkProjectsArgListTG ((@Pack
+  ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
+  (Z ::UT nilUT)
+  ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+  Z
+  (λ (x_40877513 : ArgList ({VV: Z | True}
+                            ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT))
+     (v_x_40877513 : Z),
+   ltac:(flattenP (λ (lq_tmp1 : {VV: Z | True}) (VV : Z), True) x_40877513 v_x_40877513))
+  ::RT λ (lq_tmp0 : @Pack
+                    ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
+                    (Z ::UT nilUT)
+                    ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+                    Z
+                    (λ (x_40877513 : ArgList ({VV: Z | True}
+                                              ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT))
+                       (v_x_40877513 : Z),
+                     ltac:(flattenP (λ (lq_tmp1 : {VV: Z | True}) (VV : Z), True) x_40877513 v_x_40877513))),
+       nilRT)) ((@uPack (Z ::UT nilUT) Z ::UT nilUT)))
+             Z
+             (λ (x_26007066 : ArgList (@Pack
+                                       ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
+                                       (Z ::UT nilUT)
+                                       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+                                       Z
+                                       (λ (x_40877513 : ArgList ({VV: Z | True}
+                                                                 ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT))
+                                          (v_x_40877513 : Z),
+                                        ltac:(flattenP (λ (lq_tmp1 : {VV: Z | True}) (VV : Z), True) x_40877513 v_x_40877513))
+                                       ::RT λ (lq_tmp0 : @Pack
+                                                         ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
+                                                         (Z ::UT nilUT)
+                                                         ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+                                                         Z
+                                                         (λ (x_40877513 : ArgList ({VV: Z | True}
+                                                                                   ::RT λ (lq_tmp1 : {VV: Z | True}),
+                                                                                        nilRT))
+                                                            (v_x_40877513 : Z),
+                                                          ltac:(flattenP (λ (lq_tmp1 : {VV: Z | True}) (VV : Z), True) x_40877513 v_x_40877513))),
+                                            nilRT))
+                (v_x_26007066 : Z),
+              ltac:(flattenP (λ (lq_tmp0 : @Pack
+              ({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)
+              (Z ::UT nilUT)
+              ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+              Z
+              (λ (x_40877513 : ArgList ({VV: Z | True}
+                                        ::RT λ (lq_tmp1 : {VV: Z | True}), nilRT))
+                 (v_x_40877513 : Z),
+               ltac:(flattenP (λ (lq_tmp1 : {VV: Z | True}) (VV : Z), True) x_40877513 v_x_40877513)))
+   (VV : Z),
+ True) x_26007066 v_x_26007066)) → IdentityF1_u.
 
 (* Fixpoint IdentityF1_eq (x y : IdentityF1_u): bool :=
   match (x, y) with | (ValF1_u lq_tmp0, ValF1_u lq_tmp0') => true && (lq_tmp0 ==? lq_tmp0') end.
@@ -263,72 +333,16 @@ Qed.
     refl' := IdentityF1_eq_refl;
     eqb_eq' := IdentityF1_eqb_eq }. *)
 
-Fixpoint IdentityF1_wf (x : IdentityF1_u): Type :=
+Fixpoint IdentityF1_wf (x : IdentityF1_u): Prop :=
   match x with
-  | ValF1_u lq_tmp0 => let argTps :=
-                       @Pack
-                       ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
-                       (Z ::UT nilUT)
-                       ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
-                       Z
-                       (λ (x_86795196 : ArgList ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
-                          (v_x_86795196 : Z),
-                        ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196))
-                       ::RT λ (lq_tmp0 : @Pack
-                                         ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
-                                         (Z ::UT nilUT)
-                                         ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
-                                         Z
-                                         (λ (x_86795196 : ArgList ({lq_tmp1: Z | True}
-                                                                   ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
-                                            (v_x_86795196 : Z),
-                                          ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196))),
-                            nilRT in
-                       let p :=
-                       λ (x_24546733 : ArgList (@Pack
-                                                ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
-                                                (Z ::UT nilUT)
-                                                ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
-                                                Z
-                                                (λ (x_86795196 : ArgList ({lq_tmp1: Z | True}
-                                                                          ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}),
-                                                                               nilRT))
-                                                   (v_x_86795196 : Z),
-                                                 ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196))
-                                                ::RT λ (lq_tmp0 : @Pack
-                                                                  ({lq_tmp1: Z | True}
-                                                                   ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
-                                                                  (Z ::UT nilUT)
-                                                                  ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
-                                                                  Z
-                                                                  (λ (x_86795196 : ArgList ({lq_tmp1: Z | True}
-                                                                                            ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}),
-                                                                                                 nilRT))
-                                                                     (v_x_86795196 : Z),
-                                                                   ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196))),
-                                                     nilRT))
-                         (v_x_24546733 : Z),
-                       ltac:(flattenP (λ (lq_tmp0 : @Pack
-              ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT)
-              (Z ::UT nilUT)
-              ltac:(mkProjectsArgListTG ({lq_tmp1: Z | True} ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT) ((Z ::UT nilUT)))
-              Z
-              (λ (x_86795196 : ArgList ({lq_tmp1: Z | True}
-                                        ::RT λ (lq_tmp1 : {lq_tmp1: Z | True}), nilRT))
-                 (v_x_86795196 : Z),
-               ltac:(flattenP (λ (lq_tmp1 : {lq_tmp1: Z | True}) (VV : Z), True) x_86795196 v_x_86795196)))
-   (VV : Z),
- True) x_24546733 v_x_24546733) in
-                       let z: projectsArgListT argTps (@uPack (Z ::UT nilUT) Z ::UT nilUT) :=
-                       ltac:(mkProjectsArgListTG (argTps) ((@uPack (Z ::UT nilUT) Z ::UT nilUT))) in
-                       uPack_wf argTps z p lq_tmp0
+  | ValF1_u lq_tmp0 => True
   end.
 
-Global Notation IdentityF1 := (sigT (fun x => IdentityF1_wf x)).
+Global Notation IdentityF1 := (sig (fun x => IdentityF1_wf x)).
 
 Theorem IdentityF1_wf_ref
-  [p : IdentityF1_u → Prop] (tm : sigT (fun v: IdentityF1_u => {_:IdentityF1_wf v | p v})):
-  IdentityF1_wf (projT1 tm).
+  [p : IdentityF1_u → Prop] (tm : sig (fun v: IdentityF1_u => IdentityF1_wf v /\ p v)):
+  IdentityF1_wf (proj1_sig tm).
 Proof.
   destruct tm as [tm tm_p]. solver.
 Qed.
@@ -405,7 +419,7 @@ Definition ValF1_lem
                ltac:(flattenP (λ (lq_tmp1 : {VV: Z | True}) (VV : Z), True) x_40877513 v_x_40877513)))
    (VV : Z),
  True) x_26007066 v_x_26007066))):
-  IdentityF1_wf (ValF1_u ⌊ lq_tmp0 ⌋).
+  IdentityF1_wf (ValF1_u lq_tmp0).
 Proof.
   repeat first [split | solver].
 Defined.
@@ -483,7 +497,7 @@ Definition ValF1
    (VV : Z),
  True) x_26007066 v_x_26007066))):
   IdentityF1 :=
-  existT _ (ValF1_u ⌊ lq_tmp0 ⌋) (ValF1_lem lq_tmp0).
+  exist _ (ValF1_u lq_tmp0) (ValF1_lem lq_tmp0).
 
 #[global] Hint Resolve IdentityF1_wf_ref: wf_constr_db.
 
@@ -641,8 +655,8 @@ Proof.
   refine (ValF1 f).
 Defined.
 
-Inductive pureF1_rel: @uPack (@uPack (Z ::UT nilUT) Z ::UT nilUT) Z → IdentityF1_u → Prop :=
-  | pureF1_Constr: ∀ (f : @uPack (@uPack (Z ::UT nilUT) Z ::UT nilUT) Z), pureF1_rel f (ValF1_u f).
+Inductive pureF1_rel: Pack _ _ _ → IdentityF1_u → Prop :=
+  | pureF1_Constr: ∀ (f : _), pureF1_rel f (ValF1_u f).
 
 #[global] Hint Constructors pureF1_rel: core_hint_db.
 
@@ -650,7 +664,7 @@ Inductive pureF1_rel: @uPack (@uPack (Z ::UT nilUT) Z ::UT nilUT) Z → Identity
 
 #[global] Instance pureF1_getF: getFunc pureF1_rel := { getF' := pureF1 }.
 
-Theorem pureF1_rel_funct [f : @uPack (@uPack (Z ::UT nilUT) Z ::UT nilUT) Z]:
+Theorem pureF1_rel_funct [f]:
   ∀ (VV VV' : IdentityF1_u), pureF1_rel f VV → (pureF1_rel f VV' → VV = VV').
 Proof.
   rel_functionhood_body.
@@ -658,86 +672,8 @@ Qed.
 
 #[global] Hint Resolve pureF1_rel_funct: f_rel_funct_db.
 
-Theorem pureF1_rel_ex
-  (f : @Pack
-       (@Pack
-        ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
-        (Z ::UT nilUT)
-        ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
-        Z
-        (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
-           (v_x_82647028 : Z),
-         ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : Z), True) x_82647028 v_x_82647028))
-        ::RT λ (lq_tmp1 : @Pack
-                          ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
-                          (Z ::UT nilUT)
-                          ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
-                          Z
-                          (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
-                             (v_x_82647028 : Z),
-                           ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : Z), True) x_82647028 v_x_82647028))),
-             nilRT)
-       (@uPack (Z ::UT nilUT) Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG ((@Pack
-  ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
-  (Z ::UT nilUT)
-  ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
-  Z
-  (λ (x_82647028 : ArgList ({lq_tmp2: Z | True}
-                            ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
-     (v_x_82647028 : Z),
-   ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : Z), True) x_82647028 v_x_82647028))
-  ::RT λ (lq_tmp1 : @Pack
-                    ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
-                    (Z ::UT nilUT)
-                    ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
-                    Z
-                    (λ (x_82647028 : ArgList ({lq_tmp2: Z | True}
-                                              ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
-                       (v_x_82647028 : Z),
-                     ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : Z), True) x_82647028 v_x_82647028))),
-       nilRT)) ((@uPack (Z ::UT nilUT) Z ::UT nilUT)))
-       Z
-       (λ (x_15714024 : ArgList (@Pack
-                                 ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
-                                 (Z ::UT nilUT)
-                                 ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
-                                 Z
-                                 (λ (x_82647028 : ArgList ({lq_tmp2: Z | True}
-                                                           ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
-                                    (v_x_82647028 : Z),
-                                  ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : Z), True) x_82647028 v_x_82647028))
-                                 ::RT λ (lq_tmp1 : @Pack
-                                                   ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
-                                                   (Z ::UT nilUT)
-                                                   ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
-                                                   Z
-                                                   (λ (x_82647028 : ArgList ({lq_tmp2: Z | True}
-                                                                             ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}),
-                                                                                  nilRT))
-                                                      (v_x_82647028 : Z),
-                                                    ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : Z), True) x_82647028 v_x_82647028))),
-                                      nilRT))
-          (v_x_15714024 : Z),
-        ltac:(flattenP (λ (lq_tmp1 : @Pack
-              ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
-              (Z ::UT nilUT)
-              ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
-              Z
-              (λ (x_82647028 : ArgList ({lq_tmp2: Z | True}
-                                        ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
-                 (v_x_82647028 : Z),
-               ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : Z), True) x_82647028 v_x_82647028)))
-   (VV : Z),
- True) x_15714024 v_x_15714024))):
-  pureF1_rel ⌊ f ⌋ ⌊- pureF1 f -⌋.
+Theorem pureF1_rel_ex f:
+  pureF1_rel f ⌊ pureF1 f -⌋.
 Proof.
   Opaque pureF1.
   existence_lemma_pre pureF1; fix_notations; simpl in *.
@@ -749,87 +685,8 @@ Qed.
 
 #[global] Opaque pureF1.
 
-Theorem pureF1__pureF1_rel_rw
-  (f : @Pack
-       (@Pack
-        ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
-        (Z ::UT nilUT)
-        ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
-        Z
-        (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
-           (v_x_82647028 : Z),
-         ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : Z), True) x_82647028 v_x_82647028))
-        ::RT λ (lq_tmp1 : @Pack
-                          ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
-                          (Z ::UT nilUT)
-                          ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
-                          Z
-                          (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
-                             (v_x_82647028 : Z),
-                           ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : Z), True) x_82647028 v_x_82647028))),
-             nilRT)
-       (@uPack (Z ::UT nilUT) Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG ((@Pack
-  ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
-  (Z ::UT nilUT)
-  ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
-  Z
-  (λ (x_82647028 : ArgList ({lq_tmp2: Z | True}
-                            ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
-     (v_x_82647028 : Z),
-   ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : Z), True) x_82647028 v_x_82647028))
-  ::RT λ (lq_tmp1 : @Pack
-                    ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
-                    (Z ::UT nilUT)
-                    ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
-                    Z
-                    (λ (x_82647028 : ArgList ({lq_tmp2: Z | True}
-                                              ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
-                       (v_x_82647028 : Z),
-                     ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : Z), True) x_82647028 v_x_82647028))),
-       nilRT)) ((@uPack (Z ::UT nilUT) Z ::UT nilUT)))
-       Z
-       (λ (x_15714024 : ArgList (@Pack
-                                 ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
-                                 (Z ::UT nilUT)
-                                 ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
-                                 Z
-                                 (λ (x_82647028 : ArgList ({lq_tmp2: Z | True}
-                                                           ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
-                                    (v_x_82647028 : Z),
-                                  ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : Z), True) x_82647028 v_x_82647028))
-                                 ::RT λ (lq_tmp1 : @Pack
-                                                   ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
-                                                   (Z ::UT nilUT)
-                                                   ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
-                                                   Z
-                                                   (λ (x_82647028 : ArgList ({lq_tmp2: Z | True}
-                                                                             ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}),
-                                                                                  nilRT))
-                                                      (v_x_82647028 : Z),
-                                                    ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : Z), True) x_82647028 v_x_82647028))),
-                                      nilRT))
-          (v_x_15714024 : Z),
-        ltac:(flattenP (λ (lq_tmp1 : @Pack
-              ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
-              (Z ::UT nilUT)
-              ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
-              Z
-              (λ (x_82647028 : ArgList ({lq_tmp2: Z | True}
-                                        ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
-                 (v_x_82647028 : Z),
-               ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : Z), True) x_82647028 v_x_82647028)))
-   (VV : Z),
- True) x_15714024 v_x_15714024)))
-  (VV : IdentityF1_u):
-  ⌊- pureF1 f -⌋ = VV ↔ pureF1_rel ⌊ f ⌋ VV.
+Theorem pureF1__pureF1_rel_rw f (VV : IdentityF1_u):
+  ⌊ pureF1 f -⌋ = VV ↔ pureF1_rel f VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -841,78 +698,8 @@ Qed.
 #[global] Instance pureF1_lookup_rw: dictionary rwLem pureF1 := {
     lookup' := pureF1__pureF1_rel_rw }.
 
-Theorem pureF1__pureF1_rel
-  (f : @Pack
-       (@Pack
-        ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
-        (Z ::UT nilUT)
-        ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
-        Z
-        (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
-           (v_x_10329927 : Z),
-         ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : Z), True) x_10329927 v_x_10329927))
-        ::RT λ (lq_tmp1 : @Pack
-                          ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
-                          (Z ::UT nilUT)
-                          ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
-                          Z
-                          (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
-                             (v_x_10329927 : Z),
-                           ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : Z), True) x_10329927 v_x_10329927))),
-             nilRT)
-       (@uPack (Z ::UT nilUT) Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG ((@Pack
-  ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
-  (Z ::UT nilUT)
-  ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
-  Z
-  (λ (x_10329927 : ArgList ({VV: Z | True}
-                            ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
-     (v_x_10329927 : Z),
-   ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : Z), True) x_10329927 v_x_10329927))
-  ::RT λ (lq_tmp1 : @Pack
-                    ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
-                    (Z ::UT nilUT)
-                    ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
-                    Z
-                    (λ (x_10329927 : ArgList ({VV: Z | True}
-                                              ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
-                       (v_x_10329927 : Z),
-                     ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : Z), True) x_10329927 v_x_10329927))),
-       nilRT)) ((@uPack (Z ::UT nilUT) Z ::UT nilUT)))
-       Z
-       (λ (x_54436533 : ArgList (@Pack
-                                 ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
-                                 (Z ::UT nilUT)
-                                 ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
-                                 Z
-                                 (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
-                                    (v_x_10329927 : Z),
-                                  ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : Z), True) x_10329927 v_x_10329927))
-                                 ::RT λ (lq_tmp1 : @Pack
-                                                   ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
-                                                   (Z ::UT nilUT)
-                                                   ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
-                                                   Z
-                                                   (λ (x_10329927 : ArgList ({VV: Z | True}
-                                                                             ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
-                                                      (v_x_10329927 : Z),
-                                                    ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : Z), True) x_10329927 v_x_10329927))),
-                                      nilRT))
-          (v_x_54436533 : Z),
-        ltac:(flattenP (λ (lq_tmp1 : @Pack
-              ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
-              (Z ::UT nilUT)
-              ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
-              Z
-              (λ (x_10329927 : ArgList ({VV: Z | True}
-                                        ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
-                 (v_x_10329927 : Z),
-               ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : Z), True) x_10329927 v_x_10329927)))
-   (VV : Z),
- True) x_54436533 v_x_54436533)))
-  (VV : IdentityF1_u):
-  ⌊- pureF1 f -⌋ = VV ↔ pureF1_rel ⌊ f ⌋ VV.
+Theorem pureF1__pureF1_rel f (VV : IdentityF1_u):
+  ⌊ pureF1 f -⌋ = VV ↔ pureF1_rel f VV.
 Proof.
   f__f_rel.
 Qed.
