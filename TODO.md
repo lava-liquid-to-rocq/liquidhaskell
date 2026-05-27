@@ -6,12 +6,12 @@
 - [ ] merge implementation and minimize dependencies in liquidhaskell
 
 ### λr to Rocq:
-- [ ] do not create pack for function arguments that are of unit return type
 - [ ] fix position of assertions using proof combinators
-- [ ] something with SoftwareFoundations.identity_fn_applied_twice, where a subsumption might be necessary
 - [X] fix overload of names imported in Rocq (ex: SFBin.Z)
 - [X] fix type annotation in andb_commutative
 - [X] fix `getUPackRel` in SoftwareFoundations.identity_fn_applied_twice
+- [X] do not create pack for function arguments that are of unit return type
+- [X] something with SoftwareFoundations.identity_fn_applied_twice, where a subsumption might be necessary
 
 ### Rocq:
 - [ ] test automation tactics on fixed translation output

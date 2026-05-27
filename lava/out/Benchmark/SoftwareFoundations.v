@@ -563,14 +563,7 @@ Definition identity_fn_applied_twice_spec
        SFBool_u
        (λ (x_80611037 : ArgList (SFBool ::RT λ (lq_tmp0 : SFBool), nilRT)) (v_x_80611037 : SFBool_u),
         ltac:(flattenP (λ (lq_tmp0 : SFBool) (VV : SFBool_u), SFBool_wf VV ∧ True) x_80611037 v_x_80611037)))
-  (h : @Pack
-       (SFBool ::RT λ (x : SFBool), nilRT)
-       (SFBool_u ::UT nilUT)
-       ltac:(mkProjectsArgListTG (SFBool ::RT λ (x : SFBool), nilRT) ((SFBool_u ::UT nilUT)))
-       Unit
-       (λ (x_44180694 : ArgList (SFBool ::RT λ (x : SFBool), nilRT)) (v_x_44180694 : Unit),
-        ltac:(flattenP (λ (x : SFBool) (VV : Unit),
- ∃ (f_res : SFBool_u), getPackRel f ⌊ x -⌋ f_res ∧ f_res == ⌊ x -⌋) x_44180694 v_x_44180694)))
+  (h : ∀ (x : SFBool), {{∃ (f_res : SFBool_u), getPackRel f ⌊ x -⌋ f_res ∧ f_res == ⌊ x -⌋}})
   (b : SFBool):
   Type :=
   {{∃ (f_res : SFBool_u),
@@ -587,14 +580,7 @@ Theorem identity_fn_applied_twice
        SFBool_u
        (λ (x_80611037 : ArgList (SFBool ::RT λ (lq_tmp0 : SFBool), nilRT)) (v_x_80611037 : SFBool_u),
         ltac:(flattenP (λ (lq_tmp0 : SFBool) (VV : SFBool_u), SFBool_wf VV ∧ True) x_80611037 v_x_80611037)))
-  (h : @Pack
-       (SFBool ::RT λ (x : SFBool), nilRT)
-       (SFBool_u ::UT nilUT)
-       ltac:(mkProjectsArgListTG (SFBool ::RT λ (x : SFBool), nilRT) ((SFBool_u ::UT nilUT)))
-       Unit
-       (λ (x_44180694 : ArgList (SFBool ::RT λ (x : SFBool), nilRT)) (v_x_44180694 : Unit),
-        ltac:(flattenP (λ (x : SFBool) (VV : Unit),
- ∃ (f_res : SFBool_u), getPackRel f ⌊ x -⌋ f_res ∧ f_res == ⌊ x -⌋) x_44180694 v_x_44180694)))
+  (h : ∀ (x : SFBool), {{∃ (f_res : SFBool_u), getPackRel f ⌊ x -⌋ f_res ∧ f_res == ⌊ x -⌋}})
   (b : SFBool):
   identity_fn_applied_twice_spec f h b.
 Proof.
@@ -612,12 +598,12 @@ Proof.
                            ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) -⌋
                            f_res
                            ∧ f_res == ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) -⌋ :=
-           ⌈ getPackF h (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌉ in
+           ⌈ h (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌉ in
            ltac:(solver) in
            let H_64777607: ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋
                            == b :=
            let H_70617616: ∃ (f_res : SFBool_u), getPackRel f b f_res ∧ f_res == b :=
-           ⌈ getPackF h (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌉ in
+           ⌈ h (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌉ in
            ltac:(solver) in
            # unit)
           ltac:(solver)).

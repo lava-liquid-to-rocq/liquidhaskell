@@ -8,7 +8,7 @@
 -- Unrefined and refined translations are mutually dependent, so they are all in the same file
 module Lava.Translation where
 
-import Data.Bifunctor (bimap, second)
+import Data.Bifunctor (second)
 -- import Debug.Trace (trace)
 
 import Data.Maybe (fromMaybe)
@@ -70,8 +70,13 @@ utrDC c = unrefinedConstrName c
 utrRefType :: LH.RefType -> RocqType
 utrRefType (RefType _ tp _) = trBaseType tp
 utrRefType tp@(ArrType {}) =
-  let (argsUT, retUT) = bimap (map (utrRefType . snd)) (utrRefType . mkRefType) $ arrs tp
-   in UPack (UArgListT argsUT) retUT
+  let (args, ret@(_, retTp, _)) = arrs tp
+      argsUT = map (utrRefType . snd) args
+      retUT = utrRefType $ mkRefType ret
+   in -- If an arrow type returns unit, we do not create a pack
+      if retTp == LH.unitTp
+        then foldr Coq.Arrow retUT argsUT
+        else UPack (UArgListT argsUT) retUT
 
 -- | Translation of refinement types at top-level (with arrows)
 utrRefTypeTop :: LH.RefType -> RocqType
@@ -88,6 +93,10 @@ utrRefTypeTopProp (ArrType _ tpx tp) = Coq.Arrow (utrRefType tpx) (utrRefTypeTop
 utrReft :: Bool -> LH.Reft -> Coq.CoqTerm
 -- utrReft r | traceFunc "utrReft" [pPrint r] = undefined
 utrReft eq r0 = case r0 of
+  -- global theorem -> TODO
+  LH.Var _ (Just u) Global
+    | u == LH.unitTp ->
+        error "TODO: automatically create relation for theorem used in unrefined term"
   -- global function -> f_pack
   LH.Var x (Just _) Global -> Coq.Var $ upackInstanceName x
   -- global constant -> proj1_sig f
@@ -216,6 +225,8 @@ hypsRV eq rv graphRel = \p -> foldr hyp p rv
           if graphRel then (Forall, Coq.Bop (Binop Coq.Impl PropOp)) else (Exists, Coq.Bop (Binop Coq.And PropOp))
         (hd, args) = apps app
         (hdT, tpz) = case hd of
+          -- TODO for global theorems
+          LH.Var _ (Just u) Global | u == LH.unitTp -> error "TODO: what is the hypothesis for a theorem in hypsRV?"
           -- f -> f_rel for global functions (includes operators in `operatorsWithGraph`)
           LH.Var f (Just tp) Global -> (Coq.Def $ relDefName f, tp)
           -- f -> getPackRelName f for local HO variables that are not inside a projection
@@ -250,9 +261,11 @@ trRefType eq (RefType x tp r) =
       (LH.Builtin {}) -> utrReftProp eq r
       _ | tp `elem` builtinTCs -> utrReftProp eq r
       (LH.TC tc) -> Coq.Bop (Binop Coq.And PropOp) (Coq.App (Def $ wfTCName tc) [Coq.Var x]) (utrReftProp eq r)
--- TODO: I think if we have an arrtype of a unit type, we do not translate it to a pack
 trRefType eq tp@(ArrType {}) =
-  Pack argTps uargTps (ArgListCor (Coq.ArgListTArg argTps) uargTps) tpx p_
+  case ret of
+    -- For arrow types that return unit, we do not create a pack
+    (_, u, _) | u == LH.unitTp -> foldr Coq.FAType retT argsT
+    _ -> Pack argTps uargTps (ArgListCor (Coq.ArgListTArg argTps) uargTps) tpx p_
   where
     {- substs = map (\(w, _) -> (removeSuffix "_r" w, projectTm $ Var w)) args_
        cleanupSubst substs_ = subst substs_
@@ -260,7 +273,8 @@ trRefType eq tp@(ArrType {}) =
        tpx = cleanupSubst substs tpx_
        rx = subst substs rx_ -}
     (args, ret) = arrs tp
-    (x, tpx, rx) = fromSubset . trRefType eq $ mkRefType ret
+    retT = trRefType eq $ mkRefType ret
+    (x, tpx, rx) = fromSubset retT
     argsT = map (second (trRefType eq)) args
     argTps = ArgListT argsT
     uargTps = UArgListT $ map (utrRefType . snd) args
@@ -291,7 +305,8 @@ trRefTypeSplit eq tp =
 -- | Translation of refinements
 --   Function RtoR (def 3.8) of the paper
 trReft :: Bool -> LH.Reft -> Coq.CoqTerm
-trReft _ (LH.Var x (Just _) Global) = Coq.Def $ packInstanceName x
+trReft _ (LH.Var f (Just u) _) | u == LH.unitTp = Coq.Var f
+trReft _ (LH.Var f (Just _) Global) = Coq.Def $ packInstanceName f
 trReft _ (LH.Var x _ _) = Coq.Var x
 trReft _ (LH.StringLit s) = Coq.StringLiteral s
 trReft _ (LH.IntLit n) = Coq.IntLiteral n
@@ -311,9 +326,9 @@ trReft eq tm@(LH.App {}) = case apps tm of
   (LH.Var f _ (Recursive indVar state), args) ->
     trRecCall (if eq then Right f else Left indVar) state args
   -- apply local function
-  (LH.Var f _ Local, args) -> Coq.App (packGetF (Coq.Var f)) (map (trReft eq) args)
+  (LH.Var f (Just tp) Local, args) | tp /= LH.unitTp -> Coq.App (packGetF (Coq.Var f)) (map (trReft eq) args)
   -- apply global function
-  (LH.Var f _ Global, args) -> Coq.App (Coq.Def f) (map (trReft eq) args)
+  (LH.Var f (Just tp) Global, args) | tp /= LH.unitTp -> Coq.App (Coq.Def f) (map (trReft eq) args)
   -- other cases
   (hd, args) -> Coq.App (trReft eq hd) (map (trReft eq) args)
 
@@ -335,12 +350,14 @@ trExprTacs eq (LH.Let x (Just tpx@(RefType {})) e1 e2) =
   where
     x' = x ++ "'"
 trExprTacs eq (LH.Let x (Just tpx@(ArrType {})) e1 e2) =
-  [ AssertTacs x' (trRefTypeTop eq tpx) (intros : trExprTacs eq e1),
-    assertF
-  ]
-    ++ trExprTacs eq e2
+  if retTp == LH.unitTp
+    -- No packs for theorems
+    then AssertTacs x (trRefType eq tpx) (intros : trExprTacs eq e1) : trExprTacs eq e2
+    else
+      [AssertTacs x' (trRefTypeTop eq tpx) (intros : trExprTacs eq e1), assertF]
+        ++ trExprTacs eq e2
   where
-    (args, _) = arrs tpx
+    (args, (_, retTp, _)) = arrs tpx
     intros = Intros $ map (\(xi, _) -> DestrPat $ ConjDestrPat [SingleIdPat xi, SingleIdPat $ subsetWitnessNm xi]) args
     tpxT = trRefTypeTop eq tpx
     x' = "f_" ++ hashName tpxT
