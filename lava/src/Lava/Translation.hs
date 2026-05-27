@@ -139,10 +139,16 @@ operatorsWithGraph =
     (LH.Mod, LH.Var "modZ" (Just (LH.Builtin Integer)) Global)
   ]
 
--- | Returns an association of each application in the input to a fresh variable and the term where replacements of the applications by the associated variable have been done.
+-- | Returns an association of each application in the input to a fresh variable
+-- and the term where replacements of the applications by the associated variable have been done.
 -- In the list associating terms to variables, the replacements have also been done.
 -- For operators, we only extract the ones in the list operatorsWithGraph
--- Ex: extractApps ((f 0 1) + (f 0 1) + x) = ([(f 0 1, f_res)], f_res + f_res + x)
+-- Ex: extractApps ((f 0 1) + (f 0 1) + x) = ([(f 0 1, f_res), (f 0 1, f_res2)], f_res + f_res + x)
+--
+-- NOTE: we use different variables for different occurrences of the same
+-- application because syntactically equivalent applications can come from
+-- different applications after a substitution has been made.
+-- This poses problems at least in SoftwareFoundations.andb_commutive
 extractApps :: Reft -> ([(Reft, Id)], Reft)
 -- extractApps r | traceFunc "extractApps" [pPrint r] = undefined
 extractApps r0 = go [] r0
@@ -182,13 +188,10 @@ extractApps r0 = go [] r0
       Inj r' tp -> second (`Inj` tp) $ go env r'
       Sub r' from to -> second (\r'' -> Sub r'' from to) $ go env r'
       where
-        -- If r is in env, returns its associated variable,
-        -- otherwise creates a fresh variable, update env and returns the variable
-        updateEnv env' r' = case lookup r' env' of
-          Just z -> (env', LH.Var z Nothing Local)
-          Nothing ->
-            let z = freshName (fromMaybe "z" (headVar r')) env'
-             in (env' ++ [(r', z)], LH.Var z Nothing Local)
+        -- Creates a fresh variable, update env and returns the variable
+        updateEnv env' r' =
+          let z = freshName (fromMaybe "z" (headVar r')) env'
+           in (env' ++ [(r', z)], LH.Var z Nothing Local)
         -- f_res, f_res_2, f_res_3 etc
         freshName f env' =
           let isF r' = case headVar r' of Just f' -> f == f'; Nothing -> False

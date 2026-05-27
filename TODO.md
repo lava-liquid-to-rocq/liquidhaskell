@@ -9,7 +9,8 @@
 - [ ] figure out why axiomatize_next_term loops (or just takes a long time) in foldrUniversal
 - [ ] do not create pack for function arguments that are of unit return type
 - [ ] fix position of assertions using proof combinators
-- [ ] fix type annotation in andb_commutative
+- [ ] fix overload of names imported in Rocq (ex: SFBin.Z)
+- [X] fix type annotation in andb_commutative
 
 ## Possible improvements (non-priorities)
 
