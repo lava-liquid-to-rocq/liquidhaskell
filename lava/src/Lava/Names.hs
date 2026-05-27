@@ -54,6 +54,18 @@ preamble equations =
     scope x = text "Open Scope" <+> text x <> text "_scope."
 
 {- ORMOLU_DISABLE -}
+
+-- A non-exhaustive list of reserved names
+rocqReservedNames :: [Id]
+rocqReservedNames = [
+  "Z", "bool", "Set", "Type", "Prop",
+  "From", "Require", "Import", "Export", "Open", "Scope", "Z_scope", "Int_scope",
+  "LiquidPreludeUtil", "Unicode",
+  "Inductive", "Fixpoint", "Theorem", "Lemma", "Definition", "Hint",
+  "Proof", "Qed", "Defined", "Opaque", "Transparent",
+  "Resolve", "Global", "global", "Instance", "Notation", "Rewrite",
+  "match", "with", "let", "in", "by", "end", "if", "then", "else"]
+
 specName :: Id -> Id
 specName def = def ++ "_spec"
 unrefinedTCName :: Id -> Id
@@ -67,7 +79,6 @@ wfTCName name = name ++ "_wf"
 eqFunctionName :: Id -> Id
 eqFunctionName name = name ++ "_rec"
 
-{- ORMOLU_DISABLE -}
 packName :: Id
 upackName :: Id
 projPackName :: Id

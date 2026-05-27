@@ -1316,13 +1316,13 @@ Definition B1 : SFBit :=
 #[global] Hint Unfold B1: ref_constr_db.
 
 Inductive SFBin_u: Type :=
-  | Bin0_u: SFBin_u → SFBin_u | Bin1_u: SFBin_u → SFBin_u | Z_u: SFBin_u.
+  | Bin0_u: SFBin_u → SFBin_u | Bin1_u: SFBin_u → SFBin_u | SoftwareFoundations__Z_u: SFBin_u.
 
 Fixpoint SFBin_eq (x y : SFBin_u): bool :=
   match (x, y) with
   | (Bin0_u n, Bin0_u n') => true && SFBin_eq n n'
   | (Bin1_u n, Bin1_u n') => true && SFBin_eq n n'
-  | (Z_u, Z_u) => true
+  | (SoftwareFoundations__Z_u, SoftwareFoundations__Z_u) => true
   | (_, _) => false
   end.
 
@@ -1346,7 +1346,11 @@ Qed.
     eqb_eq' := SFBin_eqb_eq }.
 
 Fixpoint SFBin_wf (x : SFBin_u): Prop :=
-  match x with | Bin0_u n => SFBin_wf n ∧ True | Bin1_u n => SFBin_wf n ∧ True | Z_u => True end.
+  match x with
+  | Bin0_u n => SFBin_wf n ∧ True
+  | Bin1_u n => SFBin_wf n ∧ True
+  | SoftwareFoundations__Z_u => True
+  end.
 
 Theorem SFBin_wf_ref [p : SFBin_u → Prop] (tm : {v: SFBin_u | SFBin_wf v ∧ p v}): SFBin_wf ⌊ tm -⌋.
 Proof.
@@ -1371,13 +1375,13 @@ Defined.
 Definition Bin1 (n : SFBin): SFBin :=
   exist _ (Bin1_u ⌊ n -⌋) (Bin1_lem n).
 
-Definition Z_lem : SFBin_wf Z_u ∧ True.
+Definition SoftwareFoundations__Z_lem : SFBin_wf SoftwareFoundations__Z_u ∧ True.
 Proof.
   repeat first [split | solver].
 Defined.
 
-Definition Z : SFBin :=
-  exist _ Z_u Z_lem.
+Definition SoftwareFoundations__Z : SFBin :=
+  exist _ SoftwareFoundations__Z_u SoftwareFoundations__Z_lem.
 
 Definition wf_Bin0_n [n : SFBin_u] (p : SFBin_wf (Bin0_u n)): SFBin_wf n.
 Proof.
@@ -1403,7 +1407,7 @@ Defined.
 
 #[global] Hint Unfold Bin1: ref_constr_db.
 
-#[global] Hint Unfold Z: ref_constr_db.
+#[global] Hint Unfold SoftwareFoundations__Z: ref_constr_db.
 
 Definition bin_to_nat_spec (ds_d5S9 : SFBin): Type :=
   {VV: Z | True}.
@@ -1447,7 +1451,7 @@ Inductive bin_to_nat_rel: SFBin_u → Z → Prop :=
                      → ∀ (multZ_res : Z),
                        multZ_rel 2 bin_to_nat_res multZ_res
                        → ∀ (addZ_res : Z), addZ_rel 1 multZ_res addZ_res → bin_to_nat_rel (Bin1_u m') addZ_res
-  | bin_to_nat_Z: bin_to_nat_rel Z_u 0.
+  | bin_to_nat_SoftwareFoundations__Z: bin_to_nat_rel SoftwareFoundations__Z_u 0.
 
 #[global] Hint Constructors bin_to_nat_rel: core_hint_db.
 
@@ -1491,13 +1495,14 @@ Qed.
 
 #[global] Hint Rewrite bin_to_nat_Bin1_lem: f_rel_back.
 
-Theorem bin_to_nat_Z_lem bin_to_nat_Z_lem_res:
-  bin_to_nat_rel Z_u bin_to_nat_Z_lem_res ↔ bin_to_nat_Z_lem_res == 0.
+Theorem bin_to_nat_SoftwareFoundations__Z_lem bin_to_nat_SoftwareFoundations__Z_lem_res:
+  bin_to_nat_rel SoftwareFoundations__Z_u bin_to_nat_SoftwareFoundations__Z_lem_res
+  ↔ bin_to_nat_SoftwareFoundations__Z_lem_res == 0.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite bin_to_nat_Z_lem: f_rel_back.
+#[global] Hint Rewrite bin_to_nat_SoftwareFoundations__Z_lem: f_rel_back.
 
 Theorem bin_to_nat_rel_ex (ds_d5S9 : SFBin_u) (ds_d5S9_p : SFBin_wf ds_d5S9 ∧ True):
   bin_to_nat_rel ds_d5S9 ⌊ bin_to_nat (exist _ ds_d5S9 ds_d5S9_p) -⌋.
@@ -1581,7 +1586,7 @@ Defined.
 
 Definition test_bin_incr4_spec : Type :=
   {{∃ (bin_to_nat_res : Z),
-    bin_to_nat_rel (Bin0_u (Bin1_u Z_u)) bin_to_nat_res ∧ bin_to_nat_res == 2}}.
+    bin_to_nat_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) bin_to_nat_res ∧ bin_to_nat_res == 2}}.
 
 #[global] Hint Unfold test_bin_incr4_spec: lia_unfold.
 
@@ -1590,7 +1595,8 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ (bin_to_nat_res : Z), bin_to_nat_rel (Bin0_u (Bin1_u Z_u)) bin_to_nat_res ∧ bin_to_nat_res == 2)
+           ∃ (bin_to_nat_res : Z),
+           bin_to_nat_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) bin_to_nat_res ∧ bin_to_nat_res == 2)
           (# unit)
           ltac:(solver)).
 Qed.
@@ -1606,14 +1612,14 @@ Proof.
   induction ds_d5Sa as [m' _| m' IH_m'|].
   - refine (Bin1 (exist (λ (n : SFBin_u), SFBin_wf n ∧ True) m' ltac:(solver))).
   - refine (Bin0 (IH_m' ltac:(try clear IH_m'; solver))).
-  - refine (Bin1 Z).
+  - refine (Bin1 SoftwareFoundations__Z).
 Defined.
 
 Inductive incr_rel: SFBin_u → SFBin_u → Prop :=
   | incr_Bin0: ∀ m', incr_rel (Bin0_u m') (Bin1_u m')
   | incr_Bin1: ∀ m' (incr_res : SFBin_u),
                incr_rel m' incr_res → incr_rel (Bin1_u m') (Bin0_u incr_res)
-  | incr_Z: incr_rel Z_u (Bin1_u Z_u).
+  | incr_SoftwareFoundations__Z: incr_rel SoftwareFoundations__Z_u (Bin1_u SoftwareFoundations__Z_u).
 
 #[global] Hint Constructors incr_rel: core_hint_db.
 
@@ -1649,12 +1655,14 @@ Qed.
 
 #[global] Hint Rewrite incr_Bin1_lem: f_rel_back.
 
-Theorem incr_Z_lem incr_Z_lem_res: incr_rel Z_u incr_Z_lem_res ↔ incr_Z_lem_res == Bin1_u Z_u.
+Theorem incr_SoftwareFoundations__Z_lem incr_SoftwareFoundations__Z_lem_res:
+  incr_rel SoftwareFoundations__Z_u incr_SoftwareFoundations__Z_lem_res
+  ↔ incr_SoftwareFoundations__Z_lem_res == Bin1_u SoftwareFoundations__Z_u.
 Proof.
   rel_back' _nil.
 Qed.
 
-#[global] Hint Rewrite incr_Z_lem: f_rel_back.
+#[global] Hint Rewrite incr_SoftwareFoundations__Z_lem: f_rel_back.
 
 Theorem incr_rel_ex (ds_d5Sa : SFBin_u) (ds_d5Sa_p : SFBin_wf ds_d5Sa ∧ True):
   incr_rel ds_d5Sa ⌊ incr (exist _ ds_d5Sa ds_d5Sa_p) -⌋.
@@ -1731,7 +1739,9 @@ Proof.
 Defined.
 
 Definition test_bin_incr1_spec : Type :=
-  {{∃ (incr_res : SFBin_u), incr_rel (Bin1_u Z_u) incr_res ∧ incr_res == Bin0_u (Bin1_u Z_u)}}.
+  {{∃ (incr_res : SFBin_u),
+    incr_rel (Bin1_u SoftwareFoundations__Z_u) incr_res
+    ∧ incr_res == Bin0_u (Bin1_u SoftwareFoundations__Z_u)}}.
 
 #[global] Hint Unfold test_bin_incr1_spec: lia_unfold.
 
@@ -1740,14 +1750,17 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ (incr_res : SFBin_u), incr_rel (Bin1_u Z_u) incr_res ∧ incr_res == Bin0_u (Bin1_u Z_u))
+           ∃ (incr_res : SFBin_u),
+           incr_rel (Bin1_u SoftwareFoundations__Z_u) incr_res
+           ∧ incr_res == Bin0_u (Bin1_u SoftwareFoundations__Z_u))
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_bin_incr2_spec : Type :=
   {{∃ (incr_res : SFBin_u),
-    incr_rel (Bin0_u (Bin1_u Z_u)) incr_res ∧ incr_res == Bin1_u (Bin1_u Z_u)}}.
+    incr_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) incr_res
+    ∧ incr_res == Bin1_u (Bin1_u SoftwareFoundations__Z_u)}}.
 
 #[global] Hint Unfold test_bin_incr2_spec: lia_unfold.
 
@@ -1756,14 +1769,17 @@ Proof.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
-           ∃ (incr_res : SFBin_u), incr_rel (Bin0_u (Bin1_u Z_u)) incr_res ∧ incr_res == Bin1_u (Bin1_u Z_u))
+           ∃ (incr_res : SFBin_u),
+           incr_rel (Bin0_u (Bin1_u SoftwareFoundations__Z_u)) incr_res
+           ∧ incr_res == Bin1_u (Bin1_u SoftwareFoundations__Z_u))
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_bin_incr3_spec : Type :=
   {{∃ (incr_res : SFBin_u),
-    incr_rel (Bin1_u (Bin1_u Z_u)) incr_res ∧ incr_res == Bin0_u (Bin0_u (Bin1_u Z_u))}}.
+    incr_rel (Bin1_u (Bin1_u SoftwareFoundations__Z_u)) incr_res
+    ∧ incr_res == Bin0_u (Bin0_u (Bin1_u SoftwareFoundations__Z_u))}}.
 
 #[global] Hint Unfold test_bin_incr3_spec: lia_unfold.
 
@@ -1773,18 +1789,19 @@ Proof.
           Unit
           (λ (VV : Unit),
            ∃ (incr_res : SFBin_u),
-           incr_rel (Bin1_u (Bin1_u Z_u)) incr_res ∧ incr_res == Bin0_u (Bin0_u (Bin1_u Z_u)))
+           incr_rel (Bin1_u (Bin1_u SoftwareFoundations__Z_u)) incr_res
+           ∧ incr_res == Bin0_u (Bin0_u (Bin1_u SoftwareFoundations__Z_u)))
           (# unit)
           ltac:(solver)).
 Qed.
 
 Definition test_bin_incr5_spec : Type :=
   {{∃ (incr_res : SFBin_u),
-    incr_rel (Bin1_u Z_u) incr_res
+    incr_rel (Bin1_u SoftwareFoundations__Z_u) incr_res
     ∧ ∃ (bin_to_nat_res : Z),
       bin_to_nat_rel incr_res bin_to_nat_res
       ∧ ∃ (bin_to_nat_res_2 : Z),
-        bin_to_nat_rel (Bin1_u Z_u) bin_to_nat_res_2
+        bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2
         ∧ ∃ (addZ_res : Z), addZ_rel 1 bin_to_nat_res_2 addZ_res ∧ bin_to_nat_res == addZ_res}}.
 
 #[global] Hint Unfold test_bin_incr5_spec: lia_unfold.
@@ -1795,11 +1812,11 @@ Proof.
           Unit
           (λ (VV : Unit),
            ∃ (incr_res : SFBin_u),
-           incr_rel (Bin1_u Z_u) incr_res
+           incr_rel (Bin1_u SoftwareFoundations__Z_u) incr_res
            ∧ ∃ (bin_to_nat_res : Z),
              bin_to_nat_rel incr_res bin_to_nat_res
              ∧ ∃ (bin_to_nat_res_2 : Z),
-               bin_to_nat_rel (Bin1_u Z_u) bin_to_nat_res_2
+               bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2
                ∧ ∃ (addZ_res : Z), addZ_rel 1 bin_to_nat_res_2 addZ_res ∧ bin_to_nat_res == addZ_res)
           (# unit)
           ltac:(solver)).
@@ -1807,13 +1824,13 @@ Qed.
 
 Definition test_bin_incr6_spec : Type :=
   {{∃ (incr_res : SFBin_u),
-    incr_rel (Bin1_u Z_u) incr_res
+    incr_rel (Bin1_u SoftwareFoundations__Z_u) incr_res
     ∧ ∃ (incr_res_2 : SFBin_u),
       incr_rel incr_res incr_res_2
       ∧ ∃ (bin_to_nat_res : Z),
         bin_to_nat_rel incr_res_2 bin_to_nat_res
         ∧ ∃ (bin_to_nat_res_2 : Z),
-          bin_to_nat_rel (Bin1_u Z_u) bin_to_nat_res_2
+          bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2
           ∧ ∃ (addZ_res : Z), addZ_rel 2 bin_to_nat_res_2 addZ_res ∧ bin_to_nat_res == addZ_res}}.
 
 #[global] Hint Unfold test_bin_incr6_spec: lia_unfold.
@@ -1824,13 +1841,13 @@ Proof.
           Unit
           (λ (VV : Unit),
            ∃ (incr_res : SFBin_u),
-           incr_rel (Bin1_u Z_u) incr_res
+           incr_rel (Bin1_u SoftwareFoundations__Z_u) incr_res
            ∧ ∃ (incr_res_2 : SFBin_u),
              incr_rel incr_res incr_res_2
              ∧ ∃ (bin_to_nat_res : Z),
                bin_to_nat_rel incr_res_2 bin_to_nat_res
                ∧ ∃ (bin_to_nat_res_2 : Z),
-                 bin_to_nat_rel (Bin1_u Z_u) bin_to_nat_res_2
+                 bin_to_nat_rel (Bin1_u SoftwareFoundations__Z_u) bin_to_nat_res_2
                  ∧ ∃ (addZ_res : Z), addZ_rel 2 bin_to_nat_res_2 addZ_res ∧ bin_to_nat_res == addZ_res)
           (# unit)
           ltac:(solver)).
