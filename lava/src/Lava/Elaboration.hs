@@ -216,11 +216,11 @@ wfDecls γ (Definition f tpf e isRefl : decls) = do
   -- elaboration of the body.
   -- We do not do it for the type tpf' because it is the complete dependent
   -- arrow that binds the parameters as refined
-  let γfargs = insertLocalVars (map (second (removeArgProjs False)) args) γf
+  let γfargs = insertLocalVars (map (second (removeProjs False Set.empty)) args) γf
   let initBrPat = map (\(x, tpx) -> Param x (arity tpx)) args
   -- We remove the projections of parameters from ret, since parameters are
   -- considered unrefined
-  e' <- inDecl $ checkExpr γfargs initBrPat (removeRedundantMatches e) (removeArgProjs False ret)
+  e' <- inDecl $ checkExpr γfargs initBrPat (removeRedundantMatches e) (removeProjs False Set.empty ret)
   γf' <- inDecl $ changeRecToGlobal f γf
   decls' <- wfDecls γf' decls
   return $ Definition f tpf' e' isRefl : decls'
@@ -369,8 +369,8 @@ checkExpr γ state (Let x (Just tpx) ex e) tp = do
   _ <- wfRefType γ tp -- check that tp does not depend on x
   tpx' <- wfRefType γ tpx
   let (args, ret) = second mkRefType $ arrs tpx'
-  let γx = insertLocalVars (map (second (removeArgProjs False)) args) γ
-  ex' <- checkExpr γx state ex (removeArgProjs False ret)
+  let γx = insertLocalVars (map (second (removeProjs False Set.empty)) args) γ
+  ex' <- checkExpr γx state ex (removeProjs False Set.empty ret)
   let γ' = insertLocalVar (x, tpx') γ
   e' <- checkExpr γ' state e tp
   return (Let x (Just tpx') ex' e')
@@ -451,7 +451,7 @@ checkExpr γ state e0@(Case r branches _) tp = do
             _ -> (γ, tp)
           -- We remove projections from the types of the variables
           -- introduced by the patterns, as these are considered unrefined
-          γ' = insertLocalVars (map (second (removeArgProjs False)) argsc) γ''
+          γ' = insertLocalVars (map (second (removeProjs False Set.empty)) argsc) γ''
       e'' <- checkExpr γ' state' e' tp'
       return (((c, ys), Just e''), indVars)
       where

@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Set Universe Polymorphism. 
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 
 Inductive SFBool_u: Type :=
@@ -604,20 +604,21 @@ Proof.
           (λ (VV : Unit),
            ∃ (f_res : SFBool_u),
            getPackRel f b f_res ∧ ∃ (f_res_2 : SFBool_u), getPackRel f f_res f_res_2 ∧ f_res_2 == b)
-          (let H_76624381: True :=
-           ⌈ let H_11452468: ⌊ getPackF f
+          (let H_18214262: True :=
+           ⌈ let H_46414952: ⌊ getPackF f
                                (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌋
                              == ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋ :=
-             let H_63478593: ∃ (f_res : SFBool_u),
-                             getUPackRel f b f_res
-                             ∧ ∃ (f_res_2 : SFBool_u),
-                               getPackRel f f_res f_res_2
-                               ∧ ∃ (f_res_3 : SFBool_u), getUPackRel f b f_res_3 ∧ f_res_2 == f_res_3 :=
+             let H_24986112: ∃ (f_res : SFBool_u),
+                             getPackRel f
+                             ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) -⌋
+                             f_res
+                             ∧ f_res
+                               == ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) -⌋ :=
              ⌈ getPackF h (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌉ in
              ltac:(solver) in
-             let H_30888203: ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋
+             let H_64777607: ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋
                              == b :=
-             let H_26651953: ∃ (f_res : SFBool_u), getPackRel f b f_res ∧ f_res == b :=
+             let H_70617616: ∃ (f_res : SFBool_u), getPackRel f b f_res ∧ f_res == b :=
              ⌈ getPackF h (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌉ in
              ltac:(solver) in
              # unit ⌉ in

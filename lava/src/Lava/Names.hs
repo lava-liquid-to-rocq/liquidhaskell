@@ -43,7 +43,7 @@ preamble equations =
     [ text "From coqDeps Require Export LiquidPreludeUtil.",
       scope "Z",
       scope "Int",
-      text "Set Universe Polymorphism. ",
+      text "Set Universe Polymorphism.",
       text "From Coq Require Import Unicode.Utf8."
       -- For debugging
       -- text "Ltac solver := quicksolve."

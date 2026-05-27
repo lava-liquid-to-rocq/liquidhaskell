@@ -7,7 +7,7 @@
 -- | Grammars, printer and suable functions for ILH
 module Lava.Calculus where
 
-import Data.Bifunctor (first)
+import Data.Bifunctor (first, second)
 import Data.Data
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
@@ -320,24 +320,39 @@ renameParams = aux []
     aux σ (y : ys) (ArrType x tpx tp) =
       ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
 
--- Remove projections Proj around first-order terms in the type.
--- If the flag is True, remove them also around higher-order ones.
--- This function should be used at top-level, where only variables appear inside projections
+-- | Remove projections around first-order arguments of the type
+-- If the flag is True, remove them everywhere.
+-- This function should be used when only variables appear inside projections.
 removeArgProjs :: Bool -> RefType -> RefType
-removeArgProjs hoToo (ArrType x tpx tp) = ArrType x (removeArgProjs hoToo tpx) (removeArgProjs hoToo tp)
-removeArgProjs hoToo (RefType y a reft) = RefType y a (aux reft)
+removeArgProjs allProjs tp =
+  let (args, (v, retTp, retReft)) = arrs tp
+      args' = map (second (removeProjs allProjs Set.empty)) args
+      ret' = removeProjs allProjs Set.empty (RefType v retTp retReft)
+   in foldr (\(x, tpx) acc -> ArrType x tpx acc) ret' args'
+
+-- | Remove projections around first-order variables in a type
+-- The first parameter contains the variables for those we should keep the projection:
+-- variables introduced by the arrow of a HO parameter.
+-- The second parameter contains variables whose projection should not be erased
+removeProjs :: Bool -> Set Id -> RefType -> RefType
+-- In x:tpx -> tp, we do not want to remove projections around the occurences of x in tp (if allProjs is False)
+removeProjs allProjs vars (ArrType x tpx tp') =
+  ArrType x (removeProjs allProjs vars tpx) (removeProjs allProjs (x `Set.insert` vars) tp')
+removeProjs allProjs vars' (RefType y a reft) = RefType y a (aux vars' reft)
   where
-    aux (Proj _ (Var x Nothing loc)) = Var x Nothing loc
-    aux projf@(Proj _ f@(Var _ (Just _) _)) = if hoToo then f else projf
-    aux p@(Proj {}) =
+    aux _ (Proj _ r) | allProjs = r
+    aux vars projx@(Proj _ (Var x Nothing loc)) =
+      if x `elem` vars then projx else Var x Nothing loc
+    aux _ projf@(Proj _ (Var _ (Just _) _)) = projf
+    aux _ p@(Proj {}) =
       error $ "Calculus.removeArgProjs should only be used at top-level, when projections are made only on local variables. Found term: " ++ prettyShow p
-    aux r@(Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = r
-    aux (App r1 r2) = App (aux r1) (aux r2)
-    aux (Neg r) = Neg (aux r)
-    aux (Bop bop r1 r2) = Bop bop (aux r1) (aux r2)
-    aux (QMark r rh rp) = QMark (aux r) (aux rh) (aux rp)
-    aux (Pop pop r1 r2) = Pop pop (aux r1) (aux r2)
-    aux (Sub {}; Inj {}) = error "Subsumption or injection cast found in type refinement in Calculus.removeArgProjs."
+    aux _ r@(Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = r
+    aux vars (App r1 r2) = App (aux vars r1) (aux vars r2)
+    aux vars (Neg r) = Neg (aux vars r)
+    aux vars (Bop bop r1 r2) = Bop bop (aux vars r1) (aux vars r2)
+    aux vars (QMark r rh rp) = QMark (aux vars r) (aux vars rh) (aux vars rp)
+    aux vars (Pop pop r1 r2) = Pop pop (aux vars r1) (aux vars r2)
+    aux _ (Sub {}; Inj {}) = error "Subsumption or injection cast found in type refinement in Calculus.removeArgProjs."
 
 -- * Typeclass related to free variables
 
