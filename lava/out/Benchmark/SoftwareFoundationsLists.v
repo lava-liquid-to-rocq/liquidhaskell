@@ -7,7 +7,7 @@ Load Benchmark.SoftwareFoundationsInduction.
 Inductive Natprod_u: Type :=
   | Pair_u: MyNat_u → MyNat_u → Natprod_u.
 
-Fixpoint Natprod_eq (x y : Natprod_u): bool :=
+Definition Natprod_eq (x y : Natprod_u): bool :=
   match (x, y) with | (Pair_u n1 n2, Pair_u n1' n2') => (true && (n1 ==? n1')) && (n2 ==? n2') end.
 
 Theorem Natprod_eq_refl : ∀ (x : Natprod_u), is_true (Natprod_eq x x).
@@ -29,7 +29,7 @@ Qed.
     refl' := Natprod_eq_refl;
     eqb_eq' := Natprod_eqb_eq }.
 
-Fixpoint Natprod_wf (x : Natprod_u): Prop :=
+Definition Natprod_wf (x : Natprod_u): Prop :=
   match x with | Pair_u n1 n2 => (MyNat_wf n1 ∧ True) ∧ (MyNat_wf n2 ∧ True) end.
 
 Theorem Natprod_wf_ref [p : Natprod_u → Prop] (tm : {v: Natprod_u | Natprod_wf v ∧ p v}):

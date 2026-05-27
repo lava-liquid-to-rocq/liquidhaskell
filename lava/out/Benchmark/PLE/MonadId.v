@@ -7,7 +7,7 @@ From Coq Require Import Unicode.Utf8.
 Inductive Identity_u: Type :=
   | Val_u: Z → Identity_u.
 
-Fixpoint Identity_eq (x y : Identity_u): bool :=
+Definition Identity_eq (x y : Identity_u): bool :=
   match (x, y) with | (Val_u n, Val_u n') => true && (n ==? n') end.
 
 Theorem Identity_eq_refl : ∀ (x : Identity_u), is_true (Identity_eq x x).
@@ -29,7 +29,7 @@ Qed.
     refl' := Identity_eq_refl;
     eqb_eq' := Identity_eqb_eq }.
 
-Fixpoint Identity_wf (x : Identity_u): Prop :=
+Definition Identity_wf (x : Identity_u): Prop :=
   match x with | Val_u n => True end.
 
 Theorem Identity_wf_ref [p : Identity_u → Prop] (tm : {v: Identity_u | Identity_wf v ∧ p v}):

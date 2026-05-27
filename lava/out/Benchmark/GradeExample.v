@@ -7,7 +7,7 @@ From Coq Require Import Unicode.Utf8.
 Inductive Modifier_u: Type :=
   | Minus_u: Modifier_u | Natural_u: Modifier_u | Plus_u: Modifier_u.
 
-Fixpoint Modifier_eq (x y : Modifier_u): bool :=
+Definition Modifier_eq (x y : Modifier_u): bool :=
   match (x, y) with
   | (Minus_u, Minus_u) => true
   | (Natural_u, Natural_u) => true
@@ -34,7 +34,7 @@ Qed.
     refl' := Modifier_eq_refl;
     eqb_eq' := Modifier_eqb_eq }.
 
-Fixpoint Modifier_wf (x : Modifier_u): Prop :=
+Definition Modifier_wf (x : Modifier_u): Prop :=
   match x with | Minus_u => True | Natural_u => True | Plus_u => True end.
 
 Theorem Modifier_wf_ref [p : Modifier_u → Prop] (tm : {v: Modifier_u | Modifier_wf v ∧ p v}):
@@ -84,7 +84,7 @@ Definition Plus : Modifier :=
 Inductive Letter_u: Type :=
   | A_u: Letter_u | B_u: Letter_u | C_u: Letter_u | D_u: Letter_u | F_u: Letter_u.
 
-Fixpoint Letter_eq (x y : Letter_u): bool :=
+Definition Letter_eq (x y : Letter_u): bool :=
   match (x, y) with
   | (A_u, A_u) => true
   | (B_u, B_u) => true
@@ -113,7 +113,7 @@ Qed.
     refl' := Letter_eq_refl;
     eqb_eq' := Letter_eqb_eq }.
 
-Fixpoint Letter_wf (x : Letter_u): Prop :=
+Definition Letter_wf (x : Letter_u): Prop :=
   match x with | A_u => True | B_u => True | C_u => True | D_u => True | F_u => True end.
 
 Theorem Letter_wf_ref [p : Letter_u → Prop] (tm : {v: Letter_u | Letter_wf v ∧ p v}):
@@ -357,7 +357,7 @@ Qed.
 Inductive Grades_u: Type :=
   | Grade_u: Letter_u → Modifier_u → Grades_u.
 
-Fixpoint Grades_eq (x y : Grades_u): bool :=
+Definition Grades_eq (x y : Grades_u): bool :=
   match (x, y) with
   | (Grade_u VV VV_, Grade_u VV' VV_') => (true && (VV ==? VV')) && (VV_ ==? VV_')
   end.
@@ -381,7 +381,7 @@ Qed.
     refl' := Grades_eq_refl;
     eqb_eq' := Grades_eqb_eq }.
 
-Fixpoint Grades_wf (x : Grades_u): Prop :=
+Definition Grades_wf (x : Grades_u): Prop :=
   match x with | Grade_u VV VV_ => (Letter_wf VV ∧ True) ∧ (Modifier_wf VV_ ∧ True) end.
 
 Theorem Grades_wf_ref [p : Grades_u → Prop] (tm : {v: Grades_u | Grades_wf v ∧ p v}):
@@ -931,7 +931,7 @@ Qed.
 Inductive Comparison_u: Type :=
   | Eq_u: Comparison_u | Gt_u: Comparison_u | Lt_u: Comparison_u.
 
-Fixpoint Comparison_eq (x y : Comparison_u): bool :=
+Definition Comparison_eq (x y : Comparison_u): bool :=
   match (x, y) with
   | (Eq_u, Eq_u) => true
   | (Gt_u, Gt_u) => true
@@ -958,7 +958,7 @@ Qed.
     refl' := Comparison_eq_refl;
     eqb_eq' := Comparison_eqb_eq }.
 
-Fixpoint Comparison_wf (x : Comparison_u): Prop :=
+Definition Comparison_wf (x : Comparison_u): Prop :=
   match x with | Eq_u => True | Gt_u => True | Lt_u => True end.
 
 Theorem Comparison_wf_ref

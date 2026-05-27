@@ -233,7 +233,7 @@ Qed.
 Inductive Pair_u: Type :=
   | MkPair_u: Z → Z → Pair_u.
 
-Fixpoint Pair_eq (x y : Pair_u): bool :=
+Definition Pair_eq (x y : Pair_u): bool :=
   match (x, y) with
   | (MkPair_u VV VV_, MkPair_u VV' VV_') => (true && (VV ==? VV')) && (VV_ ==? VV_')
   end.
@@ -257,7 +257,7 @@ Qed.
     refl' := Pair_eq_refl;
     eqb_eq' := Pair_eqb_eq }.
 
-Fixpoint Pair_wf (x : Pair_u): Prop :=
+Definition Pair_wf (x : Pair_u): Prop :=
   match x with | MkPair_u VV VV_ => True end.
 
 Theorem Pair_wf_ref [p : Pair_u → Prop] (tm : {v: Pair_u | Pair_wf v ∧ p v}): Pair_wf ⌊ tm -⌋.
@@ -814,7 +814,7 @@ Defined.
 Inductive PairL_u: Type :=
   | MkPairL_u: L_u → L_u → PairL_u.
 
-Fixpoint PairL_eq (x y : PairL_u): bool :=
+Definition PairL_eq (x y : PairL_u): bool :=
   match (x, y) with
   | (MkPairL_u VV VV_, MkPairL_u VV' VV_') => (true && (VV ==? VV')) && (VV_ ==? VV_')
   end.
@@ -838,7 +838,7 @@ Qed.
     refl' := PairL_eq_refl;
     eqb_eq' := PairL_eqb_eq }.
 
-Fixpoint PairL_wf (x : PairL_u): Prop :=
+Definition PairL_wf (x : PairL_u): Prop :=
   match x with | MkPairL_u VV VV_ => (L_wf VV ∧ True) ∧ (L_wf VV_ ∧ True) end.
 
 Theorem PairL_wf_ref [p : PairL_u → Prop] (tm : {v: PairL_u | PairL_wf v ∧ p v}): PairL_wf ⌊ tm -⌋.

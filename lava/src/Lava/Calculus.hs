@@ -282,6 +282,12 @@ isValue (Inj r _) = isValue r
 isValue (Proj _ r) = isValue r
 isValue (Var {}; Neg {}; Bop {}) = False
 
+isRecTC :: Id -> [(Id, RefType)] -> Bool
+isRecTC tc = any (isRecursive . snd)
+  where
+    isRecursive tp = any (isTC . snd) (fst $ arrs tp)
+    isTC tp' = case tp' of RefType _ (TC tc') _ -> tc' == tc; _ -> False
+
 -- | Harmonize the names of the variables bound by arrows:
 --
 -- > harmonizeBinderNames(x1:{x1':tp1 | r1} -> … -> xn:{xn':tpn | rn} -> {v:tp | rv})

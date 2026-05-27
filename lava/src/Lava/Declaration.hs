@@ -31,7 +31,7 @@ trDecl :: Bool -> LH.Decl -> [Coq.Decl]
 trDecl equations (LH.Data tc alts) =
   unrefTCDecl tc alts --                     TC_u: unrefined datatype declaration
     : tcEqDecls tc alts --                   TC_eq: equality for TC_u and associated declarations
-    ++ tcRefDecls equations tc alts --                 TC_wf and TC: Well-formedness and type alias
+    ++ tcRefDecls equations tc alts --       TC_wf and TC: Well-formedness and type alias
     ++ concatMap (mkPseudoConstr equations tc) alts -- C_i: Refined data constructors
     ++ concatMap (mkConstrWf tc) alts --     Lemmas for decomposing well-formedness on data constructors
     ++ tcHints tc alts --                    Final hints for datatypes and constructor
@@ -87,7 +87,7 @@ tcEqDecls tc alts = eqDecl tc alts : eqReflLem tc ++ eqbEqLem tc ++ [eqbInstance
 -- > Fixpoint TC_eq (x: TC_u) (y: TC_u): bool := ...
 eqDecl :: Id -> [(Id, RefType)] -> Coq.Decl
 eqDecl tc alts =
-  Fix (tcEqName tc) [(("x", unrefTC tc), False), (("y", unrefTC tc), False)] Coq.boolTp $
+  mkCoqFix (isRecTC tc alts) (tcEqName tc) [(("x", unrefTC tc), False), (("y", unrefTC tc), False)] Coq.boolTp $
     Match [Coq.Var "x", Coq.Var "y"] Nothing (map mkConstrEqBranch alts ++ [defaultBranch | length alts > 1])
   where
     mkConstrEqBranch :: (Id, RefType) -> ([(Id, [Id])], CoqTerm)
@@ -165,7 +165,7 @@ tcRefDecls eq tc alts = [wfDecl eq tc alts, wfLem tc, refTCDecl tc]
 -- > Fixpoint TC_wf (x: TC_u): Prop := match x with ...
 wfDecl :: Bool -> Id -> [(Id, RefType)] -> Coq.Decl
 wfDecl eq tc alts =
-  Fix (wfTCName tc) [(("x", unrefTC tc), False)] (Sort PropSort) $
+  mkCoqFix (isRecTC tc alts) (wfTCName tc) [(("x", unrefTC tc), False)] (Sort PropSort) $
     Match [Coq.Var "x"] Nothing (map mkBranch alts)
   where
     mkBranch :: (Id, RefType) -> ([(Id, [Id])], CoqTerm)

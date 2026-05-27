@@ -7,7 +7,7 @@ From Coq Require Import Unicode.Utf8.
 Inductive MaybeInt_u: Type :=
   | Just_u: Z → MaybeInt_u | Nothing_u: MaybeInt_u.
 
-Fixpoint MaybeInt_eq (x y : MaybeInt_u): bool :=
+Definition MaybeInt_eq (x y : MaybeInt_u): bool :=
   match (x, y) with
   | (Just_u VV, Just_u VV') => true && (VV ==? VV')
   | (Nothing_u, Nothing_u) => true
@@ -33,7 +33,7 @@ Qed.
     refl' := MaybeInt_eq_refl;
     eqb_eq' := MaybeInt_eqb_eq }.
 
-Fixpoint MaybeInt_wf (x : MaybeInt_u): Prop :=
+Definition MaybeInt_wf (x : MaybeInt_u): Prop :=
   match x with | Just_u VV => True | Nothing_u => True end.
 
 Theorem MaybeInt_wf_ref [p : MaybeInt_u → Prop] (tm : {v: MaybeInt_u | MaybeInt_wf v ∧ p v}):

@@ -7,7 +7,7 @@ From Coq Require Import Unicode.Utf8.
 Inductive SFBool_u: Type :=
   | SFFalse_u: SFBool_u | SFTrue_u: SFBool_u.
 
-Fixpoint SFBool_eq (x y : SFBool_u): bool :=
+Definition SFBool_eq (x y : SFBool_u): bool :=
   match (x, y) with
   | (SFFalse_u, SFFalse_u) => true
   | (SFTrue_u, SFTrue_u) => true
@@ -33,7 +33,7 @@ Qed.
     refl' := SFBool_eq_refl;
     eqb_eq' := SFBool_eqb_eq }.
 
-Fixpoint SFBool_wf (x : SFBool_u): Prop :=
+Definition SFBool_wf (x : SFBool_u): Prop :=
   match x with | SFFalse_u => True | SFTrue_u => True end.
 
 Theorem SFBool_wf_ref [p : SFBool_u → Prop] (tm : {v: SFBool_u | SFBool_wf v ∧ p v}):
@@ -1257,7 +1257,7 @@ Defined.
 Inductive SFBit_u: Type :=
   | B0_u: SFBit_u | B1_u: SFBit_u.
 
-Fixpoint SFBit_eq (x y : SFBit_u): bool :=
+Definition SFBit_eq (x y : SFBit_u): bool :=
   match (x, y) with | (B0_u, B0_u) => true | (B1_u, B1_u) => true | (_, _) => false end.
 
 Theorem SFBit_eq_refl : ∀ (x : SFBit_u), is_true (SFBit_eq x x).
@@ -1279,7 +1279,7 @@ Qed.
     refl' := SFBit_eq_refl;
     eqb_eq' := SFBit_eqb_eq }.
 
-Fixpoint SFBit_wf (x : SFBit_u): Prop :=
+Definition SFBit_wf (x : SFBit_u): Prop :=
   match x with | B0_u => True | B1_u => True end.
 
 Theorem SFBit_wf_ref [p : SFBit_u → Prop] (tm : {v: SFBit_u | SFBit_wf v ∧ p v}): SFBit_wf ⌊ tm -⌋.
@@ -1856,7 +1856,7 @@ Qed.
 Inductive RGB_u: Type :=
   | Blue_u: RGB_u | Green_u: RGB_u | Red_u: RGB_u.
 
-Fixpoint RGB_eq (x y : RGB_u): bool :=
+Definition RGB_eq (x y : RGB_u): bool :=
   match (x, y) with
   | (Blue_u, Blue_u) => true
   | (Green_u, Green_u) => true
@@ -1883,7 +1883,7 @@ Qed.
     refl' := RGB_eq_refl;
     eqb_eq' := RGB_eqb_eq }.
 
-Fixpoint RGB_wf (x : RGB_u): Prop :=
+Definition RGB_wf (x : RGB_u): Prop :=
   match x with | Blue_u => True | Green_u => True | Red_u => True end.
 
 Theorem RGB_wf_ref [p : RGB_u → Prop] (tm : {v: RGB_u | RGB_wf v ∧ p v}): RGB_wf ⌊ tm -⌋.
@@ -2005,7 +2005,7 @@ Defined.
 Inductive Nibble_u: Type :=
   | Bits_u: SFBit_u → SFBit_u → SFBit_u → SFBit_u → Nibble_u.
 
-Fixpoint Nibble_eq (x y : Nibble_u): bool :=
+Definition Nibble_eq (x y : Nibble_u): bool :=
   match (x, y) with
   | (Bits_u VV VV_ VV__ VV___, Bits_u VV' VV_' VV__' VV___') => (((true && (VV ==? VV'))
                                                                   && (VV_ ==? VV_'))
@@ -2032,7 +2032,7 @@ Qed.
     refl' := Nibble_eq_refl;
     eqb_eq' := Nibble_eqb_eq }.
 
-Fixpoint Nibble_wf (x : Nibble_u): Prop :=
+Definition Nibble_wf (x : Nibble_u): Prop :=
   match x with
   | Bits_u VV VV_ VV__ VV___ => (((SFBit_wf VV ∧ True) ∧ (SFBit_wf VV_ ∧ True))
                                  ∧ (SFBit_wf VV__ ∧ True))
@@ -2191,7 +2191,7 @@ Defined.
 Inductive Natprod_u: Type :=
   | Pair_u: MyNat_u → MyNat_u → Natprod_u.
 
-Fixpoint Natprod_eq (x y : Natprod_u): bool :=
+Definition Natprod_eq (x y : Natprod_u): bool :=
   match (x, y) with | (Pair_u n1 n2, Pair_u n1' n2') => (true && (n1 ==? n1')) && (n2 ==? n2') end.
 
 Theorem Natprod_eq_refl : ∀ (x : Natprod_u), is_true (Natprod_eq x x).
@@ -2213,7 +2213,7 @@ Qed.
     refl' := Natprod_eq_refl;
     eqb_eq' := Natprod_eqb_eq }.
 
-Fixpoint Natprod_wf (x : Natprod_u): Prop :=
+Definition Natprod_wf (x : Natprod_u): Prop :=
   match x with | Pair_u n1 n2 => (MyNat_wf n1 ∧ True) ∧ (MyNat_wf n2 ∧ True) end.
 
 Theorem Natprod_wf_ref [p : Natprod_u → Prop] (tm : {v: Natprod_u | Natprod_wf v ∧ p v}):
@@ -4800,7 +4800,7 @@ Qed.
 Inductive Modifier_u: Type :=
   | Minus_u: Modifier_u | Natural_u: Modifier_u | Plus_u: Modifier_u.
 
-Fixpoint Modifier_eq (x y : Modifier_u): bool :=
+Definition Modifier_eq (x y : Modifier_u): bool :=
   match (x, y) with
   | (Minus_u, Minus_u) => true
   | (Natural_u, Natural_u) => true
@@ -4827,7 +4827,7 @@ Qed.
     refl' := Modifier_eq_refl;
     eqb_eq' := Modifier_eqb_eq }.
 
-Fixpoint Modifier_wf (x : Modifier_u): Prop :=
+Definition Modifier_wf (x : Modifier_u): Prop :=
   match x with | Minus_u => True | Natural_u => True | Plus_u => True end.
 
 Theorem Modifier_wf_ref [p : Modifier_u → Prop] (tm : {v: Modifier_u | Modifier_wf v ∧ p v}):
@@ -4877,7 +4877,7 @@ Definition Plus : Modifier :=
 Inductive Letter_u: Type :=
   | A_u: Letter_u | B_u: Letter_u | C_u: Letter_u | D_u: Letter_u | F_u: Letter_u.
 
-Fixpoint Letter_eq (x y : Letter_u): bool :=
+Definition Letter_eq (x y : Letter_u): bool :=
   match (x, y) with
   | (A_u, A_u) => true
   | (B_u, B_u) => true
@@ -4906,7 +4906,7 @@ Qed.
     refl' := Letter_eq_refl;
     eqb_eq' := Letter_eqb_eq }.
 
-Fixpoint Letter_wf (x : Letter_u): Prop :=
+Definition Letter_wf (x : Letter_u): Prop :=
   match x with | A_u => True | B_u => True | C_u => True | D_u => True | F_u => True end.
 
 Theorem Letter_wf_ref [p : Letter_u → Prop] (tm : {v: Letter_u | Letter_wf v ∧ p v}):
@@ -5151,7 +5151,7 @@ Qed.
 Inductive Grades_u: Type :=
   | Grade_u: Letter_u → Modifier_u → Grades_u.
 
-Fixpoint Grades_eq (x y : Grades_u): bool :=
+Definition Grades_eq (x y : Grades_u): bool :=
   match (x, y) with
   | (Grade_u VV VV_, Grade_u VV' VV_') => (true && (VV ==? VV')) && (VV_ ==? VV_')
   end.
@@ -5175,7 +5175,7 @@ Qed.
     refl' := Grades_eq_refl;
     eqb_eq' := Grades_eqb_eq }.
 
-Fixpoint Grades_wf (x : Grades_u): Prop :=
+Definition Grades_wf (x : Grades_u): Prop :=
   match x with | Grade_u VV VV_ => (Letter_wf VV ∧ True) ∧ (Modifier_wf VV_ ∧ True) end.
 
 Theorem Grades_wf_ref [p : Grades_u → Prop] (tm : {v: Grades_u | Grades_wf v ∧ p v}):
@@ -5741,7 +5741,7 @@ Inductive Day_u: Type :=
   | Tuesday_u: Day_u
   | Wednesday_u: Day_u.
 
-Fixpoint Day_eq (x y : Day_u): bool :=
+Definition Day_eq (x y : Day_u): bool :=
   match (x, y) with
   | (Friday_u, Friday_u) => true
   | (Monday_u, Monday_u) => true
@@ -5772,7 +5772,7 @@ Qed.
     refl' := Day_eq_refl;
     eqb_eq' := Day_eqb_eq }.
 
-Fixpoint Day_wf (x : Day_u): Prop :=
+Definition Day_wf (x : Day_u): Prop :=
   match x with
   | Friday_u => True
   | Monday_u => True
@@ -6079,7 +6079,7 @@ Qed.
 Inductive Comparison_u: Type :=
   | Eq_u: Comparison_u | Gt_u: Comparison_u | Lt_u: Comparison_u.
 
-Fixpoint Comparison_eq (x y : Comparison_u): bool :=
+Definition Comparison_eq (x y : Comparison_u): bool :=
   match (x, y) with
   | (Eq_u, Eq_u) => true
   | (Gt_u, Gt_u) => true
@@ -6106,7 +6106,7 @@ Qed.
     refl' := Comparison_eq_refl;
     eqb_eq' := Comparison_eqb_eq }.
 
-Fixpoint Comparison_wf (x : Comparison_u): Prop :=
+Definition Comparison_wf (x : Comparison_u): Prop :=
   match x with | Eq_u => True | Gt_u => True | Lt_u => True end.
 
 Theorem Comparison_wf_ref
@@ -6932,7 +6932,7 @@ Defined.
 Inductive Color_u: Type :=
   | Black_u: Color_u | Primary_u: RGB_u → Color_u | White_u: Color_u.
 
-Fixpoint Color_eq (x y : Color_u): bool :=
+Definition Color_eq (x y : Color_u): bool :=
   match (x, y) with
   | (Black_u, Black_u) => true
   | (Primary_u VV, Primary_u VV') => true && (VV ==? VV')
@@ -6959,7 +6959,7 @@ Qed.
     refl' := Color_eq_refl;
     eqb_eq' := Color_eqb_eq }.
 
-Fixpoint Color_wf (x : Color_u): Prop :=
+Definition Color_wf (x : Color_u): Prop :=
   match x with | Black_u => True | Primary_u VV => RGB_wf VV ∧ True | White_u => True end.
 
 Theorem Color_wf_ref [p : Color_u → Prop] (tm : {v: Color_u | Color_wf v ∧ p v}): Color_wf ⌊ tm -⌋.
