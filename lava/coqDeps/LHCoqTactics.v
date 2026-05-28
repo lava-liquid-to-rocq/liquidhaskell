@@ -2843,6 +2843,10 @@ Ltac eq_refl :=
   intros x;
   induction x; quick_simpl; try quicksolve; simpl; 
   quick_simpl; repeat split; 
+  match goal with
+  | |- ?eq ?v ?v = true => unfold eq; simpl
+  | |- _ => idtac
+  end;
   let unfoldIsTrueNotation := fresh "unfoldIsTrueNotation" in
   assert (forall v, is_true v -> v = true) as unfoldIsTrueNotation by quicksolve;
   try apply unfoldIsTrueNotation;
@@ -2851,13 +2855,25 @@ Ltac eq_refl :=
 Ltac eq_refl_rec := 
   repeat match goal with
   | |- is_true (?eq ?v ?v) => generalize dependent v
-  | [h: _ |- _] => clear
+  | [h: _ |- _] => progress clear
   | [ |- forall v, is_true (?eq v v)] => eq_refl
+  | |- is_true (match ?v with _ => _ end) => induction v; simpl in *
+  | |- true = ?tm => symmetry
+  | |- ?tm = true => enough (is_true tm) by (now unfold is_true)
+  | |- is_true ((?v =? ?v) && _) => 
+    replace (v =? v) with true; simpl
+  | |- is_true ((?eq ?v ?v) && _) => 
+    replace (eq v v) with true; simpl
   end.
 
 Ltac eqb_eq_lem :=
   intros s t H; multivariable_induction (s _::_ t _::_ _nil) _nil _nil; try quicksolve;
-  simpl in *; quick_simpl; split_hyps; quick_simpl; try quicksolve;
+  match goal with
+  | [h: is_true (?eq ?u ?v) |- ?u = ?v] => unfold eq in h; simpl
+  | [h: ?eq ?u ?v = true |- ?u = ?v] => unfold eq in h; simpl
+  | |- _ => idtac
+  end;
+  simpl in *; quick_simpl; try split_hyps; quick_simpl; try quicksolve;
   let unfoldIsTrueNotation := fresh "unfoldIsTrueNotation" in
   assert (forall v, is_true v <-> v = true) as unfoldIsTrueNotation by quicksolve;
   try apply unfoldIsTrueNotation; try rewrite <- unfoldIsTrueNotation in *;
