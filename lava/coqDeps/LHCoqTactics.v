@@ -680,8 +680,35 @@ Ltac axiomatize_terms := tryif (repeat_or_fail axiomatize_next_term) then idtac 
 
 Ltac result_var_unification v w h1 h2 :=
   first [
-    unshelve eauto with f_rel_funct_db
+    now unshelve eauto with f_rel_funct_db
   | now (refine (_ v w h1 h2); unshelve eauto with f_rel_funct_db)
+  | 
+    let rel := fresh "rel" in
+    match type of h1 with
+    | ?relApp => 
+      let fAppD := fresh "fAppD" in
+      destrApp relApp fAppD;
+      let fAppRefl := fresh "fAppRefl" in
+      assRefl fAppD as fAppRefl;
+      match type of fAppRefl with
+      | ((?rel _::_ _nil) _::_ ?ts) = _ => clear fAppRefl; is_rel rel;
+        let functLem := fresh "functLem" in
+        lookupFunctLem rel functLem;
+        try unfold lookup in functLem; 
+        simpl in functLem;
+        let functRefl := fresh "functRefl" in
+        assRefl functLem as functRefl;
+        match type of functRefl with
+        | ?funct = _ => clear functRefl; idtac funct; 
+          let functTp := type of funct in
+          idtac ": " functTp ts;
+          let functApp := fresh "functApp" in
+          mkAppl funct ts functApp;
+          specialize (functApp w h1 h2);
+          apply functApp
+        end
+      end
+    end
   ].
 
 (* "unify" context variables axiomatized to correspond to the same unrefined values via graph relations,
@@ -992,7 +1019,7 @@ Ltac nonbranching_invert_axiomatization :=
       let htp := type of h in
       tryif (non_branching_inversion h) then 
         (idtac "Inverted the axiomatization " h ": " htp;
-        repeat axiomatize_next_term)
+        repeat progress timeout 15 axiomatize_next_term)
        else 
         fail 
     | _ => fail "No hypothesis to invert"
@@ -1147,16 +1174,15 @@ Ltac assert_wit v pred wit_name := (*idtac "assert_wit" v pred wit_name; *)
               end
             ];
             let arg_wit_tp := type of arg_wit_name in
-            idtac "recursive call created witness " arg_wit_name " : " arg_wit_tp ". "; 
+            (*idtac "recursive call created witness " arg_wit_name " : " arg_wit_tp ". "; *)
             pose (fApp' (exist _ t arg_wit_name)) as fApp;
             try subst arg_wit_name; subst fApp'; simpl_proj;
             pose tail as tl
           end; clear tlEq
-        ); idtac "finish main loop"; clear tl;
+        ); (*idtac "finish main loop";*) clear tl;
         (* we now have a fully applied version of f in fApp, we destruct it to get the refinement witness for it *)
         let appl_wit := fresh "appl_wit_" in
         pose proof (⌈ fApp ⌉) as appl_wit; subst fApp; simpl_proj; 
-        idtac "ha";
         
         let fApplTp := type of appl_wit in
         try axProjTm fApplTp;
@@ -1198,7 +1224,7 @@ Ltac assert_wit v pred wit_name := (*idtac "assert_wit" v pred wit_name; *)
           match type of remUArgsRefl with
           | ?uarg ::U ?uargsTl = _ => clear remUArgsRefl; pose uargsTl as remUArgs; 
             match hdT with
-            | sig ?pApp => idtac "Need to synthesize witness of " pApp uarg;
+            | sig ?pApp => (*idtac "Need to synthesize witness of " pApp uarg;*)
               (* let dom_ref := fresh "dom_ref" in
               pose pApp as dom_ref;*)
               let hd_wit := fresh "hd_wit" in
@@ -1214,7 +1240,7 @@ Ltac assert_wit v pred wit_name := (*idtac "assert_wit" v pred wit_name; *)
             end
           end
       end
-      )|]; idtac "Synthesized refined argument list " wit_name;
+      )|]; (*idtac "Synthesized refined argument list " wit_name;*)
       try simpl in wit_name
     end
   end.
@@ -1599,6 +1625,17 @@ Ltac simplInstExistGoal :=
       recreate_var frelAp v_;
       solve [unshelve eassumption]
     end)
+  (*| |- exists res, (?relApp res /\ res = ?tm) -> _ => exists tm; intros [? _] 
+  | |- exists res, (?relAp res /\ _) -> _ => isRelAppl relAp;
+    tryif (match goal with
+    | [h: exists (w:_), relAp w |- _] => idtac
+    | [h: relAp _ |- _] => idtac
+    end) then fail else
+    let temp := fresh "temp" in
+    let v := fresh "v_" in 
+    let v_def := fresh "v_def_" in
+    assert (exists (w:_), relAp w) as temp; 
+    [|destruct temp as [v v_def]; exists v; intros [_ ?]]*)
   (*| |- exists v, ?frel ?uargs v => localIsRel frel;
     let fAppl_res := fresh "fAppl_res" in
       let res_def := fresh "res_def" in
@@ -2417,6 +2454,20 @@ Ltac lia_preprocessor_step := match goal with
   | [h: ?relAp _ |- _] => isRelAppl relAp;
     inversion_precheck h; 
     do_nonbranching (strong_inversion h; try (exfalso; timeout 10 quicksolve))
+
+  | |- ?wf _ => 
+    concat_either (unpack_all) (unfold wf);
+    match goal with
+    | |- uPack_wf _ _ _ (packPr_proj ?pack) => idtac
+    end
+  | |- uPack_wf ?argTps ?z ?p (packPr_proj ?pack) => 
+    match pack with
+    | {| f := ?g; frel := _; f_frel := ?f_frel_; funct := _ |} => refine (exist _ g _);
+      try apply f_frel_
+    | _ => isVar pack; refine (exist _ pack.(f) _); try apply (pack.(f_frel))
+    end
+
+  | |- _ => progress unpack_all
   | |- exists v, ?relAp v => isRelAppl relAp; 
     idtac "Final desperate attempt to solve existential using strong_oracle to solve subgoals";
     first [
@@ -2795,7 +2846,7 @@ Ltac f__f_rel :=
   [ match goal with
     | [h: _ = ?v |- ?rel ?v] => rewrite <- h; unshelve eauto with rel_ax_db f_rel_funct_db
     end
-    | unshelve eauto with rel_ax_db f_rel_funct_db
+    | unshelve eauto with rel_ax_db f_rel_funct_db; try now autorewrite with f_rel_funct_db
   ].
 
 Ltac eq_refl :=
@@ -2803,6 +2854,10 @@ Ltac eq_refl :=
   intros x;
   induction x; quick_simpl; try quicksolve; simpl; 
   quick_simpl; repeat split; 
+  match goal with
+  | |- ?eq ?v ?v = true => unfold eq; simpl
+  | |- _ => idtac
+  end;
   let unfoldIsTrueNotation := fresh "unfoldIsTrueNotation" in
   assert (forall v, is_true v -> v = true) as unfoldIsTrueNotation by quicksolve;
   try apply unfoldIsTrueNotation;
@@ -2811,13 +2866,25 @@ Ltac eq_refl :=
 Ltac eq_refl_rec := 
   repeat match goal with
   | |- is_true (?eq ?v ?v) => generalize dependent v
-  | [h: _ |- _] => clear
+  | [h: _ |- _] => progress clear
   | [ |- forall v, is_true (?eq v v)] => eq_refl
+  | |- is_true (match ?v with _ => _ end) => induction v; simpl in *
+  | |- true = ?tm => symmetry
+  | |- ?tm = true => enough (is_true tm) by (now unfold is_true)
+  | |- is_true ((?v =? ?v) && _) => 
+    replace (v =? v) with true; simpl
+  | |- is_true ((?eq ?v ?v) && _) => 
+    replace (eq v v) with true; simpl
   end.
 
 Ltac eqb_eq_lem :=
   intros s t H; multivariable_induction (s _::_ t _::_ _nil) _nil _nil; try quicksolve;
-  simpl in *; quick_simpl; split_hyps; quick_simpl; try quicksolve;
+  match goal with
+  | [h: is_true (?eq ?u ?v) |- ?u = ?v] => unfold eq in h; simpl
+  | [h: ?eq ?u ?v = true |- ?u = ?v] => unfold eq in h; simpl
+  | |- _ => idtac
+  end;
+  simpl in *; quick_simpl; try split_hyps; quick_simpl; try quicksolve;
   let unfoldIsTrueNotation := fresh "unfoldIsTrueNotation" in
   assert (forall v, is_true v <-> v = true) as unfoldIsTrueNotation by quicksolve;
   try apply unfoldIsTrueNotation; try rewrite <- unfoldIsTrueNotation in *;

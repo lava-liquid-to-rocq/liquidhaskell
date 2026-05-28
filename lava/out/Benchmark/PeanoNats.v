@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Set Universe Polymorphism. 
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 
 Inductive Nats_u: Type :=
@@ -43,17 +43,17 @@ Qed.
 
 Global Notation Nats := {x: Nats_u | Nats_wf x ∧ True}.
 
-Definition Suc_lem (n : Nats): Nats_wf (Suc_u ⌊ n ⌋) ∧ True.
+Definition Suc_lem (n : Nats): Nats_wf (Suc_u ⌊ n -⌋) ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Suc (n : Nats): Nats :=
-  exist _ (Suc_u ⌊ n ⌋) (Suc_lem n).
+  exist _ (Suc_u ⌊ n -⌋) (Suc_lem n).
 
 Definition Zero_lem : Nats_wf Zero_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Zero : Nats :=
@@ -108,6 +108,8 @@ Proof.
 Qed.
 
 #[global] Hint Resolve add_rel_funct: f_rel_funct_db.
+
+#[global] Instance add_lookup_funct: dictionary functionhood add := { lookup' := add_rel_funct }.
 
 Theorem add_Suc_x_lem m n add_Suc_x_lem_res:
   add_rel (Suc_u m) n add_Suc_x_lem_res
@@ -199,7 +201,7 @@ Qed.
   @Pack
   (Nats ::RT λ (ds_d4mE : Nats), Nats ::RT λ (n : Nats), nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats ::RT λ (ds_d4mE : Nats), Nats ::RT λ (n : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Nats ::RT λ (ds_d4mE : Nats), Nats ::RT λ (n : Nats), nilRT) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   Nats_u
   (λ (x_44855413 : ArgList (Nats ::RT λ (ds_d4mE : Nats), Nats ::RT λ (n : Nats), nilRT))
      (v_x_44855413 : Nats_u),
@@ -216,7 +218,7 @@ Defined.
 Definition add'_spec (m n : Nats): Type :=
   {v: Nats_u | Nats_wf v
                ∧ ∃ (add_res : Nats_u),
-                 add_rel ⌊ m ⌋ ⌊ n ⌋ add_res
+                 add_rel ⌊ m -⌋ ⌊ n -⌋ add_res
                  ∧ ∃ (add_res_2 : Nats_u), add_rel add_res Zero_u add_res_2 ∧ add_res_2 == v}.
 
 #[global] Hint Unfold add'_spec: lia_unfold.
@@ -240,7 +242,7 @@ Proof.
 Defined.
 
 Definition add''_spec (m n : Nats): Type :=
-  {v: Nats_u | Nats_wf v ∧ ∃ (add_res : Nats_u), add_rel ⌊ m ⌋ ⌊ n ⌋ add_res ∧ add_res == v}.
+  {v: Nats_u | Nats_wf v ∧ ∃ (add_res : Nats_u), add_rel ⌊ m -⌋ ⌊ n -⌋ add_res ∧ add_res == v}.
 
 #[global] Hint Unfold add''_spec: lia_unfold.
 
@@ -259,12 +261,12 @@ Defined.
 
 Definition add_assoc_spec (ds_d4my ds_d4mz ds_d4mA : Nats): Type :=
   {{∃ (add_res : Nats_u),
-    add_rel ⌊ ds_d4mz ⌋ ⌊ ds_d4mA ⌋ add_res
+    add_rel ⌊ ds_d4mz -⌋ ⌊ ds_d4mA -⌋ add_res
     ∧ ∃ (add_res_2 : Nats_u),
-      add_rel ⌊ ds_d4my ⌋ add_res add_res_2
+      add_rel ⌊ ds_d4my -⌋ add_res add_res_2
       ∧ ∃ (add_res_3 : Nats_u),
-        add_rel ⌊ ds_d4my ⌋ ⌊ ds_d4mz ⌋ add_res_3
-        ∧ ∃ (add_res_4 : Nats_u), add_rel add_res_3 ⌊ ds_d4mA ⌋ add_res_4 ∧ add_res_2 == add_res_4}}.
+        add_rel ⌊ ds_d4my -⌋ ⌊ ds_d4mz -⌋ add_res_3
+        ∧ ∃ (add_res_4 : Nats_u), add_rel add_res_3 ⌊ ds_d4mA -⌋ add_res_4 ∧ add_res_2 == add_res_4}}.
 
 #[global] Hint Unfold add_assoc_spec: lia_unfold.
 
@@ -310,9 +312,9 @@ Qed.
 
 Definition add_suc_r_spec (ds_d4mn ds_d4mo : Nats): Type :=
   {{∃ (add_res : Nats_u),
-    add_rel ⌊ ds_d4mn ⌋ ⌊ ds_d4mo ⌋ add_res
+    add_rel ⌊ ds_d4mn -⌋ ⌊ ds_d4mo -⌋ add_res
     ∧ ∃ (add_res_2 : Nats_u),
-      add_rel ⌊ ds_d4mn ⌋ (Suc_u ⌊ ds_d4mo ⌋) add_res_2 ∧ Suc_u add_res == add_res_2}}.
+      add_rel ⌊ ds_d4mn -⌋ (Suc_u ⌊ ds_d4mo -⌋) add_res_2 ∧ Suc_u add_res == add_res_2}}.
 
 #[global] Hint Unfold add_suc_r_spec: lia_unfold.
 
@@ -340,7 +342,7 @@ Proof.
 Qed.
 
 Definition add_zero_l_spec (ds_d4mB : Nats): Type :=
-  {{∃ (add_res : Nats_u), add_rel Zero_u ⌊ ds_d4mB ⌋ add_res ∧ add_res == ⌊ ds_d4mB ⌋}}.
+  {{∃ (add_res : Nats_u), add_rel Zero_u ⌊ ds_d4mB -⌋ add_res ∧ add_res == ⌊ ds_d4mB -⌋}}.
 
 #[global] Hint Unfold add_zero_l_spec: lia_unfold.
 
@@ -378,7 +380,7 @@ Proof.
 Qed.
 
 Definition add_zero_r_spec (ds_d4mp : Nats): Type :=
-  {{∃ (add_res : Nats_u), add_rel ⌊ ds_d4mp ⌋ Zero_u add_res ∧ add_res == ⌊ ds_d4mp ⌋}}.
+  {{∃ (add_res : Nats_u), add_rel ⌊ ds_d4mp -⌋ Zero_u add_res ∧ add_res == ⌊ ds_d4mp -⌋}}.
 
 #[global] Hint Unfold add_zero_r_spec: lia_unfold.
 
@@ -437,6 +439,8 @@ Proof.
 Qed.
 
 #[global] Hint Resolve eqN_rel_funct: f_rel_funct_db.
+
+#[global] Instance eqN_lookup_funct: dictionary functionhood eqN := { lookup' := eqN_rel_funct }.
 
 Theorem eqN_Suc_Suc_lem m n eqN_Suc_Suc_lem_res:
   eqN_rel (Suc_u m) (Suc_u n) eqN_Suc_Suc_lem_res
@@ -555,8 +559,7 @@ Qed.
   @Pack
   (Nats ::RT λ (ds_d4m1 : Nats), Nats ::RT λ (ds_d4m2 : Nats), nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats
-  ::RT λ (ds_d4m1 : Nats), Nats ::RT λ (ds_d4m2 : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Nats ::RT λ (ds_d4m1 : Nats), Nats ::RT λ (ds_d4m2 : Nats), nilRT) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   bool
   (λ (x_41244053 : ArgList (Nats ::RT λ (ds_d4m1 : Nats), Nats ::RT λ (ds_d4m2 : Nats), nilRT))
      (v_x_41244053 : bool),
@@ -644,6 +647,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve geqN_rel_funct: f_rel_funct_db.
+
+#[global] Instance geqN_lookup_funct: dictionary functionhood geqN := {
+    lookup' := geqN_rel_funct }.
 
 Theorem geqN_Suc_Suc_lem lq_anf7205759403792810461 m geqN_Suc_Suc_lem_res:
   geqN_rel (Suc_u m) (Suc_u lq_anf7205759403792810461) geqN_Suc_Suc_lem_res
@@ -760,8 +766,7 @@ Qed.
   @Pack
   (Nats ::RT λ (ds_d4mg : Nats), Nats ::RT λ (ds_d4mh : Nats), nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats
-  ::RT λ (ds_d4mg : Nats), Nats ::RT λ (ds_d4mh : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Nats ::RT λ (ds_d4mg : Nats), Nats ::RT λ (ds_d4mh : Nats), nilRT) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   bool
   (λ (x_35960879 : ArgList (Nats ::RT λ (ds_d4mg : Nats), Nats ::RT λ (ds_d4mh : Nats), nilRT))
      (v_x_35960879 : bool),
@@ -811,6 +816,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve mult_rel_funct: f_rel_funct_db.
+
+#[global] Instance mult_lookup_funct: dictionary functionhood mult := {
+    lookup' := mult_rel_funct }.
 
 Theorem mult_Suc_x_lem ds_d4mH m mult_Suc_x_lem_res:
   mult_rel (Suc_u m) ds_d4mH mult_Suc_x_lem_res
@@ -915,8 +923,7 @@ Qed.
   @Pack
   (Nats ::RT λ (ds_d4mG : Nats), Nats ::RT λ (ds_d4mH : Nats), nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats
-  ::RT λ (ds_d4mG : Nats), Nats ::RT λ (ds_d4mH : Nats), nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Nats ::RT λ (ds_d4mG : Nats), Nats ::RT λ (ds_d4mH : Nats), nilRT) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   Nats_u
   (λ (x_75073885 : ArgList (Nats ::RT λ (ds_d4mG : Nats), Nats ::RT λ (ds_d4mH : Nats), nilRT))
      (v_x_75073885 : Nats_u),
@@ -932,13 +939,13 @@ Defined.
 
 Definition add_dist_rmult_spec (ds_d4mI ds_d4mJ ds_d4mK : Nats): Type :=
   {{∃ (add_res : Nats_u),
-    add_rel ⌊ ds_d4mI ⌋ ⌊ ds_d4mJ ⌋ add_res
+    add_rel ⌊ ds_d4mI -⌋ ⌊ ds_d4mJ -⌋ add_res
     ∧ ∃ (mult_res : Nats_u),
-      mult_rel add_res ⌊ ds_d4mK ⌋ mult_res
+      mult_rel add_res ⌊ ds_d4mK -⌋ mult_res
       ∧ ∃ (mult_res_2 : Nats_u),
-        mult_rel ⌊ ds_d4mJ ⌋ ⌊ ds_d4mK ⌋ mult_res_2
+        mult_rel ⌊ ds_d4mJ -⌋ ⌊ ds_d4mK -⌋ mult_res_2
         ∧ ∃ (mult_res_3 : Nats_u),
-          mult_rel ⌊ ds_d4mI ⌋ ⌊ ds_d4mK ⌋ mult_res_3
+          mult_rel ⌊ ds_d4mI -⌋ ⌊ ds_d4mK -⌋ mult_res_3
           ∧ ∃ (add_res_2 : Nats_u), add_rel mult_res_3 mult_res_2 add_res_2 ∧ mult_res == add_res_2}}.
 
 #[global] Hint Unfold add_dist_rmult_spec: lia_unfold.
@@ -965,32 +972,38 @@ Proof.
                  ∧ ∃ (mult_res_3 : Nats_u),
                    mult_rel (Suc_u m) ds_d4mK mult_res_3
                    ∧ ∃ (add_res_2 : Nats_u), add_rel mult_res_3 mult_res_2 add_res_2 ∧ mult_res == add_res_2)
-            (let _: ∃ (add_res : Nats_u),
-                    add_rel
-                    ⌊ mult
-                      (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver))
-                      (exist (λ (ds_d4mK : Nats_u), Nats_wf ds_d4mK ∧ True) ds_d4mK ltac:(solver)) ⌋
-                    ⌊ mult
-                      (exist (λ (ds_d4mJ : Nats_u), Nats_wf ds_d4mJ ∧ True) ds_d4mJ ltac:(solver))
-                      (exist (λ (ds_d4mK : Nats_u), Nats_wf ds_d4mK ∧ True) ds_d4mK ltac:(solver)) ⌋
-                    add_res
-                    ∧ ∃ (add_res_2 : Nats_u),
-                      add_rel ds_d4mK add_res add_res_2
-                      ∧ ∃ (add_res_3 : Nats_u),
-                        add_rel
-                        ds_d4mK
-                        ⌊ mult
-                          (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver))
-                          (exist (λ (ds_d4mK : Nats_u), Nats_wf ds_d4mK ∧ True) ds_d4mK ltac:(solver)) ⌋
-                        add_res_3
-                        ∧ ∃ (add_res_4 : Nats_u),
-                          add_rel
-                          add_res_3
-                          ⌊ mult
-                            (exist (λ (ds_d4mJ : Nats_u), Nats_wf ds_d4mJ ∧ True) ds_d4mJ ltac:(solver))
-                            (exist (λ (ds_d4mK : Nats_u), Nats_wf ds_d4mK ∧ True) ds_d4mK ltac:(solver)) ⌋
-                          add_res_4
-                          ∧ add_res_2 == add_res_4 :=
+            (IH_m
+             ltac:(try clear IH_m; solver)
+             ds_d4mJ
+             ltac:(try clear IH_m; solver)
+             ds_d4mK
+             ltac:(try clear IH_m; solver))
+            (let H_54830294: ∃ (add_res : Nats_u),
+                             add_rel
+                             ⌊ mult
+                               (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver))
+                               (exist (λ (ds_d4mK : Nats_u), Nats_wf ds_d4mK ∧ True) ds_d4mK ltac:(solver)) -⌋
+                             ⌊ mult
+                               (exist (λ (ds_d4mJ : Nats_u), Nats_wf ds_d4mJ ∧ True) ds_d4mJ ltac:(solver))
+                               (exist (λ (ds_d4mK : Nats_u), Nats_wf ds_d4mK ∧ True) ds_d4mK ltac:(solver)) -⌋
+                             add_res
+                             ∧ ∃ (add_res_2 : Nats_u),
+                               add_rel ds_d4mK add_res add_res_2
+                               ∧ ∃ (add_res_3 : Nats_u),
+                                 add_rel
+                                 ds_d4mK
+                                 ⌊ mult
+                                   (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver))
+                                   (exist (λ (ds_d4mK : Nats_u), Nats_wf ds_d4mK ∧ True) ds_d4mK ltac:(solver)) -⌋
+                                 add_res_3
+                                 ∧ ∃ (add_res_4 : Nats_u),
+                                   add_rel
+                                   add_res_3
+                                   ⌊ mult
+                                     (exist (λ (ds_d4mJ : Nats_u), Nats_wf ds_d4mJ ∧ True) ds_d4mJ ltac:(solver))
+                                     (exist (λ (ds_d4mK : Nats_u), Nats_wf ds_d4mK ∧ True) ds_d4mK ltac:(solver)) -⌋
+                                   add_res_4
+                                   ∧ add_res_2 == add_res_4 :=
              ⌈ add_assoc
                (exist (λ (ds_d4mK : Nats_u), Nats_wf ds_d4mK ∧ True) ds_d4mK ltac:(solver))
                (mult
@@ -999,13 +1012,7 @@ Proof.
                (mult
                 (exist (λ (ds_d4mJ : Nats_u), Nats_wf ds_d4mJ ∧ True) ds_d4mJ ltac:(solver))
                 (exist (λ (ds_d4mK : Nats_u), Nats_wf ds_d4mK ∧ True) ds_d4mK ltac:(solver))) ⌉ in
-             IH_m
-             ltac:(try clear IH_m; solver)
-             ds_d4mJ
-             ltac:(try clear IH_m; solver)
-             ds_d4mK
-             ltac:(try clear IH_m; solver))
-            ltac:(solver)).
+          ltac:(solver))).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
@@ -1035,16 +1042,16 @@ Defined.
 Definition sub_spec
   (ds_d4lW : Nats)
   (ds_d4lX : {ds_d4lX: Nats_u | Nats_wf ds_d4lX
-                                ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res ∧ is_true geqN_res}):
+                                ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lW -⌋ ds_d4lX geqN_res ∧ is_true geqN_res}):
   Type :=
-  {o: Nats_u | Nats_wf o ∧ (o ≠ Zero_u ↔ ⌊ ds_d4lW ⌋ ≠ ⌊ ds_d4lX ⌋)}.
+  {o: Nats_u | Nats_wf o ∧ (o ≠ Zero_u ↔ ⌊ ds_d4lW -⌋ ≠ ⌊ ds_d4lX -⌋)}.
 
 #[global] Hint Unfold sub_spec: lia_unfold.
 
 Definition sub
   (ds_d4lW : Nats)
   (ds_d4lX : {ds_d4lX: Nats_u | Nats_wf ds_d4lX
-                                ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res ∧ is_true geqN_res}):
+                                ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lW -⌋ ds_d4lX geqN_res ∧ is_true geqN_res}):
   sub_spec ds_d4lW ds_d4lX.
 Proof.
   destruct ds_d4lW as [ds_d4lW ds_d4lW_p].
@@ -1090,6 +1097,8 @@ Proof.
 Qed.
 
 #[global] Hint Resolve sub_rel_funct: f_rel_funct_db.
+
+#[global] Instance sub_lookup_funct: dictionary functionhood sub := { lookup' := sub_rel_funct }.
 
 Theorem sub_Suc_Suc_lem m n sub_Suc_Suc_lem_res:
   sub_rel (Suc_u m) (Suc_u n) sub_Suc_Suc_lem_res
@@ -1164,7 +1173,7 @@ Qed.
 Theorem sub__sub_rel
   (ds_d4lW : Nats)
   (ds_d4lX : {ds_d4lX: Nats_u | Nats_wf ds_d4lX
-                                ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res ∧ is_true geqN_res})
+                                ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lW -⌋ ds_d4lX geqN_res ∧ is_true geqN_res})
   (o : Nats_u):
   ⌊ sub ds_d4lW ds_d4lX -⌋ = o ↔ sub_rel ⌊ ds_d4lW ⌋ ⌊ ds_d4lX ⌋ o.
 Proof.
@@ -1177,7 +1186,7 @@ Theorem sub__sub_rel'
   (ds_d4lW_u ds_d4lX_u : Nats_u)
   (ds_d4lW : Nats)
   (ds_d4lX : {ds_d4lX: Nats_u | Nats_wf ds_d4lX
-                                ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res ∧ is_true geqN_res})
+                                ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lW -⌋ ds_d4lX geqN_res ∧ is_true geqN_res})
   (o : Nats_u):
   ds_d4lW_u = ⌊ ds_d4lW ⌋
   → (ds_d4lX_u = ⌊ ds_d4lX ⌋ → ⌊ sub ds_d4lW ds_d4lX -⌋ = o ↔ sub_rel ds_d4lW_u ds_d4lX_u o).
@@ -1212,40 +1221,40 @@ Qed.
   (Nats
    ::RT λ (ds_d4lW : Nats),
         {ds_d4lX: Nats_u | Nats_wf ds_d4lX
-                           ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res ∧ is_true geqN_res}
+                           ∧ ∃ (geqN_res : bool), geqN_rel ⌊ ds_d4lW -⌋ ds_d4lX geqN_res ∧ is_true geqN_res}
         ::RT λ (ds_d4lX : {ds_d4lX: Nats_u | Nats_wf ds_d4lX
                                              ∧ ∃ (geqN_res : bool),
-                                               geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res ∧ is_true geqN_res}),
+                                               geqN_rel ⌊ ds_d4lW -⌋ ds_d4lX geqN_res ∧ is_true geqN_res}),
              nilRT)
   (Nats_u ::UT (Nats_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Nats
-  ::RT λ (ds_d4lW : Nats),
-       {ds_d4lX: Nats_u | Nats_wf ds_d4lX
-                          ∧ ∃ (geqN_res : bool),
-                            geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res ∧ is_true geqN_res}
-       ::RT λ (ds_d4lX : {ds_d4lX: Nats_u | Nats_wf ds_d4lX
-                                            ∧ ∃ (geqN_res : bool),
-                                              geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res
-                                              ∧ is_true geqN_res}),
-            nilRT)) ((Nats_u ::UT (Nats_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Nats
+ ::RT λ (ds_d4lW : Nats),
+      {ds_d4lX: Nats_u | Nats_wf ds_d4lX
+                         ∧ ∃ (geqN_res : bool),
+                           geqN_rel ⌊ ds_d4lW -⌋ ds_d4lX geqN_res ∧ is_true geqN_res}
+      ::RT λ (ds_d4lX : {ds_d4lX: Nats_u | Nats_wf ds_d4lX
+                                           ∧ ∃ (geqN_res : bool),
+                                             geqN_rel ⌊ ds_d4lW -⌋ ds_d4lX geqN_res
+                                             ∧ is_true geqN_res}),
+           nilRT) ((Nats_u ::UT (Nats_u ::UT nilUT))))
   Nats_u
-  (λ (x_10146466 : ArgList (Nats
+  (λ (x_34844924 : ArgList (Nats
                             ::RT λ (ds_d4lW : Nats),
                                  {ds_d4lX: Nats_u | Nats_wf ds_d4lX
                                                     ∧ ∃ (geqN_res : bool),
-                                                      geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res ∧ is_true geqN_res}
+                                                      geqN_rel ⌊ ds_d4lW -⌋ ds_d4lX geqN_res ∧ is_true geqN_res}
                                  ::RT λ (ds_d4lX : {ds_d4lX: Nats_u | Nats_wf ds_d4lX
                                                                       ∧ ∃ (geqN_res : bool),
-                                                                        geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res
+                                                                        geqN_rel ⌊ ds_d4lW -⌋ ds_d4lX geqN_res
                                                                         ∧ is_true geqN_res}),
                                       nilRT))
-     (v_x_10146466 : Nats_u),
+     (v_x_34844924 : Nats_u),
    ltac:(flattenP (λ (ds_d4lW : Nats)
    (ds_d4lX : {ds_d4lX: Nats_u | Nats_wf ds_d4lX
                                  ∧ ∃ (geqN_res : bool),
-                                   geqN_rel ⌊ ds_d4lW ⌋ ds_d4lX geqN_res ∧ is_true geqN_res})
+                                   geqN_rel ⌊ ds_d4lW -⌋ ds_d4lX geqN_res ∧ is_true geqN_res})
    (o : Nats_u),
- Nats_wf o ∧ (o ≠ Zero_u ↔ ⌊ ds_d4lW ⌋ ≠ ⌊ ds_d4lX ⌋)) x_10146466 v_x_10146466)).
+ Nats_wf o ∧ (o ≠ Zero_u ↔ ⌊ ds_d4lW -⌋ ≠ ⌊ ds_d4lX -⌋)) x_34844924 v_x_34844924)).
 Proof.
   buildPackG sub sub_rel sub__sub_rel sub_rel_funct.
 Defined.
@@ -1257,8 +1266,8 @@ Defined.
 
 Definition add_sub_spec (ds_d4mq ds_d4mr : Nats): Type :=
   {{∃ (add_res : Nats_u),
-    add_rel ⌊ ds_d4mq ⌋ ⌊ ds_d4mr ⌋ add_res
-    ∧ ∃ (sub_res : Nats_u), sub_rel add_res ⌊ ds_d4mr ⌋ sub_res ∧ sub_res == ⌊ ds_d4mq ⌋}}.
+    add_rel ⌊ ds_d4mq -⌋ ⌊ ds_d4mr -⌋ add_res
+    ∧ ∃ (sub_res : Nats_u), sub_rel add_res ⌊ ds_d4mr -⌋ sub_res ∧ sub_res == ⌊ ds_d4mq -⌋}}.
 
 #[global] Hint Unfold add_sub_spec: lia_unfold.
 
@@ -1275,14 +1284,16 @@ Proof.
                add_rel (Suc_u m) (Suc_u lq_anf7205759403792810450) add_res
                ∧ ∃ (sub_res : Nats_u),
                  sub_rel add_res (Suc_u lq_anf7205759403792810450) sub_res ∧ sub_res == Suc_u m)
-              (let _: ∃ (add_res : Nats_u),
-                      add_rel (Suc_u m) lq_anf7205759403792810450 add_res
-                      ∧ ∃ (sub_res : Nats_u), sub_rel add_res lq_anf7205759403792810450 sub_res ∧ sub_res == Suc_u m :=
-               ⌈ IH_lq_anf7205759403792810450 ltac:(try clear IH_lq_anf7205759403792810450; solver) ⌉ in
+              (
                add_suc_r
                (Suc (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver)))
                (exist (λ (n : Nats_u), Nats_wf n ∧ True) lq_anf7205759403792810450 ltac:(solver)))
-              ltac:(solver)).
+              (let H_33916233: ∃ (add_res : Nats_u),
+                               add_rel (Suc_u m) lq_anf7205759403792810450 add_res
+                               ∧ ∃ (sub_res : Nats_u),
+                                 sub_rel add_res lq_anf7205759403792810450 sub_res ∧ sub_res == Suc_u m :=
+               ⌈ IH_lq_anf7205759403792810450 ltac:(try clear IH_lq_anf7205759403792810450; solver) ⌉ in 
+              ltac:(solver))).
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
@@ -1299,12 +1310,13 @@ Proof.
                add_rel Zero_u (Suc_u lq_anf7205759403792810442) add_res
                ∧ ∃ (sub_res : Nats_u),
                  sub_rel add_res (Suc_u lq_anf7205759403792810442) sub_res ∧ sub_res == Zero_u)
-              (let _: ∃ (add_res : Nats_u),
-                      add_rel Zero_u lq_anf7205759403792810442 add_res
-                      ∧ ∃ (sub_res : Nats_u), sub_rel add_res lq_anf7205759403792810442 sub_res ∧ sub_res == Zero_u :=
+              (add_suc_r Zero (exist (λ (n : Nats_u), Nats_wf n ∧ True) lq_anf7205759403792810442 ltac:(solver)))
+              (let H_68886281: ∃ (add_res : Nats_u),
+                               add_rel Zero_u lq_anf7205759403792810442 add_res
+                               ∧ ∃ (sub_res : Nats_u),
+                                 sub_rel add_res lq_anf7205759403792810442 sub_res ∧ sub_res == Zero_u :=
                ⌈ IH_lq_anf7205759403792810442 ltac:(try clear IH_lq_anf7205759403792810442; solver) ⌉ in
-               add_suc_r Zero (exist (λ (n : Nats_u), Nats_wf n ∧ True) lq_anf7205759403792810442 ltac:(solver)))
-              ltac:(solver)).
+              ltac:(solver))).
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
@@ -1316,8 +1328,8 @@ Proof.
 Qed.
 
 Definition sub_self_spec (ds_d4lQ ds_d4lR : Nats): Type :=
-  {{∃ (eqN_res : bool), eqN_rel ⌊ ds_d4lQ ⌋ ⌊ ds_d4lR ⌋ eqN_res ∧ is_true eqN_res
-    → ∃ (sub_res : Nats_u), sub_rel ⌊ ds_d4lQ ⌋ ⌊ ds_d4lR ⌋ sub_res ∧ sub_res == Zero_u}}.
+  {{∃ (eqN_res : bool), eqN_rel ⌊ ds_d4lQ -⌋ ⌊ ds_d4lR -⌋ eqN_res ∧ (is_true eqN_res
+    → ∃ (sub_res : Nats_u), sub_rel ⌊ ds_d4lQ -⌋ ⌊ ds_d4lR -⌋ sub_res ∧ sub_res == Zero_u)}}.
 
 #[global] Hint Unfold sub_self_spec: lia_unfold.
 
@@ -1327,25 +1339,26 @@ Proof.
   destruct ds_d4lR as [ds_d4lR ds_d4lR_p].
   try revert ds_d4lR_p; generalize dependent ds_d4lR; induction ds_d4lQ as [m IH_m|]; intros.
   - destruct ds_d4lR as [n|].
-    + refine (subsumptionCast
+    + autounfold with lia_unfold; simpl in *.
+      refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ (eqN_res : bool), eqN_rel (Suc_u m) (Suc_u n) eqN_res ∧ is_true eqN_res
-               → ∃ (sub_res : Nats_u), sub_rel (Suc_u m) (Suc_u n) sub_res ∧ sub_res == Zero_u)
+               ∃ (eqN_res : bool), eqN_rel (Suc_u m) (Suc_u n) eqN_res ∧ (is_true eqN_res
+               → ∃ (sub_res : Nats_u), sub_rel (Suc_u m) (Suc_u n) sub_res ∧ sub_res == Zero_u))
               (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver))
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ (eqN_res : bool), eqN_rel (Suc_u m) Zero_u eqN_res ∧ is_true eqN_res
-               → ∃ (sub_res : Nats_u), sub_rel (Suc_u m) Zero_u sub_res ∧ sub_res == Zero_u)
+               ∃ (eqN_res : bool), eqN_rel (Suc_u m) Zero_u eqN_res ∧ (is_true eqN_res
+               → ∃ (sub_res : Nats_u), sub_rel (Suc_u m) Zero_u sub_res ∧ sub_res == Zero_u))
               (# unit)
               ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ (eqN_res : bool), eqN_rel Zero_u ds_d4lR eqN_res ∧ is_true eqN_res
-             → ∃ (sub_res : Nats_u), sub_rel Zero_u ds_d4lR sub_res ∧ sub_res == Zero_u)
+             ∃ (eqN_res : bool), eqN_rel Zero_u ds_d4lR eqN_res ∧ (is_true eqN_res
+             → ∃ (sub_res : Nats_u), sub_rel Zero_u ds_d4lR sub_res ∧ sub_res == Zero_u))
             (# unit)
             ltac:(solver)).
 Qed.

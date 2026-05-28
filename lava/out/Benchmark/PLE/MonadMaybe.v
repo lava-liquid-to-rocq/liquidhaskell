@@ -1,13 +1,13 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Set Universe Polymorphism. 
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 
 Inductive MaybeInt_u: Type :=
   | Just_u: Z → MaybeInt_u | Nothing_u: MaybeInt_u.
 
-Fixpoint MaybeInt_eq (x y : MaybeInt_u): bool :=
+Definition MaybeInt_eq (x y : MaybeInt_u): bool :=
   match (x, y) with
   | (Just_u VV, Just_u VV') => true && (VV ==? VV')
   | (Nothing_u, Nothing_u) => true
@@ -33,7 +33,7 @@ Qed.
     refl' := MaybeInt_eq_refl;
     eqb_eq' := MaybeInt_eqb_eq }.
 
-Fixpoint MaybeInt_wf (x : MaybeInt_u): Prop :=
+Definition MaybeInt_wf (x : MaybeInt_u): Prop :=
   match x with | Just_u VV => True | Nothing_u => True end.
 
 Theorem MaybeInt_wf_ref [p : MaybeInt_u → Prop] (tm : {v: MaybeInt_u | MaybeInt_wf v ∧ p v}):
@@ -44,17 +44,17 @@ Qed.
 
 Global Notation MaybeInt := {x: MaybeInt_u | MaybeInt_wf x ∧ True}.
 
-Definition Just_lem (VV : {VV: Z | True}): MaybeInt_wf (Just_u ⌊ VV ⌋) ∧ True.
+Definition Just_lem (VV : {VV: Z | True}): MaybeInt_wf (Just_u ⌊ VV -⌋) ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Just (VV : {VV: Z | True}): MaybeInt :=
-  exist _ (Just_u ⌊ VV ⌋) (Just_lem VV).
+  exist _ (Just_u ⌊ VV -⌋) (Just_lem VV).
 
 Definition Nothing_lem : MaybeInt_wf Nothing_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Nothing : MaybeInt :=
@@ -75,7 +75,7 @@ Definition bind_spec
   (ds_d3S5 : @Pack
              ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
              (Z ::UT nilUT)
-             ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+             ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
              MaybeInt_u
              (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
                 (v_x_10329927 : MaybeInt_u),
@@ -91,7 +91,7 @@ Definition bind
   (ds_d3S5 : @Pack
              ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
              (Z ::UT nilUT)
-             ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+             ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
              MaybeInt_u
              (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
                 (v_x_10329927 : MaybeInt_u),
@@ -125,6 +125,9 @@ Qed.
 
 #[global] Hint Resolve bind_rel_funct: f_rel_funct_db.
 
+#[global] Instance bind_lookup_funct: dictionary functionhood bind := {
+    lookup' := bind_rel_funct }.
+
 Theorem bind_Just_x_lem ds_d3S5 m bind_Just_x_lem_res:
   bind_rel (Just_u m) ds_d3S5 bind_Just_x_lem_res
   ↔ ∃ (ds_d3S5_res : MaybeInt_u),
@@ -149,8 +152,7 @@ Theorem bind_rel_ex
   (ds_d3S5 : @Pack
              ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
              (Z ::UT nilUT)
-             ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
+             ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
              MaybeInt_u
              (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
                 (v_x_82647028 : MaybeInt_u),
@@ -177,8 +179,7 @@ Theorem bind__bind_rel_rw
   (ds_d3S5 : @Pack
              ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
              (Z ::UT nilUT)
-             ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
+             ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
              MaybeInt_u
              (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
                 (v_x_82647028 : MaybeInt_u),
@@ -201,7 +202,7 @@ Theorem bind__bind_rel
   (ds_d3S5 : @Pack
              ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
              (Z ::UT nilUT)
-             ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+             ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
              MaybeInt_u
              (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
                 (v_x_10329927 : MaybeInt_u),
@@ -222,7 +223,7 @@ Theorem bind__bind_rel'
   (ds_d3S5 : @Pack
              ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
              (Z ::UT nilUT)
-             ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+             ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
              MaybeInt_u
              (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
                 (v_x_10329927 : MaybeInt_u),
@@ -243,8 +244,7 @@ Theorem bind_rel_mk
   (ds_d3S5 : @Pack
              ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
              (Z ::UT nilUT)
-             ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
+             ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
              MaybeInt_u
              (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
                 (v_x_82647028 : MaybeInt_u),
@@ -290,6 +290,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve retrn_rel_funct: f_rel_funct_db.
+
+#[global] Instance retrn_lookup_funct: dictionary functionhood retrn := {
+    lookup' := retrn_rel_funct }.
 
 Theorem retrn_inv_lem x retrn_inv_lem_res:
   retrn_rel x retrn_inv_lem_res ↔ retrn_inv_lem_res == Just_u x.
@@ -353,7 +356,7 @@ Qed.
   @Pack
   ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
   (Z ::UT nilUT)
-  ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
+  ltac:(mkProjectsArgListTG ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT) ((Z ::UT nilUT)))
   MaybeInt_u
   (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT))
      (v_x_11473763 : MaybeInt_u),
@@ -372,7 +375,7 @@ Definition left_identity_spec
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        MaybeInt_u
        (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
           (v_x_44453395 : MaybeInt_u),
@@ -380,10 +383,10 @@ Definition left_identity_spec
  MaybeInt_wf VV ∧ True) x_44453395 v_x_44453395))):
   Type :=
   {{∃ (retrn_res : MaybeInt_u),
-    retrn_rel ⌊ x ⌋ retrn_res
+    retrn_rel ⌊ x -⌋ retrn_res
     ∧ ∃ (bind_res : MaybeInt_u),
       bind_rel retrn_res ⌊ f ⌋ bind_res
-      ∧ ∃ (f_res : MaybeInt_u), getPackRel f ⌊ x ⌋ f_res ∧ bind_res == f_res}}.
+      ∧ ∃ (f_res : MaybeInt_u), getPackRel f ⌊ x -⌋ f_res ∧ bind_res == f_res}}.
 
 #[global] Hint Unfold left_identity_spec: lia_unfold.
 
@@ -392,7 +395,7 @@ Theorem left_identity
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        MaybeInt_u
        (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
           (v_x_44453395 : MaybeInt_u),
@@ -414,7 +417,8 @@ Proof.
 Qed.
 
 Definition right_identity_spec (ds_d3S3 : MaybeInt): Type :=
-  {{∃ (bind_res : MaybeInt_u), bind_rel ⌊ ds_d3S3 ⌋ retrn_upack bind_res ∧ bind_res == ⌊ ds_d3S3 ⌋}}.
+  {{∃ (bind_res : MaybeInt_u),
+    bind_rel ⌊ ds_d3S3 -⌋ retrn_upack bind_res ∧ bind_res == ⌊ ds_d3S3 -⌋}}.
 
 #[global] Hint Unfold right_identity_spec: lia_unfold.
 

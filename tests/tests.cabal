@@ -2682,6 +2682,7 @@ executable benchmark-lava
                     , TranslationTests.FunctorId
                     , TranslationTests.FunctorList
                     , TranslationTests.FunctorMaybe
+                    , Todo.TranslationTests.ApplicativeId
                     , Benchmark.GradeExample
                     , Benchmark.Half
                     , Benchmark.Overview

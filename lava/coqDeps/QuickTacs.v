@@ -753,8 +753,8 @@ Ltac quick_simpl := quick_cleanup;  repeat shape_based.
 
 Ltac cleanup_hints := repeat match goal with
   | [hint: {_: Unit | ?r} |- _ ] => destruct hint as [_ hint]
-  | [h: (exists v, _) /\ ?t |- _] => destruct h as [? ?]
-  | [h: ?s /\ (exists v, _) |- _] => destruct h as [? ?]
+  | [h: (exists v, _) /\ ?t |- _] => destruct h as [? h]
+  | [h: ?s /\ (exists v, _) |- _] => destruct h as [h ?]
   | [hint: {x: ?A | ?r} |- _ ] => 
     let hint_r := fresh "hint_r" in
     destruct hint as [hint hint_r]

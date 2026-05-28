@@ -36,6 +36,11 @@ mkCoqLemma f args ret tacs = Definition f args ret (ProofBody tacs) Opaque
 mkCoqTheorem :: Id -> [((Id, RocqType), Bool)] -> CoqTerm -> [Tactic] -> Decl
 mkCoqTheorem f args ret = mkCoqLemma f args (Prop ret)
 
+-- Builds fix if the flag is True, Definition if False
+mkCoqFix :: Bool -> Id -> [((Id, RocqType), Bool)] -> RocqType -> CoqTerm -> Decl
+mkCoqFix isRec f args ret tm =
+  if isRec then Fix f args ret tm else Definition f args ret (TermBody tm) Transparent
+
 -- | Wrapper for Forall, defined as id for empty argument list
 mkForall :: [(Id, RocqType)] -> CoqTerm -> CoqTerm
 mkForall args r = if null args then r else Forall args r
@@ -126,15 +131,6 @@ mkOpaque :: Id -> Decl
 -- mkOpaque x | trace ("mkOpaque(" ++ x ++ ")") False = undefined
 mkOpaque x = ChangeVisibility x Opaque
 
-argListCorT :: ArgListT -> UArgListT -> RocqType
-argListCorT argList uargList = Prop $ App (Def "projectsArgListT") [mkArgListT argList, mkUArgListT uargList]
-
-argListCorPrf :: ArgListT -> UArgListT -> CoqTerm
-argListCorPrf argTps uargTps =
-  PrfTerm
-    (argListCorT argTps uargTps)
-    (ByTac . Custom . unwords $ ["mkProjectsArgListTG", render . parens $ pPrint argTps, render . parens $ pPrint uargTps])
-
 mkLam :: [(Id, RocqType)] -> CoqTerm -> CoqTerm
 mkLam [] tm = tm
 mkLam ((x, xTp) : xTs) tm = Lambda x xTp $ mkLam xTs tm
@@ -159,3 +155,7 @@ upackGetRel upack = App (Def getUPackRelName) [upack]
 
 upackGetFunct :: CoqTerm -> CoqTerm
 upackGetFunct upack = App (Def getUPackFunctName) [upack]
+
+argListTTp :: RocqType
+argListTTp = TC argListTName []
+

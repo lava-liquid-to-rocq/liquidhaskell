@@ -1,13 +1,13 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Set Universe Polymorphism. 
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 
 Inductive MaybeInt_u: Type :=
   | Just_u: Z → MaybeInt_u | Nothing_u: MaybeInt_u.
 
-Fixpoint MaybeInt_eq (x y : MaybeInt_u): bool :=
+Definition MaybeInt_eq (x y : MaybeInt_u): bool :=
   match (x, y) with
   | (Just_u VV, Just_u VV') => true && (VV ==? VV')
   | (Nothing_u, Nothing_u) => true
@@ -33,7 +33,7 @@ Qed.
     refl' := MaybeInt_eq_refl;
     eqb_eq' := MaybeInt_eqb_eq }.
 
-Fixpoint MaybeInt_wf (x : MaybeInt_u): Prop :=
+Definition MaybeInt_wf (x : MaybeInt_u): Prop :=
   match x with | Just_u VV => True | Nothing_u => True end.
 
 Theorem MaybeInt_wf_ref [p : MaybeInt_u → Prop] (tm : {v: MaybeInt_u | MaybeInt_wf v ∧ p v}):
@@ -44,17 +44,17 @@ Qed.
 
 Global Notation MaybeInt := {x: MaybeInt_u | MaybeInt_wf x ∧ True}.
 
-Definition Just_lem (VV : {VV: Z | True}): MaybeInt_wf (Just_u ⌊ VV ⌋) ∧ True.
+Definition Just_lem (VV : {VV: Z | True}): MaybeInt_wf (Just_u ⌊ VV -⌋) ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Just (VV : {VV: Z | True}): MaybeInt :=
-  exist _ (Just_u ⌊ VV ⌋) (Just_lem VV).
+  exist _ (Just_u ⌊ VV -⌋) (Just_lem VV).
 
 Definition Nothing_lem : MaybeInt_wf Nothing_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Nothing : MaybeInt :=
@@ -101,6 +101,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve mappend_rel_funct: f_rel_funct_db.
+
+#[global] Instance mappend_lookup_funct: dictionary functionhood mappend := {
+    lookup' := mappend_rel_funct }.
 
 Theorem mappend_Just_x_lem x y mappend_Just_x_lem_res:
   mappend_rel (Just_u x) y mappend_Just_x_lem_res ↔ mappend_Just_x_lem_res == Just_u x.
@@ -196,9 +199,8 @@ Qed.
   @Pack
   (MaybeInt ::RT λ (ds_d48D : MaybeInt), MaybeInt ::RT λ (y : MaybeInt), nilRT)
   (MaybeInt_u ::UT (MaybeInt_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((MaybeInt
-  ::RT λ (ds_d48D : MaybeInt),
-       MaybeInt ::RT λ (y : MaybeInt), nilRT)) ((MaybeInt_u ::UT (MaybeInt_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (MaybeInt
+ ::RT λ (ds_d48D : MaybeInt), MaybeInt ::RT λ (y : MaybeInt), nilRT) ((MaybeInt_u ::UT (MaybeInt_u ::UT nilUT))))
   MaybeInt_u
   (λ (x_69485096 : ArgList (MaybeInt
                             ::RT λ (ds_d48D : MaybeInt), MaybeInt ::RT λ (y : MaybeInt), nilRT))
@@ -215,13 +217,13 @@ Defined.
 
 Definition mappend_assoc_spec (ds_d48A y z : MaybeInt): Type :=
   {{∃ (mappend_res : MaybeInt_u),
-    mappend_rel ⌊ ds_d48A ⌋ ⌊ y ⌋ mappend_res
+    mappend_rel ⌊ ds_d48A -⌋ ⌊ y -⌋ mappend_res
     ∧ ∃ (mappend_res_2 : MaybeInt_u),
-      mappend_rel mappend_res ⌊ z ⌋ mappend_res_2
+      mappend_rel mappend_res ⌊ z -⌋ mappend_res_2
       ∧ ∃ (mappend_res_3 : MaybeInt_u),
-        mappend_rel ⌊ y ⌋ ⌊ z ⌋ mappend_res_3
+        mappend_rel ⌊ y -⌋ ⌊ z -⌋ mappend_res_3
         ∧ ∃ (mappend_res_4 : MaybeInt_u),
-          mappend_rel ⌊ ds_d48A ⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4}}.
+          mappend_rel ⌊ ds_d48A -⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4}}.
 
 #[global] Hint Unfold mappend_assoc_spec: lia_unfold.
 
@@ -285,7 +287,7 @@ Defined.
 
 Definition mempty_left_spec (ds_d48C : MaybeInt): Type :=
   {{∃ (mappend_res : MaybeInt_u),
-    mappend_rel ⌊ mempty -⌋ ⌊ ds_d48C ⌋ mappend_res ∧ mappend_res == ⌊ ds_d48C ⌋}}.
+    mappend_rel ⌊ mempty -⌋ ⌊ ds_d48C -⌋ mappend_res ∧ mappend_res == ⌊ ds_d48C -⌋}}.
 
 #[global] Hint Unfold mempty_left_spec: lia_unfold.
 
@@ -302,7 +304,7 @@ Qed.
 
 Definition mempty_right_spec (ds_d48B : MaybeInt): Type :=
   {{∃ (mappend_res : MaybeInt_u),
-    mappend_rel ⌊ ds_d48B ⌋ ⌊ mempty -⌋ mappend_res ∧ mappend_res == ⌊ ds_d48B ⌋}}.
+    mappend_rel ⌊ ds_d48B -⌋ ⌊ mempty -⌋ mappend_res ∧ mappend_res == ⌊ ds_d48B -⌋}}.
 
 #[global] Hint Unfold mempty_right_spec: lia_unfold.
 

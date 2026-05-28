@@ -34,7 +34,7 @@ trDecl :: Bool -> LH.Decl -> [Coq.Decl]
 trDecl equations (LH.Data tc alts) =
   unrefTCDecl tc alts --                     TC_u: unrefined datatype declaration
     : tcEqDecls tc alts --                   TC_eq: equality for TC_u and associated declarations
-    ++ tcRefDecls equations tc alts --                 TC_wf and TC: Well-formedness and type alias
+    ++ tcRefDecls equations tc alts --       TC_wf and TC: Well-formedness and type alias
     ++ concatMap (mkPseudoConstr equations tc) alts -- C_i: Refined data constructors
     ++ concatMap (mkConstrWf tc) alts --     Lemmas for decomposing well-formedness on data constructors
     ++ tcHints tc alts --                    Final hints for datatypes and constructor
@@ -80,6 +80,9 @@ unrefTCDecl tc alts =
 -- | Declarations related to the equality on unrefined constructors
 tcEqDecls :: Id -> [(Id, RefType)] -> [Coq.Decl]
 -- tcEqDecls tc _ | traceTC "tcEqDecls" tc = undefined
+tcEqDecls _ alts | any isHOConstr alts = []
+  where
+    isHOConstr _ = False -- TODO: Implement this
 tcEqDecls tc alts = eqDecl tc alts : eqReflLem tc ++ eqbEqLem tc ++ [eqbInstanceDecl tc]
 
 -- | Fixpoint definition of equality of two inductives
@@ -87,7 +90,7 @@ tcEqDecls tc alts = eqDecl tc alts : eqReflLem tc ++ eqbEqLem tc ++ [eqbInstance
 -- > Fixpoint TC_eq (x: TC_u) (y: TC_u): bool := ...
 eqDecl :: Id -> [(Id, RefType)] -> Coq.Decl
 eqDecl tc alts =
-  Fix (tcEqName tc) [(("x", unrefTC tc), False), (("y", unrefTC tc), False)] Coq.boolTp $
+  mkCoqFix (isRecTC tc alts) (tcEqName tc) [(("x", unrefTC tc), False), (("y", unrefTC tc), False)] Coq.boolTp $
     Match [Coq.Var "x", Coq.Var "y"] Nothing (map mkConstrEqBranch alts ++ [defaultBranch | length alts > 1])
   where
     mkConstrEqBranch :: (Id, RefType) -> ([(Id, [Id])], CoqTerm)
@@ -165,19 +168,33 @@ tcRefDecls eq tc alts = [wfDecl eq tc alts, wfLem tc, refTCDecl tc]
 -- > Fixpoint TC_wf (x: TC_u): Prop := match x with ...
 wfDecl :: Bool -> Id -> [(Id, RefType)] -> Coq.Decl
 wfDecl eq tc alts =
-  Fix (wfTCName tc) [(("x", unrefTC tc), False)] (Sort PropSort) $
+  mkCoqFix (isRecTC tc alts) (wfTCName tc) [(("x", unrefTC tc), False)] (Sort PropSort) $
     Match [Coq.Var "x"] Nothing (map mkBranch alts)
   where
     mkBranch :: (Id, RefType) -> ([(Id, [Id])], CoqTerm)
     mkBranch (c, tp) = ([(unrefinedConstrName c, map fst args)], Coq.mkAnd (retRefT : map argProp args))
       where
-        (args, (vv, _, retRef)) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
+        (args, (vv, _, retRef)) = arrs . removeArgProjs True $ harmonizeBinderNames tp
         -- Proposition for the refinement of the return type, with C x1 … xn in the refinement
         retRefT = utrReftProp eq (subst (foldl LH.App (DC c) (tpArgsArLoc tp)) vv retRef)
         -- Proposition for each argument
         argProp (x, tpArg) =
           case trRefType eq tpArg of
             Subset _ _ p -> p
+            Pack argTps _ (Coq.ArgListCor argTps' uargTps) t p
+              | Coq.ArgListTArg argTps == argTps' ->
+                  Coq.Let argTs (Just argListTTp) argTps'
+                    . Coq.Let prf (Just pTp) p
+                    . Coq.Let z (Just zTp) (Coq.ArgListCor (Coq.Var argTs) uargTps)
+                    $ Coq.App (Def uPackWfName) (map Coq.Var [argTs, z, prf, x])
+              where
+                usedNames = Set.fromList $ map fst args
+                argTs = freshVar "argTps" usedNames
+                prf = freshVar "p" usedNames
+                z = freshVar "z" usedNames
+                zTp = Coq.Prop $ Coq.App (Coq.Def "projectsArgListT") [Coq.Var argTs, mkUArgListT uargTps]
+                xs = freshVar "args" usedNames
+                pTp = FAType (xs, Coq.ArgumentList (Coq.Var argTs)) $ Arrow t (Sort PropSort)
             Pack argTps _ z _ p -> Coq.App (Def uPackWfName) [mkArgListT argTps, z, p, Coq.Var x] -- TODO: add required conditions
             _ -> PropLit True
 
@@ -220,8 +237,8 @@ mkPseudoConstr eq tc (c, tp) =
     argsT = map ((,False) . second (trRefType eq)) args
     retT = trRefType eq (mkRefType ret)
     -- C proj(x1) … proj(xn) (in LH), that translates to C_u proj1_sig(x1) … proj1_sig(x_n)
-    unrefCrApp = foldl LH.App (DC c) (map LH.mkProj $ tpArgsArLoc tp)
-    bodyLem = ProofBody [Custom "repeat first [split; solver]"]
+    unrefCrApp = foldl LH.App (DC c) (map (LH.mkProj Sig1) $ tpArgsArLoc tp)
+    bodyLem = ProofBody [Custom "repeat first [split | solver]"]
     -- The translated refinement of the return type of C, where x is replaced by Cu proj1_sig(args)
     -- NOTE: instead of inlining the translation of the refinement of an
     -- inductive type, we could use a substitution in Rocq, but I want to avoid
@@ -601,10 +618,14 @@ pathConstrName f pats additional =
 --
 -- > Definition f_rel_funct [args] (v v': Z) : f_rel [args] v -> f_rel [args] v' -> v = v'.
 -- > #[global] Hint Resolve f_rel_funct : f_rel_funct_db.
+-- > #[global] Instance f_lookup_funct : dictionary functionhood f := { lookup' := f_rel_funct }.
 relFunctionhoodLemma :: FuncData -> [Coq.Decl]
 -- relFunctionhoodLemma f | traceF "relFunctionhoodLemma" f = undefined
 relFunctionhoodLemma f =
-  [functionhoodLemma, AddHint ResolveHint (funcHoodLemName $ name f) GraphRelDB]
+  [ functionhoodLemma,
+    AddHint ResolveHint (funcHoodLemName $ name f) GraphRelDB,
+    Coq.Instance (name f ++ "_lookup_funct") ["dictionary", "functionhood", name f] [("lookup'", Coq.Def (funcHoodLemName $ name f))]
+  ]
   where
     functionhoodLemma =
       Coq.Definition
@@ -858,4 +879,4 @@ mkIndSkel _ (Reft r) specIhs =
     findRecCalls (Pop _ r1 r2) = findRecCalls r1 `union` findRecCalls r2
     findRecCalls (Sub r' _ _) = findRecCalls r'
     findRecCalls (Inj r' _) = findRecCalls r'
-    findRecCalls (LH.Proj r') = findRecCalls r'
+    findRecCalls (LH.Proj _ r') = findRecCalls r'

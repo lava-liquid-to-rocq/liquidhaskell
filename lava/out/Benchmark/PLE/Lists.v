@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Set Universe Polymorphism. 
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 
 Inductive L_u: Type :=
@@ -43,17 +43,17 @@ Qed.
 
 Global Notation L := {x: L_u | L_wf x ∧ True}.
 
-Definition C_lem (VV : {VV: Z | True}) (VV_ : L): L_wf (C_u ⌊ VV ⌋ ⌊ VV_ ⌋) ∧ True.
+Definition C_lem (VV : {VV: Z | True}) (VV_ : L): L_wf (C_u ⌊ VV -⌋ ⌊ VV_ -⌋) ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition C (VV : {VV: Z | True}) (VV_ : L): L :=
-  exist _ (C_u ⌊ VV ⌋ ⌊ VV_ ⌋) (C_lem VV VV_).
+  exist _ (C_u ⌊ VV -⌋ ⌊ VV_ -⌋) (C_lem VV VV_).
 
 Definition Emp_lem : L_wf Emp_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Emp : L :=
@@ -109,6 +109,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve append_rel_funct: f_rel_funct_db.
+
+#[global] Instance append_lookup_funct: dictionary functionhood append := {
+    lookup' := append_rel_funct }.
 
 Theorem append_C_x_lem x xs ys append_C_x_lem_res:
   append_rel (C_u x xs) ys append_C_x_lem_res
@@ -198,7 +201,7 @@ Qed.
   @Pack
   (L ::RT λ (ds_d3vP : L), L ::RT λ (ys : L), nilRT)
   (L_u ::UT (L_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((L ::RT λ (ds_d3vP : L), L ::RT λ (ys : L), nilRT)) ((L_u ::UT (L_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d3vP : L), L ::RT λ (ys : L), nilRT) ((L_u ::UT (L_u ::UT nilUT))))
   L_u
   (λ (x_84976641 : ArgList (L ::RT λ (ds_d3vP : L), L ::RT λ (ys : L), nilRT)) (v_x_84976641 : L_u),
    ltac:(flattenP (λ (ds_d3vP ys : L) (VV : L_u), L_wf VV ∧ True) x_84976641 v_x_84976641)).
@@ -317,6 +320,9 @@ Qed.
 
 #[global] Hint Resolve length_rel_funct: f_rel_funct_db.
 
+#[global] Instance length_lookup_funct: dictionary functionhood length := {
+    lookup' := length_rel_funct }.
+
 Theorem length_C_lem ds_d3vT xs length_C_lem_res:
   length_rel (C_u ds_d3vT xs) length_C_lem_res
   ↔ ∃ (length_res : Z),
@@ -397,7 +403,7 @@ Qed.
   @Pack
   (L ::RT λ (ds_d3vS : L), nilRT)
   (L_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((L ::RT λ (ds_d3vS : L), nilRT)) ((L_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d3vS : L), nilRT) ((L_u ::UT nilUT)))
   Z
   (λ (x_45869651 : ArgList (L ::RT λ (ds_d3vS : L), nilRT)) (v_x_45869651 : Z),
    ltac:(flattenP (λ (ds_d3vS : L) (VV : Z), gebZ_rel VV 0 true) x_45869651 v_x_45869651)).
@@ -412,13 +418,13 @@ Defined.
 
 Definition prop_spec (x : {x: Z | True}) (xs ys zs : L): Type :=
   {{∃ (append_res : L_u),
-    append_rel (C_u ⌊ x ⌋ ⌊ xs ⌋) ⌊ ys ⌋ append_res
+    append_rel (C_u ⌊ x -⌋ ⌊ xs -⌋) ⌊ ys -⌋ append_res
     ∧ ∃ (append_res_2 : L_u),
-      append_rel append_res ⌊ zs ⌋ append_res_2
+      append_rel append_res ⌊ zs -⌋ append_res_2
       ∧ ∃ (append_res_3 : L_u),
-        append_rel ⌊ xs ⌋ ⌊ ys ⌋ append_res_3
+        append_rel ⌊ xs -⌋ ⌊ ys -⌋ append_res_3
         ∧ ∃ (append_res_4 : L_u),
-          append_rel append_res_3 ⌊ zs ⌋ append_res_4 ∧ append_res_2 == C_u ⌊ x ⌋ append_res_4}}.
+          append_rel append_res_3 ⌊ zs -⌋ append_res_4 ∧ append_res_2 == C_u ⌊ x -⌋ append_res_4}}.
 
 #[global] Hint Unfold prop_spec: lia_unfold.
 

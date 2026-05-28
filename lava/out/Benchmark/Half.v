@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Set Universe Polymorphism. 
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 
 Inductive Nats_u: Type :=
@@ -43,17 +43,17 @@ Qed.
 
 Global Notation Nats := {x: Nats_u | Nats_wf x ∧ True}.
 
-Definition Suc_lem (n : Nats): Nats_wf (Suc_u ⌊ n ⌋) ∧ True.
+Definition Suc_lem (n : Nats): Nats_wf (Suc_u ⌊ n -⌋) ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Suc (n : Nats): Nats :=
-  exist _ (Suc_u ⌊ n ⌋) (Suc_lem n).
+  exist _ (Suc_u ⌊ n -⌋) (Suc_lem n).
 
 Definition Zero_lem : Nats_wf Zero_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Zero : Nats :=
@@ -110,6 +110,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve even_rel_funct: f_rel_funct_db.
+
+#[global] Instance even_lookup_funct: dictionary functionhood even := {
+    lookup' := even_rel_funct }.
 
 Theorem even_Suc_lem n even_Suc_lem_res:
   even_rel (Suc_u n) even_Suc_lem_res
@@ -188,7 +191,7 @@ Qed.
   @Pack
   (Nats ::RT λ (ds_d1Za : Nats), nilRT)
   (Nats_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Nats ::RT λ (ds_d1Za : Nats), nilRT)) ((Nats_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Nats ::RT λ (ds_d1Za : Nats), nilRT) ((Nats_u ::UT nilUT)))
   bool
   (λ (x_18566717 : ArgList (Nats ::RT λ (ds_d1Za : Nats), nilRT)) (v_x_18566717 : bool),
    ltac:(flattenP (λ (ds_d1Za : Nats) (VV : bool), True) x_18566717 v_x_18566717)).

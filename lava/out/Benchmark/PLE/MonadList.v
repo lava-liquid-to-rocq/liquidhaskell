@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Set Universe Polymorphism. 
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 
 Inductive L_u: Type :=
@@ -43,17 +43,17 @@ Qed.
 
 Global Notation L := {x: L_u | L_wf x ∧ True}.
 
-Definition C_lem (VV : {VV: Z | True}) (VV_ : L): L_wf (C_u ⌊ VV ⌋ ⌊ VV_ ⌋) ∧ True.
+Definition C_lem (VV : {VV: Z | True}) (VV_ : L): L_wf (C_u ⌊ VV -⌋ ⌊ VV_ -⌋) ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition C (VV : {VV: Z | True}) (VV_ : L): L :=
-  exist _ (C_u ⌊ VV ⌋ ⌊ VV_ ⌋) (C_lem VV VV_).
+  exist _ (C_u ⌊ VV -⌋ ⌊ VV_ -⌋) (C_lem VV VV_).
 
 Definition Emp_lem : L_wf Emp_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Emp : L :=
@@ -109,6 +109,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve append_rel_funct: f_rel_funct_db.
+
+#[global] Instance append_lookup_funct: dictionary functionhood append := {
+    lookup' := append_rel_funct }.
 
 Theorem append_C_x_lem x xs ys append_C_x_lem_res:
   append_rel (C_u x xs) ys append_C_x_lem_res
@@ -198,7 +201,7 @@ Qed.
   @Pack
   (L ::RT λ (ds_d3Io : L), L ::RT λ (ys : L), nilRT)
   (L_u ::UT (L_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((L ::RT λ (ds_d3Io : L), L ::RT λ (ys : L), nilRT)) ((L_u ::UT (L_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d3Io : L), L ::RT λ (ys : L), nilRT) ((L_u ::UT (L_u ::UT nilUT))))
   L_u
   (λ (x_84885443 : ArgList (L ::RT λ (ds_d3Io : L), L ::RT λ (ys : L), nilRT)) (v_x_84885443 : L_u),
    ltac:(flattenP (λ (ds_d3Io ys : L) (VV : L_u), L_wf VV ∧ True) x_84885443 v_x_84885443)).
@@ -216,7 +219,7 @@ Definition bind_spec
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
           (v_x_10329927 : L_u),
@@ -231,7 +234,7 @@ Definition bind
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
           (v_x_10329927 : L_u),
@@ -267,6 +270,9 @@ Qed.
 
 #[global] Hint Resolve bind_rel_funct: f_rel_funct_db.
 
+#[global] Instance bind_lookup_funct: dictionary functionhood bind := {
+    lookup' := bind_rel_funct }.
+
 Theorem bind_C_x_lem f x xs bind_C_x_lem_res:
   bind_rel (C_u x xs) f bind_C_x_lem_res
   ↔ ∃ (bind_res : L_u),
@@ -294,8 +300,7 @@ Theorem bind_rel_ex
   (f : @Pack
        ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
           (v_x_82647028 : L_u),
@@ -324,8 +329,7 @@ Theorem bind__bind_rel_rw
   (f : @Pack
        ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
           (v_x_82647028 : L_u),
@@ -347,7 +351,7 @@ Theorem bind__bind_rel
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
           (v_x_10329927 : L_u),
@@ -367,7 +371,7 @@ Theorem bind__bind_rel'
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_10329927 : ArgList ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT))
           (v_x_10329927 : L_u),
@@ -386,8 +390,7 @@ Theorem bind_rel_mk
   (f : @Pack
        ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({lq_tmp2: Z | True}
-  ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_82647028 : ArgList ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT))
           (v_x_82647028 : L_u),
@@ -407,7 +410,7 @@ Qed.
 #[global] Hint Resolve bind_rel_mk: f_rel_funct_db.
 
 Definition prop_append_neutral_spec (ds_d3Im : L): Type :=
-  {{∃ (append_res : L_u), append_rel ⌊ ds_d3Im ⌋ Emp_u append_res ∧ append_res == ⌊ ds_d3Im ⌋}}.
+  {{∃ (append_res : L_u), append_rel ⌊ ds_d3Im -⌋ Emp_u append_res ∧ append_res == ⌊ ds_d3Im -⌋}}.
 
 #[global] Hint Unfold prop_append_neutral_spec: lia_unfold.
 
@@ -453,6 +456,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve retrn_rel_funct: f_rel_funct_db.
+
+#[global] Instance retrn_lookup_funct: dictionary functionhood retrn := {
+    lookup' := retrn_rel_funct }.
 
 Theorem retrn_inv_lem x retrn_inv_lem_res:
   retrn_rel x retrn_inv_lem_res ↔ retrn_inv_lem_res == C_u x Emp_u.
@@ -515,7 +521,7 @@ Qed.
   @Pack
   ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
   (Z ::UT nilUT)
-  ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
+  ltac:(mkProjectsArgListTG ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT) ((Z ::UT nilUT)))
   L_u
   (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) (v_x_11473763 : L_u),
    ltac:(flattenP (λ (x : {x: Z | True}) (VV : L_u), L_wf VV ∧ True) x_11473763 v_x_11473763)).
@@ -533,17 +539,17 @@ Definition left_identity_spec
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
           (v_x_44453395 : L_u),
         ltac:(flattenP (λ (lq_tmp0 : {VV: Z | True}) (VV : L_u), L_wf VV ∧ True) x_44453395 v_x_44453395))):
   Type :=
   {{∃ (retrn_res : L_u),
-    retrn_rel ⌊ x ⌋ retrn_res
+    retrn_rel ⌊ x -⌋ retrn_res
     ∧ ∃ (bind_res : L_u),
       bind_rel retrn_res ⌊ f ⌋ bind_res
-      ∧ ∃ (f_res : L_u), getPackRel f ⌊ x ⌋ f_res ∧ bind_res == f_res}}.
+      ∧ ∃ (f_res : L_u), getPackRel f ⌊ x -⌋ f_res ∧ bind_res == f_res}}.
 
 #[global] Hint Unfold left_identity_spec: lia_unfold.
 
@@ -552,7 +558,7 @@ Theorem left_identity
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        L_u
        (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
           (v_x_44453395 : L_u),
@@ -572,7 +578,7 @@ Proof.
 Qed.
 
 Definition right_identity_spec (ds_d3In : L): Type :=
-  {{∃ (bind_res : L_u), bind_rel ⌊ ds_d3In ⌋ retrn_upack bind_res ∧ bind_res == ⌊ ds_d3In ⌋}}.
+  {{∃ (bind_res : L_u), bind_rel ⌊ ds_d3In -⌋ retrn_upack bind_res ∧ bind_res == ⌊ ds_d3In -⌋}}.
 
 #[global] Hint Unfold right_identity_spec: lia_unfold.
 

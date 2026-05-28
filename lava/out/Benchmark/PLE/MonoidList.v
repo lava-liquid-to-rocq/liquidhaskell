@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Set Universe Polymorphism. 
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 
 Inductive L_u: Type :=
@@ -43,17 +43,17 @@ Qed.
 
 Global Notation L := {x: L_u | L_wf x ∧ True}.
 
-Definition C_lem (VV : {VV: Z | True}) (VV_ : L): L_wf (C_u ⌊ VV ⌋ ⌊ VV_ ⌋) ∧ True.
+Definition C_lem (VV : {VV: Z | True}) (VV_ : L): L_wf (C_u ⌊ VV -⌋ ⌊ VV_ -⌋) ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition C (VV : {VV: Z | True}) (VV_ : L): L :=
-  exist _ (C_u ⌊ VV ⌋ ⌊ VV_ ⌋) (C_lem VV VV_).
+  exist _ (C_u ⌊ VV -⌋ ⌊ VV_ -⌋) (C_lem VV VV_).
 
 Definition Emp_lem : L_wf Emp_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Emp : L :=
@@ -109,6 +109,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve mappend_rel_funct: f_rel_funct_db.
+
+#[global] Instance mappend_lookup_funct: dictionary functionhood mappend := {
+    lookup' := mappend_rel_funct }.
 
 Theorem mappend_C_x_lem x xs ys mappend_C_x_lem_res:
   mappend_rel (C_u x xs) ys mappend_C_x_lem_res
@@ -198,7 +201,7 @@ Qed.
   @Pack
   (L ::RT λ (ds_d3ZP : L), L ::RT λ (ys : L), nilRT)
   (L_u ::UT (L_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((L ::RT λ (ds_d3ZP : L), L ::RT λ (ys : L), nilRT)) ((L_u ::UT (L_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d3ZP : L), L ::RT λ (ys : L), nilRT) ((L_u ::UT (L_u ::UT nilUT))))
   L_u
   (λ (x_83637771 : ArgList (L ::RT λ (ds_d3ZP : L), L ::RT λ (ys : L), nilRT)) (v_x_83637771 : L_u),
    ltac:(flattenP (λ (ds_d3ZP ys : L) (VV : L_u), L_wf VV ∧ True) x_83637771 v_x_83637771)).
@@ -213,13 +216,13 @@ Defined.
 
 Definition mappend_assoc_spec (ds_d3ZN ys zs : L): Type :=
   {{∃ (mappend_res : L_u),
-    mappend_rel ⌊ ds_d3ZN ⌋ ⌊ ys ⌋ mappend_res
+    mappend_rel ⌊ ds_d3ZN -⌋ ⌊ ys -⌋ mappend_res
     ∧ ∃ (mappend_res_2 : L_u),
-      mappend_rel mappend_res ⌊ zs ⌋ mappend_res_2
+      mappend_rel mappend_res ⌊ zs -⌋ mappend_res_2
       ∧ ∃ (mappend_res_3 : L_u),
-        mappend_rel ⌊ ys ⌋ ⌊ zs ⌋ mappend_res_3
+        mappend_rel ⌊ ys -⌋ ⌊ zs -⌋ mappend_res_3
         ∧ ∃ (mappend_res_4 : L_u),
-          mappend_rel ⌊ ds_d3ZN ⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4}}.
+          mappend_rel ⌊ ds_d3ZN -⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4}}.
 
 #[global] Hint Unfold mappend_assoc_spec: lia_unfold.
 
@@ -275,7 +278,7 @@ Proof.
 Defined.
 
 Definition mempty_left_spec (xs : L): Type :=
-  {{∃ (mappend_res : L_u), mappend_rel ⌊ mempty -⌋ ⌊ xs ⌋ mappend_res ∧ mappend_res == ⌊ xs ⌋}}.
+  {{∃ (mappend_res : L_u), mappend_rel ⌊ mempty -⌋ ⌊ xs -⌋ mappend_res ∧ mappend_res == ⌊ xs -⌋}}.
 
 #[global] Hint Unfold mempty_left_spec: lia_unfold.
 
@@ -291,7 +294,7 @@ Qed.
 
 Definition mempty_right_spec (ds_d3ZO : L): Type :=
   {{∃ (mappend_res : L_u),
-    mappend_rel ⌊ ds_d3ZO ⌋ ⌊ mempty -⌋ mappend_res ∧ mappend_res == ⌊ ds_d3ZO ⌋}}.
+    mappend_rel ⌊ ds_d3ZO -⌋ ⌊ mempty -⌋ mappend_res ∧ mappend_res == ⌊ ds_d3ZO -⌋}}.
 
 #[global] Hint Unfold mempty_right_spec: lia_unfold.
 

@@ -8,7 +8,7 @@
 -- Unrefined and refined translations are mutually dependent, so they are all in the same file
 module Lava.Translation where
 
-import Data.Bifunctor (bimap, second)
+import Data.Bifunctor (second)
 -- import Debug.Trace (trace)
 import Data.Maybe (fromMaybe)
 import Text.PrettyPrint.HughesPJClass as PP
@@ -71,8 +71,13 @@ utrDC c = unrefinedConstrName c
 utrRefType :: LH.RefType -> RocqType
 utrRefType (RefType _ tp _) = trBaseType tp
 utrRefType tp@(ArrType {}) =
-  let (argsUT, retUT) = bimap (map (utrRefType . snd)) (utrRefType . mkRefType) $ arrs tp
-   in UPack (UArgListT argsUT) retUT
+  let (args, ret@(_, retTp, _)) = arrs tp
+      argsUT = map (utrRefType . snd) args
+      retUT = utrRefType $ mkRefType ret
+   in -- If an arrow type returns unit, we do not create a pack
+      if retTp == LH.unitTp
+        then foldr Coq.Arrow retUT argsUT
+        else UPack (UArgListT argsUT) retUT
 
 -- | Translation of refinement types at top-level (with arrows)
 utrRefTypeTop :: LH.RefType -> RocqType
@@ -89,6 +94,10 @@ utrRefTypeTopProp (ArrType _ tpx tp) = Coq.Arrow (utrRefType tpx) (utrRefTypeTop
 utrReft :: Bool -> LH.Reft -> Coq.CoqTerm
 -- utrReft r | traceFunc "utrReft" [pPrint r] = undefined
 utrReft eq r0 = case r0 of
+  -- global theorem -> TODO
+  LH.Var _ (Just u) Global
+    | u == LH.unitTp ->
+        error "TODO: automatically create relation for theorem used in unrefined term"
   -- global function -> f_pack
   LH.Var x (Just _) Global -> Coq.Var $ upackInstanceName x
   -- global constant -> proj1_sig f
@@ -109,7 +118,7 @@ utrReft eq r0 = case r0 of
   LH.Pop _ _ r -> utrReft eq r
   LH.Sub r _ _ -> utrReft eq r
   LH.Inj r _ -> utrReft eq r
-  LH.Proj r -> Coq.mkProj GenProj $ trReft eq r
+  LH.Proj k r -> Coq.mkProj k $ trReft eq r
 
 -- | Translation of refinements to propositions
 --   Function RtoP (def 3.4) of the paper
@@ -140,10 +149,16 @@ operatorsWithGraph =
     (LH.Mod, LH.Var "modZ" (Just (LH.Builtin Integer)) Global)
   ]
 
--- | Returns an association of each application in the input to a fresh variable and the term where replacements of the applications by the associated variable have been done.
+-- | Returns an association of each application in the input to a fresh variable
+-- and the term where replacements of the applications by the associated variable have been done.
 -- In the list associating terms to variables, the replacements have also been done.
 -- For operators, we only extract the ones in the list operatorsWithGraph
--- Ex: extractApps ((f 0 1) + (f 0 1) + x) = ([(f 0 1, f_res)], f_res + f_res + x)
+-- Ex: extractApps ((f 0 1) + (f 0 1) + x) = ([(f 0 1, f_res), (f 0 1, f_res2)], f_res + f_res + x)
+--
+-- NOTE: we use different variables for different occurrences of the same
+-- application because syntactically equivalent applications can come from
+-- different applications after a substitution has been made.
+-- This poses problems at least in SoftwareFoundations.andb_commutive
 extractApps :: Reft -> ([(Reft, Id)], Reft)
 -- extractApps r | traceFunc "extractApps" [pPrint r] = undefined
 extractApps r0 = go [] r0
@@ -167,7 +182,7 @@ extractApps r0 = go [] r0
         -- but must use either the IH or the function itself
         -- (DC _; LH.Var _ _ (Recursive {})) -> extractInAppArgs
         DC _ -> extractInAppArgs
-        (LH.Var {}; LH.Proj (LH.Var {})) -> extractApp
+        (LH.Var {}; LH.Proj _ (LH.Var {})) -> extractApp
         _ -> error . render $ text "LH application" <+> pPrint r <+> text "not starting with an identifier."
         where
           (hd, args) = apps r
@@ -183,13 +198,10 @@ extractApps r0 = go [] r0
       Inj r' tp -> second (`Inj` tp) $ go env r'
       Sub r' from to -> second (\r'' -> Sub r'' from to) $ go env r'
       where
-        -- If r is in env, returns its associated variable,
-        -- otherwise creates a fresh variable, update env and returns the variable
-        updateEnv env' r' = case lookup r' env' of
-          Just z -> (env', LH.Var z Nothing Local)
-          Nothing ->
-            let z = freshName (fromMaybe "z" (headVar r')) env'
-             in (env' ++ [(r', z)], LH.Var z Nothing Local)
+        -- Creates a fresh variable, update env and returns the variable
+        updateEnv env' r' =
+          let z = freshName (fromMaybe "z" (headVar r')) env'
+           in (env' ++ [(r', z)], LH.Var z Nothing Local)
         -- f_res, f_res_2, f_res_3 etc
         freshName f env' =
           let isF r' = case headVar r' of Just f' -> f == f'; Nothing -> False
@@ -214,9 +226,12 @@ hypsRV eq rv graphRel = \p -> foldr hyp p rv
           if graphRel then (Forall, Coq.Bop (Binop Coq.Impl PropOp)) else (Exists, Coq.Bop (Binop Coq.And PropOp))
         (hd, args) = apps app
         (hdT, tpz) = case hd of
+          -- TODO for global theorems
+          LH.Var _ (Just u) Global | u == LH.unitTp -> error "TODO: what is the hypothesis for a theorem in hypsRV?"
           -- f -> f_rel for global functions (includes operators in `operatorsWithGraph`)
           LH.Var f (Just tp) Global -> (Coq.Def $ relDefName f, tp)
-          -- f -> getUPackRelName f for local HO variables
+          -- f -> getPackRelName f for local HO variables that are not inside a projection
+          -- TODO: verify that this is what we have in the paper
           LH.Var f (Just tp) Local -> (upackGetRel $ Coq.Def f, tp)
           -- TODO: this is not correct, but is a placeholder that does not
           -- prevent translation since this only appears in places that are not
@@ -224,7 +239,7 @@ hypsRV eq rv graphRel = \p -> foldr hyp p rv
           -- specifications uses the name of the function being defined
           LH.Var f (Just tp) (Recursive {}) -> (Coq.Def $ relDefName f, tp)
           -- proj f -> getPackRelName f for local HO variables
-          LH.Proj (LH.Var f (Just tp) _) -> (packGetRel (Coq.Def f), tp)
+          LH.Proj _ (LH.Var f (Just tp) _) -> (packGetRel (Coq.Def f), tp)
           _ -> error . render $ text "Unexpected extract term" <+> pPrint app <+> text "in Translation.hypsRV."
 
 -- * Refined translations
@@ -247,9 +262,11 @@ trRefType eq (RefType x tp r) =
       (LH.Builtin {}) -> utrReftProp eq r
       _ | tp `elem` builtinTCs -> utrReftProp eq r
       (LH.TC tc) -> Coq.Bop (Binop Coq.And PropOp) (Coq.App (Def $ wfTCName tc) [Coq.Var x]) (utrReftProp eq r)
--- TODO: I think if we have an arrtype of a unit type, we do not translate it to a pack
 trRefType eq tp@(ArrType {}) =
-  Pack argTps uargTps (argListCorPrf argTps uargTps) tpx p_
+  case ret of
+    -- For arrow types that return unit, we do not create a pack
+    (_, u, _) | u == LH.unitTp -> foldr Coq.FAType retT argsT
+    _ -> Pack argTps uargTps (ArgListCor (Coq.ArgListTArg argTps) uargTps) tpx p_
   where
     {- substs = map (\(w, _) -> (removeSuffix "_r" w, projectTm $ Var w)) args_
        cleanupSubst substs_ = subst substs_
@@ -257,14 +274,15 @@ trRefType eq tp@(ArrType {}) =
        tpx = cleanupSubst substs tpx_
        rx = subst substs rx_ -}
     (args, ret) = arrs tp
-    (x, tpx, rx) = fromSubset . trRefType eq $ mkRefType ret
+    retT = trRefType eq $ mkRefType ret
+    (x, tpx, rx) = fromSubset retT
     argsT = map (second (trRefType eq)) args
     argTps = ArgListT argsT
     uargTps = UArgListT $ map (utrRefType . snd) args
     p = mkLam argsT (Lambda x tpx rx)
     argsNm = "x_" ++ hashName argTps
     v = "v_" ++ argsNm
-    p_ = Lambda argsNm (ArgumentList argTps) (Lambda v tpx pBody)
+    p_ = Lambda argsNm (ArgumentList (ArgListTArg argTps)) (Lambda v tpx pBody)
     pBody = PrfTerm Hole (ByTac . Custom $ unwords ["flattenP", render $ parens (pPrint p), argsNm, v])
 
 -- | Translation of refinement types at top-level (with foralls)
@@ -279,7 +297,7 @@ trRefTypeTop eq (ArrType x tpx tp) = Coq.FAType (x, trRefType eq tpx) (trRefType
 -- >   = ([(x: Z) (x_p: geq_rel x 0 true) (f: Pack(Int -> Int))], {v: Z | (getPackRel f) x v})
 trRefTypeSplit :: Bool -> LH.RefType -> ([(Id, RocqType)], RocqType)
 trRefTypeSplit eq tp =
-  let (args, ret) = arrs . removeFOArgProjs $ harmonizeBinderNames tp
+  let (args, ret) = arrs . removeArgProjs False $ harmonizeBinderNames tp
    in (concatMap (splitIfFO . second (trRefType eq)) args, trRefType eq $ mkRefType ret)
   where
     splitIfFO (x, Subset _ tpx p) = [(x, tpx), (subsetWitnessNm x, Prop p)]
@@ -288,7 +306,8 @@ trRefTypeSplit eq tp =
 -- | Translation of refinements
 --   Function RtoR (def 3.8) of the paper
 trReft :: Bool -> LH.Reft -> Coq.CoqTerm
-trReft _ (LH.Var x (Just _) Global) = Coq.Def $ packInstanceName x
+trReft _ (LH.Var f (Just u) _) | u == LH.unitTp = Coq.Var f
+trReft _ (LH.Var f (Just _) Global) = Coq.Def $ packInstanceName f
 trReft _ (LH.Var x _ _) = Coq.Var x
 trReft _ (LH.StringLit s) = Coq.StringLiteral s
 trReft _ (LH.IntLit n) = Coq.IntLiteral n
@@ -296,25 +315,21 @@ trReft _ (LH.FloatLit d) = Coq.FloatLiteral d
 trReft _ (LH.DC c) = Cr (trDC c)
 trReft eq (LH.Neg tm) = Coq.Neg RefOp $ trReft eq tm
 trReft eq (LH.Bop op tm1 tm2) = Coq.Bop (Binop (trBop op) RefOp) (trReft eq tm1) (trReft eq tm2)
--- trReft _ qmark@(LH.QMark {}) | traceFunc "trReft" [text $ show qmark] = undefined
-trReft eq (LH.QMark tm hint prop) =
-  Coq.Let "_" (Just . Prop $ utrReftProp eq prop) (Coq.mkProj Sig2 $ trReft eq hint) (trReft eq tm)
--- trReft _ pop@(LH.Pop {}) | traceFunc "trReft" [text $ show pop] = undefined
-trReft eq (LH.Pop pop tm1 tm2) =
-  let popProp = Just . Prop $ Coq.Bop (Binop (trBop $ popToBop pop) PropOp) (Coq.mkProj GenProj $ trReft eq tm1) (Coq.mkProj GenProj $ trReft eq tm2)
-   in Coq.Let "_" popProp (PrfTerm Hole $ if eq then ProofHole else ByTac Oracle) (trReft eq tm2)
+trReft eq r@(LH.QMark {}; LH.Pop {}) =
+  let (r', proofs) = parseProofTerm r
+   in trProofCombinators eq proofs (trReft eq r')
 trReft eq (LH.Sub tm from to) = Coq.SubCast (trRefType eq to) (trRefType eq from) (trReft eq tm) (if eq then ProofHole else ByTac Oracle)
 trReft eq (LH.Inj tm tp) = mkExist eq (trRefType eq tp) (trReft eq tm)
-trReft _ tm@(LH.Proj _) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
+trReft _ tm@(LH.Proj {}) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
 -- TODO: we do not use packs for theorems, maybe we need to change that
 trReft eq tm@(LH.App {}) = case apps tm of
   -- recursive call
   (LH.Var f _ (Recursive indVar state), args) ->
     trRecCall (if eq then Right f else Left indVar) state args
   -- apply local function
-  (LH.Var f _ Local, args) -> Coq.App (packGetF (Coq.Var f)) (map (trReft eq) args)
+  (LH.Var f (Just tp) Local, args) | tp /= LH.unitTp -> Coq.App (packGetF (Coq.Var f)) (map (trReft eq) args)
   -- apply global function
-  (LH.Var f _ Global, args) -> Coq.App (Coq.Def f) (map (trReft eq) args)
+  (LH.Var f (Just tp) Global, args) | tp /= LH.unitTp -> Coq.App (Coq.Def f) (map (trReft eq) args)
   -- other cases
   (hd, args) -> Coq.App (trReft eq hd) (map (trReft eq) args)
 
@@ -336,12 +351,14 @@ trExprTacs eq (LH.Let x (Just tpx@(RefType {})) e1 e2) =
   where
     x' = x ++ "'"
 trExprTacs eq (LH.Let x (Just tpx@(ArrType {})) e1 e2) =
-  [ AssertTacs x' (trRefTypeTop eq tpx) (intros : trExprTacs eq e1),
-    assertF
-  ]
-    ++ trExprTacs eq e2
+  if retTp == LH.unitTp
+    -- No packs for theorems
+    then AssertTacs x (trRefType eq tpx) (intros : trExprTacs eq e1) : trExprTacs eq e2
+    else
+      [AssertTacs x' (trRefTypeTop eq tpx) (intros : trExprTacs eq e1), assertF]
+        ++ trExprTacs eq e2
   where
-    (args, _) = arrs tpx
+    (args, (_, retTp, _)) = arrs tpx
     intros = Intros $ map (\(xi, _) -> DestrPat $ ConjDestrPat [SingleIdPat xi, SingleIdPat $ subsetWitnessNm xi]) args
     tpxT = trRefTypeTop eq tpx
     x' = "f_" ++ hashName tpxT
@@ -432,3 +449,55 @@ mkMatching eq trans tm alts genVars =
         -- Whether y is used as an inductive variable, by checking the
         -- information contained in the localization of the recursive variables
         isIndVar y = any (\case (_, Recursive y' _) -> y == y'; _ -> False) (freeVarsAnnot e)
+
+-- *** Translation of proof combinators
+
+-- | A proof term of Liquid Haskell:
+--   either a hint with the proposition it proves or an (in)equation
+data Proof = Hint Reft Reft | Eqn ProofOp Reft Reft [Proof] deriving (Eq, Show)
+
+instance Pretty Proof where
+  pPrint (Hint rh rp) = pPrint rh <+> char '?' <+> parens (pPrint rp)
+  pPrint (Eqn pop r1 r2 hints) =
+    parens (parens (pPrint r1) <+> pPrint pop <+> parens (pPrint r2))
+      <+> char '?'
+      <+> pPrint hints
+
+-- | Translate a hint or (in)equation into a let-binding with a hole
+trProofCombinators :: Bool -> [Proof] -> CoqTerm -> CoqTerm
+trProofCombinators eq proofs tm = foldr ($) tm (map trProofCombinator proofs)
+  where
+    trProofCombinator :: Proof -> CoqTerm -> CoqTerm
+    trProofCombinator p@(Hint rh rp) =
+      Coq.Let hypName (Just . Prop $ utrReftProp eq rp) (Coq.mkProj Sig2 $ trReft eq rh)
+      where
+        hypName = "H_" ++ hashName p
+    trProofCombinator p@(Eqn pop r1 r2 proofs') =
+      let trans = Coq.mkProj GenProj . trReft eq
+          popT = Binop (trBop $ popToBop pop) PropOp
+          popProp = Just . Prop $ Coq.Bop popT (trans r1) (trans r2)
+          hole = PrfTerm Hole $ if eq then ProofHole else ByTac Oracle
+       in Coq.Let hypName popProp (trProofCombinators eq proofs' hole)
+      where
+        hypName = "H_" ++ hashName p
+
+-- | Given a term r ? h1 ? … ? hn where the hi's can be either hints or (in)equations
+--   and r is minimal, return (r, [h1, …, hn])
+qmarks :: Reft -> (Reft, [Proof])
+qmarks (QMark r rh@(Pop {}) _) =
+  let (_, eqns) = parseProofTerm rh
+   in second (++ eqns) $ qmarks r
+qmarks (QMark r rh rp) = second (++ [Hint rh rp]) $ qmarks r
+qmarks r = (r, [])
+
+-- | Retrieve the top-level hints and (in)equations from a term
+parseProofTerm :: Reft -> (Reft, [Proof])
+parseProofTerm (Pop pop r1 r2) =
+  let (r1', hints1) = qmarks r1
+      (r1'', proofs) = parseProofTerm r1'
+      (r2', proofs2) = qmarks r2
+   in (r2', proofs ++ [Eqn pop r1'' r2' hints1] ++ proofs2)
+parseProofTerm r@(QMark {}) =
+  let (r', hints) = qmarks r
+   in second (++ hints) $ parseProofTerm r'
+parseProofTerm r = (r, [])

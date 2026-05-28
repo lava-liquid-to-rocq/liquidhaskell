@@ -21,10 +21,12 @@ import Data.Data
 import Data.List (isSuffixOf, stripPrefix, unsnoc)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (isNothing)
+
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 
 import Language.Haskell.Liquid.RefCore.Names
+import Language.Haskell.Liquid.RefCore.Calculus (ProjKind (..))
 
 {- ORMOLU_DISABLE -}
 unitTmName :: Id
@@ -158,7 +160,7 @@ data RocqType
   | -- | unrefined Packs
     UPack UArgListT RocqType
   | Pack ArgListT UArgListT CoqTerm RocqType CoqTerm
-  | ArgumentList ArgListT
+  | ArgumentList CoqTerm
   | Hole
   deriving (Eq, Data, Show)
 
@@ -226,14 +228,11 @@ data CoqTerm
     LetDes (Id, Id) CoqTerm CoqTerm
   | TermHole
   | PrfTerm RocqType ProofTerm
+  | ArgListCor CoqTerm UArgListT
+  | ArgListTArg ArgListT
   | InlineInstance [(Id, CoqTerm)]
   | TypeArg RocqType
   deriving (Data, Eq, Show)
-
--- | The different kinds of projections:
--- `proj` from the generalized projections typeclass,
--- Rocq's `proj1_sig1` and `proj2_sig`
-data ProjKind = GenProj | Sig1 | Sig2 deriving (Data, Eq, Show)
 
 data Binop = Binop BaseBop OpKind deriving (Data, Eq)
 
@@ -697,7 +696,9 @@ instance Pretty CoqTerm where
   pPrintPrec l p (TypeArg tp) = pPrintPrec l p tp
   pPrintPrec _ _ TermHole = char '_'
   pPrintPrec l p (PrfTerm _ z) = pPrintPrec l p z
-
+  pPrintPrec l p (ArgListCor argTps uargTps) = pPrintPrec l p (PrfTerm Hole
+    (ByTac . Custom . unwords $ ["mkProjectsArgListTG", render . parens $ pPrint argTps, render . parens $ pPrint uargTps]))
+  pPrintPrec l p (ArgListTArg argTps) = pPrintPrec l p argTps
   pPrint = pPrintPrec prettyNormal 200
 
 instance Show Binop where

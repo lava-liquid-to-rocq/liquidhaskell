@@ -1,13 +1,13 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Set Universe Polymorphism. 
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 
 Inductive Modifier_u: Type :=
   | Minus_u: Modifier_u | Natural_u: Modifier_u | Plus_u: Modifier_u.
 
-Fixpoint Modifier_eq (x y : Modifier_u): bool :=
+Definition Modifier_eq (x y : Modifier_u): bool :=
   match (x, y) with
   | (Minus_u, Minus_u) => true
   | (Natural_u, Natural_u) => true
@@ -34,7 +34,7 @@ Qed.
     refl' := Modifier_eq_refl;
     eqb_eq' := Modifier_eqb_eq }.
 
-Fixpoint Modifier_wf (x : Modifier_u): Prop :=
+Definition Modifier_wf (x : Modifier_u): Prop :=
   match x with | Minus_u => True | Natural_u => True | Plus_u => True end.
 
 Theorem Modifier_wf_ref [p : Modifier_u → Prop] (tm : {v: Modifier_u | Modifier_wf v ∧ p v}):
@@ -47,7 +47,7 @@ Global Notation Modifier := {x: Modifier_u | Modifier_wf x ∧ True}.
 
 Definition Minus_lem : Modifier_wf Minus_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Minus : Modifier :=
@@ -55,7 +55,7 @@ Definition Minus : Modifier :=
 
 Definition Natural_lem : Modifier_wf Natural_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Natural : Modifier :=
@@ -63,7 +63,7 @@ Definition Natural : Modifier :=
 
 Definition Plus_lem : Modifier_wf Plus_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Plus : Modifier :=
@@ -84,7 +84,7 @@ Definition Plus : Modifier :=
 Inductive Letter_u: Type :=
   | A_u: Letter_u | B_u: Letter_u | C_u: Letter_u | D_u: Letter_u | F_u: Letter_u.
 
-Fixpoint Letter_eq (x y : Letter_u): bool :=
+Definition Letter_eq (x y : Letter_u): bool :=
   match (x, y) with
   | (A_u, A_u) => true
   | (B_u, B_u) => true
@@ -113,7 +113,7 @@ Qed.
     refl' := Letter_eq_refl;
     eqb_eq' := Letter_eqb_eq }.
 
-Fixpoint Letter_wf (x : Letter_u): Prop :=
+Definition Letter_wf (x : Letter_u): Prop :=
   match x with | A_u => True | B_u => True | C_u => True | D_u => True | F_u => True end.
 
 Theorem Letter_wf_ref [p : Letter_u → Prop] (tm : {v: Letter_u | Letter_wf v ∧ p v}):
@@ -126,7 +126,7 @@ Global Notation Letter := {x: Letter_u | Letter_wf x ∧ True}.
 
 Definition A_lem : Letter_wf A_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition A : Letter :=
@@ -134,7 +134,7 @@ Definition A : Letter :=
 
 Definition B_lem : Letter_wf B_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition B : Letter :=
@@ -142,7 +142,7 @@ Definition B : Letter :=
 
 Definition C_lem : Letter_wf C_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition C : Letter :=
@@ -150,7 +150,7 @@ Definition C : Letter :=
 
 Definition D_lem : Letter_wf D_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition D : Letter :=
@@ -158,7 +158,7 @@ Definition D : Letter :=
 
 Definition F_lem : Letter_wf F_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition F : Letter :=
@@ -217,6 +217,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve lowerLetter_rel_funct: f_rel_funct_db.
+
+#[global] Instance lowerLetter_lookup_funct: dictionary functionhood lowerLetter := {
+    lookup' := lowerLetter_rel_funct }.
 
 Theorem lowerLetter_A_lem lowerLetter_A_lem_res:
   lowerLetter_rel A_u lowerLetter_A_lem_res ↔ lowerLetter_A_lem_res == B_u.
@@ -323,7 +326,7 @@ Qed.
   @Pack
   (Letter ::RT λ (ds_d153 : Letter), nilRT)
   (Letter_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Letter ::RT λ (ds_d153 : Letter), nilRT)) ((Letter_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Letter ::RT λ (ds_d153 : Letter), nilRT) ((Letter_u ::UT nilUT)))
   Letter_u
   (λ (x_90789449 : ArgList (Letter ::RT λ (ds_d153 : Letter), nilRT)) (v_x_90789449 : Letter_u),
    ltac:(flattenP (λ (ds_d153 : Letter) (VV : Letter_u), Letter_wf VV ∧ True) x_90789449 v_x_90789449)).
@@ -354,7 +357,7 @@ Qed.
 Inductive Grades_u: Type :=
   | Grade_u: Letter_u → Modifier_u → Grades_u.
 
-Fixpoint Grades_eq (x y : Grades_u): bool :=
+Definition Grades_eq (x y : Grades_u): bool :=
   match (x, y) with
   | (Grade_u VV VV_, Grade_u VV' VV_') => (true && (VV ==? VV')) && (VV_ ==? VV_')
   end.
@@ -378,7 +381,7 @@ Qed.
     refl' := Grades_eq_refl;
     eqb_eq' := Grades_eqb_eq }.
 
-Fixpoint Grades_wf (x : Grades_u): Prop :=
+Definition Grades_wf (x : Grades_u): Prop :=
   match x with | Grade_u VV VV_ => (Letter_wf VV ∧ True) ∧ (Modifier_wf VV_ ∧ True) end.
 
 Theorem Grades_wf_ref [p : Grades_u → Prop] (tm : {v: Grades_u | Grades_wf v ∧ p v}):
@@ -389,13 +392,13 @@ Qed.
 
 Global Notation Grades := {x: Grades_u | Grades_wf x ∧ True}.
 
-Definition Grade_lem (VV : Letter) (VV_ : Modifier): Grades_wf (Grade_u ⌊ VV ⌋ ⌊ VV_ ⌋) ∧ True.
+Definition Grade_lem (VV : Letter) (VV_ : Modifier): Grades_wf (Grade_u ⌊ VV -⌋ ⌊ VV_ -⌋) ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Grade (VV : Letter) (VV_ : Modifier): Grades :=
-  exist _ (Grade_u ⌊ VV ⌋ ⌊ VV_ ⌋) (Grade_lem VV VV_).
+  exist _ (Grade_u ⌊ VV -⌋ ⌊ VV_ -⌋) (Grade_lem VV VV_).
 
 Definition wf_Grade_VV [VV : Letter_u] [VV_ : Modifier_u] (p : Grades_wf (Grade_u VV VV_)):
   Letter_wf VV.
@@ -475,6 +478,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve lowerGrade_rel_funct: f_rel_funct_db.
+
+#[global] Instance lowerGrade_lookup_funct: dictionary functionhood lowerGrade := {
+    lookup' := lowerGrade_rel_funct }.
 
 Theorem lowerGrade__Grade_A_Minus_lem lowerGrade__Grade_A_Minus_lem_res:
   lowerGrade_rel (Grade_u A_u Minus_u) lowerGrade__Grade_A_Minus_lem_res
@@ -616,7 +622,7 @@ Qed.
   @Pack
   (Grades ::RT λ (ds_d154 : Grades), nilRT)
   (Grades_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((Grades ::RT λ (ds_d154 : Grades), nilRT)) ((Grades_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Grades ::RT λ (ds_d154 : Grades), nilRT) ((Grades_u ::UT nilUT)))
   Grades_u
   (λ (x_65119381 : ArgList (Grades ::RT λ (ds_d154 : Grades), nilRT)) (v_x_65119381 : Grades_u),
    ltac:(flattenP (λ (ds_d154 : Grades) (VV : Grades_u), Grades_wf VV ∧ True) x_65119381 v_x_65119381)).
@@ -698,6 +704,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve applyLatePolicy_rel_funct: f_rel_funct_db.
+
+#[global] Instance applyLatePolicy_lookup_funct: dictionary functionhood applyLatePolicy := {
+    lookup' := applyLatePolicy_rel_funct }.
 
 Theorem applyLatePolicy_inv_lem g lateDays applyLatePolicy_inv_lem_res:
   applyLatePolicy_rel lateDays g applyLatePolicy_inv_lem_res
@@ -806,9 +815,9 @@ Qed.
   @Pack
   ({lateDays: Z | True} ::RT λ (lateDays : {lateDays: Z | True}), Grades ::RT λ (g : Grades), nilRT)
   (Z ::UT (Grades_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG (({lateDays: Z | True}
-  ::RT λ (lateDays : {lateDays: Z | True}),
-       Grades ::RT λ (g : Grades), nilRT)) ((Z ::UT (Grades_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG ({lateDays: Z | True}
+ ::RT λ (lateDays : {lateDays: Z | True}),
+      Grades ::RT λ (g : Grades), nilRT) ((Z ::UT (Grades_u ::UT nilUT))))
   Grades_u
   (λ (x_58156632 : ArgList ({lateDays: Z | True}
                             ::RT λ (lateDays : {lateDays: Z | True}), Grades ::RT λ (g : Grades), nilRT))
@@ -888,15 +897,15 @@ Proof.
 Qed.
 
 Definition noPenaltyForMostlyOnTime_spec
-  (lateDays : {lateDays: Z | True}) (g : Grades) (h : {{ltbZ_rel ⌊ lateDays ⌋ 9 true}}):
+  (lateDays : {lateDays: Z | True}) (g : Grades) (h : {{ltbZ_rel ⌊ lateDays -⌋ 9 true}}):
   Type :=
   {{∃ (applyLatePolicy_res : Grades_u),
-    applyLatePolicy_rel ⌊ lateDays ⌋ ⌊ g ⌋ applyLatePolicy_res ∧ applyLatePolicy_res == ⌊ g ⌋}}.
+    applyLatePolicy_rel ⌊ lateDays -⌋ ⌊ g -⌋ applyLatePolicy_res ∧ applyLatePolicy_res == ⌊ g -⌋}}.
 
 #[global] Hint Unfold noPenaltyForMostlyOnTime_spec: lia_unfold.
 
 Theorem noPenaltyForMostlyOnTime
-  (lateDays : {lateDays: Z | True}) (g : Grades) (h : {{ltbZ_rel ⌊ lateDays ⌋ 9 true}}):
+  (lateDays : {lateDays: Z | True}) (g : Grades) (h : {{ltbZ_rel ⌊ lateDays -⌋ 9 true}}):
   noPenaltyForMostlyOnTime_spec lateDays g h.
 Proof.
   destruct lateDays as [lateDays lateDays_p].
@@ -922,7 +931,7 @@ Qed.
 Inductive Comparison_u: Type :=
   | Eq_u: Comparison_u | Gt_u: Comparison_u | Lt_u: Comparison_u.
 
-Fixpoint Comparison_eq (x y : Comparison_u): bool :=
+Definition Comparison_eq (x y : Comparison_u): bool :=
   match (x, y) with
   | (Eq_u, Eq_u) => true
   | (Gt_u, Gt_u) => true
@@ -949,7 +958,7 @@ Qed.
     refl' := Comparison_eq_refl;
     eqb_eq' := Comparison_eqb_eq }.
 
-Fixpoint Comparison_wf (x : Comparison_u): Prop :=
+Definition Comparison_wf (x : Comparison_u): Prop :=
   match x with | Eq_u => True | Gt_u => True | Lt_u => True end.
 
 Theorem Comparison_wf_ref
@@ -963,7 +972,7 @@ Global Notation Comparison := {x: Comparison_u | Comparison_wf x ∧ True}.
 
 Definition Eq_lem : Comparison_wf Eq_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Eq : Comparison :=
@@ -971,7 +980,7 @@ Definition Eq : Comparison :=
 
 Definition Gt_lem : Comparison_wf Gt_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Gt : Comparison :=
@@ -979,7 +988,7 @@ Definition Gt : Comparison :=
 
 Definition Lt_lem : Comparison_wf Lt_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Lt : Comparison :=
@@ -1088,6 +1097,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve letterComparison_rel_funct: f_rel_funct_db.
+
+#[global] Instance letterComparison_lookup_funct: dictionary functionhood letterComparison := {
+    lookup' := letterComparison_rel_funct }.
 
 Theorem letterComparison_A_A_lem letterComparison_A_A_lem_res:
   letterComparison_rel A_u A_u letterComparison_A_A_lem_res ↔ letterComparison_A_A_lem_res == Eq_u.
@@ -1382,9 +1394,8 @@ Qed.
   @Pack
   (Letter ::RT λ (ds_d15A : Letter), Letter ::RT λ (ds_d15B : Letter), nilRT)
   (Letter_u ::UT (Letter_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Letter
-  ::RT λ (ds_d15A : Letter),
-       Letter ::RT λ (ds_d15B : Letter), nilRT)) ((Letter_u ::UT (Letter_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Letter
+ ::RT λ (ds_d15A : Letter), Letter ::RT λ (ds_d15B : Letter), nilRT) ((Letter_u ::UT (Letter_u ::UT nilUT))))
   Comparison_u
   (λ (x_46193732 : ArgList (Letter
                             ::RT λ (ds_d15A : Letter), Letter ::RT λ (ds_d15B : Letter), nilRT))
@@ -1403,7 +1414,8 @@ Defined.
 
 Definition letterComparisonEq_spec (ds_d15z : Letter): Type :=
   {{∃ (letterComparison_res : Comparison_u),
-    letterComparison_rel ⌊ ds_d15z ⌋ ⌊ ds_d15z ⌋ letterComparison_res ∧ letterComparison_res == Eq_u}}.
+    letterComparison_rel ⌊ ds_d15z -⌋ ⌊ ds_d15z -⌋ letterComparison_res
+    ∧ letterComparison_res == Eq_u}}.
 
 #[global] Hint Unfold letterComparisonEq_spec: lia_unfold.
 
@@ -1451,19 +1463,19 @@ Qed.
 Definition lowerLetterLowers_spec
   (l : Letter)
   (p : {{∃ (letterComparison_res : Comparison_u),
-         letterComparison_rel F_u ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u}}):
+         letterComparison_rel F_u ⌊ l -⌋ letterComparison_res ∧ letterComparison_res == Lt_u}}):
   Type :=
   {{∃ (lowerLetter_res : Letter_u),
-    lowerLetter_rel ⌊ l ⌋ lowerLetter_res
+    lowerLetter_rel ⌊ l -⌋ lowerLetter_res
     ∧ ∃ (letterComparison_res : Comparison_u),
-      letterComparison_rel lowerLetter_res ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u}}.
+      letterComparison_rel lowerLetter_res ⌊ l -⌋ letterComparison_res ∧ letterComparison_res == Lt_u}}.
 
 #[global] Hint Unfold lowerLetterLowers_spec: lia_unfold.
 
 Theorem lowerLetterLowers
   (l : Letter)
   (p : {{∃ (letterComparison_res : Comparison_u),
-         letterComparison_rel F_u ⌊ l ⌋ letterComparison_res ∧ letterComparison_res == Lt_u}}):
+         letterComparison_rel F_u ⌊ l -⌋ letterComparison_res ∧ letterComparison_res == Lt_u}}):
   lowerLetterLowers_spec l p.
 Proof.
   destruct l as [l l_p].
@@ -1571,6 +1583,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve modifierComparison_rel_funct: f_rel_funct_db.
+
+#[global] Instance modifierComparison_lookup_funct: dictionary functionhood modifierComparison := {
+    lookup' := modifierComparison_rel_funct }.
 
 Theorem modifierComparison_Minus_Minus_lem modifierComparison_Minus_Minus_lem_res:
   modifierComparison_rel Minus_u Minus_u modifierComparison_Minus_Minus_lem_res
@@ -1742,9 +1757,9 @@ Qed.
   @Pack
   (Modifier ::RT λ (ds_d15r : Modifier), Modifier ::RT λ (ds_d15s : Modifier), nilRT)
   (Modifier_u ::UT (Modifier_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((Modifier
-  ::RT λ (ds_d15r : Modifier),
-       Modifier ::RT λ (ds_d15s : Modifier), nilRT)) ((Modifier_u ::UT (Modifier_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (Modifier
+ ::RT λ (ds_d15r : Modifier),
+      Modifier ::RT λ (ds_d15s : Modifier), nilRT) ((Modifier_u ::UT (Modifier_u ::UT nilUT))))
   Comparison_u
   (λ (x_90108088 : ArgList (Modifier
                             ::RT λ (ds_d15r : Modifier), Modifier ::RT λ (ds_d15s : Modifier), nilRT))

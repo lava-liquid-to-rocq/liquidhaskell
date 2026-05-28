@@ -10,7 +10,7 @@
 module Language.Haskell.Liquid.RefCore.Calculus where
 
 import Prelude hiding (lookup, (<>))
-import Data.Bifunctor (first)
+import Data.Bifunctor (first, second)
 import Data.Binary (Binary)
 import Data.Data
 import Data.Map.Strict (Map)
@@ -111,8 +111,15 @@ data Reft
   | Pop ProofOp Reft Reft
   | Sub Reft RefType RefType
   | Inj Reft RefType
-  | Proj Reft
+  | Proj ProjKind Reft
   deriving (Data, Eq, Show, Generic, Binary)
+
+-- | The different kinds of projections:
+-- `proj` from the generalized projections typeclass,
+-- Rocq's `proj1_sig1` and `proj2_sig`
+-- FIX: we shouldn't need this here, only in Rocq,
+-- but Rocq cannot always find the correct instance
+data ProjKind = GenProj | Sig1 | Sig2 deriving (Data, Eq, Show)
 
 -- | Localization of the variables.
 -- The recursive variables take the name of the induction variable
@@ -209,10 +216,10 @@ mkSub r from to | from == to = r
 mkSub r from to = Sub r from to
 
 -- | Build a projection, removing the outer injection or subsumptions.
-mkProj :: Reft -> Reft
-mkProj (Inj r _) = r
-mkProj (Sub r _ _) = mkProj r
-mkProj r = Proj r
+mkProj :: ProjKind -> Reft -> Reft
+mkProj _ (Inj r _) = r
+mkProj k (Sub r _ _) = mkProj k r
+mkProj k r = Proj k r
 
 -- | Make a refinement type
 mkRefType :: (Id, BaseType, Reft) -> RefType
@@ -259,7 +266,7 @@ apps tm = (tm, [])
 headVar :: Reft -> Maybe Id
 headVar r = case fst (apps r) of
   Var f _ _ -> Just f
-  Proj (Var f _ _) -> Just f
+  Proj _ (Var f _ _) -> Just f
   _ -> Nothing
 
 -- | Gives the bop corresponding to a pop
@@ -279,8 +286,14 @@ isValue (QMark r _ _) = isValue r
 isValue (Pop _ _ r) = isValue r
 isValue (Sub r _ _) = isValue r
 isValue (Inj r _) = isValue r
-isValue (Proj r) = isValue r
+isValue (Proj _ r) = isValue r
 isValue (Var {}; Neg {}; Bop {}) = False
+
+isRecTC :: Id -> [(Id, RefType)] -> Bool
+isRecTC tc = any (isRecursive . snd)
+  where
+    isRecursive tp = any (isTC . snd) (fst $ arrs tp)
+    isTC tp' = case tp' of RefType _ (TC tc') _ -> tc' == tc; _ -> False
 
 -- | Harmonize the names of the variables bound by arrows:
 --
@@ -314,24 +327,39 @@ renameParams = aux []
     aux σ (y : ys) (ArrType x tpx tp) =
       ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
 
--- Remove projections around the *first-order* arguments of the constructor, in
--- a context where FO arguments are given unrefined types
--- This function should be used at top-level, where only variables appear inside projections
-removeFOArgProjs :: RefType -> RefType
-removeFOArgProjs (ArrType x tpx tp) = ArrType x (removeFOArgProjs tpx) (removeFOArgProjs tp)
-removeFOArgProjs (RefType y a reft) = RefType y a (aux reft)
+-- | Remove projections around first-order arguments of the type
+-- If the flag is True, remove them everywhere.
+-- This function should be used when only variables appear inside projections.
+removeArgProjs :: Bool -> RefType -> RefType
+removeArgProjs allProjs tp =
+  let (args, (v, retTp, retReft)) = arrs tp
+      args' = map (second (removeProjs allProjs Set.empty)) args
+      ret' = removeProjs allProjs Set.empty (RefType v retTp retReft)
+   in foldr (\(x, tpx) acc -> ArrType x tpx acc) ret' args'
+
+-- | Remove projections around first-order variables in a type
+-- The first parameter contains the variables for those we should keep the projection:
+-- variables introduced by the arrow of a HO parameter.
+-- The second parameter contains variables whose projection should not be erased
+removeProjs :: Bool -> Set Id -> RefType -> RefType
+-- In x:tpx -> tp, we do not want to remove projections around the occurences of x in tp (if allProjs is False)
+removeProjs allProjs vars (ArrType x tpx tp') =
+  ArrType x (removeProjs allProjs vars tpx) (removeProjs allProjs (x `Set.insert` vars) tp')
+removeProjs allProjs vars' (RefType y a reft) = RefType y a (aux vars' reft)
   where
-    aux (Proj (Var x Nothing loc)) = Var x Nothing loc
-    aux f@(Proj (Var _ (Just _) _)) = f
-    aux p@(Proj _) =
-      error $ "Calculus.removeFOArgProjs should only be used at top-level, when projections are made only on local variables. Found term: " ++ prettyShow p
-    aux r@(Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = r
-    aux (App r1 r2) = App (aux r1) (aux r2)
-    aux (Neg r) = Neg (aux r)
-    aux (Bop bop r1 r2) = Bop bop (aux r1) (aux r2)
-    aux (QMark r rh rp) = QMark (aux r) (aux rh) (aux rp)
-    aux (Pop pop r1 r2) = Pop pop (aux r1) (aux r2)
-    aux (Sub {}; Inj {}) = error "Subsumption or injection cast found in type refinement."
+    aux _ (Proj _ r) | allProjs = r
+    aux vars projx@(Proj _ (Var x Nothing loc)) =
+      if x `elem` vars then projx else Var x Nothing loc
+    aux _ projf@(Proj _ (Var _ (Just _) _)) = projf
+    aux _ p@(Proj {}) =
+      error $ "Calculus.removeArgProjs should only be used at top-level, when projections are made only on local variables. Found term: " ++ prettyShow p
+    aux _ r@(Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = r
+    aux vars (App r1 r2) = App (aux vars r1) (aux vars r2)
+    aux vars (Neg r) = Neg (aux vars r)
+    aux vars (Bop bop r1 r2) = Bop bop (aux vars r1) (aux vars r2)
+    aux vars (QMark r rh rp) = QMark (aux vars r) (aux vars rh) (aux vars rp)
+    aux vars (Pop pop r1 r2) = Pop pop (aux vars r1) (aux vars r2)
+    aux _ (Sub {}; Inj {}) = error "Subsumption or injection cast found in type refinement in Calculus.removeArgProjs."
 
 -- * Typeclass related to free variables
 
@@ -383,7 +411,7 @@ instance HasVars Reft where
   freeVarsAnnot (Pop _ r1 r2) = freeVarsAnnot [r1, r2]
   freeVarsAnnot (Sub r from to) = freeVarsAnnot r `Map.union` freeVarsAnnot [from, to]
   freeVarsAnnot (Inj r tp) = freeVarsAnnot r `Map.union` freeVarsAnnot tp
-  freeVarsAnnot (Proj r) = freeVarsAnnot r
+  freeVarsAnnot (Proj _ r) = freeVarsAnnot r
 
   -- Empty on unelaborated refinements, but has the bound variables of the types in casts
   boundVars (Var {}; StringLit _; IntLit _; FloatLit _; DC _) = Set.empty
@@ -394,7 +422,7 @@ instance HasVars Reft where
   boundVars (Pop _ r1 r2) = boundVars [r1, r2]
   boundVars (Sub r from to) = boundVars r `Set.union` boundVars [from, to]
   boundVars (Inj r tp) = boundVars r `Set.union` boundVars tp
-  boundVars (Proj r) = boundVars r
+  boundVars (Proj _ r) = boundVars r
 
   subst r' x r0 = case r0 of
     Var y _ _ | y == x -> r'
@@ -406,7 +434,7 @@ instance HasVars Reft where
     Pop pop r1 r2 -> Pop pop (subst r' x r1) (subst r' x r2)
     Sub r tps tpt -> Sub (subst r' x r) (subst r' x tps) (subst r' x tpt)
     Inj r tp -> Inj (subst r' x r) (subst r' x tp)
-    Proj r -> Proj (subst r' x r)
+    Proj kind r -> Proj kind (subst r' x r)
 
 instance HasVars Expr where
   freeVarsAnnot (Reft r) = freeVarsAnnot r
@@ -621,7 +649,7 @@ instance Pretty Reft where
     maybeParens (p > appPrec) $ "sub" <+> parens (hsep $ punctuate comma (pPrint r : map pPrint [from, to]))
   pPrintPrec _ p (Inj r tp) =
     maybeParens (p > appPrec) $ "inj" <+> parens (pPrint r <> comma <+> pPrint tp)
-  pPrintPrec l p (Proj r) =
+  pPrintPrec l p (Proj _ r) =
     maybeParens (p > appPrec) $ "proj" <+> pPrintPrec l (appPrec + 1) r
 
 instance Pretty Localization where

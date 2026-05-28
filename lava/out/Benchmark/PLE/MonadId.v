@@ -1,13 +1,13 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Set Universe Polymorphism. 
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 
 Inductive Identity_u: Type :=
   | Val_u: Z → Identity_u.
 
-Fixpoint Identity_eq (x y : Identity_u): bool :=
+Definition Identity_eq (x y : Identity_u): bool :=
   match (x, y) with | (Val_u n, Val_u n') => true && (n ==? n') end.
 
 Theorem Identity_eq_refl : ∀ (x : Identity_u), is_true (Identity_eq x x).
@@ -29,7 +29,7 @@ Qed.
     refl' := Identity_eq_refl;
     eqb_eq' := Identity_eqb_eq }.
 
-Fixpoint Identity_wf (x : Identity_u): Prop :=
+Definition Identity_wf (x : Identity_u): Prop :=
   match x with | Val_u n => True end.
 
 Theorem Identity_wf_ref [p : Identity_u → Prop] (tm : {v: Identity_u | Identity_wf v ∧ p v}):
@@ -40,13 +40,13 @@ Qed.
 
 Global Notation Identity := {x: Identity_u | Identity_wf x ∧ True}.
 
-Definition Val_lem (n : {n: Z | True}): Identity_wf (Val_u ⌊ n ⌋) ∧ True.
+Definition Val_lem (n : {n: Z | True}): Identity_wf (Val_u ⌊ n -⌋) ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Val (n : {n: Z | True}): Identity :=
-  exist _ (Val_u ⌊ n ⌋) (Val_lem n).
+  exist _ (Val_u ⌊ n -⌋) (Val_lem n).
 
 #[global] Hint Resolve Identity_wf_ref: wf_constr_db.
 
@@ -61,7 +61,7 @@ Definition compose_spec
   (f : @Pack
        ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_32508782 : ArgList ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT))
           (v_x_32508782 : Identity_u),
@@ -76,7 +76,7 @@ Definition compose
   (f : @Pack
        ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_32508782 : ArgList ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT))
           (v_x_32508782 : Identity_u),
@@ -106,6 +106,9 @@ Qed.
 
 #[global] Hint Resolve compose_rel_funct: f_rel_funct_db.
 
+#[global] Instance compose_lookup_funct: dictionary functionhood compose := {
+    lookup' := compose_rel_funct }.
+
 Theorem compose_Val_x_lem f x compose_Val_x_lem_res:
   compose_rel (Val_u x) f compose_Val_x_lem_res
   ↔ ∃ (f_res : Identity_u), getUPackRel f x f_res ∧ compose_Val_x_lem_res == f_res.
@@ -121,7 +124,7 @@ Theorem compose_rel_ex
   (f : @Pack
        ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT))
           (v_x_11473763 : Identity_u),
@@ -147,7 +150,7 @@ Theorem compose__compose_rel_rw
   (f : @Pack
        ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT))
           (v_x_11473763 : Identity_u),
@@ -170,7 +173,7 @@ Theorem compose__compose_rel
   (f : @Pack
        ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_32508782 : ArgList ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT))
           (v_x_32508782 : Identity_u),
@@ -190,7 +193,7 @@ Theorem compose__compose_rel'
   (f : @Pack
        ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_32508782 : ArgList ({VV: Z | True} ::RT λ (x : {VV: Z | True}), nilRT))
           (v_x_32508782 : Identity_u),
@@ -210,7 +213,7 @@ Theorem compose_rel_mk
   (f : @Pack
        ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_11473763 : ArgList ({x: Z | True} ::RT λ (x : {x: Z | True}), nilRT))
           (v_x_11473763 : Identity_u),
@@ -255,6 +258,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve retrn_rel_funct: f_rel_funct_db.
+
+#[global] Instance retrn_lookup_funct: dictionary functionhood retrn := {
+    lookup' := retrn_rel_funct }.
 
 Theorem retrn_inv_lem v retrn_inv_lem_res:
   retrn_rel v retrn_inv_lem_res ↔ retrn_inv_lem_res == Val_u v.
@@ -318,7 +324,7 @@ Qed.
   @Pack
   ({v: Z | True} ::RT λ (v : {v: Z | True}), nilRT)
   (Z ::UT nilUT)
-  ltac:(mkProjectsArgListTG (({v: Z | True} ::RT λ (v : {v: Z | True}), nilRT)) ((Z ::UT nilUT)))
+  ltac:(mkProjectsArgListTG ({v: Z | True} ::RT λ (v : {v: Z | True}), nilRT) ((Z ::UT nilUT)))
   Identity_u
   (λ (x_82100618 : ArgList ({v: Z | True} ::RT λ (v : {v: Z | True}), nilRT))
      (v_x_82100618 : Identity_u),
@@ -337,7 +343,7 @@ Definition leftIdentity_spec
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
           (v_x_44453395 : Identity_u),
@@ -345,10 +351,10 @@ Definition leftIdentity_spec
  Identity_wf VV ∧ True) x_44453395 v_x_44453395))):
   Type :=
   {{∃ (retrn_res : Identity_u),
-    retrn_rel ⌊ x ⌋ retrn_res
+    retrn_rel ⌊ x -⌋ retrn_res
     ∧ ∃ (compose_res : Identity_u),
       compose_rel retrn_res ⌊ f ⌋ compose_res
-      ∧ ∃ (f_res : Identity_u), getPackRel f ⌊ x ⌋ f_res ∧ compose_res == f_res}}.
+      ∧ ∃ (f_res : Identity_u), getPackRel f ⌊ x -⌋ f_res ∧ compose_res == f_res}}.
 
 #[global] Hint Unfold leftIdentity_spec: lia_unfold.
 
@@ -357,7 +363,7 @@ Theorem leftIdentity
   (f : @Pack
        ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)
        (Z ::UT nilUT)
-       ltac:(mkProjectsArgListTG (({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT)) ((Z ::UT nilUT)))
+       ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
        Identity_u
        (λ (x_44453395 : ArgList ({VV: Z | True} ::RT λ (lq_tmp0 : {VV: Z | True}), nilRT))
           (v_x_44453395 : Identity_u),
@@ -380,7 +386,7 @@ Qed.
 
 Definition rightIdentity_spec (ds_d3B6 : Identity): Type :=
   {{∃ (compose_res : Identity_u),
-    compose_rel ⌊ ds_d3B6 ⌋ retrn_upack compose_res ∧ compose_res == ⌊ ds_d3B6 ⌋}}.
+    compose_rel ⌊ ds_d3B6 -⌋ retrn_upack compose_res ∧ compose_res == ⌊ ds_d3B6 -⌋}}.
 
 #[global] Hint Unfold rightIdentity_spec: lia_unfold.
 

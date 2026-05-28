@@ -27,7 +27,6 @@ coqDeps/LiquidPreludeUtil.v
 # manual/Benchmark/SFGradeExample.v
 
 # manual/Benchmark/PLE/Append.v
-manual/ltac_bug.v
 out/Benchmark/PLE/Lists.v
 # out/Benchmark/PLE/Compose.v
 
@@ -39,20 +38,22 @@ out/Benchmark/PLE/MonadId.v
 out/Benchmark/PLE/MonadList.v
 out/Benchmark/PLE/MonoidList.v
 out/Benchmark/PLE/MonoidMaybe.v
+out/Benchmark/PLE/Append.v
 #
 #
 out/Benchmark/RBinsToBins.v
-out/Benchmark/SoftwareFoundations.v
 out/Benchmark/PeanoNats.v
 # out/Benchmark/Half.v
-out/Benchmark/PLE/Append.v
 out/Benchmark/Overview.v
+out/Benchmark/SoftwareFoundations.v
 
 #out/TranslationTests/FunctorId.v
 #out/TranslationTests/FunctorMaybe.v
 #out/TranslationTests/FunctorList.v
+out/Todo/TranslationTests/ApplicativeId.v
 
 # subsumed by SoftwareFoundations, Overview, PeanoNats resp.
 # out/Benchmark/GradeExample.v
 # out/Benchmark/SafeIndexing.v
 # out/Benchmark/SubExample.v
+manual/ltac_bug.v

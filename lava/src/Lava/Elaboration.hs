@@ -36,7 +36,11 @@ litType tp l = RefType "VV" (Builtin tp) (Bop Eq (Var "VV" Nothing Local) l)
 
 -- | Type of negation, with singleton return type
 negType :: RefType
-negType = ArrType "x" (RefType "x" boolTp ttTm) (RefType "VV" boolTp (Bop Eq (Var "VV" Nothing Local) (Neg . Proj $ Var "x" Nothing Local)))
+negType =
+  ArrType
+    "x"
+    (RefType "x" boolTp ttTm)
+    (RefType "VV" boolTp (Bop Eq (Var "VV" Nothing Local) (Neg . Proj Sig1 $ Var "x" Nothing Local)))
 
 -- | Types of binary operators, with singleton return type
 bopTypes :: [(Bop, RefType)]
@@ -68,7 +72,7 @@ mkBopType :: Bop -> BaseType -> BaseType -> Reft -> BaseType -> RefType
 mkBopType bop a1 a2 r2 a3 =
   ArrType "x_1" (RefType "x_1" a1 ttTm) $
     ArrType "x_2" (RefType "x_2" a2 r2) $
-      RefType "VV" a3 (Bop Eq (Var "VV" Nothing Local) (Bop bop (Proj $ Var "x_1" Nothing Local) (Proj $ Var "x_2" Nothing Local)))
+      RefType "VV" a3 (Bop Eq (Var "VV" Nothing Local) (Bop bop (Proj Sig1 $ Var "x_1" Nothing Local) (Proj Sig1 $ Var "x_2" Nothing Local)))
 
 -- * Simple types, used for typing type refinements
 
@@ -139,7 +143,7 @@ smpTpCheck γ r@(Bop bop r1 r2) = do
   if tp1' == tp1 && tp2' == tp2
     then return (tp, Bop bop r1' r2')
     else Left . SmpTpErr $ "Wrong types for the arguments of the operator" <+> pPrint r
-smpTpCheck γ (Proj r) = second Proj <$> smpTpCheck γ r
+smpTpCheck γ (Proj k r) = second (Proj k) <$> smpTpCheck γ r
 smpTpCheck _ r@(Sub {}; Inj {}; QMark {}; Pop {}) =
   error . render $ "Unexpected term" <+> pPrint r <+> "found in type refinement"
 
@@ -170,7 +174,8 @@ wfRefType γ (ArrType x tpx tp) = do
   tpx' <- wfRefType γ tpx
   let γ' = insertLocalVar (x, tpx') γ
   tp' <- wfRefType γ' tp
-  return $ ArrType x tpx' (subst (Proj (mkVarWithAnnot x tpx' Local)) x tp')
+  let projkind = case tpx of ArrType {} -> GenProj; RefType {} -> Sig1
+  return $ ArrType x tpx' (subst (Proj projkind (mkVarWithAnnot x tpx' Local)) x tp')
 
 -- * Well-formedness of declarations
 
@@ -199,8 +204,8 @@ wfDecls γ (Data tc constrs : decls) = do
       return (insertTC (tc, γtc') γi, (ci, tpi') : dcs)
     checkFOandTC :: RefType -> Either TypeError ()
     checkFOandTC tp =
-      let (args, (_, tc', _)) = arrs tp
-       in if any ((\case RefType {} -> False; _ -> True) . snd) args
+      let (_, (_, tc', _)) = arrs tp
+       in if False {-any ((\case RefType {} -> False; _ -> True) . snd) args -}
             then Left . WfErr $ "The constructor type" <+> pPrint tp <+> "is higher-order, which is forbidden"
             else when (tc' /= TC tc) . Left . WfErr $ "The constructor type" <+> pPrint tp <+> "must return a refinement of" <+> text tc
 -- (WF-DDef)
@@ -213,11 +218,11 @@ wfDecls γ (Definition f tpf e isRefl : decls) = do
   -- elaboration of the body.
   -- We do not do it for the type tpf' because it is the complete dependent
   -- arrow that binds the parameters as refined
-  let γfargs = insertLocalVars (map (second removeFOArgProjs) args) γf
+  let γfargs = insertLocalVars (map (second (removeProjs False Set.empty)) args) γf
   let initBrPat = map (\(x, tpx) -> Param x (arity tpx)) args
   -- We remove the projections of parameters from ret, since parameters are
   -- considered unrefined
-  e' <- inDecl $ checkExpr γfargs initBrPat (removeRedundantMatches e) (removeFOArgProjs ret)
+  e' <- inDecl $ checkExpr γfargs initBrPat (removeRedundantMatches e) (removeProjs False Set.empty ret)
   γf' <- inDecl $ changeRecToGlobal f γf
   decls' <- wfDecls γf' decls
   return $ Definition f tpf' e' isRefl : decls'
@@ -337,21 +342,12 @@ synReft γ r0@(QMark r rh _) = do
       return (tp, QMark r' rh' rp)
     _ -> Left . SynErr $ "Higher-order value found as a hint in" <+> pPrint r0
 -- Not in the paper
-synReft γ r@(Pop pop r1 r2) = do
-  (tp1, r1') <- synReft γ r1
-  case tp1 of
-    ArrType {} -> Left . SynErr $ "Proof combinators on higher-order values is not defined, in the type synthesis of" <+> pPrint r
-    RefType x a reft1
-      | a == unitTp -> do
-          (tp2, r2') <- synReft γ r2
-          return (tp2, Pop pop r1' r2')
-      | otherwise -> do
-          let xvar = Var x Nothing Local
-              reft2 = mkAnd [reft1, Bop (popToBop pop) xvar (mkProj r1')]
-          r2' <- checkReft γ r2 (RefType x a reft2)
-          let reft3' = mkAnd [reft1, Bop Eq xvar (mkProj r2')]
-              reft3 = case pop of PEq -> mkAnd [reft3', Bop Eq xvar (mkProj r1')]; _ -> reft3'
-          return (RefType x a reft3, Pop pop r1' r2')
+-- We only check that the terms of the equalities have the same type,
+-- since we do not use the refinements in the translation
+synReft γ (Pop pop r1 r2) = do
+  (tp, r1') <- synReft γ r1
+  r2' <- checkReft γ r2 tp
+  return (tp, Pop pop r1' r2')
 synReft _ (Sub {}) = error "Constructor Sub found before elaboration"
 synReft _ (Inj {}) = error "Constructor Inj found before elaboration"
 synReft _ (Proj {}) = error "Constructor Proj found before elaboration"
@@ -375,8 +371,8 @@ checkExpr γ state (Let x (Just tpx) ex e) tp = do
   _ <- wfRefType γ tp -- check that tp does not depend on x
   tpx' <- wfRefType γ tpx
   let (args, ret) = second mkRefType $ arrs tpx'
-  let γx = insertLocalVars args γ
-  ex' <- checkExpr γx state ex ret
+  let γx = insertLocalVars (map (second (removeProjs False Set.empty)) args) γ
+  ex' <- checkExpr γx state ex (removeProjs False Set.empty ret)
   let γ' = insertLocalVar (x, tpx') γ
   e' <- checkExpr γ' state e tp
   return (Let x (Just tpx') ex' e')
@@ -457,7 +453,7 @@ checkExpr γ state e0@(Case r branches _) tp = do
             _ -> (γ, tp)
           -- We remove projections from the types of the variables
           -- introduced by the patterns, as these are considered unrefined
-          γ' = insertLocalVars (map (second removeFOArgProjs) argsc) γ''
+          γ' = insertLocalVars (map (second (removeProjs False Set.empty)) argsc) γ''
       e'' <- checkExpr γ' state' e' tp'
       return (((c, ys), Just e''), indVars)
       where
@@ -539,7 +535,7 @@ checkExpr γ state e0@(Case r branches _) tp = do
             let (r'', indVars1) = instRecReft inds r'
                 (tp'', indVars2) = instRecRefType inds tp'
              in (Inj r'' tp'', indVars1 `Set.union` indVars2)
-          Proj r' -> first Proj $ instRecReft inds r'
+          Proj k r' -> first (Proj k) $ instRecReft inds r'
 
         -- Given the potential inductive variables `inds` and a list of arguments,
         -- return Just y if y is both in `inds` and the ith argument, where i is the

@@ -265,7 +265,8 @@ Ltac lookupFuncTp tm :=
 
 Inductive LookupItems : Set :=
   | rel : LookupItems
-  | rwLem : LookupItems.
+  | rwLem : LookupItems
+  | functionhood : LookupItems.
 Class dictionary (item: LookupItems) {A : Type} (a : A) := { 
   ty : Type; 
   lookup' : ty
@@ -290,6 +291,11 @@ Ltac localLookupRel f Res :=
     | [f_frel: forall (args: ArgList argTps) v, ⌊ f args -⌋ = v <-> ?frel _ v |- _] =>
       pose frel as Res
     end
+  end.
+Ltac localLookupFunct rel Res :=
+  match goal with
+  | [funct: forall (uargs : UArgList _) (v v' : Z), rel uargs v -> rel uargs v' -> v = v' |- _] =>
+    pose rel as Res
   end.
 
 Ltac hasLocalRel f :=
@@ -331,6 +337,27 @@ Ltac localHasRwLem f :=
   try clear res.
 Ltac hasRwLem f := first [test_term (lookup rwLem f) | localHasRwLem f].
 Ltac lookupRwLem f Res := first [pose (lookup rwLem f) as Res | localLookupRwLem f Res].
+Ltac lookupF rel Res := first [pose (getF rel) as Res | 
+    match goal with
+    | [f_frel: forall (args: ArgList _) v, ⌊ ?f args -⌋ = v <-> rel _ v |- _] =>
+      pose f as Res
+    end
+].
+Ltac lookupFunctLem rel Res := 
+  first [
+    localLookupFunc rel Res |
+    let f := fresh "f" in
+    lookupF rel f;
+    try unfold getF' in f;
+    simpl in f;
+    let fRefl := fresh "fRefl" in
+    assRefl f as fRefl;
+    match type of fRefl with
+    | ?f = _ => clear fRefl; 
+      pose (lookup functionhood f) as Res
+    end
+  ].
+
 Ltac getRwLemRefl f ReflRes :=
   let res := fresh "res" in
   lookupRwLem f res;
@@ -648,6 +675,12 @@ Ltac rconstructor := first [
     unshelve (econstructor 6; try (quick_simpl; reflexivity); try rassumption; quicksolve); quicksolve |
     unshelve econstructor 6; try (quick_simpl; reflexivity); try rassumption;  quicksolve
   ].
+
+Ltac getHead fApp Res :=
+  match fApp with
+  | ?f _ => getHead f Res
+  | ?f => pose f as Res
+  end.
 
 (*
 Ltac 

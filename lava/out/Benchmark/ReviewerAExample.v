@@ -1,7 +1,7 @@
 From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
-Set Universe Polymorphism. 
+Set Universe Polymorphism.
 From Coq Require Import Unicode.Utf8.
 
 Inductive IList_u: Type :=
@@ -44,17 +44,17 @@ Qed.
 Global Notation IList := {x: IList_u | IList_wf x ∧ True}.
 
 Definition Cons_lem (n : {n: Z | ltbZ_rel 5 n true}) (l : IList):
-  IList_wf (Cons_u ⌊ n ⌋ ⌊ l ⌋) ∧ True.
+  IList_wf (Cons_u ⌊ n -⌋ ⌊ l -⌋) ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Cons (n : {n: Z | ltbZ_rel 5 n true}) (l : IList): IList :=
-  exist _ (Cons_u ⌊ n ⌋ ⌊ l ⌋) (Cons_lem n l).
+  exist _ (Cons_u ⌊ n -⌋ ⌊ l -⌋) (Cons_lem n l).
 
 Definition Nil_lem : IList_wf Nil_u ∧ True.
 Proof.
-  repeat first [split; solver].
+  repeat first [split | solver].
 Defined.
 
 Definition Nil : IList :=
@@ -122,6 +122,9 @@ Proof.
 Qed.
 
 #[global] Hint Resolve llen_rel_funct: f_rel_funct_db.
+
+#[global] Instance llen_lookup_funct: dictionary functionhood llen := {
+    lookup' := llen_rel_funct }.
 
 Theorem llen_Cons_lem ds_d4QZ l' llen_Cons_lem_res:
   llen_rel (Cons_u ds_d4QZ l') llen_Cons_lem_res
@@ -200,7 +203,7 @@ Qed.
   @Pack
   (IList ::RT λ (ds_d4QY : IList), nilRT)
   (IList_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG ((IList ::RT λ (ds_d4QY : IList), nilRT)) ((IList_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (IList ::RT λ (ds_d4QY : IList), nilRT) ((IList_u ::UT nilUT)))
   Z
   (λ (x_21409491 : ArgList (IList ::RT λ (ds_d4QY : IList), nilRT)) (v_x_21409491 : Z),
    ltac:(flattenP (λ (ds_d4QY : IList) (v : Z), gebZ_rel v 0 true) x_21409491 v_x_21409491)).
@@ -216,7 +219,7 @@ Defined.
 Definition get_spec
   (ds_d4QV : IList)
   (i' : {i': Z | lebZ_rel 0 i' true
-                 ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true}):
+                 ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4QV -⌋ llen_res ∧ ltbZ_rel i' llen_res true}):
   Type :=
   {v: Z | ltbZ_rel 5 v true}.
 
@@ -225,7 +228,7 @@ Definition get_spec
 Definition get
   (ds_d4QV : IList)
   (i' : {i': Z | lebZ_rel 0 i' true
-                 ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true}):
+                 ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4QV -⌋ llen_res ∧ ltbZ_rel i' llen_res true}):
   get_spec ds_d4QV i'.
 Proof.
   destruct ds_d4QV as [ds_d4QV ds_d4QV_p].
@@ -260,6 +263,8 @@ Proof.
 Qed.
 
 #[global] Hint Resolve get_rel_funct: f_rel_funct_db.
+
+#[global] Instance get_lookup_funct: dictionary functionhood get := { lookup' := get_rel_funct }.
 
 Theorem get_Cons_x_lem i' x xs' get_Cons_x_lem_res:
   get_rel (Cons_u x xs') i' get_Cons_x_lem_res
@@ -323,7 +328,7 @@ Qed.
 Theorem get__get_rel
   (ds_d4QV : IList)
   (i' : {i': Z | lebZ_rel 0 i' true
-                 ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true})
+                 ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4QV -⌋ llen_res ∧ ltbZ_rel i' llen_res true})
   (v : Z):
   ⌊ get ds_d4QV i' -⌋ = v ↔ get_rel ⌊ ds_d4QV ⌋ ⌊ i' ⌋ v.
 Proof.
@@ -337,7 +342,7 @@ Theorem get__get_rel'
   (i'_u : Z)
   (ds_d4QV : IList)
   (i' : {i': Z | lebZ_rel 0 i' true
-                 ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true})
+                 ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4QV -⌋ llen_res ∧ ltbZ_rel i' llen_res true})
   (v : Z):
   ds_d4QV_u = ⌊ ds_d4QV ⌋ → (i'_u = ⌊ i' ⌋ → ⌊ get ds_d4QV i' -⌋ = v ↔ get_rel ds_d4QV_u i'_u v).
 Proof.
@@ -371,36 +376,37 @@ Qed.
   (IList
    ::RT λ (ds_d4QV : IList),
         {i': Z | lebZ_rel 0 i' true
-                 ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true}
+                 ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4QV -⌋ llen_res ∧ ltbZ_rel i' llen_res true}
         ::RT λ (i' : {i': Z | lebZ_rel 0 i' true
-                              ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true}),
+                              ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4QV -⌋ llen_res ∧ ltbZ_rel i' llen_res true}),
              nilRT)
   (IList_u ::UT (Z ::UT nilUT))
-  ltac:(mkProjectsArgListTG ((IList
-  ::RT λ (ds_d4QV : IList),
-       {i': Z | lebZ_rel 0 i' true
-                ∧ ∃ (llen_res : Z),
-                  llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true}
-       ::RT λ (i' : {i': Z | lebZ_rel 0 i' true
-                             ∧ ∃ (llen_res : Z),
-                               llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true}),
-            nilRT)) ((IList_u ::UT (Z ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (IList
+ ::RT λ (ds_d4QV : IList),
+      {i': Z | lebZ_rel 0 i' true
+               ∧ ∃ (llen_res : Z),
+                 llen_rel ⌊ ds_d4QV -⌋ llen_res ∧ ltbZ_rel i' llen_res true}
+      ::RT λ (i' : {i': Z | lebZ_rel 0 i' true
+                            ∧ ∃ (llen_res : Z),
+                              llen_rel ⌊ ds_d4QV -⌋ llen_res ∧ ltbZ_rel i' llen_res true}),
+           nilRT) ((IList_u ::UT (Z ::UT nilUT))))
   Z
-  (λ (x_59913007 : ArgList (IList
+  (λ (x_87441709 : ArgList (IList
                             ::RT λ (ds_d4QV : IList),
                                  {i': Z | lebZ_rel 0 i' true
-                                          ∧ ∃ (llen_res : Z), llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true}
+                                          ∧ ∃ (llen_res : Z),
+                                            llen_rel ⌊ ds_d4QV -⌋ llen_res ∧ ltbZ_rel i' llen_res true}
                                  ::RT λ (i' : {i': Z | lebZ_rel 0 i' true
                                                        ∧ ∃ (llen_res : Z),
-                                                         llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true}),
+                                                         llen_rel ⌊ ds_d4QV -⌋ llen_res ∧ ltbZ_rel i' llen_res true}),
                                       nilRT))
-     (v_x_59913007 : Z),
+     (v_x_87441709 : Z),
    ltac:(flattenP (λ (ds_d4QV : IList)
    (i' : {i': Z | lebZ_rel 0 i' true
                   ∧ ∃ (llen_res : Z),
-                    llen_rel ⌊ ds_d4QV ⌋ llen_res ∧ ltbZ_rel i' llen_res true})
+                    llen_rel ⌊ ds_d4QV -⌋ llen_res ∧ ltbZ_rel i' llen_res true})
    (v : Z),
- ltbZ_rel 5 v true) x_59913007 v_x_59913007)).
+ ltbZ_rel 5 v true) x_87441709 v_x_87441709)).
 Proof.
   buildPackG get get_rel get__get_rel get_rel_funct.
 Defined.

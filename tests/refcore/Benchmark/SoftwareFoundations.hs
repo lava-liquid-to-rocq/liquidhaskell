@@ -478,14 +478,12 @@ zero_nbeq_plus_1 (S n') = trivial
 {-@ identity_fn_applied_twice :: f: (SFBool -> SFBool) -> h:(x:SFBool -> {f x = x}) -> b:SFBool -> {f (f b) = b} @-}
 identity_fn_applied_twice :: (SFBool -> SFBool) -> (SFBool -> Proof) -> SFBool -> Proof
 identity_fn_applied_twice f h b =
-  trivial
-    ? ( f (f b)
-          ? h (f b)
-          === f b
-          ? h b
-          === b
-          *** QED
-      )
+  f (f b)
+    ? h (f b)
+    === f b
+    ? h b
+    === b
+    *** QED
 
 -- 340 SLoc
 
@@ -816,4 +814,3 @@ surjective_pairing :: Natprod -> Proof
 surjective_pairing (Pair n m) = trivial
 
 -- 437 SLoc
-
