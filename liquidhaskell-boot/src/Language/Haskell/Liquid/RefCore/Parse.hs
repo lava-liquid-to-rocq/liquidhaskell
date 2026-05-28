@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wall #-}
 
-module Language.Haskell.Liquid.Lava.Parse
+module Language.Haskell.Liquid.RefCore.Parse
   ( -- ** type aliases for intermediate data
     SpecPair,
     PData (..),
@@ -31,11 +31,11 @@ import GHC.Types.Var (Var, varName)
 import qualified Language.Fixpoint.Types as F (Located (..))
 import qualified Language.Haskell.Liquid.Types.RType as LhLib
 
-import           Language.Haskell.Liquid.Lava.Misc
-import           Language.Haskell.Liquid.Lava.Names (Id, freshVar)
-import qualified Language.Haskell.Liquid.Lava.Calculus as Calc
-import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
-import           Language.Haskell.Liquid.Lava.CoreToLH (Def (..))
+import           Language.Haskell.Liquid.RefCore.Misc
+import           Language.Haskell.Liquid.RefCore.Names (Id, freshVar)
+import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
+import qualified Language.Haskell.Liquid.RefCore.SpecToLH as SLH
+import           Language.Haskell.Liquid.RefCore.CoreToLH (Def (..))
 
 -- ** LH -> Calculus parsing
 

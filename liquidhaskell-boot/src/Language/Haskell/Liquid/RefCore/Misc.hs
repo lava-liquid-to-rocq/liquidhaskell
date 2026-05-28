@@ -1,7 +1,7 @@
 -- TODO: rename the module
 
 -- | Functions used in the translation from Core and Spec
-module Language.Haskell.Liquid.Lava.Misc where
+module Language.Haskell.Liquid.RefCore.Misc where
 
 import Data.List (intercalate, stripPrefix)
 import Data.Maybe (fromMaybe)

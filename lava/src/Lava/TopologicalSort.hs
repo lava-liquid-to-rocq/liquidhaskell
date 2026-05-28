@@ -14,8 +14,8 @@ module Lava.TopologicalSort
 import Prelude
 import Data.Graph
 
-import           Language.Haskell.Liquid.Lava.Names (Id)
-import qualified Language.Haskell.Liquid.Lava.Calculus as LH
+import           Language.Haskell.Liquid.RefCore.Names (Id)
+import qualified Language.Haskell.Liquid.RefCore.Calculus as LH
 
 import qualified Lava.Coq as Coq
 

@@ -76,7 +76,7 @@ import           Language.Haskell.Liquid.Bare
 import qualified Language.Haskell.Liquid.Bare.Resolve as Resolve
 import           Language.Haskell.Liquid.UX.CmdLine
 import           Language.Haskell.Liquid.UX.Config
-import           Language.Haskell.Liquid.Lava.Extract (SrcInfo (..), extractCalculus, writeIlh, writeIlhBin)
+import           Language.Haskell.Liquid.RefCore.Extract (SrcInfo (..), extractCalculus, writeIlh, writeIlhBin)
 
 
 -- | Represents an abnormal but non-fatal state of the plugin. Because it is not

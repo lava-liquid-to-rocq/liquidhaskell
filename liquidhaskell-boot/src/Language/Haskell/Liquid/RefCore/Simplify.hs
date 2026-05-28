@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -Wall #-}
 
-module Language.Haskell.Liquid.Lava.Simplify (simplify) where
+module Language.Haskell.Liquid.RefCore.Simplify (simplify) where
 
 import Control.Monad.State.Strict
 import Data.Bifunctor (second)
@@ -14,7 +14,7 @@ import GHC.Types.Var
 -- needed for Show Var instance
 import Language.Haskell.Liquid.GHC.Misc ()
 
-import Language.Haskell.Liquid.Lava.Misc (showStripped)
+import Language.Haskell.Liquid.RefCore.Misc (showStripped)
 
 class Simplifiable a where
   simplify :: a -> a

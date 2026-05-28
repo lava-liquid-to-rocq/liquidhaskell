@@ -8,8 +8,8 @@ import qualified Data.Map.Strict as Map
 import Data.Set (fromList)
 import Text.PrettyPrint.HughesPJClass
 
-import Language.Haskell.Liquid.Lava.Calculus
-import Language.Haskell.Liquid.Lava.Names (Id, freshVar)
+import Language.Haskell.Liquid.RefCore.Calculus
+import Language.Haskell.Liquid.RefCore.Names (Id, freshVar)
 
 data TypeError
   = WfErr Doc

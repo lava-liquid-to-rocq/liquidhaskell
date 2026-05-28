@@ -21,7 +21,8 @@ import GHC.Tc.Types (TcGblEnv, TcM)
 import GHC.Unit.Module.ModSummary (ModSummary (..))
 import GHC.Unit.Types (moduleName)
 
-import Language.Haskell.Liquid.Lava.Extract (calcMetaFor, ilhBinPath)
+import Language.Haskell.Liquid.RefCore.Extract (calcMetaFor, ilhBinPath)
+
 import Lava.IlhParse (parseIlh)
 import Lava.Translate (runFromCalculus)
 

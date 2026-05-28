@@ -2,8 +2,8 @@
 {-# OPTIONS_GHC -Wall #-}
 
 -- |
--- - Main module for the translation between GHC Core Haskell and Lava Calculus
-module Language.Haskell.Liquid.Lava.CoreToLH (transBind, Def (..)) where
+-- - Main module for the translation between GHC Core Haskell and RefCore Calculus
+module Language.Haskell.Liquid.RefCore.CoreToLH (transBind, Def (..)) where
 
 import Control.Exception (assert)
 import Data.Bifunctor (first, second)
@@ -34,10 +34,10 @@ import           Language.Haskell.Liquid.Types.RType (SpecType)
 import           Language.Haskell.Liquid.Types.Types (AnnInfo (..))
 import qualified Language.Haskell.Liquid.Types.Types ()
 
-import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
-import           Language.Haskell.Liquid.Lava.Misc
-import           Language.Haskell.Liquid.Lava.Names (Id, hashName)
-import qualified Language.Haskell.Liquid.Lava.Calculus as Calc
+import qualified Language.Haskell.Liquid.RefCore.SpecToLH as SLH
+import           Language.Haskell.Liquid.RefCore.Misc
+import           Language.Haskell.Liquid.RefCore.Names (Id, hashName)
+import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
 
 -- | Constraint synonym for GHC Core binder variables
 type CoreBinder b = (Data b, Show b, NamedThing b)

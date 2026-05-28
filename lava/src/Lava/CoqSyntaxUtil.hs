@@ -7,7 +7,7 @@ module Lava.CoqSyntaxUtil where
 
 import Text.PrettyPrint.HughesPJClass
 
-import Language.Haskell.Liquid.Lava.Names
+import Language.Haskell.Liquid.RefCore.Names
 
 import Lava.Coq
 

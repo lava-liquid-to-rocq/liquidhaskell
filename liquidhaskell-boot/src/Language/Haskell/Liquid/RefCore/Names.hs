@@ -1,5 +1,5 @@
 -- | Collection of names and strings used in the translation
-module Language.Haskell.Liquid.Lava.Names where
+module Language.Haskell.Liquid.RefCore.Names where
 
 import Data.Hashable (hash)
 import Data.List (find)

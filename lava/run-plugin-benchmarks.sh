@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Drive `ghc -fplugin=LiquidHaskellBoot -fplugin=Lava.Plugin` over every
-# benchmark under tests/lava/Benchmark
+# benchmark under tests/refcore/Benchmark
 #
 # Usage:
 #   ./run-plugin-benchmarks.sh                  # all benchmarks
@@ -10,7 +10,7 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(cd -- "$SCRIPT_DIR/.." && pwd)
-BENCH_DIR="$ROOT_DIR/tests/lava/Benchmark"
+BENCH_DIR="$ROOT_DIR/tests/refcore/Benchmark"
 
 if [[ ! -d "$BENCH_DIR" ]]; then
     echo "no benchmark sources at $BENCH_DIR" >&2
@@ -46,7 +46,7 @@ GHC_FLAGS=(
     -package liquidhaskell-boot
     -package lava
     -package liquid-prelude
-    -i"$ROOT_DIR/tests/lava"
+    -i"$ROOT_DIR/tests/refcore"
 )
 
 ok=0

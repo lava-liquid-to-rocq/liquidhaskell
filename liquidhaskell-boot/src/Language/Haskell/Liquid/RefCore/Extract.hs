@@ -3,8 +3,8 @@
 
 -- | Pulls Calculus declarations out of LiquidHaskell's TargetInfo + GHC core
 --   binds. Output of this module is the boundary between liquidhaskell-boot
---   and downstream tools (e.g. lava) that consume Calculus declarations.
-module Language.Haskell.Liquid.Lava.Extract
+--   and downstream tools (e.g. Lava) that consume Calculus declarations.
+module Language.Haskell.Liquid.RefCore.Extract
   ( SrcInfo (..)
   , CalcMeta (..)
   , extractCalculus
@@ -34,13 +34,13 @@ import qualified Language.Fixpoint.Types as F (Located, val)
 import           Language.Haskell.Liquid.Types.RType (SpecType, TyConP (..))
 import qualified Language.Haskell.Liquid.Types.Specs as Specs
 import           Language.Haskell.Liquid.Types.Types (AnnInfo (..))
-import           Language.Haskell.Liquid.Lava.Misc (isIgnoredBind, removeSuffix, split, stripLegalName)
-import           Language.Haskell.Liquid.Lava.Names (Id, OUT (..), outPostfix)
-import qualified Language.Haskell.Liquid.Lava.Calculus as Calc
-import qualified Language.Haskell.Liquid.Lava.CoreToLH as CLH
-import           Language.Haskell.Liquid.Lava.Parse
-import           Language.Haskell.Liquid.Lava.Simplify (simplify)
-import qualified Language.Haskell.Liquid.Lava.SpecToLH as SLH
+import           Language.Haskell.Liquid.RefCore.Misc (isIgnoredBind, removeSuffix, split, stripLegalName)
+import           Language.Haskell.Liquid.RefCore.Names (Id, OUT (..), outPostfix)
+import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
+import qualified Language.Haskell.Liquid.RefCore.CoreToLH as CLH
+import           Language.Haskell.Liquid.RefCore.Parse
+import           Language.Haskell.Liquid.RefCore.Simplify (simplify)
+import qualified Language.Haskell.Liquid.RefCore.SpecToLH as SLH
 
 -- | Contains all information about the source Liquid Haskell file to translate
 data SrcInfo = SrcInfo
@@ -82,7 +82,7 @@ extractCalculus sinfo = do
         allSpecs = rawSpecs ++ asmSpecs ++ refSpecs
         importDecls = map (mkImportDecl moduleId (pb_decls pb) allSpecs) importNames
         -- Note: declarations are emitted in source order. The consumer
-        -- (lava driver) topologically sorts before elaboration.
+        -- (RefCore driver) topologically sorts before elaboration.
         calcSource = importDecls ++ dataDecls ++ defDecls
         meta = CalcMeta outputFolder modulename (not (null importNames))
     importedSourceFiles <- getImportFiles examplesFolder importNames
@@ -132,7 +132,7 @@ readIlhBin :: FilePath -> IO [Calc.Decl]
 readIlhBin = Bin.decodeFile
 
 -- | Pretty-print a list of declarations to a file. Used by both extract (.ilh)
---   and the lava driver (.ilh after elaboration, .v Coq output).
+--   and the RefCore driver (.ilh after elaboration, .v Coq output).
 writeOut :: (PP.Pretty a) => FilePath -> String -> OUT -> PP.Doc -> [a] -> IO ()
 writeOut outputFolder modulename outType pre decls = do
     let outputPath = outputFolder </> (modulename ++ outPostfix outType)
@@ -175,7 +175,7 @@ getSrcFolder moduleId filename workingPath = joinPath (getSrcPath moduleId filen
 
 getOutputFolder :: String -> String -> String -> FilePath
 getOutputFolder moduleId filename workingPath =
-    implementationFolder </> "lava" </> "out" </> subfolder
+    implementationFolder </> "RefCore" </> "out" </> subfolder
   where
     modulePrefixes = init $ split '.' moduleId
     exampleFolderPath = getSrcPath moduleId filename workingPath

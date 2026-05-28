@@ -7,7 +7,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | Grammars, printer and suable functions for ILH
-module Language.Haskell.Liquid.Lava.Calculus where
+module Language.Haskell.Liquid.RefCore.Calculus where
 
 import Prelude hiding (lookup, (<>))
 import Data.Bifunctor (first)
@@ -24,7 +24,7 @@ import Debug.Trace (trace)
 
 import GHC.Generics (Generic)
 
-import Language.Haskell.Liquid.Lava.Names (Id, freshVar)
+import Language.Haskell.Liquid.RefCore.Names (Id, freshVar)
 
 -- * The grammar
 

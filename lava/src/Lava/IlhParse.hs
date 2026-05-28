@@ -7,8 +7,8 @@ module Lava.IlhParse (parseIlh) where
 
 import System.Directory (doesFileExist)
 
-import qualified Language.Haskell.Liquid.Lava.Calculus as Calc
-import           Language.Haskell.Liquid.Lava.Extract (readIlhBin)
+import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
+import           Language.Haskell.Liquid.RefCore.Extract (readIlhBin)
 
 -- | Load Calculus from disk. Accepts either the binary file directly or the
 --   text .ilh_no_elab path, in which case the @.bin@ companion is loaded.

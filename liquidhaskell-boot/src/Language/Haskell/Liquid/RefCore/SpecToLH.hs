@@ -2,7 +2,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# OPTIONS_GHC -Wall #-}
 
-module Language.Haskell.Liquid.Lava.SpecToLH (transSig, transType, showppStripped, bops, buildins, InternalCont (..)) where
+module Language.Haskell.Liquid.RefCore.SpecToLH (transSig, transType, showppStripped, bops, buildins, InternalCont (..)) where
 
 import Control.Monad (filterM)
 import Control.Monad.Extra (allM, ifM)
@@ -16,9 +16,9 @@ import           Language.Fixpoint.Types (PPrint)
 import qualified Language.Fixpoint.Types as F
 import           Language.Haskell.Liquid.Types.RType (PVarV (PV), RTVar (RTVar), RTyCon (RTyCon), RTyVar (RTV), RTypeV (..), SpecType, UReft, UReftV (MkUReft))
 
-import           Language.Haskell.Liquid.Lava.Misc
-import           Language.Haskell.Liquid.Lava.Names (Id)
-import qualified Language.Haskell.Liquid.Lava.Calculus as Calc
+import           Language.Haskell.Liquid.RefCore.Misc
+import           Language.Haskell.Liquid.RefCore.Names (Id)
+import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
 
 -- | Helper for unsupported constructs
 unsupported :: String -> a

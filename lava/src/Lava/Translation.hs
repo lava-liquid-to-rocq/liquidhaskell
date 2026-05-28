@@ -13,8 +13,8 @@ import Data.Bifunctor (bimap, second)
 import Data.Maybe (fromMaybe)
 import Text.PrettyPrint.HughesPJClass as PP
 
-import Language.Haskell.Liquid.Lava.Names
-import Language.Haskell.Liquid.Lava.Calculus as LH
+import Language.Haskell.Liquid.RefCore.Names
+import Language.Haskell.Liquid.RefCore.Calculus as LH
 
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil

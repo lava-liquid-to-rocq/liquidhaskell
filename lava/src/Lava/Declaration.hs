@@ -18,8 +18,8 @@ import Text.PrettyPrint.HughesPJClass hiding (first)
 
 import Debug.Trace (trace)
 
-import Language.Haskell.Liquid.Lava.Names
-import Language.Haskell.Liquid.Lava.Calculus as LH
+import Language.Haskell.Liquid.RefCore.Names
+import Language.Haskell.Liquid.RefCore.Calculus as LH
 
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil as Coq
