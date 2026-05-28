@@ -175,7 +175,7 @@ getSrcFolder moduleId filename workingPath = joinPath (getSrcPath moduleId filen
 
 getOutputFolder :: String -> String -> String -> FilePath
 getOutputFolder moduleId filename workingPath =
-    implementationFolder </> "RefCore" </> "out" </> subfolder
+    implementationFolder </> "lava" </> "out" </> subfolder
   where
     modulePrefixes = init $ split '.' moduleId
     exampleFolderPath = getSrcPath moduleId filename workingPath
