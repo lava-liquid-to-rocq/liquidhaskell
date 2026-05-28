@@ -1625,6 +1625,17 @@ Ltac simplInstExistGoal :=
       recreate_var frelAp v_;
       solve [unshelve eassumption]
     end)
+  (*| |- exists res, (?relApp res /\ res = ?tm) -> _ => exists tm; intros [? _] 
+  | |- exists res, (?relAp res /\ _) -> _ => isRelAppl relAp;
+    tryif (match goal with
+    | [h: exists (w:_), relAp w |- _] => idtac
+    | [h: relAp _ |- _] => idtac
+    end) then fail else
+    let temp := fresh "temp" in
+    let v := fresh "v_" in 
+    let v_def := fresh "v_def_" in
+    assert (exists (w:_), relAp w) as temp; 
+    [|destruct temp as [v v_def]; exists v; intros [_ ?]]*)
   (*| |- exists v, ?frel ?uargs v => localIsRel frel;
     let fAppl_res := fresh "fAppl_res" in
       let res_def := fresh "res_def" in
