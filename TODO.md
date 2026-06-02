@@ -8,6 +8,7 @@
 ### λr to Rocq:
 - [ ] fix position of assertions using proof combinators
 - [ ] bind arguments to function calls in hints if they appear in the type of subsequent hints, possibly bind other recurring subterms as well
+- [ ] fix printing of recurring branch delimiters -, +, *, ...
 - [X] fix overload of names imported in Rocq (ex: SFBin.Z)
 - [X] fix type annotation in andb_commutative
 - [X] fix `getUPackRel` in SoftwareFoundations.identity_fn_applied_twice
