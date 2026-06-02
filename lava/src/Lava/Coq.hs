@@ -428,13 +428,14 @@ rocqBullet p =
   -- if p' == 0 || p == 1 then error "Cannot print bullet inside concatenation of tactics."
   if p == nodotPrec || p == concatPrec then empty
   else let bullet
-             | p' == truncate dotPrec = char '-'
-             | p' == truncate dotPrec + 1 = char '+'
-             | otherwise = char '*'
-        -- negations to obtain the ceiling from the division
-        in hcat $ replicate (-((-p') `div` 3)) bullet
-  where p' :: Int
-        p' = truncate p
+             | pmod3 == truncate dotPrec = char '-'
+             | pmod3 == (truncate dotPrec + 1) `mod` 3 = char '+'
+             | pmod3 == (truncate dotPrec + 2) `mod` 3 = char '*'
+             | otherwise = error "Bug in the implementation of Coq.rocqBullet"
+        in hcat $ replicate ((truncate p + 1) `div` 3) bullet
+  where
+    pmod3 :: Int
+    pmod3 = truncate p `mod` 3
 
 -- | Number of indentation spaces
 identNb :: Int
