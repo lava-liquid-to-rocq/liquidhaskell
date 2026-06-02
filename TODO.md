@@ -7,6 +7,9 @@
 
 ### λr to Rocq:
 - [ ] fix position of assertions using proof combinators
+- [ ] bind arguments to function calls in hints if they appear in the type of subsequent hints, possibly bind other recurring subterms as well
+- [ ] use clearbody after let-bound Prop-sorted hints to cleanup the proof state
+- [ ] ensure let bound subterms and hints are declared one at a time (one binding per tactic, using refine (let : ... := ... in _) for typed hints (followed by clearbody if Prop-sorted) or pose proof for untyped ones) 
 - [X] fix overload of names imported in Rocq (ex: SFBin.Z)
 - [X] fix type annotation in andb_commutative
 - [X] fix `getUPackRel` in SoftwareFoundations.identity_fn_applied_twice
@@ -23,6 +26,7 @@
       parameters but also of the result. we can also factorize common assumption in
       disjuncts (e.g. in applyLatePolicy)
 - [ ] cleanup Rocq grammar
+- [ ] bind opaque subsumption witnesses of hints before translating the hints themselves for simpler proof states and reduced memory-load
 
 ## Extension with higher-order datatypes
 
