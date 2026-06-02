@@ -26,7 +26,7 @@
       disjuncts (e.g. in applyLatePolicy)
 - [ ] cleanup Rocq grammar
 - [ ] bind opaque subsumption witnesses of hints before translating the hints themselves for simpler proof states and reduced memory-load
-- [ ] ensure let bound subterms and hints are declared one at a time (one binding per tactic, using refine (let : ... := ... in _) for typed hints (followed by clearbody if Prop-sorted) or pose proof for untyped ones)
+- [ ] ensure let bound subterms and hints are declared one at a time (one binding per tactic, using refine (let : ... := ... in _) for typed hints (or assert if Prop-sorted) or pose proof for untyped ones)
 - [ ] use clearbody after let-bound Prop-sorted hints to cleanup the proof state
 - [ ] simplify subsumptionCasts of existentials
 
