@@ -338,7 +338,7 @@ Ltac inversion_precheck h :=
 
 Global Tactic Notation "non_branching_inversion" hyp(h) := first 
   [ do_nonbranching strong_inversion h 
-  | inversion_precheck h; do_nonbranching (strong_inversion h; try (exfalso; timeout 60 quicksolve))].
+  | inversion_precheck h; do_nonbranching (strong_inversion h; try (exfalso; timeout 40 quicksolve))].
 
 Tactic Notation "is_rel_appl_h" hyp(h) :=
   let tp := type of h in

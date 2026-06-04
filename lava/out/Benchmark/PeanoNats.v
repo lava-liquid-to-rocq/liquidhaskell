@@ -1327,8 +1327,8 @@ Proof.
 Qed.
 
 Definition sub_self_spec (ds_d4lT ds_d4lU : Nats): Type :=
-  {{∃ (eqN_res : bool), eqN_rel ⌊ ds_d4lT -⌋ ⌊ ds_d4lU -⌋ eqN_res ∧ is_true eqN_res
-    → ∃ (sub_res : Nats_u), sub_rel ⌊ ds_d4lT -⌋ ⌊ ds_d4lU -⌋ sub_res ∧ sub_res == Zero_u}}.
+  {{∃ (eqN_res : bool), eqN_rel ⌊ ds_d4lT -⌋ ⌊ ds_d4lU -⌋ eqN_res ∧ (is_true eqN_res
+    → ∃ (sub_res : Nats_u), sub_rel ⌊ ds_d4lT -⌋ ⌊ ds_d4lU -⌋ sub_res ∧ sub_res == Zero_u)}}.
 
 #[global] Hint Unfold sub_self_spec: lia_unfold.
 
@@ -1341,22 +1341,22 @@ Proof.
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ (eqN_res : bool), eqN_rel (Suc_u m) (Suc_u n) eqN_res ∧ is_true eqN_res
-               → ∃ (sub_res : Nats_u), sub_rel (Suc_u m) (Suc_u n) sub_res ∧ sub_res == Zero_u)
+               ∃ (eqN_res : bool), eqN_rel (Suc_u m) (Suc_u n) eqN_res ∧ (is_true eqN_res
+               → ∃ (sub_res : Nats_u), sub_rel (Suc_u m) (Suc_u n) sub_res ∧ sub_res == Zero_u))
               (IH_m ltac:(try clear IH_m; solver) n ltac:(try clear IH_m; solver))
               ltac:(solver)).
     + refine (subsumptionCast
               Unit
               (λ (VV : Unit),
-               ∃ (eqN_res : bool), eqN_rel (Suc_u m) Zero_u eqN_res ∧ is_true eqN_res
-               → ∃ (sub_res : Nats_u), sub_rel (Suc_u m) Zero_u sub_res ∧ sub_res == Zero_u)
+               ∃ (eqN_res : bool), eqN_rel (Suc_u m) Zero_u eqN_res ∧ (is_true eqN_res
+               → ∃ (sub_res : Nats_u), sub_rel (Suc_u m) Zero_u sub_res ∧ sub_res == Zero_u))
               (# unit)
               ltac:(solver)).
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
-             ∃ (eqN_res : bool), eqN_rel Zero_u ds_d4lU eqN_res ∧ is_true eqN_res
-             → ∃ (sub_res : Nats_u), sub_rel Zero_u ds_d4lU sub_res ∧ sub_res == Zero_u)
+             ∃ (eqN_res : bool), eqN_rel Zero_u ds_d4lU eqN_res ∧ (is_true eqN_res
+             → ∃ (sub_res : Nats_u), sub_rel Zero_u ds_d4lU sub_res ∧ sub_res == Zero_u))
             (# unit)
             ltac:(solver)).
 Qed.

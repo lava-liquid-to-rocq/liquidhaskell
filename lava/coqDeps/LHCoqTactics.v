@@ -294,7 +294,7 @@ Ltac applyRwLem h :=
       match type of rwLemResRefl with
       | ?rwLemSimpl = _ => clear rwLemResRefl;
         let rwLemTp := type of rwLemSimpl in
-        idtac "The rewrite lemma " rwLemSimpl ": " rwLemTp " that needs to be used to change axiomatization of a variable from the refined to the unrefined world. ";
+        (*idtac "The rewrite lemma " rwLemSimpl ": " rwLemTp " that needs to be used to change axiomatization of a variable from the refined to the unrefined world. ";*)
         match ts with
         | _nil => 
           rewrite (rwLemSimpl v) in h
@@ -465,7 +465,7 @@ Ltac axHOAppProjTm exp :=
       let def_rw := fresh "def_rw" in
       pose proof v_def as def_rw; try unfold tm in v_def;
       try match goal with
-      | [h: ?htp |- _] => eq_fail witTp htp; idtac h; rewrite def_rw in h
+      | [h: ?htp |- _] => eq_fail witTp htp; rewrite def_rw in h
       end; try rewrite def_rw in v_wit;
       (* try rewriteAll def_rw;*)
       let rw_lem := fresh "rw_lem" in
@@ -574,7 +574,7 @@ Ltac createIhAppRw ih p :=
     specialize all occurences of the hypothesis with that variable *)
 Ltac assIhAppl ih p Res :=
   propKinded p;
-  idtac "assIhAppl " ih p Res; 
+  (*idtac "assIhAppl " ih p Res; *)
   createIhAppRw ih p;
   match goal with
   | [h: ih ?q = ?v |- _ ] => propKinded q; (*idtac "Specialization of " ih " already exists in context as " v;*)
@@ -627,7 +627,7 @@ Ltac axProjIhAppl exp :=
         | ?t _::_ ?tl = _ => clear tailRefl; 
           assRefl ihAppl as ihAppRefl; 
           match type of ihAppRefl with
-          | ?ih = _ => clear ihAppRefl; idtac "Specializing " ih " with term " t; pose (ih t) as ihAppl
+          | ?ih = _ => clear ihAppRefl; idtac "Specializing " ih " with term "(* t*); pose (ih t) as ihAppl
           end;
           pose tl as tail
         end
@@ -700,9 +700,10 @@ Ltac result_var_unification v w h1 h2 :=
         let functRefl := fresh "functRefl" in
         assRefl functLem as functRefl;
         match type of functRefl with
-        | ?funct = _ => clear functRefl; idtac funct; 
+        | ?funct = _ => clear functRefl; 
+          (*idtac funct; 
           let functTp := type of funct in
-          idtac ": " functTp ts;
+          idtac ": " functTp ts;*)
           let functApp := fresh "functApp" in
           mkAppl funct ts functApp;
           specialize (functApp w h1 h2);
@@ -1020,22 +1021,53 @@ Tactic Notation "if_successful" tactic(t) :=
   let temp := fresh "H" in
   tryif (assert True as temp by (t; exact I); clear temp) then idtac else fail.
 
-Ltac nonbranching_invert_axiomatization :=
-  let temp := fresh "H" in
-  match goal with
-    | [h:?f_rel_ap ?v |- _] => isRelAppl f_rel_ap;
-      let htp := type of h in
+Ltac hyps_to_potentially_invert Res :=
+  return Res _nil;
+  repeat progress (match goal with
+    | [h: ?f_rel_ap ?v |- _] => tryif (contains_res h Res) then fail else (
+        isRelAppl f_rel_ap;
+        inversion_precheck h;
+        prepend_res Res h
+      )
+    end).
+
+Ltac nonbranching_invert_axiomatization h :=
+  let htp := type of h in
+  match htp with
+    | ?f_rel_ap ?v => isRelAppl f_rel_ap;
       tryif (non_branching_inversion h) then 
         (idtac "Inverted the axiomatization " h ": " htp;
         try now post_invert_finish_goal;
         repeat progress timeout 15 axiomatize_next_term)
        else 
         fail 
-    | _ => fail "No hypothesis to invert"
     end.
 
+Ltac invert_given_hyps hyps :=
+  match hyps with
+  | _nil => idtac
+  | ?h _::_ ?tl => tryif (nonbranching_invert_axiomatization h) then try invert_given_hyps tl else invert_given_hyps tl
+  end.
+
+Tactic Notation "nonbranching_invert_axiomatizations" :=
+  concat_either (repeat_or_fail match goal with
+  | [h:?f_rel_ap ?v |- _] => isRelAppl f_rel_ap;
+    let htp := type of h in
+    do_nonbranching (strong_inversion h); 
+    idtac "Inverted the axiomatization " h ": " htp;
+    try now post_invert_finish_goal;
+    repeat progress timeout 15 axiomatize_next_term
+  end) (
+  let hypsToInvert := fresh "hypsToInvert" in
+  hyps_to_potentially_invert hypsToInvert;
+  let hypsToInvertRefl := fresh "hypsToInvertRefl" in
+  assRefl hypsToInvert as hypsToInvertRefl;
+  match type of hypsToInvertRefl with
+  | ?hyps = _ => clear hypsToInvertRefl; progress invert_given_hyps hyps
+  end).
+
 Ltac invert_axiomatization :=
-  tryif nonbranching_invert_axiomatization then idtac else
+  tryif nonbranching_invert_axiomatizations then idtac else
   let temp := fresh "H" in
     match goal with
       | [h:?f_rel_ap ?v |- _] => isRelAppl f_rel_ap;
@@ -1058,9 +1090,6 @@ Ltac invert_axiomatization :=
         end
       | _ => fail "No hypothesis to invert"
       end.
-
-Tactic Notation "nonbranching_invert_axiomatizations" :=
-  repeat_or_fail ( progress nonbranching_invert_axiomatization).
 
 Tactic Notation "invert_axiomatizations" :=
   repeat_or_fail ( progress invert_axiomatization ).
@@ -1138,8 +1167,8 @@ Ltac assert_wit v pred wit_name := (*idtac "assert_wit" v pred wit_name; *)
         repeat (
           assRefl tl as tlEq; 
           match type of tlEq with
-          | _nil = _ => fail
-          | ?t _::_ ?tail = _ => (* idtac "running main loop in assert_wit with tail " t " _::_ " tail; *)
+          | _nil = _ => clear tlEq; fail
+          | ?t _::_ ?tail = _ => clear tlEq; (* idtac "running main loop in assert_wit with tail " t " _::_ " tail; *)
             pose fApp as fApp'; subst fApp;
             
             let dom_ref := fresh "t_dom_ref" in
@@ -1154,7 +1183,7 @@ Ltac assert_wit v pred wit_name := (*idtac "assert_wit" v pred wit_name; *)
               assRefl claim as claimRefl; 
               unfold dom_ref in claimRefl; simpl in claimRefl; 
               match type of claimRefl with
-              | ?tp = _ => clear claimRefl; idtac tp;
+              | ?tp = _ => clear claimRefl; (*idtac tp;*)
                 match tp with
                 | (?wf ?x /\ ?p) /\ ?q => neq_fail x t;
                   first [
@@ -1187,7 +1216,7 @@ Ltac assert_wit v pred wit_name := (*idtac "assert_wit" v pred wit_name; *)
             pose (fApp' (exist _ t arg_wit_name)) as fApp;
             try subst arg_wit_name; subst fApp'; simpl_proj;
             pose tail as tl
-          end; clear tlEq
+          end
         ); (*idtac "finish main loop";*) clear tl;
         (* we now have a fully applied version of f in fApp, we destruct it to get the refinement witness for it *)
         let appl_wit := fresh "appl_wit_" in
@@ -1332,177 +1361,11 @@ Ltac solving_tac := quick_simpl; try split_hyps; try unify_vars; quicksolve.
 Ltac mkRefAppl f ts Res := (* idtac "mkRefAppl" f ts Res; *)
   match ts with
   | _nil => return Res f
-  (* | ?uargs _::_ _nil => match uargs with
-    | _ ::U _ => idtac
-    end;
-    match goal with
-    | [f_frel: forall (args: ArgList ?argTps) (v: ?T), ⌊ f args -⌋ = v <-> ?frel _ v |- _] =>
-      assert_ho_relAp frel uargs;
-      match goal with
-      | [vRes_def: frel uargs ?vRes |- _] => return Res vRes
-      end
-    end*)
   | ?t _::_ ?tl => 
     let f_t__res_ := fresh "f_t__res_" in
     let wff_lem := fresh "wit_" in
     mk_ref_arg f t wff_lem f_t__res_;
     idtac "mk_ref_arg returned"; 
-
-    (*match t with
-    | ⌊ ?tm -⌋ => pose (f tm) as f_t__res_
-    | packPr_proj ?pack => (* idtac "pack argument case in mkRefAppl: " pack; *)
-      pose (f pack) as f_t__res_
-    | _ => 
-      let t_wit := fresh "t_wit" in 
-      (* prevent nameclashes with witnesses from recursive calls that use fresh to figure out a name *)
-      pose I as t_wit;
-      let dom_ref := fresh "dom_ref" in
-      get_dom_ref f dom_ref;
-      let claim := fresh "claim" in
-      let claimRefl := fresh "claimRefl" in
-      pose (dom_ref t) as claim;
-      assRefl claim as claimRefl; 
-      unfold dom_ref in claimRefl; simpl in claimRefl; 
-      match type of claimRefl with
-      | ?tp = _ => clear claimRefl; 
-        (*idtac "claim we need to prove in order to synthesize refined version of argument: " tp;*)
-        match tp with
-        | _ => clear t_wit; assert tp as t_wit by (easy)
-        | _ => 
-          match goal with
-          | [h: ?relAp t |- _] => isVar t;
-            isRelAppl relAp; 
-            (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
-            let g_ts := fresh "g_ts" in
-            get_f_ts relAp g_ts; 
-            let tempEq := fresh "tempEq" in
-            assRefl g_ts as tempEq;
-            match type of tempEq with
-            | (?g, ?ts) = _ => clear tempEq;
-              tryif (_contains t ts) then fail else idtac;
-              let gAppl := fresh "gAppl" in
-              mkRefAppl g ts gAppl;
-              (* idtac "Generated refined term " gAppl " for argument " t ".";*)
-              let gAppl_wit := fresh "gAppl_wit" in
-              pose proof ⌈ gAppl ⌉ as gAppl_wit;
-              let rw := fresh "rw" in
-              assert (⌊ gAppl -⌋ = t) as rw by ( 
-                let temp := fresh "temp" in
-                lookupRwLem g temp;
-                simpl in temp;
-                apply temp; assumption);
-              rewrite rw in gAppl_wit;
-              (* let witTp := type of gAppl_wit in
-              idtac "witTp: " witTp ", tp: " tp; *)
-              clear t_wit;
-              assert tp as t_wit by (try apply gAppl_wit; 
-                solving_tac)
-            end
-          end
-        | (?wf ?x /\ ?p) /\ ?q =>
-          first [
-            match goal with
-            | [h: ?relAp x |- _] => 
-              isRelAppl relAp; 
-              (* fetch f and the values ts to which f_rel is applied in f_rel_ap *)
-              let g_ts := fresh "g_ts" in
-              get_f_ts relAp g_ts; 
-              let tempEq := fresh "tempEq" in
-              assRefl g_ts as tempEq;
-              match type of tempEq with
-              | (?g, ?ts) = _ => clear tempEq;
-                tryif (_contains x ts) then fail else idtac;
-                let gAppl := fresh "gAppl" in
-                mkRefAppl g ts gAppl;
-                (*idtac "Generated refined term " gAppl " for axiomatized subterm " x " of argument " t ".";*)
-                let gAppl_wit := fresh "gAppl_wit" in
-                pose proof ⌈ gAppl ⌉ as gAppl_wit;
-                let rw := fresh "rw" in
-                assert (⌊ gAppl -⌋ = x) as rw by ( 
-                  let temp := fresh "temp" in
-                  lookupRwLem g temp;
-                  simpl in temp;
-                  apply temp; assumption);
-                rewrite rw in gAppl_wit
-              end;
-              clear t_wit;
-              assert tp as t_wit by solving_tac
-            end
-          ]
-        | _ => 
-          clear t_wit;
-          tryif (assert tp as t_wit by (
-            quick_simpl; try split_hyps; try unify_vars; 
-            first [quicksolve | 
-
-            match goal with
-            | |- exists (w:_), ?relAp w /\ _ => isRelAppl relAp;
-              let v := fresh "v_" in 
-              let f_ts := fresh "Res" in
-              get_f_ts relAp f_ts; 
-
-              (* idtac "calling mkRefAppl_res" f_res tail_res fAppl_res; try mkRefAppl_res f_res tail_res fAppl_res; *)
-              let temp3 := fresh "temp3" in
-              assRefl f_ts as temp3;
-              match type of temp3 with
-              | (?f, ?ts) = _ => (* idtac "f:=" f;*) clear temp3; mkRefAppl f ts v
-              end; try clear f_ts;
-              exists v; split; [assumption|]
-            end; 
-            quick_simpl; try first [ lia | timeout 5 quicksolve];
-            repeat match goal with
-            | |- ?f ?s ?t => isVar s; idtac s; try subst s
-            | |- ?f ?s ?t => isVar t; idtac t; try subst t
-            end;
-            simpl in *;
-            try timeout 10 quicksolve;
-            repeat nonbranching_invert_axiomatizations;
-            autorewrite with lia_rewrites;
-            (let res := fresh "res" in
-            match goal with
-            | [h: ?relAp ?v |- ?f ?s ?t] => eq_fail v s isRelAppl relAp;
-              let f_ts := fresh "Res" in
-              get_f_ts relAp f_ts; 
-
-              (* idtac "calling mkRefAppl_res" f_res tail_res fAppl_res; try mkRefAppl_res f_res tail_res fAppl_res; *)
-              let temp3 := fresh "temp3" in
-              assRefl f_ts as temp3;
-              match type of temp3 with
-              | (?f, ?ts) = _ => (* idtac "f:=" f;*) clear temp3; mkRefAppl f ts res
-              end; try clear f_ts;
-              let res_wit := fresh "res_wit" in
-              pose proof ⌈ res ⌉ as res_wit;
-              let rw := fresh "rw" in
-              assert (⌊ res -⌋ = v) as rw by (try subst res; now autorewrite with f_rel_funct_db);
-              rewrite rw in res_wit
-            | [h: ?relAp ?v |- ?f ?s ?t] => eq_fail v t; isRelAppl relAp; idtac v;
-              let f_ts := fresh "Res" in
-              get_f_ts relAp f_ts; 
-
-              (* idtac "calling mkRefAppl_res" f_res tail_res fAppl_res; try mkRefAppl_res f_res tail_res fAppl_res; *)
-              let temp3 := fresh "temp3" in
-              assRefl f_ts as temp3;
-              match type of temp3 with
-              | (?f, ?ts) = _ => idtac "f:=" f "ts:=" ts; clear temp3; mkRefAppl f ts res
-              end; try clear f_ts;
-              let res_wit := fresh "res_wit" in
-              pose proof ⌈ res ⌉ as res_wit;
-              let rw := fresh "rw" in
-              assert (⌊ res -⌋ = v) as rw by (try subst res; now autorewrite with f_rel_funct_db);
-              try rewrite rw in res_wit
-            end
-            );
-            repeat nonbranching_invert_axiomatizations;
-            autorewrite with lia_rewrites;
-            quicksolve
-
-            ])) then
-            idtac else fail "No known way to prove the refinement of " tp
-        end
-      end;
-      (* idtac "Created witness " t_wit " for argument " t " of graph relation for " f;*)
-      pose (f (exist dom_ref t t_wit)) as f_t__res_
-    end;*)
 
     let temp_2 := fresh "temp_2" in
     assRefl f_t__res_ as temp_2;
@@ -1542,13 +1405,6 @@ Tactic Notation "recreate_var" constr(relApp) ident(vRes) :=
   | _ ?v => isVar v; match goal with
     | [def: ⌊ ?tm -⌋ = v |- _] => pose (exist _ v ⌈ tm ⌉) as vRes
     end
-  (*| ?frel ?uargs =>
-    match type of frel with
-    | forall (_:UArgList ?uargTps) (_:?T), Prop =>
-      let fAppl_res := fresh "fAppl_res" in
-      let res_def := fresh "res_def" in
-      assert_ho_relAp frel uargs
-    end*)
   | _ =>
     let fAppl_res := fresh "fAppl_res" in
     recreate_refined_term relApp fAppl_res;
@@ -1649,19 +1505,6 @@ Ltac simplInstExistGoal :=
     let v_def := fresh "v_def_" in
     assert (exists (w:_), relAp w) as temp; 
     [|destruct temp as [v v_def]; exists v; intros [_ ?]]*)
-  (*| |- exists v, ?frel ?uargs v => localIsRel frel;
-    let fAppl_res := fresh "fAppl_res" in
-      let res_def := fresh "res_def" in
-    assert_ho_relAp frel uargs;
-    match goal with
-    | [vRes_def: frel uargs ?vRes |- _] =>
-      exists vRes; apply vRes_def
-    end
-  | |- ?frel ?uargs _ => localIsRel frel;
-    let fAppl_res := fresh "fAppl_res" in
-      let res_def := fresh "res_def" in
-    assert_ho_relAp frel uargs;
-    solve [unshelve eassumption]*)
   | |- exists v, ?relAp v /\ ?tm == v => exists tm
   | |- exists v, ?relAp v /\ v == ?tm => exists tm
   end.
@@ -1769,7 +1612,7 @@ Ltac instantiate_goal :=
     
     | [h: ?f_rel_ap ?v |- exists (w:?tp), (?f_rel_ap w) /\ ?p ] => 
       isRelAppl f_rel_ap; 
-      idtac "instanciating the existential in the goal with " v;
+      try (isVar v; idtac "instanciating the existential in the goal with " v);
       exists v; 
       split; [assumption|]
     | [h: ?f_rel_ap ?v |- exists (w:?tp) (_:_), ?f_rel_ap w ] => 
@@ -2076,7 +1919,7 @@ Ltac strong_mkRefAppl f ts Res := idtac "strong_mkRefAppl" f ts Res;
       unfold dom_ref in claimRefl; simpl in claimRefl; 
       match type of claimRefl with
       | ?tp = _ => clear claimRefl; 
-        idtac "claim we need to prove in order to synthesize refined version of argument: " tp;
+        (*idtac "claim we need to prove in order to synthesize refined version of argument: " tp;*)
         match tp with
         | _ => clear t_wit; assert tp as t_wit by (assumption)
         | _ => 
@@ -2104,7 +1947,7 @@ Ltac strong_mkRefAppl f ts Res := idtac "strong_mkRefAppl" f ts Res;
                 apply temp; assumption);
               rewrite rw in gAppl_wit;
               let witTp := type of gAppl_wit in
-              idtac "witTp: " witTp ", tp: " tp; 
+              (*idtac "witTp: " witTp ", tp: " tp; *)
               clear t_wit;
               assert tp as t_wit by (try apply gAppl_wit; 
                 strong_oracle)
@@ -2590,7 +2433,7 @@ Ltac f__f_rel_ih :=
       enough qTp as H; 
       [specialize (h H);
       match type of h with
-      | ?relApp ?u => idtac u;
+      | ?relApp ?u => (*idtac u;*)
         first [set u as uTm in * | pose u as uTm];
         first [set u' as vTm in * | pose u' as vTm];
         replace vTm with uTm;
@@ -2645,8 +2488,9 @@ Ltac f__f_rel_ih :=
         end
       end;
       try apply h
-      | _ => idtac "failure to solve goal: "; print_proof_state
     | |- ?s = ?t => idtac
+    | |- _ => solve [solve_pi_unif_subgoal]
+    | _ => idtac "failure to solve goal: "; print_proof_state
     end; try solve [solve_pi_unif_subgoal]; try timeout 10 quicksolve.
 
 Ltac eager_instantiate_goal :=
@@ -2766,7 +2610,7 @@ Ltac pack_goal_rewriting :=
     ?frel (prArgList args _ _) v |- ?frel _ ?res ] => 
     unfold res; pack_goal_rewriting
   | [f_frel: forall (args: ArgList ?argTps) (v:?resTp), ⌊ ?f args -⌋ = v <->
-    ?frel (prArgList args _ _) v |- ⌊ packPr_proj ?fpack _⌋ _ _ ] => idtac f_frel;
+    ?frel (prArgList args _ _) v |- ⌊ packPr_proj ?fpack _⌋ _ _ ] => (*idtac f_frel;*)
     let tmp := fresh "tmp" in
     set (⌊ packPr_proj fpack _⌋) as tmp;
     simpl in tmp;
