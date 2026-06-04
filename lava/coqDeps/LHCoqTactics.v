@@ -2329,6 +2329,31 @@ Ltac contradicts_brel_hyp p :=
     | relApp true /\ _ => idtac
     | _ /\ relApp true => idtac
     end
+  | [h: ltbZ_rel ?s ?t true |- _] => match p with
+    | (s <? t) == false /\ _ => idtac
+    end
+  | [h: lebZ_rel ?s ?t true |- _] => match p with
+    | (s <=? t) == false /\ _ => idtac
+    end
+  | [h: gebZ_rel ?s ?t true |- _] => match p with
+    | (s >=? t) == false /\ _ => idtac
+    end
+  | [h: gtbZ_rel ?s ?t true |- _] => match p with
+    | (s >? t) == false /\ _ => idtac
+    end
+
+  | [h: ltbZ_rel ?s ?t false |- _] => match p with
+    | (s <? t) == true /\ _ => idtac
+    end
+  | [h: lebZ_rel ?s ?t false |- _] => match p with
+    | (s <=? t) == true /\ _ => idtac
+    end
+  | [h: gebZ_rel ?s ?t false |- _] => match p with
+    | (s >=? t) == true /\ _ => idtac
+    end
+  | [h: gtbZ_rel ?s ?t false |- _] => match p with
+    | (s >? t) == true /\ _ => idtac
+    end
   | |- _ => 
     match p with
     | ?q \/ ?r => contradicts_brel_hyp q; contradicts_brel_hyp r
@@ -2346,6 +2371,10 @@ Ltac destruct_disjs_pre := repeat (match goal with
   | [h: (?s >? ?t) = ?b |- _] => apply eq_sym in h; apply gtbZ_rel_rw in h
   | [h: (?s <=? ?t) = ?b |- _] => apply eq_sym in h; apply lebZ_rel_rw in h
   | [h: (?s >=? ?t) = ?b |- _] => apply eq_sym in h; apply gebZ_rel_rw in h
+  | [h: (?s <? ?t) == ?b |- _] => rewrite eqb_true' in h; apply eq_sym in h; apply ltbZ_rel_rw in h
+  | [h: (?s >? ?t) == ?b |- _] => rewrite eqb_true' in h; apply eq_sym in h; apply gtbZ_rel_rw in h
+  | [h: (?s <=? ?t) == ?b |- _] => rewrite eqb_true' in h; apply eq_sym in h; apply lebZ_rel_rw in h
+  | [h: (?s >=? ?t) == ?b |- _] => rewrite eqb_true' in h; apply eq_sym in h; apply gebZ_rel_rw in h
   end).
 
 Ltac destruct_disjs := first [destruct_disjs_pre; match goal with
@@ -2781,7 +2810,7 @@ Ltac f__f_rel_ex_body :=
   end; 
   autorewrite with f_rel_back; (* this may create existential variables in the goal *)
   repeat shape_based; 
-  try unfold rel_u;
+  try unfold rel_u; simpl_proj;
   repeat destruct_disjs; repeat progress autorewrite with int_rel_back;
   try pack_goal_rewriting; 
   try subst resVal;

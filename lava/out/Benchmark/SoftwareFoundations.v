@@ -5538,7 +5538,6 @@ Proof.
   simpl in *.
   Transparent apply_late_policy.
   all: (existence_lemma_quicksolve apply_late_policy; f__f_rel_ex_body; try f_rel_finish).
-  
 Qed.
 
 #[global] Hint Resolve apply_late_policy_rel_ex: rel_ax_db.

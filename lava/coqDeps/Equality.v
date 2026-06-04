@@ -68,6 +68,11 @@ Proof.
   rewrite H.
   apply true_eqb.
 Qed.
+Lemma eqb_true': forall [A: Type] {instance : LeibnitzEqB} (s: A) (t: A), (s == t) <-> (s = t).
+Proof.
+  intros. 
+  rewrite eqb_true. now unfold equal.
+Qed.
 
 Local Ltac eqb_reflexivity :=
   solve [repeat progress first [reflexivity | 
