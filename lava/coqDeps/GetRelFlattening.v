@@ -1,5 +1,5 @@
 Require Import Logic.FunctionalExtensionality.
-Load GetRelInterface.
+Load QuickTacs.
 
 (* This file contains the instances and definitions for packs *)
 
@@ -1306,16 +1306,17 @@ Global Ltac flattenP P args v :=
   let PZRefl := fresh "PZRefl" in
   pose proof (eq_refl P) as PZRefl; try unfold P in PZRefl;
   match type of PZRefl with
-  | (fun _ _ => ?tp) = _ => exact tp
-  | (fun _ _ _ => ?tp) = _ => exact tp
-  | (fun _ _ _ _ => ?tp) = _ => exact tp
-  | (fun _ _ _ _ _ => ?tp) = _ => exact tp
-  | (fun _ => (fun x => ?wf x /\ True)) = _ => exact (wf v /\ True)
-  | (fun _ _ => (fun x => ?wf x /\ True)) = _ => exact (wf v /\ True)
-  | (fun _ _ _ => (fun x => ?wf x /\ True)) = _ => exact (wf v /\ True)
-  | (fun _ _ _ _ => (fun x => ?wf x /\ True)) = _ => exact (wf v /\ True)
-  | (fun _ _ _ _ _ => (fun x => ?wf x /\ True)) = _ => exact (wf v /\ True)
-  | _ => try (
+  | (fun _ _ _ _ _ => ?tp) = _ => clear PZRefl; exact tp
+  | (fun _ _ _ _ => ?tp) = _ => clear PZRefl; exact tp
+  | (fun _ _ _ => ?tp) = _ => clear PZRefl; exact tp
+  | (fun _ _ => ?tp) = _ => clear PZRefl; exact tp
+  | (fun _ => ?tp) = _ => clear PZRefl; exact tp
+  | (fun _ _ _ _ _ => (fun x => ?wf x /\ True)) = _ => clear PZRefl; exact (wf v /\ True)
+  | (fun _ _ _ _ => (fun x => ?wf x /\ True)) = _ => clear PZRefl; exact (wf v /\ True)
+  | (fun _ _ _ => (fun x => ?wf x /\ True)) = _ => clear PZRefl; exact (wf v /\ True)
+  | (fun _ _ => (fun x => ?wf x /\ True)) = _ => clear PZRefl; exact (wf v /\ True)
+  | (fun _ => (fun x => ?wf x /\ True)) = _ => clear PZRefl; exact (wf v /\ True)
+  | _ = _ => clear PZRefl; try (
     isVar P; 
     match type of P with
     | ?pTp => subst pTp
@@ -1324,7 +1325,7 @@ Global Ltac flattenP P args v :=
     pose P as pz;
     uncons_rw_app_all pz args;
     exact (pz v)
-  end; clear PZRefl.
+  end.
 
 Goal forall (X X':Type) (PX: X' ⤖ X) (Z:Type) (PZ: forall (x:X'), Z -> Prop) 
   (F: forall (x:X'), {v:Z|PZ x v}) (x1 x2: X'), Z -> Prop.

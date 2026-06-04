@@ -77,6 +77,7 @@ Proof.
   (* apply (subCast {x': A | G x' /\ x' = ` x} {y:A | H y} (exist _ (` x) (conj ⌈ x ⌉ eq_refl)) (subCast' A G H x p)). *)
   exact (exist H (` x) (p ⌈ x ⌉)).
 Defined. 
+
 Definition subsumptionCastT (A:Type) [G:A -> Type] (H: A -> Prop) (x: sigT (fun x: A => G x)) (p: G ⌊- x -⌋ -> H ⌊- x -⌋) : {y:A | H y}.
 Proof.
   (* apply (subCast {x': A | G x' /\ x' = ` x} {y:A | H y} (exist _ (` x) (conj ⌈ x ⌉ eq_refl)) (subCast' A G H x p)). *)

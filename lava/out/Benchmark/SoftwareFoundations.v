@@ -585,27 +585,26 @@ Theorem identity_fn_applied_twice
   identity_fn_applied_twice_spec f h b.
 Proof.
   destruct b as [b b_p].
+  refine (let H_24986112: ∃ (f_res : SFBool_u),
+                           getPackRel f
+                           ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) -⌋
+                           f_res
+                           ∧ f_res == ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) -⌋ :=
+           ⌈ h (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌉ in _); clearbody H_24986112.
+  refine (let H_46414952: ⌊ getPackF f
+                             (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌋
+                           == ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋ :=
+           ltac:(solver) in _); clearbody H_46414952.
+  refine (let H_70617616: ∃ (f_res : SFBool_u), getPackRel f b f_res ∧ f_res == b :=
+           ⌈ h (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌉ in _); clearbody H_70617616.
+  refine (let H_64777607: ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋
+                           == b := ltac:(solver) in _); clearbody H_64777607.
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
            ∃ (f_res : SFBool_u),
            getPackRel f b f_res ∧ ∃ (f_res_2 : SFBool_u), getPackRel f f_res f_res_2 ∧ f_res_2 == b)
-          (let H_46414952: ⌊ getPackF f
-                             (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌋
-                           == ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋ :=
-           let H_24986112: ∃ (f_res : SFBool_u),
-                           getPackRel f
-                           ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) -⌋
-                           f_res
-                           ∧ f_res == ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) -⌋ :=
-           ⌈ h (getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver))) ⌉ in
-           ltac:(solver) in
-           let H_64777607: ⌊ getPackF f (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌋
-                           == b :=
-           let H_70617616: ∃ (f_res : SFBool_u), getPackRel f b f_res ∧ f_res == b :=
-           ⌈ h (exist (λ (b : SFBool_u), SFBool_wf b ∧ True) b ltac:(solver)) ⌉ in
-           ltac:(solver) in
-           # unit)
+          (# unit)
           ltac:(solver)).
 Qed.
 
@@ -2094,10 +2093,10 @@ Proof.
   - destruct ds_d5TM as [|].
     + destruct ds_d5TN as [|].
       ** destruct ds_d5TO as [|].
-         ** destruct ds_d5TP as [|].
-            ** refine SFTrue.
-            ** refine SFFalse.
-         ** refine SFFalse.
+         -- destruct ds_d5TP as [|].
+            --- refine SFTrue.
+            --- refine SFFalse.
+         -- refine SFFalse.
       ** refine SFFalse.
     + refine SFFalse.
 Defined.
@@ -3815,10 +3814,9 @@ Proof.
            ∧ ∃ (mult_res_2 : MyNat_u),
              mult_rel p O_u mult_res_2
              ∧ ∃ (plus_res : MyNat_u), plus_rel mult_res_2 mult_res plus_res ∧ plus_res == O_u)
+          (mult_n_O (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)))
           (let H_19900718: ∃ (mult_res : MyNat_u), mult_rel q O_u mult_res ∧ O_u == mult_res :=
-           ⌈ mult_n_O (exist (λ (q : MyNat_u), MyNat_wf q ∧ True) q ltac:(solver)) ⌉ in
-           mult_n_O (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)))
-          ltac:(solver)).
+           ⌈ mult_n_O (exist (λ (q : MyNat_u), MyNat_wf q ∧ True) q ltac:(solver)) ⌉ in ltac:(solver))).
 Qed.
 
 Definition mult_n_Sm_spec (ds_d5TG ds_d5TH : MyNat): Type :=
@@ -3846,15 +3844,7 @@ Proof.
                ∧ ∃ (mult_res_2 : MyNat_u), mult_rel O_u (S_u ds_d5TH) mult_res_2 ∧ plus_res == mult_res_2)
             (# unit)
             ltac:(solver)).
-  - refine (subsumptionCast
-            Unit
-            (λ (VV : Unit),
-             ∃ (mult_res : MyNat_u),
-             mult_rel (S_u n') ds_d5TH mult_res
-             ∧ ∃ (plus_res : MyNat_u),
-               plus_rel mult_res (S_u n') plus_res
-               ∧ ∃ (mult_res_2 : MyNat_u), mult_rel (S_u n') (S_u ds_d5TH) mult_res_2 ∧ plus_res == mult_res_2)
-            (let H_53338901: ∃ (plus_res : MyNat_u),
+  - assert (∃ (plus_res : MyNat_u),
                              plus_rel
                              ⌊ plus
                                (exist (λ (ds_d5TH : MyNat_u), MyNat_wf ds_d5TH ∧ True) ds_d5TH ltac:(solver))
@@ -3872,15 +3862,15 @@ Proof.
                                   (exist (λ (ds_d5TH : MyNat_u), MyNat_wf ds_d5TH ∧ True) ds_d5TH ltac:(solver))) -⌋
                                n'
                                plus_res_2
-                               ∧ plus_res == S_u plus_res_2 :=
+                               ∧ plus_res == S_u plus_res_2) as H_53338901 by (exact
              ⌈ add_succ_r
                (plus
                 (exist (λ (ds_d5TH : MyNat_u), MyNat_wf ds_d5TH ∧ True) ds_d5TH ltac:(solver))
                 (mult
                  (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
                  (exist (λ (ds_d5TH : MyNat_u), MyNat_wf ds_d5TH ∧ True) ds_d5TH ltac:(solver))))
-               (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)) ⌉ in
-             let H_81644031: ∃ (plus_res : MyNat_u),
+               (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)) ⌉). 
+    assert (∃ (plus_res : MyNat_u),
                              plus_rel
                              ⌊ mult
                                (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
@@ -3897,14 +3887,22 @@ Proof.
                                    (exist (λ (ds_d5TH : MyNat_u), MyNat_wf ds_d5TH ∧ True) ds_d5TH ltac:(solver)) -⌋
                                  plus_res_3
                                  ∧ ∃ (plus_res_4 : MyNat_u),
-                                   plus_rel plus_res_3 n' plus_res_4 ∧ plus_res_2 == plus_res_4 :=
-             ⌈ add_assoc
+                                   plus_rel plus_res_3 n' plus_res_4 ∧ plus_res_2 == plus_res_4) as H_81644031 by
+    (exact ⌈ add_assoc
                (exist (λ (ds_d5TH : MyNat_u), MyNat_wf ds_d5TH ∧ True) ds_d5TH ltac:(solver))
                (mult
                 (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver))
                 (exist (λ (ds_d5TH : MyNat_u), MyNat_wf ds_d5TH ∧ True) ds_d5TH ltac:(solver)))
-               (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)) ⌉ in
-             IH_n' ltac:(try clear IH_n'; solver) ds_d5TH ltac:(try clear IH_n'; solver))
+               (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)) ⌉).
+    refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∃ (mult_res : MyNat_u),
+             mult_rel (S_u n') ds_d5TH mult_res
+             ∧ ∃ (plus_res : MyNat_u),
+               plus_rel mult_res (S_u n') plus_res
+               ∧ ∃ (mult_res_2 : MyNat_u), mult_rel (S_u n') (S_u ds_d5TH) mult_res_2 ∧ plus_res == mult_res_2)
+            (IH_n' ltac:(try clear IH_n'; solver) ds_d5TH ltac:(try clear IH_n'; solver))
             ltac:(solver)).
 Qed.
 
@@ -3916,12 +3914,12 @@ Definition mult_n_1_spec (p : MyNat): Type :=
 Theorem mult_n_1 (p : MyNat): mult_n_1_spec p.
 Proof.
   destruct p as [p p_p].
+  assert (H_24755952: ∃ (mult_res : MyNat_u), mult_rel p O_u mult_res ∧ O_u == mult_res) by 
+    (exact ⌈ mult_n_O (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)) ⌉).
   refine (subsumptionCast
           Unit
           (λ (VV : Unit), ∃ (mult_res : MyNat_u), mult_rel p ⌊ one -⌋ mult_res ∧ mult_res == p)
-          (let H_24755952: ∃ (mult_res : MyNat_u), mult_rel p O_u mult_res ∧ O_u == mult_res :=
-           ⌈ mult_n_O (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)) ⌉ in
-           mult_n_Sm (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)) O)
+          (mult_n_Sm (exist (λ (p : MyNat_u), MyNat_wf p ∧ True) p ltac:(solver)) O)
           ltac:(solver)).
 Qed.
 
@@ -4074,17 +4072,17 @@ Proof.
              ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m O_u plus_res_2 ∧ plus_res == plus_res_2)
             (add_0_r (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver)))
             ltac:(solver)).
-  - refine (subsumptionCast
+  - assert (∃ (plus_res : MyNat_u),
+                             plus_rel n' m plus_res
+                             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m n' plus_res_2 ∧ plus_res == plus_res_2)
+    as H_91091155 by (exact ⌈ IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver) ⌉).
+    refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (plus_res : MyNat_u),
              plus_rel (S_u n') m plus_res
              ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m (S_u n') plus_res_2 ∧ plus_res == plus_res_2)
-            (let H_91091155: ∃ (plus_res : MyNat_u),
-                             plus_rel n' m plus_res
-                             ∧ ∃ (plus_res_2 : MyNat_u), plus_rel m n' plus_res_2 ∧ plus_res == plus_res_2 :=
-             ⌈ IH_n' ltac:(try clear IH_n'; solver) m ltac:(try clear IH_n'; solver) ⌉ in
-             plus_n_Sm
+            (plus_n_Sm
              (exist (λ (m : MyNat_u), MyNat_wf m ∧ True) m ltac:(solver))
              (exist (λ (VV : MyNat_u), MyNat_wf VV ∧ True) n' ltac:(solver)))
             ltac:(solver)).

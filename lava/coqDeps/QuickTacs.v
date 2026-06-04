@@ -1,4 +1,4 @@
-Load SubsumptionTacs.
+Load SimpleTacticUtils.
 
 Inductive Unit : Set := unit.
 Global Notation "{{ p }}" := ({_:Unit | p}).
@@ -474,6 +474,9 @@ Ltac shape_based := match goal with
   | |- exists v, ?relAp v /\ v = ?t => exists t; split; [|reflexivity]
   | [h: (exists v, _) /\ ?t |- _] => destruct h as [? ?]
   | [h: ?s /\ (exists v, _) |- _] => destruct h as [? ?]
+  | [h: ?relAp ?w |- exists v, ?relAp v /\ _] => isRelAppl relAp;
+    exists w; split; [exact h|]
+  | [h: ?relAp ?w |- exists v, ?relAp v] => isRelAppl relAp; exists w; exact h
   | |- _ => intro
   end.
 

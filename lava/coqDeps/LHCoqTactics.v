@@ -1,4 +1,5 @@
 Load TacticUtils.
+From Coq Require Import Unicode.Utf8.
 
 Ltac injectivity_in H := injection H; clear H; intros H.
 
@@ -711,6 +712,13 @@ Ltac result_var_unification v w h1 h2 :=
     end
   ].
 
+Ltac post_invert_finish_goal :=
+  match goal with
+  | [f_frel: forall (args: ArgList ?argTps) v, 
+    ⌊ ?f args -⌋ = v <-> ?frel ?prArgs v |- ?frel ?uargs ⌊ ?f ?args -⌋ ] =>
+    replace uargs with prArgs by quicksolve;
+    exact (pr1 (f_frel args (⌊ ?f args -⌋)) eq_refl)
+  end.
 (* "unify" context variables axiomatized to correspond to the same unrefined values via graph relations,
   also do various other simpler unification steps to unify/remove redundant hypothesis *)
 Ltac simplify_hyp :=
@@ -1019,6 +1027,7 @@ Ltac nonbranching_invert_axiomatization :=
       let htp := type of h in
       tryif (non_branching_inversion h) then 
         (idtac "Inverted the axiomatization " h ": " htp;
+        try now post_invert_finish_goal;
         repeat progress timeout 15 axiomatize_next_term)
        else 
         fail 
@@ -1196,9 +1205,11 @@ Ltac assert_wit v pred wit_name := (*idtac "assert_wit" v pred wit_name; *)
         end
       end
 
-    | _ => (* idtac "fallback case in assert_wit for complicated unrefined values that aren't variables axiomatized using a graph relation"; *)
+    | _ => idtac "fallback case in assert_wit for complicated unrefined values that aren't variables axiomatized using a graph relation"; 
            assert (pred v) as wit_name by 
-            (try unfold pred; simpl; try first [clear pred | subst pred]; first [quick_wff_wit | quick_simpl; unify_vars; try (specialize_hyps; try unify_vars); try quicksolve; (*print_proof_state;*) timeout 10 unshelve eauto 50 with solver_db])
+            (try unfold pred; simpl; try first [clear pred | subst pred]; 
+            now repeat progress first [quick_wff_wit | split | quick_simpl; unify_vars; try (specialize_hyps; try unify_vars); try quicksolve; 
+            (*print_proof_state;*) timeout 10 unshelve eauto 50 with solver_db]); idtac "Suceeded in generating witness anyways. "
     end); 
     try subst pred; try simpl in wit_name 
   | ?uargs => isUArgList uargs; idtac "higher-order case in assert_wit " uargs pred wit_name; 
@@ -1590,6 +1601,8 @@ Ltac simplInstExistGoal :=
     let v_def := fresh "v_def_" in 
     destruct h as [v [v_def ?]];
     exists v; apply v_def
+  | |- exists (w:_), ?relAp w /\ ?tm == w => isRelAppl relAp; exists tm; split; [|reflexivity]
+  | |- exists (w:_), ?relAp w /\ ?tm = w => isRelAppl relAp; exists tm; split; [|reflexivity]
   | |- exists (w:_), ?relAp w /\ _ => isRelAppl relAp;
     tryif (match goal with
     | [h: exists (w:_), relAp w |- _] => idtac
@@ -1753,6 +1766,7 @@ Ltac instantiate_hyps := repeat_or_fail instantiate_hyp.
 Ltac instantiate_goal := 
   match goal with
     | |- exists (z:Z), _ => instantiate_lia_goal
+    
     | [h: ?f_rel_ap ?v |- exists (w:?tp), (?f_rel_ap w) /\ ?p ] => 
       isRelAppl f_rel_ap; 
       idtac "instanciating the existential in the goal with " v;
@@ -1804,22 +1818,24 @@ Create HintDb f_rel_funct_db.
 
 Ltac saturate_axiom relApp w :=
   let v_ref := fresh "v_ref" in
-  let v := fresh "v" in
-  let v_def := fresh "v_def" in
-  let temp := fresh "temp_rw" in
-  let v_wit := fresh "v_wit" in
   
   (* Todo: destruct relApp using destrApp, fetch f using getF, fetch its return type using destrFunc and check if the refinement is trivial or already in the context *)
   idtac "Creating a refined term for variable " w;
   recreate_refined_term relApp v_ref;
 
+  let v_wit := fresh "v_wit" in
   pose proof ⌈ v_ref ⌉ as v_wit;
   cbv beta in v_wit;
+  let v := fresh "v" in
+  let v_def := fresh "v_def" in
   axiomatize_term v_ref as v v_def;
   
   applyRwLem v_def;
   simpl_proj;
-  assert (v = w) as temp by (unshelve eauto with f_rel_funct_db; quicksolve);
+  let temp := fresh "temp_rw" in
+  match type of v_def with
+  | _ ?v' => assert (v' = w) as temp by (first [now unify_vars | unshelve eauto with f_rel_funct_db; quicksolve])
+  end;
   rewriteAll temp;
   clear v_def; 
 
@@ -1935,7 +1951,7 @@ Ltac inversion_cleanup :=
     (* backwards reasoning *)
     (concat_either 
       (* backwards reasoning in hypotheses *)
-      (nonbranching_inversion_specialization)
+      (nonbranching_inversion_specialization; try timeout 1 quicksolve)
       (* backwards reasoning in goal *)
       (concat_either (unshelve constructor; timeout 3 quicksolve) 
         (concat_either (progress (autorewrite with f_rel_back; autorewrite with int_rel_back)) 
@@ -2482,6 +2498,10 @@ Ltac lia_preprocessor_step := match goal with
       econstructor; try match goal with
       | [h: ?tp _ |- ?tp _] => apply h
       end; unshelve strong_oracle)]]
+  | |- (?tm ==? ?s) == true ∧ _ ∨ (?tm ==? ?s) == false ∧ _ =>
+    let eq := fresh "eq" in
+    destruct (tm ==? s) eqn:eq; [left; split; [reflexivity|] |right; split; [reflexivity|]];
+    simpl in eq; quick_simpl
   end.
 
 Ltac eager_oracle :=
@@ -2873,8 +2893,13 @@ Ltac eq_refl_rec :=
   | |- ?tm = true => enough (is_true tm) by (now unfold is_true)
   | |- is_true ((?v =? ?v) && _) => 
     replace (v =? v) with true; simpl
-  | |- is_true ((?eq ?v ?v) && _) => 
+  | |- is_true (_ && (?eq ?v ?v)) => 
     replace (eq v v) with true; simpl
+  | |- is_true (?tm && true) => 
+    replace (tm && true) with tm by (
+    let term := fresh "term" in
+    set tm as term; 
+    now destruct term)
   end.
 
 Ltac eqb_eq_lem :=

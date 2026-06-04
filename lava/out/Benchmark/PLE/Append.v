@@ -3139,7 +3139,24 @@ Proof.
                        ∧ ∃ (zip_res_2 : L2_u), zip_rel take_res_2 take_res zip_res_2 ∧ zip_res == zip_res_2)
               (# unit)
               ltac:(solver)).
-  - refine (subsumptionCast
+  - assert (H_59619593: ⌊ zip Emp (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver)) ⌋
+                             == ⌊ zip Emp Emp ⌋) by (solver).
+    assert (H_26013249: ⌊ zip Emp Emp ⌋
+                             == ⌊ zip (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp) Emp ⌋) by
+      (solver).
+    assert (H_90026285: ⌊ zip (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp) Emp ⌋
+                             == ⌊ zip
+                                  (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp)
+                                  (take Zero (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) ⌋) by
+      (solver).
+    assert (H_26027000: ⌊ zip
+                               (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp)
+                               (take Zero (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) ⌋
+                             == ⌊ zip
+                                  (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp)
+                                  (take (length Emp) (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) ⌋) by
+      (solver).
+    refine (subsumptionCast
             Unit
             (λ (VV : Unit),
              ∃ (zip_res : L2_u),
@@ -3153,24 +3170,6 @@ Proof.
                    ∧ ∃ (take_res_2 : L_u),
                      take_rel length_res_2 Emp_u take_res_2
                      ∧ ∃ (zip_res_2 : L2_u), zip_rel take_res_2 take_res zip_res_2 ∧ zip_res == zip_res_2)
-            (let H_59619593: ⌊ zip Emp (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver)) ⌋
-                             == ⌊ zip Emp Emp ⌋ :=
-             ltac:(solver) in
-             let H_26013249: ⌊ zip Emp Emp ⌋
-                             == ⌊ zip (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp) Emp ⌋ :=
-             ltac:(solver) in
-             let H_90026285: ⌊ zip (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp) Emp ⌋
-                             == ⌊ zip
-                                  (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp)
-                                  (take Zero (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) ⌋ :=
-             ltac:(solver) in
-             let H_26027000: ⌊ zip
-                               (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp)
-                               (take Zero (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) ⌋
-                             == ⌊ zip
-                                  (take (length (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) Emp)
-                                  (take (length Emp) (exist (λ (m : L_u), L_wf m ∧ True) m ltac:(solver))) ⌋ :=
-             ltac:(solver) in
-             # unit)
+            (# unit)
             ltac:(solver)).
 Qed.

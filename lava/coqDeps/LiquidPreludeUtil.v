@@ -121,20 +121,32 @@ Ltac solver := repeat first [
     first [lia | oracle | shelve]
   ].
 *)
-Ltac solver_loop :=
-  repeat_or_fail concat_either (quick_wff_wit) (
+Ltac solver_step := concat_either (quick_wff_wit) (
     concat_either (quicksolve) (
       progress concat_either (simpl in *; timeout 1200 progress cleanup_after_hints) (
         lia_preprocessor
         (*concat_either (lia_preprocessor) (split_hyps)*)
       )
     )
-  ); intros.
+  ).
+Ltac solver_loop :=
+  repeat_or_fail solver_step; intros.
 
 Ltac solver := simpl in *; solve [
     solver_loop; progress saturate_context; solver_loop
     | idtac ""; idtac "Falling back to saturating_solver"; fail (*saturating_solver*) ].
 #[global] Hint Extern 20 () => solver : solver_db. 
+
+Ltac letSubCast arg A H x := 
+  let arg_uncast := fresh "arg_uncast" in
+  set x as arg_uncast in *;
+  autounfold with lia_unfold in arg_uncast; simpl in arg_uncast;
+  match type of arg_uncast with
+  | sig ?G => 
+    let arg_p := fresh "arg_p" in
+    assert (G (` arg_uncast) -> H (` arg_uncast)) as arg_p by (subst arg_uncast; solver);
+    refine (let arg : {y:A | H y} := subsumptionCast A H arg_uncast arg_p in _); subst arg_uncast
+  end.
 
 Ltac unsaturating_solver := first [
   quick_wff_wit

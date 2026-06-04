@@ -1,5 +1,5 @@
 Require Import Logic.FunctionalExtensionality.
-Load SimpleTacticUtils.
+Load SubsumptionTacs.
 
 (* This file contains the classes and inductive types for packs *)
 

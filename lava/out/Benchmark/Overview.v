@@ -650,10 +650,9 @@ Proof.
              ∃ (get_res : Z),
              get_rel (Cons_u x l') 0 get_res ∧ ∃ (f_res : Z), getPackRel f get_res f_res ∧ v == f_res)
             (getPackF f
-             (subsumptionCast
-              Z
+             (exist
               (λ (VV : Z), True)
-              (exist (λ (n : Z), ltbZ_rel 5 n true) x ltac:(solver))
+              x
               ltac:(solver)))
             ltac:(solver)).
   - intros; exfalso; solver.
@@ -873,19 +872,32 @@ Proof.
   try revert ds_d27J_p; generalize dependent ds_d27J;
   induction ds_d27K as [y ys IH_ys|];
   intros.
-  - refine (subsumptionCast
-            Unit
-            (λ (VV : Unit),
-             ∃ (get_res : Z),
-             get_rel ds_d27J ds_d27L get_res
-             ∧ ∃ (llen_res : Z),
-               llen_rel (Cons_u y ys) llen_res
-               ∧ ∃ (addZ_res : Z),
-                 addZ_rel ds_d27L llen_res addZ_res
-                 ∧ ∃ (append_res : IList_u),
-                   append_rel (Cons_u y ys) ds_d27J append_res
-                   ∧ ∃ (get_res_2 : Z), get_rel append_res addZ_res get_res_2 ∧ get_res == get_res_2)
-            (let H_87417964: ∃ (get_res : Z),
+  - autounfold with lia_unfold in *; simpl in *.
+    assert ((λ (l : IList_u), IList_wf l ∧ True) ys) as tm1_sub1 by solver.
+    assert ((λ (ds_d27J : IList_u), IList_wf ds_d27J ∧ True) ds_d27J) as tm1_sub2 by solver.
+    letSubCast tm1 IList_u (λ (ds_d27C : IList_u), IList_wf ds_d27C ∧ True)
+      (append
+                 (exist (λ (l : IList_u), IList_wf l ∧ True) ys tm1_sub1)
+                 (exist (λ (ds_d27J : IList_u), IList_wf ds_d27J ∧ True) ds_d27J tm1_sub2)).
+    assert ((λ (n : Z), ltbZ_rel 5 n true) y) as tm2_p by solver.
+    refine (let tm2 := (exist (λ (n : Z), ltbZ_rel 5 n true) y tm2_p) in _).
+    letSubCast tm3 Z 
+      (λ ds_d27D:Z, lebZ_rel 0 ds_d27D true ∧ ∃ llen_res : Z,
+      llen_rel ⌊ tm1 -⌋ llen_res ∧ ltbZ_rel ds_d27D llen_res true)
+    (subsumptionCast
+                 Z
+                 (λ (x_1 : Z), True)
+                 (exist (λ (ds_d27L : Z),
+                         lebZ_rel 0 ds_d27L true
+                         ∧ ∃ (llen_res : Z),
+                           llen_rel ds_d27J llen_res ∧ ltbZ_rel ds_d27L llen_res true) ds_d27L ltac:(solver))
+                 ltac:(solver)
+                 +Z subsumptionCast
+                    Z
+                    (λ (x_2 : Z), True)
+                    (llen (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver)))
+                    ltac:(solver)).
+    refine (let H_87417964: ∃ (get_res : Z),
                              get_rel
                              ⌊ append
                                (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver))
@@ -905,41 +917,21 @@ Proof.
                                     (exist (λ (ds_d27J : IList_u), IList_wf ds_d27J ∧ True) ds_d27J ltac:(solver)) -⌋)
                                  addZ_res
                                  get_res_2
-                                 ∧ get_res == get_res_2 :=
-             ⌈ thm1
-               (subsumptionCast
-                IList_u
-                (λ (ds_d27C : IList_u), IList_wf ds_d27C ∧ True)
-                (append
-                 (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver))
-                 (exist (λ (ds_d27J : IList_u), IList_wf ds_d27J ∧ True) ds_d27J ltac:(solver)))
-                ltac:(solver))
-               (exist (λ (n : Z), ltbZ_rel 5 n true) y ltac:(solver))
-               (subsumptionCast
-                Z
-                (λ (ds_d27D : Z),
-                 lebZ_rel 0 ds_d27D true
-                 ∧ ∃ (llen_res : Z),
-                   llen_rel
-                   ⌊ append
-                     (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver))
-                     (exist (λ (ds_d27J : IList_u), IList_wf ds_d27J ∧ True) ds_d27J ltac:(solver)) -⌋
-                   llen_res
-                   ∧ ltbZ_rel ds_d27D llen_res true)
-                (subsumptionCast
-                 Z
-                 (λ (x_1 : Z), True)
-                 (exist (λ (ds_d27L : Z),
-                         lebZ_rel 0 ds_d27L true
-                         ∧ ∃ (llen_res : Z),
-                           llen_rel ds_d27J llen_res ∧ ltbZ_rel ds_d27L llen_res true) ds_d27L ltac:(solver))
-                 ltac:(solver)
-                 +Z subsumptionCast
-                    Z
-                    (λ (x_2 : Z), True)
-                    (llen (exist (λ (l : IList_u), IList_wf l ∧ True) ys ltac:(solver)))
-                    ltac:(solver))
-                ltac:(solver)) ⌉ in
+                                 ∧ get_res == get_res_2 := ⌈ thm1 tm1 tm2 tm3 ⌉
+              in _); clearbody H_87417964.
+    refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∃ (get_res : Z),
+             get_rel ds_d27J ds_d27L get_res
+             ∧ ∃ (llen_res : Z),
+               llen_rel (Cons_u y ys) llen_res
+               ∧ ∃ (addZ_res : Z),
+                 addZ_rel ds_d27L llen_res addZ_res
+                 ∧ ∃ (append_res : IList_u),
+                   append_rel (Cons_u y ys) ds_d27J append_res
+                   ∧ ∃ (get_res_2 : Z), get_rel append_res addZ_res get_res_2 ∧ get_res == get_res_2)
+            (
              IH_ys
              ltac:(try clear IH_ys; solver)
              ds_d27J

@@ -125,14 +125,6 @@ Ltac multivariable_induction indVars conds lemmaVars :=
   intros;
   destruct_conds conds.
 
-(* destructs a function application exp into a pair of shape (f, (t1, (t2, ... (tn, tt)))) and pose it as Res *)
-Ltac destrApp exp Res := 
-  match exp with
-  | ?f' ?t' => 
-    prepend_res Res t'; destrApp f' Res
-  | _ => prepend_res Res (exp _::_ _nil)
-  end.
-
 Ltac specializes recCalls :=
   match recCalls with
   | _nil => idtac
@@ -154,7 +146,10 @@ Global Tactic Notation "transparent" "assert" constr(type) "as" ident(name) "by"
     idtac "transparent assert sucessful: " name ": " tp.
   (* do_no_subgoals (unshelve assert type as name by (now tac)). *)
   *)
-  do_nonbranching (unshelve refine (let name := (_ : type) in _); [now tac|]).
+  unshelve refine (let name : type := ltac:(tac) in _).
+
+Global Tactic Notation "bind" ident(name) ":" constr(type) ":=" constr(term) :=
+  refine (let name : type := term in _); clearbody name.
 
 Tactic Notation "autospecialize'" hyp(h) "by" tactic(tac) :=
   let temp := fresh "temp_autospecialize_" in
@@ -229,7 +224,7 @@ Ltac get_goal_ret Res :=
 Ltac rewriteAll h :=
   match type of h with
   | ?v = ?t => tryif (isVar v) then 
-    first [subst v | 
+    first [
       first [
         progress rewrite h in *; clear h | 
         revert h; intros -> |
@@ -262,66 +257,6 @@ Ltac introsRwRL :=
 Ltac lookupFuncTp tm := 
   let tp := type of tm in
   exact tp.
-
-Inductive LookupItems : Set :=
-  | rel : LookupItems
-  | rwLem : LookupItems
-  | functionhood : LookupItems.
-Class dictionary (item: LookupItems) {A : Type} (a : A) := { 
-  ty : Type; 
-  lookup' : ty
-}.
-Definition lookup item {A:Type} a {instance : dictionary item a}: ty := (@lookup' item A a) instance.
-
-Class getFunc {B: Type} (b:B) := {
-  f_tp : Type;
-  getF' : f_tp
-}.
-Definition getF {B:Type} (b:B) {instance: getFunc b}: f_tp := (@getF' B b) instance.
-
-Ltac test_term tm := 
-  let temp := fresh "temp" in
-  pose tm as temp;
-  clear temp.
-
-Ltac localLookupRel f Res :=
-  match type of f with
-  | forall (args:ArgList ?argTps), ?rTp =>
-    match goal with
-    | [f_frel: forall (args: ArgList argTps) v, ⌊ f args -⌋ = v <-> ?frel _ v |- _] =>
-      pose frel as Res
-    end
-  end.
-Ltac localLookupFunct rel Res :=
-  match goal with
-  | [funct: forall (uargs : UArgList _) (v v' : Z), rel uargs v -> rel uargs v' -> v = v' |- _] =>
-    pose rel as Res
-  end.
-
-Ltac hasLocalRel f :=
-  let res := fresh "res" in
-  localLookupRel f res;
-  try clear res.
-
-Ltac has_rel f := first [test_term (lookup rel f) | hasLocalRel f].
-Ltac has_no_rel f := tryif (has_rel f) then fail else idtac.
-
-
-Ltac localLookupFunc rel Res :=
-  match type of rel with
-  | forall (_:UArgList ?uargTps) (_:?T), Prop =>
-    match goal with
-    | [f_frel: forall (args: ArgList ?argTps) (v: T), ⌊ ?f args -⌋ = v <-> rel _ v |- _] =>
-      pose f as Res
-    end
-  end.
-Ltac localIsRel rel :=
-  let res := fresh "res" in
-  localLookupFunc rel res;
-  try clear res.
-
-Ltac is_rel f_rel := first [test_term (getF f_rel) | localIsRel f_rel].
-Ltac is_no_rel f_rel := tryif (test_term (getF f_rel)) then fail else idtac.
 
 Ltac localLookupRwLem f Res :=
   match type of f with
@@ -364,22 +299,6 @@ Ltac getRwLemRefl f ReflRes :=
   assRefl res as ReflRes;
   simpl in ReflRes.
 
-Ltac isRelAppl fApplV :=
-  let fAppl := fresh "fAppl" in
-  pose fApplV as fAppl; try unfold fApplV in fAppl;
-  let fApplRefl := fresh "fApplRefl" in
-  assRefl fAppl as fApplRefl;
-  match type of fApplRefl with
-  | ?fApp = _ => clear fApplRefl; 
-    let fAppD := fresh "fAppD" in
-    destrApp fApp fAppD;
-    let fAppRefl := fresh "fAppRefl" in
-    assRefl fAppD as fAppRefl;
-    match type of fAppRefl with
-    | ((?f_rel _::_ _nil) _::_ _) = _ => clear fAppRefl; is_rel f_rel
-    end
-  end.
-
 Ltac isFApplTm fApp :=
   let fAppD := fresh "fAppD" in
   destrApp fApp fAppD;
@@ -419,7 +338,7 @@ Ltac inversion_precheck h :=
 
 Global Tactic Notation "non_branching_inversion" hyp(h) := first 
   [ do_nonbranching strong_inversion h 
-  | inversion_precheck h; do_nonbranching (strong_inversion h; try (exfalso; timeout 1 quicksolve))].
+  | inversion_precheck h; do_nonbranching (strong_inversion h; try (exfalso; timeout 60 quicksolve))].
 
 Tactic Notation "is_rel_appl_h" hyp(h) :=
   let tp := type of h in
