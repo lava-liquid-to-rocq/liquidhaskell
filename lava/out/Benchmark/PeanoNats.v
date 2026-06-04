@@ -960,19 +960,7 @@ Proof.
   try revert ds_d4mM_p; generalize dependent ds_d4mM;
   induction ds_d4mL as [m IH_m|];
   intros.
-  - refine (subsumptionCast
-            Unit
-            (λ (VV : Unit),
-             ∃ (add_res : Nats_u),
-             add_rel (Suc_u m) ds_d4mM add_res
-             ∧ ∃ (mult_res : Nats_u),
-               mult_rel add_res ds_d4mN mult_res
-               ∧ ∃ (mult_res_2 : Nats_u),
-                 mult_rel ds_d4mM ds_d4mN mult_res_2
-                 ∧ ∃ (mult_res_3 : Nats_u),
-                   mult_rel (Suc_u m) ds_d4mN mult_res_3
-                   ∧ ∃ (add_res_2 : Nats_u), add_rel mult_res_3 mult_res_2 add_res_2 ∧ mult_res == add_res_2)
-            (let H_55779234: ∃ (add_res : Nats_u),
+  - assert (H_55779234: ∃ (add_res : Nats_u),
                              add_rel
                              ⌊ mult
                                (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver))
@@ -997,16 +985,28 @@ Proof.
                                      (exist (λ (ds_d4mM : Nats_u), Nats_wf ds_d4mM ∧ True) ds_d4mM ltac:(solver))
                                      (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)) -⌋
                                    add_res_4
-                                   ∧ add_res_2 == add_res_4 :=
-             ⌈ add_assoc
+                                   ∧ add_res_2 == add_res_4) by
+      (exact ⌈ add_assoc
                (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver))
                (mult
                 (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver))
                 (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver)))
                (mult
                 (exist (λ (ds_d4mM : Nats_u), Nats_wf ds_d4mM ∧ True) ds_d4mM ltac:(solver))
-                (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver))) ⌉ in
-             IH_m
+                (exist (λ (ds_d4mN : Nats_u), Nats_wf ds_d4mN ∧ True) ds_d4mN ltac:(solver))) ⌉).
+    refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∃ (add_res : Nats_u),
+             add_rel (Suc_u m) ds_d4mM add_res
+             ∧ ∃ (mult_res : Nats_u),
+               mult_rel add_res ds_d4mN mult_res
+               ∧ ∃ (mult_res_2 : Nats_u),
+                 mult_rel ds_d4mM ds_d4mN mult_res_2
+                 ∧ ∃ (mult_res_3 : Nats_u),
+                   mult_rel (Suc_u m) ds_d4mN mult_res_3
+                   ∧ ∃ (add_res_2 : Nats_u), add_rel mult_res_3 mult_res_2 add_res_2 ∧ mult_res == add_res_2)
+            (IH_m
              ltac:(try clear IH_m; solver)
              ds_d4mM
              ltac:(try clear IH_m; solver)
@@ -1277,19 +1277,19 @@ Proof.
   destruct ds_d4mu as [ds_d4mu ds_d4mu_p].
   destruct ds_d4mt as [m|].
   - induction ds_d4mu as [lq_anf7205759403792810453 IH_lq_anf7205759403792810453|].
-    + refine (subsumptionCast
+    + assert (H_27835136: ∃ (add_res : Nats_u),
+                               add_rel (Suc_u m) lq_anf7205759403792810453 add_res
+                               ∧ ∃ (sub_res : Nats_u),
+                                 sub_rel add_res lq_anf7205759403792810453 sub_res ∧ sub_res == Suc_u m) by
+        (exact ⌈ IH_lq_anf7205759403792810453 ltac:(try clear IH_lq_anf7205759403792810453; solver) ⌉).
+      refine (subsumptionCast
               Unit
               (λ (VV : Unit),
                ∃ (add_res : Nats_u),
                add_rel (Suc_u m) (Suc_u lq_anf7205759403792810453) add_res
                ∧ ∃ (sub_res : Nats_u),
                  sub_rel add_res (Suc_u lq_anf7205759403792810453) sub_res ∧ sub_res == Suc_u m)
-              (let H_27835136: ∃ (add_res : Nats_u),
-                               add_rel (Suc_u m) lq_anf7205759403792810453 add_res
-                               ∧ ∃ (sub_res : Nats_u),
-                                 sub_rel add_res lq_anf7205759403792810453 sub_res ∧ sub_res == Suc_u m :=
-               ⌈ IH_lq_anf7205759403792810453 ltac:(try clear IH_lq_anf7205759403792810453; solver) ⌉ in
-               add_suc_r
+              (add_suc_r
                (Suc (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver)))
                (exist (λ (n : Nats_u), Nats_wf n ∧ True) lq_anf7205759403792810453 ltac:(solver)))
               ltac:(solver)).
@@ -1302,19 +1302,19 @@ Proof.
               (add_zero_r (exist (λ (n : Nats_u), Nats_wf n ∧ True) m ltac:(solver)))
               ltac:(solver)).
   - induction ds_d4mu as [lq_anf7205759403792810445 IH_lq_anf7205759403792810445|].
-    + refine (subsumptionCast
+    + assert (H_70230881: ∃ (add_res : Nats_u),
+                               add_rel Zero_u lq_anf7205759403792810445 add_res
+                               ∧ ∃ (sub_res : Nats_u),
+                                 sub_rel add_res lq_anf7205759403792810445 sub_res ∧ sub_res == Zero_u) by
+        (exact ⌈ IH_lq_anf7205759403792810445 ltac:(try clear IH_lq_anf7205759403792810445; solver) ⌉).
+      refine (subsumptionCast
               Unit
               (λ (VV : Unit),
                ∃ (add_res : Nats_u),
                add_rel Zero_u (Suc_u lq_anf7205759403792810445) add_res
                ∧ ∃ (sub_res : Nats_u),
                  sub_rel add_res (Suc_u lq_anf7205759403792810445) sub_res ∧ sub_res == Zero_u)
-              (let H_70230881: ∃ (add_res : Nats_u),
-                               add_rel Zero_u lq_anf7205759403792810445 add_res
-                               ∧ ∃ (sub_res : Nats_u),
-                                 sub_rel add_res lq_anf7205759403792810445 sub_res ∧ sub_res == Zero_u :=
-               ⌈ IH_lq_anf7205759403792810445 ltac:(try clear IH_lq_anf7205759403792810445; solver) ⌉ in
-               add_suc_r Zero (exist (λ (n : Nats_u), Nats_wf n ∧ True) lq_anf7205759403792810445 ltac:(solver)))
+              (add_suc_r Zero (exist (λ (n : Nats_u), Nats_wf n ∧ True) lq_anf7205759403792810445 ltac:(solver)))
               ltac:(solver)).
     + refine (subsumptionCast
               Unit

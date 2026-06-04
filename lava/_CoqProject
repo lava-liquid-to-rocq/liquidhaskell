@@ -23,9 +23,6 @@ coqDeps/LHCoqTactics.v
 coqDeps/LiquidPreludeUtil.v
 -R out Output
 
-
-out/Benchmark/Overview.v
-
 # manual/Benchmark/SFGradeExample0.v
 # manual/Benchmark/SFGradeExample.v
 
@@ -48,11 +45,12 @@ out/Benchmark/RBinsToBins.v
 out/Benchmark/PeanoNats.v
 # out/Benchmark/Half.v
 out/Benchmark/SoftwareFoundations.v
+out/Benchmark/Overview.v
 
 #out/TranslationTests/FunctorId.v
 #out/TranslationTests/FunctorMaybe.v
 #out/TranslationTests/FunctorList.v
-out/Todo/TranslationTests/ApplicativeId.v
+# out/Todo/TranslationTests/ApplicativeId.v
 
 # subsumed by SoftwareFoundations, Overview, PeanoNats resp.
 # out/Benchmark/GradeExample.v
