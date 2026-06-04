@@ -8,6 +8,7 @@
 ### λr to Rocq:
 - [ ] fix position of assertions using proof combinators
 - [ ] bind arguments to function calls in hints if they appear in the type of subsequent hints, possibly bind other recurring subterms as well
+- [ ] fix [missing brackets](https://github.com/lava-liquid-to-rocq/liquidhaskell/blob/e161493afe617ed8e9ca5bd4cb10e0972b9cb795/lava/out/Benchmark/PeanoNats.v#L1330-L1331) in printer
 - [X] fix printing of recurring branch delimiters -, +, *, ...
 - [X] fix overload of names imported in Rocq (ex: SFBin.Z)
 - [X] fix type annotation in andb_commutative
@@ -25,9 +26,9 @@
       parameters but also of the result. we can also factorize common assumption in
       disjuncts (e.g. in applyLatePolicy)
 - [ ] cleanup Rocq grammar
-- [ ] bind opaque subsumption witnesses of hints before translating the hints themselves for simpler proof states and reduced memory-load
+- [ ] bind opaque subsumption witnesses of hints before translating the hints themselves for simpler proof states and reduced memory-load (using the letSubCast tactic)
 - [ ] ensure let bound subterms and hints are declared one at a time (one binding per tactic, using refine (let : ... := ... in _) for typed hints (or assert if Prop-sorted) or pose proof for untyped ones)
-- [ ] use clearbody after let-bound Prop-sorted hints to cleanup the proof state
+- [ ] assert injection and subsumption witnesses of hints before translating the hints, resulting in easier to read proof states and avoiding proving subgoals twice
 - [ ] simplify subsumptionCasts of existentials
 
 ## Extension with higher-order datatypes
