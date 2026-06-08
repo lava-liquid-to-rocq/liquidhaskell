@@ -6,10 +6,12 @@ module Lava.TypingEnvironment where
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Set (fromList)
+
 import Text.PrettyPrint.HughesPJClass
 
-import Language.Haskell.Liquid.RefCore.Calculus
 import Language.Haskell.Liquid.RefCore.Names (Id, freshVar)
+
+import Lava.CalculusUtil
 
 data TypeError
   = WfErr Doc

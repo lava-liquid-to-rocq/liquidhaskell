@@ -13,9 +13,8 @@ import Data.Bifunctor (second)
 import Data.Maybe (fromMaybe)
 import Text.PrettyPrint.HughesPJClass as PP
 
-import Language.Haskell.Liquid.RefCore.Names
-import Language.Haskell.Liquid.RefCore.Calculus as LH
-
+import Lava.RocqNames
+import Lava.CalculusUtil as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil
 

@@ -13,14 +13,14 @@ import Data.List (groupBy, mapAccumL, nub, union, (\\))
 import qualified Data.Map as Map
 import Data.Maybe (isNothing)
 import qualified Data.Set as Set
+
 import Text.PrettyPrint as PP
 import Text.PrettyPrint.HughesPJClass hiding (first)
 
 import Debug.Trace (trace)
 
-import Language.Haskell.Liquid.RefCore.Names
-import Language.Haskell.Liquid.RefCore.Calculus as LH
-
+import Lava.RocqNames
+import Lava.CalculusUtil as LH
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil as Coq
 import Lava.Translation

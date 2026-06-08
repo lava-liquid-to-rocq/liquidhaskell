@@ -10,11 +10,10 @@ module Language.Haskell.Liquid.RefCore.Extract
   , extractCalculus
   , writeIlh
   , writeOut
-  , calcMetaFor
   , ilhPath
   , writeIlhBin
-  , readIlhBin
   , ilhBinPath
+  , getOutputFolder
   ) where
 
 import Control.Monad (unless)
@@ -99,20 +98,6 @@ writeIlh meta calcSource = do
     createDirectoryIfMissing True (cmOutputFolder meta)
     writeOut (cmOutputFolder meta) (cmModuleName meta) ILHNoElab PP.empty calcSource
 
--- | Reconstruct the 'CalcMeta' that @writeIlh@ used, given just the module
---   name and the source file path. Used by downstream tools that want to
---   locate the .ilh file without re-running extraction.
---
---   Note: 'cmHasImports' is set to 'False' here. Consumers that need the
---   correct value should derive it from the parsed .ilh contents.
-calcMetaFor :: ModuleName -> FilePath -> IO CalcMeta
-calcMetaFor modName filename = do
-    workingPath <- getCurrentDirectory
-    let moduleId = moduleNameString modName
-        modulename = last (split '.' moduleId)
-        outputFolder = getOutputFolder moduleId filename workingPath
-    pure (CalcMeta outputFolder modulename False)
-
 -- | Path that 'writeIlh' wrote to.
 ilhPath :: CalcMeta -> FilePath
 ilhPath meta = cmOutputFolder meta </> (cmModuleName meta ++ outPostfix ILHNoElab)
@@ -127,9 +112,6 @@ writeIlhBin meta calcSource = do
     let path = ilhBinPath meta
     putStrLn ("Writing serialized Calculus to " ++ path)
     Bin.encodeFile path calcSource
-
-readIlhBin :: FilePath -> IO [Calc.Decl]
-readIlhBin = Bin.decodeFile
 
 -- | Pretty-print a list of declarations to a file. Used by both extract (.ilh)
 --   and the RefCore driver (.ilh after elaboration, .v Coq output).
@@ -175,6 +157,7 @@ getSrcFolder moduleId filename workingPath = joinPath (getSrcPath moduleId filen
 
 getOutputFolder :: String -> String -> String -> FilePath
 getOutputFolder moduleId filename workingPath =
+    -- TODO customize output folder path
     implementationFolder </> "lava" </> "out" </> subfolder
   where
     modulePrefixes = init $ split '.' moduleId

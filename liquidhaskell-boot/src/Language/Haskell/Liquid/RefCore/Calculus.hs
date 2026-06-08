@@ -10,20 +10,18 @@
 module Language.Haskell.Liquid.RefCore.Calculus where
 
 import Prelude hiding (lookup, (<>))
-import Data.Bifunctor (first, second)
+import Data.Bifunctor (first)
 import Data.Binary (Binary)
 import Data.Data
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
+
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 
-import Debug.Trace (trace)
-
 import GHC.Generics (Generic)
-
 import Language.Haskell.Liquid.RefCore.Names (Id, freshVar)
 
 -- * The grammar
@@ -180,11 +178,6 @@ unitTp = TC unitTpName
 unitTpName = "Unit"
 unitTm = DC unitTmName
 unitTmName = "unit"
-
-builtinDCs :: [Reft]
-builtinTCs :: [BaseType]
-builtinDCs = [ttTm, ffTm, unitTm]
-builtinTCs = [boolTp, unitTp]
 {- ORMOLU_ENABLE -}
 
 -- * Functions on the terms
@@ -195,117 +188,17 @@ builtinTCs = [boolTp, unitTp]
 mkVar :: Id -> Reft
 mkVar x = Var x Nothing Local
 
-mkVarWithAnnot :: Id -> RefType -> Localization -> Reft
-mkVarWithAnnot x tpx loc =
-  let typeAnnot =
-        case arrs tpx of
-          ([], _) -> Nothing
-          (_, (_, retTp, _)) -> Just retTp
-   in Var x typeAnnot loc
-
--- | Wrapper for And, defined as TT for empty conjuncts list
-mkAnd :: [Reft] -> Reft
-mkAnd args = if null args' then ttTm else foldl1 (Bop And) args'
-  where
-    args' = filter (/= ttTm) args
-
--- | mkSub(r, from, to) makes a subsumption cast unless tp1 = tp2
---   Should we collapse casts? Would it hide intermediate properties needed for automation?
-mkSub :: Reft -> RefType -> RefType -> Reft
-mkSub r from to | from == to = r
-mkSub r from to = Sub r from to
-
--- | Build a projection, removing the outer injection or subsumptions.
-mkProj :: ProjKind -> Reft -> Reft
-mkProj _ (Inj r _) = r
-mkProj k (Sub r _ _) = mkProj k r
-mkProj k r = Proj k r
-
--- | Make a refinement type
-mkRefType :: (Id, BaseType, Reft) -> RefType
-mkRefType (x, a, r) = RefType x a r
-
--- ** Destructions
-
--- | Extracts the elements out of an ArrType and raises an error for another type
-fromArrType :: RefType -> (Id, RefType, RefType)
-fromArrType (ArrType x tpx tp) = (x, tpx, tp)
-fromArrType _ = error "ArrType expected"
-
 -- ** Other functions
-
--- | Arity of a refinement type
-arity :: RefType -> Integer
-arity (ArrType _ _ tp) = 1 + arity tp
-arity (RefType {}) = 0
-
--- | defaultRef tp := {VV : tp | True}
-defaultRef :: BaseType -> RefType
-defaultRef tp = RefType "VV" tp ttTm
 
 -- | arrs(R) := (x_i:R_i)_{i ≤ n} -> R' where n is maximal
 arrs :: RefType -> ([(Id, RefType)], (Id, BaseType, Reft))
 arrs (RefType x a r) = ([], (x, a, r))
 arrs (ArrType x tpx tp) = ((x, tpx) :) `first` arrs tp
 
--- | tpArgs(x_i:R_i|r_i)_{i ≤ n} -> R) = [x_i]_{i ≤ n}
-tpArgs :: RefType -> [Id]
-tpArgs = map fst . fst . arrs
-
--- | tpArgsArLoc((x_i:R_i|r_i)_{i ≤ n} -> R) = [Var x_i R_i Local]_{i ≤ n}
--- Used to give the initial patterns on the parameters of a function
-tpArgsArLoc :: RefType -> [Reft]
-tpArgsArLoc = map (\(x, tp) -> mkVarWithAnnot x tp Local) . fst . arrs
-
 -- | Flattens an application
 apps :: Reft -> (Reft, [Reft])
 apps (App tm1 tm2) = let (hd, args) = apps tm1 in (hd, args ++ [tm2])
 apps tm = (tm, [])
-
--- | Head variable of an application (also when projected)
-headVar :: Reft -> Maybe Id
-headVar r = case fst (apps r) of
-  Var f _ _ -> Just f
-  Proj _ (Var f _ _) -> Just f
-  _ -> Nothing
-
--- | Gives the bop corresponding to a pop
-popToBop :: ProofOp -> Bop
-popToBop PEq = Eq
-popToBop PLeq = Leq
-popToBop PGeq = Geq
-
--- | Whether a refinement is a value: a local variable, a constructor applied to values, a literal or a projected value
-isValue :: Reft -> Bool
-isValue (Var _ _ Local; Var _ _ (Recursive {}); StringLit _; IntLit _; FloatLit _; DC _) = True
-isValue r@(App {}) =
-  case apps r of
-    (DC _, args) -> all isValue args
-    _ -> False
-isValue (QMark r _ _) = isValue r
-isValue (Pop _ _ r) = isValue r
-isValue (Sub r _ _) = isValue r
-isValue (Inj r _) = isValue r
-isValue (Proj _ r) = isValue r
-isValue (Var {}; Neg {}; Bop {}) = False
-
-isRecTC :: Id -> [(Id, RefType)] -> Bool
-isRecTC tc = any (isRecursive . snd)
-  where
-    isRecursive tp = any (isTC . snd) (fst $ arrs tp)
-    isTC tp' = case tp' of RefType _ (TC tc') _ -> tc' == tc; _ -> False
-
--- | Harmonize the names of the variables bound by arrows:
---
--- > harmonizeBinderNames(x1:{x1':tp1 | r1} -> … -> xn:{xn':tpn | rn} -> {v:tp | rv})
--- >   = (x1:{x1:tp1 | r1{x1'/x1}} -> … -> xn:{xn:tpn | rn{xn'/xn}} -> {v:tp | rv})
-harmonizeBinderNames :: RefType -> RefType
-harmonizeBinderNames (ArrType x tpx tp) =
-  let tpx' = case tpx of
-        RefType x' a r -> RefType x a (rename x x' r)
-        ArrType {} -> harmonizeBinderNames tpx
-   in ArrType x tpx' $ harmonizeBinderNames tp
-harmonizeBinderNames tp@(RefType {}) = tp
 
 -- | Rename all the arguments of an arrow:
 --
@@ -326,40 +219,6 @@ renameParams = aux []
           error . render $ "Name clash while renaming variable" <+> text x <+> "to" <+> text y <+> "in" <+> pPrint tp0
     aux σ (y : ys) (ArrType x tpx tp) =
       ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
-
--- | Remove projections around first-order arguments of the type
--- If the flag is True, remove them everywhere.
--- This function should be used when only variables appear inside projections.
-removeArgProjs :: Bool -> RefType -> RefType
-removeArgProjs allProjs tp =
-  let (args, (v, retTp, retReft)) = arrs tp
-      args' = map (second (removeProjs allProjs Set.empty)) args
-      ret' = removeProjs allProjs Set.empty (RefType v retTp retReft)
-   in foldr (\(x, tpx) acc -> ArrType x tpx acc) ret' args'
-
--- | Remove projections around first-order variables in a type
--- The first parameter contains the variables for those we should keep the projection:
--- variables introduced by the arrow of a HO parameter.
--- The second parameter contains variables whose projection should not be erased
-removeProjs :: Bool -> Set Id -> RefType -> RefType
--- In x:tpx -> tp, we do not want to remove projections around the occurences of x in tp (if allProjs is False)
-removeProjs allProjs vars (ArrType x tpx tp') =
-  ArrType x (removeProjs allProjs vars tpx) (removeProjs allProjs (x `Set.insert` vars) tp')
-removeProjs allProjs vars' (RefType y a reft) = RefType y a (aux vars' reft)
-  where
-    aux _ (Proj _ r) | allProjs = r
-    aux vars projx@(Proj _ (Var x Nothing loc)) =
-      if x `elem` vars then projx else Var x Nothing loc
-    aux _ projf@(Proj _ (Var _ (Just _) _)) = projf
-    aux _ p@(Proj {}) =
-      error $ "Calculus.removeArgProjs should only be used at top-level, when projections are made only on local variables. Found term: " ++ prettyShow p
-    aux _ r@(Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = r
-    aux vars (App r1 r2) = App (aux vars r1) (aux vars r2)
-    aux vars (Neg r) = Neg (aux vars r)
-    aux vars (Bop bop r1 r2) = Bop bop (aux vars r1) (aux vars r2)
-    aux vars (QMark r rh rp) = QMark (aux vars r) (aux vars rh) (aux vars rp)
-    aux vars (Pop pop r1 r2) = Pop pop (aux vars r1) (aux vars r2)
-    aux _ (Sub {}; Inj {}) = error "Subsumption or injection cast found in type refinement in Calculus.removeArgProjs."
 
 -- * Typeclass related to free variables
 
@@ -388,10 +247,6 @@ rename new old tm =
   case Map.lookup old $ freeVarsAnnot tm of
     Nothing -> tm
     Just (tp, loc) -> subst (Var new tp loc) old tm
-
--- | renameFresh(x,tm) gives x a fresh name in tm
-renameFresh :: (HasVars a) => Id -> a -> a
-renameFresh x tm = rename (fresh x tm) x tm
 
 -- | Apply a list of renamings, starting from the right
 renames :: (HasVars a) => [(Id, Id)] -> a -> a
@@ -685,8 +540,3 @@ instance Show ProofOp where
 
 instance Pretty ProofOp where
   pPrint = text . show
-
-traceFunc :: Id -> [Doc] -> Bool
-traceFunc f args =
-  let doc = text f <> parens (hsep $ punctuate comma args)
-   in trace (render doc) False

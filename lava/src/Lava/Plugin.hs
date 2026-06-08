@@ -4,7 +4,7 @@
 --
 --   > {-# OPTIONS_GHC -fplugin=LiquidHaskellBoot -fplugin=Lava.Plugin #-}
 --
---   With @--lava@ (or @--lava-equations@) passed to the LH plugin, LH writes
+--   With @--refcore@ passed to the LH plugin, LH writes
 --   the .ilh_no_elab.bin file; this plugin then parses it and runs the Rocq pipeline.
 --
 --   Plugin options:
@@ -14,15 +14,14 @@ module Lava.Plugin (plugin) where
 
 import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
-import System.Directory (doesFileExist)
+import System.Directory (doesFileExist, getCurrentDirectory)
 
-import GHC.Plugins (CommandLineOption, Plugin (..), defaultPlugin, purePlugin)
+import GHC.Plugins (CommandLineOption, ModuleName, Plugin (..), defaultPlugin, moduleNameString, purePlugin)
 import GHC.Tc.Types (TcGblEnv, TcM)
 import GHC.Unit.Module.ModSummary (ModSummary (..))
 import GHC.Unit.Types (moduleName)
-
 import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
-import           Language.Haskell.Liquid.RefCore.Extract (CalcMeta (..), calcMetaFor, ilhBinPath)
+import           Language.Haskell.Liquid.RefCore.Extract (CalcMeta (..), getOutputFolder, ilhBinPath)
 
 import Lava.IlhParse (parseIlh)
 import Lava.Translate (runFromCalculus)
@@ -48,3 +47,21 @@ lavaHook opts ms gblEnv =
                    _ <- runFromCalculus meta' calcSource equations
                    pure ()
      pure gblEnv
+
+-- | Reconstruct the 'CalcMeta' that @writeIlh@ used, given just the module
+--   name and the source file path, so the .ilh file can be located without
+--   re-running extraction.
+--
+--   Note: 'cmHasImports' is set to 'False' here; it is derived from the parsed
+--   .ilh contents in 'lavaHook'.
+calcMetaFor :: ModuleName -> FilePath -> IO CalcMeta
+calcMetaFor modName filename = do
+    workingPath <- getCurrentDirectory
+    let moduleId = moduleNameString modName
+        modulename = moduleBaseName moduleId
+        outputFolder = getOutputFolder moduleId filename workingPath
+    pure (CalcMeta outputFolder modulename False)
+
+-- | Last dotted component of a module name (e.g. @A.B.C@ -> @C@).
+moduleBaseName :: String -> String
+moduleBaseName name = reverse (takeWhile (/= '.') (reverse name))

@@ -12,8 +12,8 @@ import qualified Text.PrettyPrint.HughesPJClass as PP
 
 import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
 import           Language.Haskell.Liquid.RefCore.Extract (CalcMeta (..), writeOut)
-import           Language.Haskell.Liquid.RefCore.Names (OUT (..), preamble)
 
+import           Lava.RocqNames (OUT (..), preamble)
 import qualified Lava.Coq as Coq (Decl (..))
 import           Lava.Declaration (trDecl)
 import           Lava.Elaboration (elaborate)

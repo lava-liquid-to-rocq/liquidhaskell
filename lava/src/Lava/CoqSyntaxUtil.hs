@@ -7,8 +7,7 @@ module Lava.CoqSyntaxUtil where
 
 import Text.PrettyPrint.HughesPJClass
 
-import Language.Haskell.Liquid.RefCore.Names
-
+import Lava.RocqNames
 import Lava.Coq
 
 -- * Tactic names for "projections" out of packs

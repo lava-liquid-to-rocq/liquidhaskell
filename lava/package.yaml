@@ -22,12 +22,14 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
+    - Lava.CalculusUtil
     - Lava.Coq
     - Lava.CoqSyntaxUtil
     - Lava.Declaration
     - Lava.Elaboration
     - Lava.IlhParse
     - Lava.Plugin
+    - Lava.RocqNames
     - Lava.TopologicalSort
     - Lava.Translate
     - Lava.Translation

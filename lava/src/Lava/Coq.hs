@@ -25,8 +25,9 @@ import Data.Maybe (isNothing)
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 
-import Language.Haskell.Liquid.RefCore.Names
 import Language.Haskell.Liquid.RefCore.Calculus (ProjKind (..))
+
+import Lava.RocqNames
 
 {- ORMOLU_DISABLE -}
 unitTmName :: Id

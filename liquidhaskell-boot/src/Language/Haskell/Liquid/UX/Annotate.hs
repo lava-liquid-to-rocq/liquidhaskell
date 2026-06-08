@@ -78,7 +78,7 @@ import           Language.Haskell.Liquid.Types.Types
 
 
 -- | @output@ creates the pretty printed output
--- NOTE: for lava, we want to get the inferred types before they get printed to Doc
+-- NOTE: for Refcore, we want to get the inferred types before they get printed to Doc
 --------------------------------------------------------------------------------------------
 mkOutput :: Config -> ErrorResult -> FInfo a -> FixDelayedSolution -> AnnInfo (Annot SpecType) -> (Output Doc, AnnInfo SpecType)
 --------------------------------------------------------------------------------------------
