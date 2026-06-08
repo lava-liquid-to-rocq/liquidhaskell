@@ -4,6 +4,8 @@
 --   adds the name-mangling helpers that only the Rocq translation needs.
 module Lava.RocqNames
   ( module Language.Haskell.Liquid.RefCore.Names
+  , OUT (..)
+  , outPostfix
   , preamble
   , specName
   , unrefinedTCName
@@ -53,6 +55,17 @@ import Text.PrettyPrint.HughesPJClass
 import Prelude hiding ((<>))
 
 import Language.Haskell.Liquid.RefCore.Names
+
+-- * Names of the output files
+
+-- | Output formats produced by the Lava translation: the elaborated ILH
+--   (.ilhe) and the Rocq file (.v).
+data OUT = ILHElab | Rocq
+  deriving (Show)
+
+outPostfix :: OUT -> String
+outPostfix ILHElab = ".ilhe"
+outPostfix Rocq = ".v"
 
 -- | Preamble for the Rocq file
 preamble :: Bool -> Doc

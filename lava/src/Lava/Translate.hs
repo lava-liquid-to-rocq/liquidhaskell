@@ -13,7 +13,7 @@ import qualified Text.PrettyPrint.HughesPJClass as PP
 import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
 import           Language.Haskell.Liquid.RefCore.Extract (CalcMeta (..), writeOut)
 
-import           Lava.RocqNames (OUT (..), preamble)
+import           Lava.RocqNames (OUT (..), outPostfix, preamble)
 import qualified Lava.Coq as Coq (Decl (..))
 import           Lava.Declaration (trDecl)
 import           Lava.Elaboration (elaborate)
@@ -27,10 +27,10 @@ runFromCalculus meta calcSource equations =
         Left err -> putStrLn (PP.prettyShow err) >> pure []
         Right calcSourceElaborated ->
             do putStrLn "––Typechecking and elaboration OK––"
-               writeOut outputFolder modulename ILH PP.empty calcSourceElaborated
+               writeOut outputFolder modulename (outPostfix ILHElab) PP.empty calcSourceElaborated
                let coqPreamble = if cmHasImports meta then PP.empty else preamble equations
                    coqResult = concatMap (trDecl equations) calcSourceElaborated
-               writeOut outputFolder modulename Rocq coqPreamble coqResult
+               writeOut outputFolder modulename (outPostfix Rocq) coqPreamble coqResult
                pure coqResult
   where
     outputFolder = cmOutputFolder meta

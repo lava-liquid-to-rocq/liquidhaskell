@@ -7,12 +7,13 @@
 module Language.Haskell.Liquid.RefCore.Extract
   ( SrcInfo (..)
   , CalcMeta (..)
+  , OUT (..)
+  , outPostfix
   , extractCalculus
   , writeIlh
   , writeOut
-  , ilhPath
   , writeIlhBin
-  , ilhBinPath
+  , outPath
   , getOutputFolder
   ) where
 
@@ -34,7 +35,7 @@ import           Language.Haskell.Liquid.Types.RType (SpecType, TyConP (..))
 import qualified Language.Haskell.Liquid.Types.Specs as Specs
 import           Language.Haskell.Liquid.Types.Types (AnnInfo (..))
 import           Language.Haskell.Liquid.RefCore.Misc (isIgnoredBind, removeSuffix, split, stripLegalName)
-import           Language.Haskell.Liquid.RefCore.Names (Id, OUT (..), outPostfix)
+import           Language.Haskell.Liquid.RefCore.Names (Id)
 import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
 import qualified Language.Haskell.Liquid.RefCore.CoreToLH as CLH
 import           Language.Haskell.Liquid.RefCore.Parse
@@ -92,33 +93,39 @@ extractCalculus sinfo = do
   where
     filename = Specs.giTarget $ Specs.giSrc $ s_targetInfo sinfo
 
--- | Write the un-elaborated Calculus declarations to .ilh_no_elab file.
+-- | Output formats for the un-elaborated Calculus produced by extraction:
+--   a human-readable text dump (.ilh) and its binary companion (.ilhb).
+data OUT = Text | Bin
+  deriving (Show)
+
+outPostfix :: OUT -> String
+outPostfix Text = ".ilh"
+outPostfix Bin = ".ilhb"
+
+-- | Write the un-elaborated Calculus declarations to the .ilh text file.
 writeIlh :: CalcMeta -> [Calc.Decl] -> IO ()
 writeIlh meta calcSource = do
     createDirectoryIfMissing True (cmOutputFolder meta)
-    writeOut (cmOutputFolder meta) (cmModuleName meta) ILHNoElab PP.empty calcSource
+    writeOut (cmOutputFolder meta) (cmModuleName meta) (outPostfix Text) PP.empty calcSource
 
--- | Path that 'writeIlh' wrote to.
-ilhPath :: CalcMeta -> FilePath
-ilhPath meta = cmOutputFolder meta </> (cmModuleName meta ++ outPostfix ILHNoElab)
-
--- | Binary-serialized companion to the .ilh file.
-ilhBinPath :: CalcMeta -> FilePath
-ilhBinPath meta = ilhPath meta ++ ".bin"
+-- | Path of the output file for the given format (e.g. the .ilh text dump or
+--   its .ilhb binary companion).
+outPath :: OUT -> CalcMeta -> FilePath
+outPath out meta = cmOutputFolder meta </> (cmModuleName meta ++ outPostfix out)
 
 writeIlhBin :: CalcMeta -> [Calc.Decl] -> IO ()
 writeIlhBin meta calcSource = do
     createDirectoryIfMissing True (cmOutputFolder meta)
-    let path = ilhBinPath meta
+    let path = outPath Bin meta
     putStrLn ("Writing serialized Calculus to " ++ path)
     Bin.encodeFile path calcSource
 
--- | Pretty-print a list of declarations to a file. Used by both extract (.ilh)
---   and the RefCore driver (.ilh after elaboration, .v Coq output).
-writeOut :: (PP.Pretty a) => FilePath -> String -> OUT -> PP.Doc -> [a] -> IO ()
-writeOut outputFolder modulename outType pre decls = do
-    let outputPath = outputFolder </> (modulename ++ outPostfix outType)
-    putStrLn ("Writing " ++ show outType ++ " output to file at " ++ outputPath)
+-- | Pretty-print a list of declarations to a file with the given filename
+--   suffix.
+writeOut :: (PP.Pretty a) => FilePath -> String -> String -> PP.Doc -> [a] -> IO ()
+writeOut outputFolder modulename suffix pre decls = do
+    let outputPath = outputFolder </> (modulename ++ suffix)
+    putStrLn ("Writing output to file at " ++ outputPath)
     let body = PP.vcat (pre PP.<> PP.char '\n' : map ((PP.<> PP.char '\n') . PP.pPrint) decls)
         style = PP.Style {PP.mode = PP.PageMode, PP.lineLength = 120, PP.ribbonsPerLine = 1.2}
     writeFile outputPath (PP.renderStyle style body)
