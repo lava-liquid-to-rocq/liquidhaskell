@@ -117,8 +117,7 @@ data Config = Config
   , allowUnsafeConstructors  :: Bool       -- ^ Allow refining constructors with unsafe refinements
   , ddumpTimings             :: Bool       -- ^ Dump time measures of the Liquid Haskell plugin
                                            -- Only needed to work around https://github.com/haskell/cabal/issues/11116
-  , lava                     :: Bool       -- Enable translation to Rocq
-  , lavaEquations            :: Bool       -- Enable translation to Rocq using Equations
+  , refcore                  :: Bool       -- Enable extraction of RefCore Calculus declarations
   } deriving (Generic, Data, Show, Eq)
 
 allowPLE :: Config -> Bool

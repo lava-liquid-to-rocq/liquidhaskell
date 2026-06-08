@@ -1,4 +1,4 @@
-{-@ LIQUID "--lava" @-}
+{-@ LIQUID "--refcore" @-}
 {-@ LIQUID "--higherorder"     @-}
 {-@ LIQUID "--ple" @-}
 

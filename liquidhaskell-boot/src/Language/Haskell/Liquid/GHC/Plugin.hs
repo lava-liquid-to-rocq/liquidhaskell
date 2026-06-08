@@ -428,7 +428,7 @@ mkSrcInfo lhContext targetInfo infTypes = SrcInfo
     , s_imports    = lhRelevantModules lhContext
     }
 
--- | When the @--lava@ or @--lava-equations@ flag is set, extract Calculus
+-- | When the @--refcore@ flag is set, extract Calculus
 --   declarations and write the .bin file.
 checkLiquidHaskellContext :: LiquidHaskellContext -> TcM (Either LiquidCheckException LiquidLib)
 checkLiquidHaskellContext lhContext = do
@@ -442,7 +442,7 @@ checkLiquidHaskellContext lhContext = do
       let bareSpec = lhInputSpec lhContext
           cfg     = lhGlobalCfg lhContext
 
-      when (lava cfg || lavaEquations cfg) $ liftIO $ do
+      when (refcore cfg) $ liftIO $ do
         (calcSource, meta) <- extractCalculus (mkSrcInfo lhContext pmrTargetInfo infTypes)
         writeIlh meta calcSource
         writeIlhBin meta calcSource

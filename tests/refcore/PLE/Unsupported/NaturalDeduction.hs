@@ -5,7 +5,7 @@
 
 module PLE.NaturalDeduction where
 
-{-@ LIQUID "--lava" @-}
+{-@ LIQUID "--refcore" @-}
 {-@ LIQUID "--higherorder" @-}
 {-@ LIQUID "--exact-data-cons" @-}
 

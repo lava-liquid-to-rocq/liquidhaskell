@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE IncoherentInstances #-}
 
-{-@ LIQUID "--lava" @-}
+{-@ LIQUID "--refcore" @-}
 {-@ LIQUID "--reflection"     @-}
 
 module PLE.Maybe where

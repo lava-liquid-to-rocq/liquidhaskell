@@ -1,4 +1,4 @@
-{-@ LIQUID "--lava" @-}
+{-@ LIQUID "--refcore" @-}
 
 module PLE.NatInduction where
 

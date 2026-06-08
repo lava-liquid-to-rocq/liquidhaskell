@@ -1,4 +1,4 @@
-{-@ LIQUID "--lava" @-}
+{-@ LIQUID "--refcore" @-}
 {-@ LIQUID "--ple" @-}
 
 module Benchmark.RBinsToBins where

@@ -1,6 +1,6 @@
 -- Unsupported because L is used polymorphically. We could replace it by actual lists
 --
-{-@ LIQUID "--lava" @-}
+{-@ LIQUID "--refcore" @-}
 {-@ LIQUID "--reflection"     @-}
 {-@ LIQUID "--pruneunsorted"   @-}
 

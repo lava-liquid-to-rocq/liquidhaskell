@@ -1,6 +1,6 @@
 {-@ LIQUID "--ple" @-}
 -- {-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--lava" @-}
+{-@ LIQUID "--refcore" @-}
 
 module Benchmark.PLE.Lambdas where
 

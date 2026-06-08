@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-@ LIQUID "--lava" @-}
+{-@ LIQUID "--refcore" @-}
 {-@ LIQUID "--reflection" @-}
 {-@ LIQUID "--ple"        @-}
 {-# LANGUAGE IncoherentInstances #-}
