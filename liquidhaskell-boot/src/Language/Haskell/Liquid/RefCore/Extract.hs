@@ -7,7 +7,6 @@ module Language.Haskell.Liquid.RefCore.Extract
   ( SrcInfo (..)
   , CalcMeta (..)
   , OUT (..)
-  , outPostfix
   , extractCalculus
   , writeIlh
   , writeOut

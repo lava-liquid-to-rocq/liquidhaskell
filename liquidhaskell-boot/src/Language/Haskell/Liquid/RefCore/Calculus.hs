@@ -7,7 +7,42 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | Grammars, printer and suable functions for ILH
-module Language.Haskell.Liquid.RefCore.Calculus where
+module Language.Haskell.Liquid.RefCore.Calculus
+  ( -- * Grammar
+    Builtin (..)
+  , BaseType (..)
+  , RefType (..)
+  , Decl (..)
+  , Expr (..)
+  , Reft (..)
+  , ProjKind (..)
+  , Localization (..)
+  , DesState (..)
+  , Bop (..)
+  , ProofOp (..)
+    -- * Builtin type and data constructors
+  , boolTp
+  , boolTpName
+  , ttTm
+  , ttTmName
+  , ffTm
+  , ffTmName
+  , unitTp
+  , unitTpName
+  , unitTm
+  , unitTmName
+    -- * Construction and destruction
+  , mkVar
+  , arrs
+  , apps
+  , renameParams
+    -- * Free variables and substitution
+  , HasVars (..)
+  , freeVars
+  , fresh
+  , rename
+  , substs
+  ) where
 
 import Prelude hiding (lookup, (<>))
 import Data.Bifunctor (first)
