@@ -1,12 +1,12 @@
 {-# OPTIONS_GHC -Wall #-}
 
--- | The @lava@ executable for Calculus to Rocq translation. Consumes the .ilh_no_elab.bin
+-- | The @lava@ executable for Calculus to Rocq translation. Consumes the .ilhb
 --   file that was written by liquidhaskell-boot's plugin (see
 --   'Language.Haskell.Liquid.RefCore.Extract.writeIlhBin').
 --
 --   Usage:
 --
---   > lava [--equations] [--has-imports] [--output-folder DIR] PATH.ilh_no_elab.bin
+--   > lava [--equations] [--has-imports] [--output-folder DIR] PATH.ilhb
 --
 --   The module name is derived from the input file's base name. The output
 --   folder defaults to the input file's directory.
@@ -46,13 +46,13 @@ parseArgs = do
         [path] -> case readFlags flags path of
             Right o  -> pure o
             Left err -> die err
-        _ -> die "expected exactly one .ilh_no_elab(.bin) file path"
+        _ -> die "expected exactly one .ilhb file path"
 
 die :: String -> IO a
 die msg =
   do name <- getProgName
      hPutStrLn stderr (name ++ ": " ++ msg)
-     hPutStrLn stderr "usage: lava [--equations] [--has-imports] [--output-folder DIR] PATH.ilh_no_elab.bin"
+     hPutStrLn stderr "usage: lava [--equations] [--has-imports] [--output-folder DIR] PATH.ilhb"
      exitFailure
 
 run :: Opts -> IO ()

@@ -5,7 +5,7 @@
 --   > {-# OPTIONS_GHC -fplugin=LiquidHaskellBoot -fplugin=Lava.Plugin #-}
 --
 --   With @--refcore@ passed to the LH plugin, LH writes
---   the .ilh_no_elab.bin file; this plugin then parses it and runs the Rocq pipeline.
+--   the .ilhb file; this plugin then parses it and runs the Rocq pipeline.
 --
 --   Plugin options:
 --

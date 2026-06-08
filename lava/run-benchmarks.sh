@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run the lava translation on every .ilh_no_elab.bin under lava/out/Benchmark
+# Run the lava translation on every .ilhb under lava/out/Benchmark
 #
 # Usage:
 #   ./run-benchmarks.sh                 # plain mode
@@ -36,7 +36,7 @@ fi
 mapfile -t bin_files < <(find "$BENCH_DIR" -type f -name '*.ilhb' | sort)
 
 if (( ${#bin_files[@]} == 0 )); then
-    echo "no .ilh_no_elab.bin files under $BENCH_DIR" >&2
+    echo "no .ilhb files under $BENCH_DIR" >&2
     exit 1
 fi
 

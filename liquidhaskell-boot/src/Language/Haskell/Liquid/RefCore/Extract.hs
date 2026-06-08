@@ -1,9 +1,8 @@
 {-# LANGUAGE OrPatterns #-}
 {-# OPTIONS_GHC -Wall #-}
 
--- | Pulls Calculus declarations out of LiquidHaskell's TargetInfo + GHC core
---   binds. Output of this module is the boundary between liquidhaskell-boot
---   and downstream tools (e.g. Lava) that consume Calculus declarations.
+-- | Extracts Calculus declarations out of LiquidHaskell's TargetInfo + GHC core
+--   binds.
 module Language.Haskell.Liquid.RefCore.Extract
   ( SrcInfo (..)
   , CalcMeta (..)
@@ -53,7 +52,7 @@ data SrcInfo = SrcInfo
 
 -- | Metadata about the extracted Calculus that downstream tools need to drive
 --   their output. Independent of LH/GHC types so it can be re-derived on the
---   consumer side (e.g. when reading an .ilh file from disk).
+--   consumer side.
 data CalcMeta = CalcMeta
   { cmOutputFolder :: FilePath
   , cmModuleName   :: String
@@ -93,8 +92,7 @@ extractCalculus sinfo = do
   where
     filename = Specs.giTarget $ Specs.giSrc $ s_targetInfo sinfo
 
--- | Output formats for the un-elaborated Calculus produced by extraction:
---   a human-readable text dump (.ilh) and its binary companion (.ilhb).
+-- | Output formats for the un-elaborated Calculus produced by extraction.
 data OUT = Text | Bin
   deriving (Show)
 
@@ -108,8 +106,7 @@ writeIlh meta calcSource = do
     createDirectoryIfMissing True (cmOutputFolder meta)
     writeOut (cmOutputFolder meta) (cmModuleName meta) (outPostfix Text) PP.empty calcSource
 
--- | Path of the output file for the given format (e.g. the .ilh text dump or
---   its .ilhb binary companion).
+-- | Path of the output file for the given format.
 outPath :: OUT -> CalcMeta -> FilePath
 outPath out meta = cmOutputFolder meta </> (cmModuleName meta ++ outPostfix out)
 
