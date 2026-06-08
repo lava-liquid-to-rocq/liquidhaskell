@@ -119,7 +119,7 @@ data Reft
 -- Rocq's `proj1_sig1` and `proj2_sig`
 -- FIX: we shouldn't need this here, only in Rocq,
 -- but Rocq cannot always find the correct instance
-data ProjKind = GenProj | Sig1 | Sig2 deriving (Data, Eq, Show)
+data ProjKind = GenProj | Sig1 | Sig2 deriving (Data, Eq, Show, Generic, Binary)
 
 -- | Localization of the variables.
 -- The recursive variables take the name of the induction variable
