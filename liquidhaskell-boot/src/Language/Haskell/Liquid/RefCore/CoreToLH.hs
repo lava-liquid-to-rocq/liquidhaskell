@@ -127,7 +127,7 @@ classifyHead "***" = HCast
 classifyHead "?" = HQmark
 classifyHead "patError" = HPatError
 classifyHead n
-  | n `elem` ["()", "trivial", "True", "False"] = HConst (transName n)
+  | M.member n SLH.builtinDCs = HConst (transName n)
   | n `elem` ["I#", "I"] = HUnbox
   | Just op <- M.lookup n SLH.bops = HBinOp op
   | otherwise = HGeneric n
@@ -196,12 +196,8 @@ unexpected :: Id -> [Calc.Reft] -> a
 unexpected n as = error $ "transFlattenedApp: unexpected args for " ++ n ++ ": " ++ prettyShow as
 
 transName :: Id -> Calc.Reft
-transName "()" = Calc.unitTm
-transName "trivial" = Calc.unitTm
-transName "True" = Calc.ttTm
-transName "False" = Calc.ffTm
 transName "?" = error "Impossible: '?'"
-transName n = Calc.mkVar n
+transName n = M.findWithDefault (Calc.mkVar n) n SLH.builtinDCs
 
 toStr :: (Data a) => a -> String
 toStr = showConstr . toConstr
@@ -212,7 +208,7 @@ toStr = showConstr . toConstr
 -- Ignored: ticks
 trans :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> Calc.Expr
 trans modId _ _ (Var n)
-  | strippedName `elem` ["()", "True", "False"] = Calc.Reft $ transName strippedName
+  | M.member strippedName SLH.builtinDCs = Calc.Reft $ transName strippedName
   | isDataConId n = Calc.Reft $ Calc.DC strippedName
   | otherwise =
       -- trace ("VAR: " ++ show n ++ " -> " ++ strippedName ++ " isDC=" ++ show (isDataConId n)) $

@@ -2,7 +2,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# OPTIONS_GHC -Wall #-}
 
-module Language.Haskell.Liquid.RefCore.SpecToLH (transSig, transType, showppStripped, bops, buildins, InternalCont (..)) where
+module Language.Haskell.Liquid.RefCore.SpecToLH (transSig, transType, showppStripped, bops, builtinDCs, builtinTCs, InternalCont (..)) where
 
 import Control.Monad (filterM)
 import Control.Monad.Extra (allM, ifM)
@@ -26,11 +26,7 @@ unsupported msg = error $ "[SpecToLH] " ++ msg
 
 -- | Translation of an RTyCon as a builtin or as a type constructor
 transCon :: Id -> RTyCon -> Calc.BaseType
-transCon modId (RTyCon tc [] _) =
-  maybe
-    (if name == "()" then Calc.unitTp else Calc.TC name)
-    Calc.Builtin
-    (M.lookup name buildins)
+transCon modId (RTyCon tc [] _) = M.findWithDefault (Calc.TC name) name builtinTCs
   where
     name = showppStripped modId tc
 transCon _ c = unsupported $ "Type constructor with type args not supported (no polymorphism): " ++ show c
@@ -190,12 +186,11 @@ transExp modId binder = transExpr
     -- a Haskell data constructor (starts with uppercase) and is not
     -- the current refinement binder (e.g. "VV").
     mkVarOrDC :: Id -> Calc.Reft
-    mkVarOrDC s = case s of
-      "True" -> Calc.ttTm
-      "False" -> Calc.ffTm
-      _
-        | s /= binder, c : _ <- s, isUpper c -> Calc.DC s
-        | otherwise -> Calc.mkVar s
+    mkVarOrDC s = M.findWithDefault dflt s builtinDCs
+      where
+        dflt
+          | s /= binder, c : _ <- s, isUpper c = Calc.DC s
+          | otherwise = Calc.mkVar s
     transExpr :: F.Expr -> Reader InternalCont Calc.Reft
     transExpr term =
       ifM (internal modId term) (pure Calc.ttTm) $
@@ -297,11 +292,22 @@ bops =
       ("<", Calc.Lt)
     ]
 
--- | LH builtin types
-buildins :: M.Map String Calc.Builtin
-buildins =
+-- | LH builtin data constructors
+builtinDCs :: M.Map String Calc.Reft
+builtinDCs =
   M.fromList
-    [ ("Integer", Calc.Integer),
-      ("Int", Calc.Integer),
-      ("Float", Calc.Double)
+    [ ("()", Calc.unitTm),
+      ("trivial", Calc.unitTm),
+      ("True", Calc.ttTm),
+      ("False", Calc.ffTm)
+    ]
+
+-- | LH builtin types: the base types and the unit type constructor
+builtinTCs :: M.Map String Calc.BaseType
+builtinTCs =
+  M.fromList
+    [ ("Integer", Calc.Builtin Calc.Integer),
+      ("Int", Calc.Builtin Calc.Integer),
+      ("Float", Calc.Builtin Calc.Double),
+      ("()", Calc.unitTp)
     ]
