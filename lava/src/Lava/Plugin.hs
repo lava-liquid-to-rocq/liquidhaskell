@@ -21,7 +21,8 @@ import GHC.Tc.Types (TcGblEnv, TcM)
 import GHC.Unit.Module.ModSummary (ModSummary (..))
 import GHC.Unit.Types (moduleName)
 
-import Language.Haskell.Liquid.RefCore.Extract (calcMetaFor, ilhBinPath)
+import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
+import           Language.Haskell.Liquid.RefCore.Extract (CalcMeta (..), calcMetaFor, ilhBinPath)
 
 import Lava.IlhParse (parseIlh)
 import Lava.Translate (runFromCalculus)
@@ -39,8 +40,11 @@ lavaHook opts ms gblEnv =
      liftIO $ do meta <- calcMetaFor (moduleName (ms_mod ms)) (ms_hspp_file ms)
                  let binPath = ilhBinPath meta
                  exists <- doesFileExist binPath
-                 when exists $ do putStrLn ("Lava.Plugin: consuming " ++ binPath)
-                                  calcSource <- parseIlh binPath
-                                  _ <- runFromCalculus meta calcSource equations
-                                  pure ()
+                 when exists $ do
+                   putStrLn ("Lava.Plugin: consuming " ++ binPath)
+                   calcSource <- parseIlh binPath
+                   let hasImports = any (\d -> case d of Calc.Import _ _ -> True; _ -> False) calcSource
+                       meta'      = meta { cmHasImports = hasImports }
+                   _ <- runFromCalculus meta' calcSource equations
+                   pure ()
      pure gblEnv

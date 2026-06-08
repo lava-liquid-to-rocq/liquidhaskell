@@ -2,7 +2,7 @@
 
 -- | The @lava@ executable for Calculus to Rocq translation. Consumes the .ilh_no_elab.bin
 --   file that was written by liquidhaskell-boot's plugin (see
---   'Language.Haskell.Liquid.Lava.Extract.writeIlhBin').
+--   'Language.Haskell.Liquid.RefCore.Extract.writeIlhBin').
 --
 --   Usage:
 --
@@ -46,13 +46,13 @@ parseArgs = do
         [path] -> case readFlags flags path of
             Right o  -> pure o
             Left err -> die err
-        _ -> die "expected exactly one .ilh file path"
+        _ -> die "expected exactly one .ilh_no_elab(.bin) file path"
 
 die :: String -> IO a
 die msg =
   do name <- getProgName
      hPutStrLn stderr (name ++ ": " ++ msg)
-     hPutStrLn stderr "usage: lava [--equations] [--has-imports] [--output-folder DIR] PATH.ilh_no_elab"
+     hPutStrLn stderr "usage: lava [--equations] [--has-imports] [--output-folder DIR] PATH.ilh_no_elab.bin"
      exitFailure
 
 run :: Opts -> IO ()
