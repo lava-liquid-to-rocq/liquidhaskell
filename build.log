@@ -21,9 +21,9 @@ Warning: Loading Stdlib without prefix is deprecated.
 Use "From Stdlib Require Bool" or the deprecated "From Coq Require Bool"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/BoolTacs.vo (real: 0.30, user: 0.23, sys: 0.07, mem: 387100 ko)
+coqDeps/BoolTacs.vo (real: 0.30, user: 0.23, sys: 0.06, mem: 387204 ko)
 ROCQ compile coqDeps/PairLists.v
-coqDeps/PairLists.vo (real: 0.06, user: 0.03, sys: 0.02, mem: 72828 ko)
+coqDeps/PairLists.vo (real: 0.06, user: 0.03, sys: 0.02, mem: 72048 ko)
 ROCQ compile coqDeps/Snipe.v
 File "./coqDeps/Snipe.v", line 5, characters 15-19:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -47,7 +47,7 @@ File "./coqDeps/Snipe.v", line 9, characters 0-35:
 Warning: Use of “Require” inside a module is fragile. It is not recommended
 to use this functionality in finished proof scripts.
 [require-in-module,fragile,default]
-coqDeps/Snipe.vo (real: 0.37, user: 0.30, sys: 0.06, mem: 422364 ko)
+coqDeps/Snipe.vo (real: 0.36, user: 0.30, sys: 0.05, mem: 421136 ko)
 ROCQ compile coqDeps/EqualityInterface.v
 File "./coqDeps/EqualityInterface.v", line 5, characters 15-21:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -73,7 +73,7 @@ Use "From Stdlib Require Bool.Bool"
 or the deprecated "From Coq Require Bool.Bool"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/EqualityInterface.vo (real: 0.27, user: 0.20, sys: 0.06, mem: 338256 ko)
+coqDeps/EqualityInterface.vo (real: 0.26, user: 0.20, sys: 0.05, mem: 337868 ko)
 ROCQ compile coqDeps/Equality.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/EqualityInterface.v", line 5, characters 15-21:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -99,7 +99,7 @@ Use "From Stdlib Require Bool.Bool"
 or the deprecated "From Coq Require Bool.Bool"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/Equality.vo (real: 0.38, user: 0.30, sys: 0.07, mem: 423108 ko)
+coqDeps/Equality.vo (real: 0.38, user: 0.31, sys: 0.06, mem: 423100 ko)
 ROCQ compile coqDeps/LiquidPreludeInterface.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/EqualityInterface.v", line 5, characters 15-21:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -174,7 +174,7 @@ Warning: Loading Stdlib without prefix is deprecated.
 Use "From Stdlib Require Floats" or the deprecated "From Coq Require Floats"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/LiquidPreludeInterface.vo (real: 0.43, user: 0.37, sys: 0.06, mem: 423560 ko)
+coqDeps/LiquidPreludeInterface.vo (real: 0.43, user: 0.37, sys: 0.06, mem: 423436 ko)
 ROCQ compile coqDeps/LiquidPrelude.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/EqualityInterface.v", line 5, characters 15-21:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -249,7 +249,7 @@ Warning: Loading Stdlib without prefix is deprecated.
 Use "From Stdlib Require Floats" or the deprecated "From Coq Require Floats"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/LiquidPrelude.vo (real: 0.72, user: 0.64, sys: 0.07, mem: 430780 ko)
+coqDeps/LiquidPrelude.vo (real: 0.71, user: 0.64, sys: 0.06, mem: 431508 ko)
 ROCQ compile coqDeps/SubsumptionTacs.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/EqualityInterface.v", line 5, characters 15-21:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -324,7 +324,7 @@ Warning: Loading Stdlib without prefix is deprecated.
 Use "From Stdlib Require Floats" or the deprecated "From Coq Require Floats"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/SubsumptionTacs.vo (real: 0.72, user: 0.64, sys: 0.08, mem: 430664 ko)
+coqDeps/SubsumptionTacs.vo (real: 0.75, user: 0.69, sys: 0.06, mem: 430244 ko)
 ROCQ compile coqDeps/GetRelInterface.v
 File "./coqDeps/GetRelInterface.v", line 1, characters 15-45:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -405,7 +405,7 @@ Warning: Loading Stdlib without prefix is deprecated.
 Use "From Stdlib Require Floats" or the deprecated "From Coq Require Floats"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/GetRelInterface.vo (real: 0.81, user: 0.72, sys: 0.08, mem: 433244 ko)
+coqDeps/GetRelInterface.vo (real: 0.80, user: 0.72, sys: 0.07, mem: 433392 ko)
 ROCQ compile coqDeps/SimpleTacticUtils.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/GetRelInterface.v", line 1, characters 15-45:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -486,7 +486,7 @@ Warning: Loading Stdlib without prefix is deprecated.
 Use "From Stdlib Require Floats" or the deprecated "From Coq Require Floats"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/SimpleTacticUtils.vo (real: 0.83, user: 0.76, sys: 0.06, mem: 431068 ko)
+coqDeps/SimpleTacticUtils.vo (real: 0.81, user: 0.73, sys: 0.08, mem: 431012 ko)
 ROCQ compile coqDeps/QuickTacs.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/GetRelInterface.v", line 1, characters 15-45:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -573,7 +573,7 @@ Use "From Stdlib Require Logic.ProofIrrelevanceFacts"
 or the deprecated "From Coq Require Logic.ProofIrrelevanceFacts"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/QuickTacs.vo (real: 0.95, user: 0.86, sys: 0.09, mem: 432184 ko)
+coqDeps/QuickTacs.vo (real: 0.94, user: 0.85, sys: 0.09, mem: 433992 ko)
 ROCQ compile coqDeps/GetRelFlattening.v
 File "./coqDeps/GetRelFlattening.v", line 1, characters 15-45:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -685,7 +685,7 @@ it will not be used for printing. [non-reversible-notation,parsing,default]
 File "./coqDeps/GetRelFlattening.v", line 906, characters 0-58:
 Warning: This notation contains Ltac expressions:
 it will not be used for printing. [non-reversible-notation,parsing,default]
-coqDeps/GetRelFlattening.vo (real: 9.70, user: 9.59, sys: 0.10, mem: 601604 ko)
+coqDeps/GetRelFlattening.vo (real: 9.95, user: 9.85, sys: 0.09, mem: 601944 ko)
 ROCQ compile coqDeps/TacticUtils.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/GetRelFlattening.v", line 1, characters 15-45:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -797,7 +797,7 @@ it will not be used for printing. [non-reversible-notation,parsing,default]
 File "./coqDeps/TacticUtils.v", line 1, characters 0-22:
 Warning: This notation contains Ltac expressions:
 it will not be used for printing. [non-reversible-notation,parsing,default]
-coqDeps/TacticUtils.vo (real: 9.64, user: 9.56, sys: 0.08, mem: 596364 ko)
+coqDeps/TacticUtils.vo (real: 9.63, user: 9.53, sys: 0.09, mem: 593860 ko)
 ROCQ compile coqDeps/LHCoqTactics.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/GetRelFlattening.v", line 1, characters 15-45:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -917,7 +917,7 @@ Warning: Loading Stdlib without prefix is deprecated.
 Use "From Stdlib Require Bool" or the deprecated "From Coq Require Bool"
 for compatibility with older Coq versions.
 [deprecated-missing-stdlib,deprecated-since-9.0,deprecated,default]
-coqDeps/LHCoqTactics.vo (real: 9.71, user: 9.61, sys: 0.09, mem: 589864 ko)
+coqDeps/LHCoqTactics.vo (real: 9.88, user: 9.79, sys: 0.08, mem: 590024 ko)
 ROCQ compile coqDeps/LiquidPreludeUtil.v
 File "/home/runner/work/liquidhaskell/liquidhaskell/lava/coqDeps/GetRelFlattening.v", line 1, characters 15-45:
 Warning: Loading Stdlib without prefix is deprecated.
@@ -1051,7 +1051,7 @@ disable this warning.
 File "./coqDeps/LiquidPreludeUtil.v", line 178, characters 0-63:
 Warning: This notation contains Ltac expressions:
 it will not be used for printing. [non-reversible-notation,parsing,default]
-coqDeps/LiquidPreludeUtil.vo (real: 10.68, user: 10.58, sys: 0.09, mem: 592244 ko)
+coqDeps/LiquidPreludeUtil.vo (real: 9.83, user: 9.74, sys: 0.09, mem: 593812 ko)
 ROCQ compile out/Benchmark/PLE/Lists.v
 File "./out/Benchmark/PLE/Lists.v", line 5, characters 0-37:
 Warning: "From Coq" has been replaced by "From Stdlib".
@@ -1196,12 +1196,12 @@ Inverted the axiomatization  v_def_0 :
 (append_rel (C_u x append_res) zs v_0)
 Unified axiomatized variables v_1 and append_res . 
 Unified axiomatized variables v_2 and append_res0 . 
-out/Benchmark/PLE/Lists.vo (real: 31.27, user: 31.15, sys: 0.10, mem: 527344 ko)
+out/Benchmark/PLE/Lists.vo (real: 30.91, user: 30.79, sys: 0.11, mem: 526376 ko)
 ROCQ compile out/Benchmark/PLE/Lambdas.v
 File "./out/Benchmark/PLE/Lambdas.v", line 5, characters 0-37:
 Warning: "From Coq" has been replaced by "From Stdlib".
 [deprecated-from-Coq,deprecated-since-9.0,deprecated,default]
-out/Benchmark/PLE/Lambdas.vo (real: 1.11, user: 1.04, sys: 0.06, mem: 440848 ko)
+out/Benchmark/PLE/Lambdas.vo (real: 1.16, user: 1.09, sys: 0.06, mem: 440340 ko)
 ROCQ compile out/Benchmark/PLE/MonadMaybe.v
 File "./out/Benchmark/PLE/MonadMaybe.v", line 5, characters 0-37:
 Warning: "From Coq" has been replaced by "From Stdlib".
@@ -1237,7 +1237,7 @@ Inverted the axiomatization  v_def_0 :
 (bind_rel (Just_u x)
    (packPr_proj {| f := f0; frel := frel; f_frel := f_frel; funct := funct |})
    v_0)
-out/Benchmark/PLE/MonadMaybe.vo (real: 8.91, user: 8.82, sys: 0.08, mem: 453504 ko)
+out/Benchmark/PLE/MonadMaybe.vo (real: 8.82, user: 8.74, sys: 0.08, mem: 452968 ko)
 ROCQ compile out/Benchmark/PLE/MonadId.v
 File "./out/Benchmark/PLE/MonadId.v", line 5, characters 0-37:
 Warning: "From Coq" has been replaced by "From Stdlib".
@@ -1276,7 +1276,7 @@ Sucessfully recreated axiomatized unrefined variable by recreating and axiomatiz
 Removed redundant hypothesis res_wit
 Unified axiomatized variables f_res and ⌊ fAppl_res -⌋ . 
 Inverted the axiomatization  v_def_ :  (retrn_rel x (Val_u x0))
-out/Benchmark/PLE/MonadId.vo (real: 10.25, user: 10.17, sys: 0.07, mem: 455040 ko)
+out/Benchmark/PLE/MonadId.vo (real: 10.11, user: 10.02, sys: 0.08, mem: 455480 ko)
 ROCQ compile out/Benchmark/PLE/MonadList.v
 File "./out/Benchmark/PLE/MonadList.v", line 5, characters 0-37:
 Warning: "From Coq" has been replaced by "From Stdlib".
@@ -1370,7 +1370,7 @@ Inverted the axiomatization  p :  (bind_rel xs retrn_upack xs)
 Inverted the axiomatization  p :  (bind_rel xs retrn_upack xs)
 Inverted the axiomatization  p :  (bind_rel xs retrn_upack xs)
 Inverted the axiomatization  v_def_ :  (retrn_rel x v_)
-out/Benchmark/PLE/MonadList.vo (real: 64.01, user: 63.83, sys: 0.16, mem: 578060 ko)
+out/Benchmark/PLE/MonadList.vo (real: 62.07, user: 61.88, sys: 0.18, mem: 576236 ko)
 ROCQ compile out/Benchmark/PLE/MonoidList.v
 File "./out/Benchmark/PLE/MonoidList.v", line 5, characters 0-37:
 Warning: "From Coq" has been replaced by "From Stdlib".
@@ -1425,7 +1425,7 @@ Inverted the axiomatization  v_def_0 :  (mappend_rel v_ zs v_0)
 Inverted the axiomatization  v_def_0 :  (mappend_rel v_ zs v_0)
 Inverted the axiomatization  v_def_ :  (mappend_rel Emp_u ys v_)
 Unified axiomatized variables v_0 and v_1 . 
-out/Benchmark/PLE/MonoidList.vo (real: 12.99, user: 12.88, sys: 0.10, mem: 467264 ko)
+out/Benchmark/PLE/MonoidList.vo (real: 12.83, user: 12.72, sys: 0.10, mem: 470404 ko)
 ROCQ compile out/Benchmark/PLE/MonoidMaybe.v
 File "./out/Benchmark/PLE/MonoidMaybe.v", line 5, characters 0-37:
 Warning: "From Coq" has been replaced by "From Stdlib".
@@ -1485,7 +1485,7 @@ Sucessfully recreated axiomatized unrefined variable by recreating and axiomatiz
 Inverted the axiomatization  v_def_1 :  (mappend_rel Nothing_u z v_1)
 Inverted the axiomatization  v_def_ :  (mappend_rel Nothing_u Nothing_u v_)
 Inverted the axiomatization  v_def_0 :  (mappend_rel Nothing_u z v_0)
-out/Benchmark/PLE/MonoidMaybe.vo (real: 3.76, user: 3.68, sys: 0.08, mem: 445964 ko)
+out/Benchmark/PLE/MonoidMaybe.vo (real: 3.81, user: 3.72, sys: 0.08, mem: 445956 ko)
 ROCQ compile out/Benchmark/PLE/Append.v
 File "./out/Benchmark/PLE/Append.v", line 5, characters 0-37:
 Warning: "From Coq" has been replaced by "From Stdlib".
@@ -2134,7 +2134,7 @@ Inverted the axiomatization  up2 :  (zip_rel Emp_u Emp_u Emp2_u)
 Inverted the axiomatization  up5 :  (take_rel Zero_u m x0)
 Removed redundant hypothesis res_wit3
 Removed redundant hypothesis res_wit
-out/Benchmark/PLE/Append.vo (real: 323.67, user: 323.13, sys: 0.49, mem: 758396 ko)
+out/Benchmark/PLE/Append.vo (real: 322.46, user: 321.93, sys: 0.47, mem: 761220 ko)
 ROCQ compile out/Benchmark/RBinsToBins.v
 File "./out/Benchmark/RBinsToBins.v", line 5, characters 0-37:
 Warning: "From Coq" has been replaced by "From Stdlib".
@@ -2151,7 +2151,7 @@ Specializing  IHt  with (simple) proof term in nested induction
 Specializing  IHt  with (simple) proof term in nested induction 
 Specializing  IHt  with (simple) proof term in nested induction 
 Specializing  IHt  with (simple) proof term in nested induction 
-out/Benchmark/RBinsToBins.vo (real: 6.53, user: 6.45, sys: 0.07, mem: 441896 ko)
+out/Benchmark/RBinsToBins.vo (real: 6.57, user: 6.49, sys: 0.07, mem: 441984 ko)
 ROCQ compile out/Benchmark/PeanoNats.v
 File "./out/Benchmark/PeanoNats.v", line 5, characters 0-37:
 Warning: "From Coq" has been replaced by "From Stdlib".
@@ -2436,7 +2436,7 @@ Sucessfully axiomatized refined term and created refinement witness for it.
 Axiomatized term with axiomatiation  fAppl_p :  (eqN_rel Zero_u ds_d4lU v)
 Sucessfully recreated axiomatized unrefined variable by recreating and axiomatizing refined term 
 Inverted the axiomatization  v_def_ :  (eqN_rel Zero_u ds_d4lU true)
-out/Benchmark/PeanoNats.vo (real: 62.19, user: 62.00, sys: 0.16, mem: 627516 ko)
+out/Benchmark/PeanoNats.vo (real: 61.31, user: 61.12, sys: 0.17, mem: 628116 ko)
 ROCQ compile out/Benchmark/SoftwareFoundations.v
 File "./out/Benchmark/SoftwareFoundations.v", line 5, characters 0-37:
 Warning: "From Coq" has been replaced by "From Stdlib".
@@ -3567,7 +3567,7 @@ running generalize dependent  H
 running generalize dependent  t
 Starting proof of existence lemma for the reflected function  monochrome . 
 Unified axiomatized variables s and VV . 
-out/Benchmark/SoftwareFoundations.vo (real: 217.72, user: 217.25, sys: 0.43, mem: 799264 ko)
+out/Benchmark/SoftwareFoundations.vo (real: 215.47, user: 214.99, sys: 0.43, mem: 802344 ko)
 ROCQ compile out/Benchmark/Overview.v
 File "./out/Benchmark/Overview.v", line 5, characters 0-37:
 Warning: "From Coq" has been replaced by "From Stdlib".
@@ -4836,7 +4836,7 @@ Sucessfully recreated axiomatized unrefined variable by recreating and axiomatiz
 Inverted the axiomatization  v_def_2 :  (append_rel Nil_u ds_d27J v_2)
 Inverted the axiomatization  p :  (llen_rel ds_d27J llen_res)
 Inverted the axiomatization  v_def_0 :  (llen_rel Nil_u v_0)
-out/Benchmark/Overview.vo (real: 1363.30, user: 1362.44, sys: 0.65, mem: 1010792 ko)
+out/Benchmark/Overview.vo (real: 1357.32, user: 1356.46, sys: 0.66, mem: 1045728 ko)
 ROCQ compile manual/ltac_bug.v
 File "./manual/ltac_bug.v", line 5, characters 0-37:
 Warning: "From Coq" has been replaced by "From Stdlib".
@@ -4856,37 +4856,37 @@ A witness for the refined term  tm  is already present as hypothesis  x_p
 A witness for the refined term  tm  is already present as hypothesis  x_p
  not asserting another. 
 Unified axiomatized variables z and VV . 
-manual/ltac_bug.vo (real: 12.39, user: 12.31, sys: 0.07, mem: 447688 ko)
+manual/ltac_bug.vo (real: 12.52, user: 12.43, sys: 0.08, mem: 447588 ko)
      Time |   Peak Mem | File Name                           
 -------------------------------------------------------------
-35m59.54s | 1010792 ko | Total Time / Peak Mem               
+35m46.36s | 1045728 ko | Total Time / Peak Mem               
 -------------------------------------------------------------
-22m42.44s | 1010792 ko | out/Benchmark/Overview.vo           
- 5m23.13s |  758396 ko | out/Benchmark/PLE/Append.vo         
- 3m37.25s |  799264 ko | out/Benchmark/SoftwareFoundations.vo
- 1m03.83s |  578060 ko | out/Benchmark/PLE/MonadList.vo      
- 1m02.00s |  627516 ko | out/Benchmark/PeanoNats.vo          
- 0m31.15s |  527344 ko | out/Benchmark/PLE/Lists.vo          
- 0m12.88s |  467264 ko | out/Benchmark/PLE/MonoidList.vo     
- 0m12.31s |  447688 ko | manual/ltac_bug.vo                  
- 0m10.58s |  592244 ko | coqDeps/LiquidPreludeUtil.vo        
- 0m10.17s |  455040 ko | out/Benchmark/PLE/MonadId.vo        
- 0m09.61s |  589864 ko | coqDeps/LHCoqTactics.vo             
- 0m09.59s |  601604 ko | coqDeps/GetRelFlattening.vo         
- 0m09.56s |  596364 ko | coqDeps/TacticUtils.vo              
- 0m08.82s |  453504 ko | out/Benchmark/PLE/MonadMaybe.vo     
- 0m06.45s |  441896 ko | out/Benchmark/RBinsToBins.vo        
- 0m03.68s |  445964 ko | out/Benchmark/PLE/MonoidMaybe.vo    
- 0m01.04s |  440848 ko | out/Benchmark/PLE/Lambdas.vo        
- 0m00.86s |  432184 ko | coqDeps/QuickTacs.vo                
- 0m00.76s |  431068 ko | coqDeps/SimpleTacticUtils.vo        
- 0m00.72s |  433244 ko | coqDeps/GetRelInterface.vo          
- 0m00.64s |  430780 ko | coqDeps/LiquidPrelude.vo            
- 0m00.64s |  430664 ko | coqDeps/SubsumptionTacs.vo          
- 0m00.37s |  423560 ko | coqDeps/LiquidPreludeInterface.vo   
- 0m00.30s |  423108 ko | coqDeps/Equality.vo                 
- 0m00.30s |  422364 ko | coqDeps/Snipe.vo                    
- 0m00.23s |  387100 ko | coqDeps/BoolTacs.vo                 
- 0m00.20s |  338256 ko | coqDeps/EqualityInterface.vo        
- 0m00.03s |   72828 ko | coqDeps/PairLists.vo                
+22m36.46s | 1045728 ko | out/Benchmark/Overview.vo           
+ 5m21.93s |  761220 ko | out/Benchmark/PLE/Append.vo         
+ 3m34.99s |  802344 ko | out/Benchmark/SoftwareFoundations.vo
+ 1m01.88s |  576236 ko | out/Benchmark/PLE/MonadList.vo      
+ 1m01.12s |  628116 ko | out/Benchmark/PeanoNats.vo          
+ 0m30.79s |  526376 ko | out/Benchmark/PLE/Lists.vo          
+ 0m12.72s |  470404 ko | out/Benchmark/PLE/MonoidList.vo     
+ 0m12.43s |  447588 ko | manual/ltac_bug.vo                  
+ 0m10.02s |  455480 ko | out/Benchmark/PLE/MonadId.vo        
+ 0m09.85s |  601944 ko | coqDeps/GetRelFlattening.vo         
+ 0m09.79s |  590024 ko | coqDeps/LHCoqTactics.vo             
+ 0m09.74s |  593812 ko | coqDeps/LiquidPreludeUtil.vo        
+ 0m09.53s |  593860 ko | coqDeps/TacticUtils.vo              
+ 0m08.74s |  452968 ko | out/Benchmark/PLE/MonadMaybe.vo     
+ 0m06.49s |  441984 ko | out/Benchmark/RBinsToBins.vo        
+ 0m03.72s |  445956 ko | out/Benchmark/PLE/MonoidMaybe.vo    
+ 0m01.09s |  440340 ko | out/Benchmark/PLE/Lambdas.vo        
+ 0m00.85s |  433992 ko | coqDeps/QuickTacs.vo                
+ 0m00.73s |  431012 ko | coqDeps/SimpleTacticUtils.vo        
+ 0m00.72s |  433392 ko | coqDeps/GetRelInterface.vo          
+ 0m00.69s |  430244 ko | coqDeps/SubsumptionTacs.vo          
+ 0m00.64s |  431508 ko | coqDeps/LiquidPrelude.vo            
+ 0m00.37s |  423436 ko | coqDeps/LiquidPreludeInterface.vo   
+ 0m00.31s |  423100 ko | coqDeps/Equality.vo                 
+ 0m00.30s |  421136 ko | coqDeps/Snipe.vo                    
+ 0m00.23s |  387204 ko | coqDeps/BoolTacs.vo                 
+ 0m00.20s |  337868 ko | coqDeps/EqualityInterface.vo        
+ 0m00.03s |   72048 ko | coqDeps/PairLists.vo                
 cp -f time-of-build-pretty.log out/time-of-build-pretty.log
