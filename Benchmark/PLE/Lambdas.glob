@@ -1,207 +1,256 @@
-DIGEST 8a9b548d07a1772f09265d211eb595ac
+DIGEST 20cf0a7f67999d7600b035f9ffc888ad
 FOutput.Benchmark.PLE.Lambdas
 R28:44 coqDeps.LiquidPreludeUtil <> <> lib
-def 127:141 <> fvInLambda_spec
-R147:147 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R149:150 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R152:154 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R159:159 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R151:151 Corelib.Numbers.BinNums <> Z ind
-binder 148:148 <> x:1
-R155:158 Corelib.Init.Logic <> True ind
-binder 144:144 <> x:2
-R173:173 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R176:177 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R179:181 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R186:186 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R178:178 Corelib.Numbers.BinNums <> Z ind
-binder 174:175 <> VV:3
-R182:185 Corelib.Init.Logic <> True ind
-R212:226 Output.Benchmark.PLE.Lambdas <> fvInLambda_spec def
-def 253:262 <> fvInLambda
-R268:268 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R270:271 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R273:275 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R280:280 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R272:272 Corelib.Numbers.BinNums <> Z ind
-binder 269:269 <> x:4
-R276:279 Corelib.Init.Logic <> True ind
-binder 265:265 <> x:5
-R284:298 Output.Benchmark.PLE.Lambdas <> fvInLambda_spec def
-R300:300 Output.Benchmark.PLE.Lambdas <> x:5 var
-R370:370 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R372:373 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R375:377 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R382:382 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R374:374 Corelib.Numbers.BinNums <> Z ind
-binder 371:371 <> y:6
-R378:381 Corelib.Init.Logic <> True ind
-binder 367:367 <> y:7
-R387:387 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R389:390 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R392:394 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R467:467 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R391:391 Corelib.Numbers.BinNums <> Z ind
-binder 388:388 <> v:8
-R412:412 Corelib.Numbers.BinNums <> Z ind
-binder 403:409 <> addZres:9
-R416:416 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R448:453 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R466:466 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R417:424 coqDeps.LiquidPreludeUtil <> addZ_rel ind
-R429:432 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R434:438 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R433:433 Output.Benchmark.PLE.Lambdas <> y:7 var
-R441:447 Output.Benchmark.PLE.Lambdas <> addZres:9 var
-R455:458 coqDeps.LiquidPreludeUtil <> :::x_'=='_x not
-R454:454 Output.Benchmark.PLE.Lambdas <> v:8 var
-R459:465 Output.Benchmark.PLE.Lambdas <> addZres:9 var
-R520:534 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R544:544 coqDeps.LiquidPreludeUtil <> :::x_'+Z'_x not
-R592:597 coqDeps.LiquidPreludeUtil <> :::x_'+Z'_x not
-R645:645 coqDeps.LiquidPreludeUtil <> :::x_'+Z'_x not
-R545:549 Corelib.Init.Specif <> exist constr
-R562:562 Corelib.Numbers.BinNums <> Z ind
-binder 557:559 <> x_1:10
-R568:571 Corelib.Init.Logic <> True ind
-R598:602 Corelib.Init.Specif <> exist constr
-R615:615 Corelib.Numbers.BinNums <> Z ind
-binder 610:612 <> x_2:11
-R621:624 Corelib.Init.Logic <> True ind
-R370:370 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R372:373 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R375:377 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R382:382 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R374:374 Corelib.Numbers.BinNums <> Z ind
-binder 371:371 <> y:12
-R378:381 Corelib.Init.Logic <> True ind
-binder 367:367 <> y:13
-R387:387 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R389:390 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R392:394 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R467:467 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R391:391 Corelib.Numbers.BinNums <> Z ind
-binder 388:388 <> v:14
-R412:412 Corelib.Numbers.BinNums <> Z ind
-binder 403:409 <> addZres:15
-R416:416 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R448:453 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R466:466 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R417:424 coqDeps.LiquidPreludeUtil <> addZ_rel ind
-R429:432 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R434:438 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R433:433 Output.Benchmark.PLE.Lambdas <> y:13 var
-R441:447 Output.Benchmark.PLE.Lambdas <> addZres:15 var
-R455:458 coqDeps.LiquidPreludeUtil <> :::x_'=='_x not
-R454:454 Output.Benchmark.PLE.Lambdas <> v:14 var
-R459:465 Output.Benchmark.PLE.Lambdas <> addZres:15 var
-R520:534 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R544:544 coqDeps.LiquidPreludeUtil <> :::x_'+Z'_x not
-R592:597 coqDeps.LiquidPreludeUtil <> :::x_'+Z'_x not
-R645:645 coqDeps.LiquidPreludeUtil <> :::x_'+Z'_x not
-R545:549 Corelib.Init.Specif <> exist constr
-R562:562 Corelib.Numbers.BinNums <> Z ind
-binder 557:559 <> x_1:16
-R568:571 Corelib.Init.Logic <> True ind
-R598:602 Corelib.Init.Specif <> exist constr
-R615:615 Corelib.Numbers.BinNums <> Z ind
-binder 610:612 <> x_2:17
-R621:624 Corelib.Init.Logic <> True ind
-binder 686:686 <> f:18
-binder 686:686 <> f:19
-R776:790 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R801:808 coqDeps.LiquidPreludeUtil <> getPackF def
-R814:818 Corelib.Init.Specif <> exist constr
-R829:829 Corelib.Numbers.BinNums <> Z ind
-binder 826:826 <> y:20
-R835:838 Corelib.Init.Logic <> True ind
-R776:790 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R801:808 coqDeps.LiquidPreludeUtil <> getPackF def
-R814:818 Corelib.Init.Specif <> exist constr
-R829:829 Corelib.Numbers.BinNums <> Z ind
-binder 826:826 <> y:21
-R835:838 Corelib.Init.Logic <> True ind
-def 898:907 <> appId_spec
-R913:913 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R915:916 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R918:920 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R925:925 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R917:917 Corelib.Numbers.BinNums <> Z ind
-binder 914:914 <> x:22
-R921:924 Corelib.Init.Logic <> True ind
-binder 910:910 <> x:23
-R939:939 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R942:943 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R945:947 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R952:952 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R944:944 Corelib.Numbers.BinNums <> Z ind
-binder 940:941 <> VV:24
-R948:951 Corelib.Init.Logic <> True ind
-R978:987 Output.Benchmark.PLE.Lambdas <> appId_spec def
-def 1014:1018 <> appId
+R140:151 Stdlib.Unicode.Utf8 <> <> lib
+def 166:180 <> fvInLambda_spec
+R187:187 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R189:190 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R192:194 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R199:199 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R191:191 Corelib.Numbers.BinNums <> Z ind
+binder 188:188 <> x:1
+R195:198 Corelib.Init.Logic <> True ind
+binder 183:183 <> x:2
+R213:213 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R216:217 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R219:221 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R226:226 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R218:218 Corelib.Numbers.BinNums <> Z ind
+binder 214:215 <> VV:3
+R222:225 Corelib.Init.Logic <> True ind
+R252:266 Output.Benchmark.PLE.Lambdas <> fvInLambda_spec def
+def 293:302 <> fvInLambda
+R309:309 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R311:312 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R314:316 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R321:321 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R313:313 Corelib.Numbers.BinNums <> Z ind
+binder 310:310 <> x:4
+R317:320 Corelib.Init.Logic <> True ind
+binder 305:305 <> x:5
+R325:339 Output.Benchmark.PLE.Lambdas <> fvInLambda_spec def
+R341:341 Output.Benchmark.PLE.Lambdas <> x:5 var
+R399:403 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R422:447 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R408:408 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R411:412 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R414:416 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R421:421 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R413:413 Corelib.Numbers.BinNums <> Z ind
+binder 409:410 <> VV:6
+R417:420 Corelib.Init.Logic <> True ind
+binder 404:404 <> y:7
+R448:448 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R450:451 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R453:455 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R524:524 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R452:452 Corelib.Numbers.BinNums <> Z ind
+binder 449:449 <> v:8
+R456:460 Stdlib.Unicode.Utf8_core <> ::type_scope:'∃'_x_'..'_x_','_x not
+R473:475 Stdlib.Unicode.Utf8_core <> ::type_scope:'∃'_x_'..'_x_','_x not
+R472:472 Corelib.Numbers.BinNums <> Z ind
+binder 461:468 <> addZ_res:9
+R506:510 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R476:483 coqDeps.LiquidPreludeUtil <> addZ_rel ind
+R487:490 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R492:496 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R491:491 Output.Benchmark.PLE.Lambdas <> y:7 var
+R498:505 Output.Benchmark.PLE.Lambdas <> addZ_res:9 var
+R512:515 coqDeps.LiquidPreludeUtil <> :::x_'=='_x not
+R511:511 Output.Benchmark.PLE.Lambdas <> v:8 var
+R516:523 Output.Benchmark.PLE.Lambdas <> addZ_res:9 var
+R399:403 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R422:447 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R408:408 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R411:412 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R414:416 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R421:421 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R413:413 Corelib.Numbers.BinNums <> Z ind
+binder 409:410 <> VV:10
+R417:420 Corelib.Init.Logic <> True ind
+binder 404:404 <> y:11
+R448:448 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R450:451 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R453:455 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R524:524 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R452:452 Corelib.Numbers.BinNums <> Z ind
+binder 449:449 <> v:12
+R456:460 Stdlib.Unicode.Utf8_core <> ::type_scope:'∃'_x_'..'_x_','_x not
+R473:475 Stdlib.Unicode.Utf8_core <> ::type_scope:'∃'_x_'..'_x_','_x not
+R472:472 Corelib.Numbers.BinNums <> Z ind
+binder 461:468 <> addZ_res:13
+R506:510 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R476:483 coqDeps.LiquidPreludeUtil <> addZ_rel ind
+R487:490 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R492:496 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R491:491 Output.Benchmark.PLE.Lambdas <> y:11 var
+R498:505 Output.Benchmark.PLE.Lambdas <> addZ_res:13 var
+R512:515 coqDeps.LiquidPreludeUtil <> :::x_'=='_x not
+R511:511 Output.Benchmark.PLE.Lambdas <> v:12 var
+R516:523 Output.Benchmark.PLE.Lambdas <> addZ_res:13 var
+R560:574 coqDeps.LiquidPreludeUtil <> subsumptionCast def
+R692:695 coqDeps.LiquidPreludeUtil <> :::x_'+Z'_x not
+R689:690 coqDeps.LiquidPreludeUtil <> :::'#'_x not
+R696:697 coqDeps.LiquidPreludeUtil <> :::'#'_x not
+R603:606 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R612:614 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R611:611 Corelib.Numbers.BinNums <> Z ind
+binder 607:607 <> v:14
+R615:619 Stdlib.Unicode.Utf8_core <> ::type_scope:'∃'_x_'..'_x_','_x not
+R632:634 Stdlib.Unicode.Utf8_core <> ::type_scope:'∃'_x_'..'_x_','_x not
+R631:631 Corelib.Numbers.BinNums <> Z ind
+binder 620:627 <> addZ_res:15
+R656:660 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R635:642 coqDeps.LiquidPreludeUtil <> addZ_rel ind
+R648:655 Output.Benchmark.PLE.Lambdas <> addZ_res:15 var
+R662:665 coqDeps.LiquidPreludeUtil <> :::x_'=='_x not
+R661:661 Output.Benchmark.PLE.Lambdas <> v:14 var
+R666:673 Output.Benchmark.PLE.Lambdas <> addZ_res:15 var
+R588:588 Corelib.Numbers.BinNums <> Z ind
+R560:574 coqDeps.LiquidPreludeUtil <> subsumptionCast def
+R692:695 coqDeps.LiquidPreludeUtil <> :::x_'+Z'_x not
+R689:690 coqDeps.LiquidPreludeUtil <> :::'#'_x not
+R696:697 coqDeps.LiquidPreludeUtil <> :::'#'_x not
+R603:606 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R612:614 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R611:611 Corelib.Numbers.BinNums <> Z ind
+binder 607:607 <> v:16
+R615:619 Stdlib.Unicode.Utf8_core <> ::type_scope:'∃'_x_'..'_x_','_x not
+R632:634 Stdlib.Unicode.Utf8_core <> ::type_scope:'∃'_x_'..'_x_','_x not
+R631:631 Corelib.Numbers.BinNums <> Z ind
+binder 620:627 <> addZ_res:17
+R656:660 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R635:642 coqDeps.LiquidPreludeUtil <> addZ_rel ind
+R648:655 Output.Benchmark.PLE.Lambdas <> addZ_res:17 var
+R662:665 coqDeps.LiquidPreludeUtil <> :::x_'=='_x not
+R661:661 Output.Benchmark.PLE.Lambdas <> v:16 var
+R666:673 Output.Benchmark.PLE.Lambdas <> addZ_res:17 var
+R588:588 Corelib.Numbers.BinNums <> Z ind
+binder 754:754 <> f:18
+binder 754:754 <> f:19
+R875:889 coqDeps.LiquidPreludeUtil <> subsumptionCast def
+R914:921 coqDeps.LiquidPreludeUtil <> getPackF def
+R926:927 coqDeps.LiquidPreludeUtil <> :::'#'_x not
+R894:897 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R904:906 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R903:903 Corelib.Numbers.BinNums <> Z ind
+binder 898:899 <> VV:20
+R907:910 Corelib.Init.Logic <> True ind
+R891:891 Corelib.Numbers.BinNums <> Z ind
+R875:889 coqDeps.LiquidPreludeUtil <> subsumptionCast def
+R914:921 coqDeps.LiquidPreludeUtil <> getPackF def
+R926:927 coqDeps.LiquidPreludeUtil <> :::'#'_x not
+R894:897 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R904:906 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R903:903 Corelib.Numbers.BinNums <> Z ind
+binder 898:899 <> VV:21
+R907:910 Corelib.Init.Logic <> True ind
+R891:891 Corelib.Numbers.BinNums <> Z ind
+def 969:978 <> appId_spec
+R985:985 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R987:988 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R990:992 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R997:997 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R989:989 Corelib.Numbers.BinNums <> Z ind
+binder 986:986 <> x:22
+R993:996 Corelib.Init.Logic <> True ind
+binder 981:981 <> x:23
+R1011:1011 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1014:1015 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1017:1019 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
 R1024:1024 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1026:1027 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1029:1031 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1036:1036 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1028:1028 Corelib.Numbers.BinNums <> Z ind
-binder 1025:1025 <> x:25
-R1032:1035 Corelib.Init.Logic <> True ind
-binder 1021:1021 <> x:26
-R1040:1049 Output.Benchmark.PLE.Lambdas <> appId_spec def
-R1051:1051 Output.Benchmark.PLE.Lambdas <> x:26 var
-R1121:1121 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1123:1124 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1126:1128 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1133:1133 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1125:1125 Corelib.Numbers.BinNums <> Z ind
-binder 1122:1122 <> y:27
-R1129:1132 Corelib.Init.Logic <> True ind
-binder 1118:1118 <> y:28
-R1138:1138 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1140:1141 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1143:1145 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1162:1162 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1142:1142 Corelib.Numbers.BinNums <> Z ind
-binder 1139:1139 <> v:29
-R1147:1150 Corelib.Init.Logic <> ::type_scope:x_'='_x not
-R1161:1161 Corelib.Init.Logic <> ::type_scope:x_'='_x not
-R1146:1146 Output.Benchmark.PLE.Lambdas <> v:29 var
-R1151:1154 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R1156:1160 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R1155:1155 Output.Benchmark.PLE.Lambdas <> y:28 var
-R1215:1219 Corelib.Init.Specif <> exist constr
-R1121:1121 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1123:1124 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1126:1128 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1133:1133 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1125:1125 Corelib.Numbers.BinNums <> Z ind
-binder 1122:1122 <> y:30
-R1129:1132 Corelib.Init.Logic <> True ind
-binder 1118:1118 <> y:31
-R1138:1138 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1140:1141 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1143:1145 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1162:1162 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1142:1142 Corelib.Numbers.BinNums <> Z ind
-binder 1139:1139 <> v:32
-R1147:1150 Corelib.Init.Logic <> ::type_scope:x_'='_x not
-R1161:1161 Corelib.Init.Logic <> ::type_scope:x_'='_x not
-R1146:1146 Output.Benchmark.PLE.Lambdas <> v:32 var
-R1151:1154 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R1156:1160 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R1155:1155 Output.Benchmark.PLE.Lambdas <> y:31 var
-R1215:1219 Corelib.Init.Specif <> exist constr
-binder 1263:1263 <> f:33
-binder 1263:1263 <> f:34
-R1353:1367 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R1378:1385 coqDeps.LiquidPreludeUtil <> getPackF def
-R1391:1395 Corelib.Init.Specif <> exist constr
-R1406:1406 Corelib.Numbers.BinNums <> Z ind
-binder 1403:1403 <> y:35
-R1412:1415 Corelib.Init.Logic <> True ind
-R1353:1367 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R1378:1385 coqDeps.LiquidPreludeUtil <> getPackF def
-R1391:1395 Corelib.Init.Specif <> exist constr
-R1406:1406 Corelib.Numbers.BinNums <> Z ind
-binder 1403:1403 <> y:36
-R1412:1415 Corelib.Init.Logic <> True ind
+R1016:1016 Corelib.Numbers.BinNums <> Z ind
+binder 1012:1013 <> VV:24
+R1020:1023 Corelib.Init.Logic <> True ind
+R1050:1059 Output.Benchmark.PLE.Lambdas <> appId_spec def
+def 1086:1090 <> appId
+R1097:1097 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1099:1100 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1102:1104 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1109:1109 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1101:1101 Corelib.Numbers.BinNums <> Z ind
+binder 1098:1098 <> x:25
+R1105:1108 Corelib.Init.Logic <> True ind
+binder 1093:1093 <> x:26
+R1113:1122 Output.Benchmark.PLE.Lambdas <> appId_spec def
+R1124:1124 Output.Benchmark.PLE.Lambdas <> x:26 var
+R1182:1186 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R1205:1207 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R1191:1191 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1194:1195 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1197:1199 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1204:1204 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1196:1196 Corelib.Numbers.BinNums <> Z ind
+binder 1192:1193 <> VV:27
+R1200:1203 Corelib.Init.Logic <> True ind
+binder 1187:1187 <> y:28
+R1208:1208 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1210:1211 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1213:1215 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1231:1231 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1212:1212 Corelib.Numbers.BinNums <> Z ind
+binder 1209:1209 <> v:29
+R1217:1220 coqDeps.LiquidPreludeUtil <> :::x_'=='_x not
+R1216:1216 Output.Benchmark.PLE.Lambdas <> v:29 var
+R1221:1224 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R1226:1230 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R1225:1225 Output.Benchmark.PLE.Lambdas <> y:28 var
+R1182:1186 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R1205:1207 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R1191:1191 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1194:1195 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1197:1199 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1204:1204 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1196:1196 Corelib.Numbers.BinNums <> Z ind
+binder 1192:1193 <> VV:30
+R1200:1203 Corelib.Init.Logic <> True ind
+binder 1187:1187 <> y:31
+R1208:1208 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1210:1211 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1213:1215 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1231:1231 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1212:1212 Corelib.Numbers.BinNums <> Z ind
+binder 1209:1209 <> v:32
+R1217:1220 coqDeps.LiquidPreludeUtil <> :::x_'=='_x not
+R1216:1216 Output.Benchmark.PLE.Lambdas <> v:32 var
+R1221:1224 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R1226:1230 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R1225:1225 Output.Benchmark.PLE.Lambdas <> y:31 var
+R1263:1277 coqDeps.LiquidPreludeUtil <> subsumptionCast def
+R1303:1304 coqDeps.LiquidPreludeUtil <> :::'#'_x not
+R1282:1285 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R1291:1293 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R1290:1290 Corelib.Numbers.BinNums <> Z ind
+binder 1286:1286 <> v:33
+R1295:1298 coqDeps.LiquidPreludeUtil <> :::x_'=='_x not
+R1294:1294 Output.Benchmark.PLE.Lambdas <> v:33 var
+R1279:1279 Corelib.Numbers.BinNums <> Z ind
+R1263:1277 coqDeps.LiquidPreludeUtil <> subsumptionCast def
+R1303:1304 coqDeps.LiquidPreludeUtil <> :::'#'_x not
+R1282:1285 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R1291:1293 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R1290:1290 Corelib.Numbers.BinNums <> Z ind
+binder 1286:1286 <> v:34
+R1295:1298 coqDeps.LiquidPreludeUtil <> :::x_'=='_x not
+R1294:1294 Output.Benchmark.PLE.Lambdas <> v:34 var
+R1279:1279 Corelib.Numbers.BinNums <> Z ind
+binder 1349:1349 <> f:35
+binder 1349:1349 <> f:36
+R1470:1484 coqDeps.LiquidPreludeUtil <> subsumptionCast def
+R1509:1516 coqDeps.LiquidPreludeUtil <> getPackF def
+R1521:1522 coqDeps.LiquidPreludeUtil <> :::'#'_x not
+R1489:1492 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R1499:1501 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R1498:1498 Corelib.Numbers.BinNums <> Z ind
+binder 1493:1494 <> VV:37
+R1502:1505 Corelib.Init.Logic <> True ind
+R1486:1486 Corelib.Numbers.BinNums <> Z ind
+R1470:1484 coqDeps.LiquidPreludeUtil <> subsumptionCast def
+R1509:1516 coqDeps.LiquidPreludeUtil <> getPackF def
+R1521:1522 coqDeps.LiquidPreludeUtil <> :::'#'_x not
+R1489:1492 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R1499:1501 Stdlib.Unicode.Utf8_core <> :::'λ'_x_'..'_x_','_x not
+R1498:1498 Corelib.Numbers.BinNums <> Z ind
+binder 1493:1494 <> VV:38
+R1502:1505 Corelib.Init.Logic <> True ind
+R1486:1486 Corelib.Numbers.BinNums <> Z ind

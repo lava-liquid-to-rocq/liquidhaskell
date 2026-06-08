@@ -1,515 +1,447 @@
-DIGEST f9b1c63f4b5686bdce34c35289b5f0f6
+DIGEST 1bc6e2c87876bb8bdcaa6d4241a48c49
 FOutput.Benchmark.RBinsToBins
 R28:44 coqDeps.LiquidPreludeUtil <> <> lib
-ind 126:131 <> RBin_u
-constr 148:152 <> RB0_u
-constr 176:180 <> RB1_u
-constr 204:207 <> RZ_u
-R161:164 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R155:160 Output.Benchmark.RBinsToBins <> RBin_u:1 ind
-R165:170 Output.Benchmark.RBinsToBins <> RBin_u:1 ind
-R189:192 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R183:188 Output.Benchmark.RBinsToBins <> RBin_u:1 ind
-R193:198 Output.Benchmark.RBinsToBins <> RBin_u:1 ind
-R210:215 Output.Benchmark.RBinsToBins <> RBin_u:1 ind
-scheme 126:131 <> RBin_u_rect
-scheme 126:131 <> RBin_u_ind
-scheme 126:131 <> RBin_u_rec
-scheme 126:131 <> RBin_u_sind
-def 228:234 <> RBin_eq
-R240:245 Output.Benchmark.RBinsToBins <> RBin_u ind
-binder 237:237 <> x:3
-R252:257 Output.Benchmark.RBinsToBins <> RBin_u ind
-binder 249:249 <> y:4
-R261:264 Corelib.Init.Datatypes <> bool ind
-R277:277 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R279:280 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R282:282 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R278:278 Output.Benchmark.RBinsToBins <> x:3 var
-R281:281 Output.Benchmark.RBinsToBins <> y:4 var
-R289:289 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R297:298 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R307:307 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R290:294 Output.Benchmark.RBinsToBins <> RB0_u constr
-R299:303 Output.Benchmark.RBinsToBins <> RB0_u constr
-R317:321 Corelib.Init.Datatypes <> ::bool_scope:x_'&&'_x not
-R334:334 Corelib.Init.Datatypes <> ::bool_scope:x_'&&'_x not
-R313:316 Corelib.Init.Datatypes <> true constr
-R322:328 Output.Benchmark.RBinsToBins <> RBin_eq:5 def
-R330:330 Output.Benchmark.RBinsToBins <> x:3 var
-R339:339 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R347:348 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R357:357 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R340:344 Output.Benchmark.RBinsToBins <> RB1_u constr
-R349:353 Output.Benchmark.RBinsToBins <> RB1_u constr
-R367:371 Corelib.Init.Datatypes <> ::bool_scope:x_'&&'_x not
-R384:384 Corelib.Init.Datatypes <> ::bool_scope:x_'&&'_x not
-R363:366 Corelib.Init.Datatypes <> true constr
-R372:378 Output.Benchmark.RBinsToBins <> RBin_eq:5 def
-R380:380 Output.Benchmark.RBinsToBins <> x:3 var
-R389:389 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R394:395 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R400:400 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R390:393 Output.Benchmark.RBinsToBins <> RZ_u constr
-R396:399 Output.Benchmark.RBinsToBins <> RZ_u constr
-R405:408 Corelib.Init.Datatypes <> true constr
-R412:412 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R414:415 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R417:417 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R422:426 Corelib.Init.Datatypes <> false constr
-prf 442:453 <> RBin_eq_refl
-R468:473 Output.Benchmark.RBinsToBins <> RBin_u ind
-binder 465:465 <> x:6
-R478:484 Corelib.Init.Datatypes <> is_true def
-R487:493 Output.Benchmark.RBinsToBins <> RBin_eq def
-R495:495 Output.Benchmark.RBinsToBins <> x:6 var
-R497:497 Output.Benchmark.RBinsToBins <> x:6 var
-prf 590:600 <> RBin_eqb_eq
-R615:620 Output.Benchmark.RBinsToBins <> RBin_u ind
-binder 612:612 <> s:7
-R627:632 Output.Benchmark.RBinsToBins <> RBin_u ind
-binder 624:624 <> t:8
-R637:637 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R659:664 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R670:670 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R638:644 Corelib.Init.Datatypes <> is_true def
-R647:653 Output.Benchmark.RBinsToBins <> RBin_eq def
-R655:655 Output.Benchmark.RBinsToBins <> s:7 var
-R657:657 Output.Benchmark.RBinsToBins <> t:8 var
-R666:668 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R140:151 Stdlib.Unicode.Utf8 <> <> lib
+ind 165:170 <> RBin_u
+constr 185:189 <> RB0_u
+constr 212:216 <> RB1_u
+constr 239:242 <> RZ_u
+R198:202 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'→'_x not
+R192:197 Output.Benchmark.RBinsToBins <> RBin_u:1 ind
+R203:208 Output.Benchmark.RBinsToBins <> RBin_u:1 ind
+R225:229 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'→'_x not
+R219:224 Output.Benchmark.RBinsToBins <> RBin_u:1 ind
+R230:235 Output.Benchmark.RBinsToBins <> RBin_u:1 ind
+R245:250 Output.Benchmark.RBinsToBins <> RBin_u:1 ind
+scheme 165:170 <> RBin_u_rect
+scheme 165:170 <> RBin_u_ind
+scheme 165:170 <> RBin_u_rec
+scheme 165:170 <> RBin_u_sind
+def 263:269 <> RBin_eq
+R278:283 Output.Benchmark.RBinsToBins <> RBin_u ind
+binder 272:272 <> x:3
+binder 274:274 <> y:4
+R287:290 Corelib.Init.Datatypes <> bool ind
+R303:303 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R305:306 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R308:308 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R304:304 Output.Benchmark.RBinsToBins <> x:3 var
+R307:307 Output.Benchmark.RBinsToBins <> y:4 var
+R319:319 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R327:328 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R337:337 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R320:324 Output.Benchmark.RBinsToBins <> RB0_u constr
+R329:333 Output.Benchmark.RBinsToBins <> RB0_u constr
+R346:349 Corelib.Init.Datatypes <> ::bool_scope:x_'&&'_x not
+R342:345 Corelib.Init.Datatypes <> true constr
+R350:356 Output.Benchmark.RBinsToBins <> RBin_eq:5 def
+R367:367 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R375:376 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R385:385 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R368:372 Output.Benchmark.RBinsToBins <> RB1_u constr
+R377:381 Output.Benchmark.RBinsToBins <> RB1_u constr
+R394:397 Corelib.Init.Datatypes <> ::bool_scope:x_'&&'_x not
+R390:393 Corelib.Init.Datatypes <> true constr
+R398:404 Output.Benchmark.RBinsToBins <> RBin_eq:5 def
+R415:415 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R420:421 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R426:426 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R416:419 Output.Benchmark.RBinsToBins <> RZ_u constr
+R422:425 Output.Benchmark.RBinsToBins <> RZ_u constr
+R431:434 Corelib.Init.Datatypes <> true constr
+R440:440 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R442:443 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R445:445 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R450:454 Corelib.Init.Datatypes <> false constr
+prf 472:483 <> RBin_eq_refl
+R487:491 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R502:504 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R496:501 Output.Benchmark.RBinsToBins <> RBin_u ind
+binder 492:492 <> x:6
+R505:511 Corelib.Init.Datatypes <> is_true def
+R514:520 Output.Benchmark.RBinsToBins <> RBin_eq def
+R522:522 Output.Benchmark.RBinsToBins <> x:6 var
+R524:524 Output.Benchmark.RBinsToBins <> x:6 var
+prf 614:624 <> RBin_eqb_eq
+R628:632 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R645:647 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R639:644 Output.Benchmark.RBinsToBins <> RBin_u ind
+binder 633:633 <> s:7
+R639:644 Output.Benchmark.RBinsToBins <> RBin_u ind
+binder 635:635 <> t:8
+R669:673 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'→'_x not
+R648:654 Corelib.Init.Datatypes <> is_true def
+R657:663 Output.Benchmark.RBinsToBins <> RBin_eq def
 R665:665 Output.Benchmark.RBinsToBins <> s:7 var
-R669:669 Output.Benchmark.RBinsToBins <> t:8 var
-inst 771:786 <> leibnitz_eq_RBin
-R790:800 coqDeps.LiquidPreludeUtil <> LeibnitzEqB class
-R854:860 coqDeps.LiquidPreludeUtil <> eqb_eq' meth
-R830:834 coqDeps.LiquidPreludeUtil <> refl' meth
-R809:815 coqDeps.LiquidPreludeUtil <> equalB' meth
-R820:826 Output.Benchmark.RBinsToBins <> RBin_eq def
-R839:850 Output.Benchmark.RBinsToBins <> RBin_eq_refl thm
-R865:875 Output.Benchmark.RBinsToBins <> RBin_eqb_eq thm
-def 889:895 <> RBin_wf
-R901:906 Output.Benchmark.RBinsToBins <> RBin_u ind
-binder 898:898 <> x:9
-R926:926 Output.Benchmark.RBinsToBins <> x:9 var
-R934:938 Output.Benchmark.RBinsToBins <> RB0_u constr
-R947:947 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R957:962 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R972:972 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R948:954 Output.Benchmark.RBinsToBins <> RBin_wf:10 def
-R964:967 Corelib.Init.Logic <> ::type_scope:x_'<>'_x not
-R968:971 Output.Benchmark.RBinsToBins <> RZ_u constr
-R978:982 Output.Benchmark.RBinsToBins <> RB1_u constr
-R991:991 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1001:1005 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R992:998 Output.Benchmark.RBinsToBins <> RBin_wf:10 def
-R1006:1009 Corelib.Init.Logic <> True ind
-R1014:1017 Output.Benchmark.RBinsToBins <> RZ_u constr
-R1022:1025 Corelib.Init.Logic <> True ind
-prf 1041:1051 <> RBin_wf_ref
-R1063:1066 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R1057:1062 Output.Benchmark.RBinsToBins <> RBin_u ind
-binder 1054:1054 <> p:12
-R1078:1078 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1080:1081 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1088:1090 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1111:1111 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1082:1087 Output.Benchmark.RBinsToBins <> RBin_u ind
-binder 1079:1079 <> v:13
-R1091:1091 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1101:1106 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1110:1110 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1092:1098 Output.Benchmark.RBinsToBins <> RBin_wf def
-R1100:1100 Output.Benchmark.RBinsToBins <> v:13 var
-R1107:1107 Output.Benchmark.RBinsToBins <> p:12 var
-R1109:1109 Output.Benchmark.RBinsToBins <> v:13 var
-binder 1074:1075 <> tm:14
-R1115:1121 Output.Benchmark.RBinsToBins <> RBin_wf def
-R1124:1127 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R1130:1134 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R1128:1129 Output.Benchmark.RBinsToBins <> tm:14 var
-abbrev 1207:1210 <> RBin
-R1215:1215 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1217:1218 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1225:1227 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1247:1247 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1219:1224 Output.Benchmark.RBinsToBins <> RBin_u ind
-binder 1216:1216 <> x:15
-R1228:1228 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1238:1242 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1229:1235 Output.Benchmark.RBinsToBins <> RBin_wf def
-R1237:1237 Output.Benchmark.RBinsToBins <> x:15 var
-R1243:1246 Corelib.Init.Logic <> True ind
-def 1262:1268 <> RB0_lem
-R1274:1274 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1276:1277 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1284:1286 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1313:1313 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1278:1283 Output.Benchmark.RBinsToBins <> RBin_u ind
-binder 1275:1275 <> n:16
-R1287:1287 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1297:1302 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1312:1312 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1288:1294 Output.Benchmark.RBinsToBins <> RBin_wf def
-R1296:1296 Output.Benchmark.RBinsToBins <> n:16 var
-R1304:1307 Corelib.Init.Logic <> ::type_scope:x_'<>'_x not
-R1303:1303 Output.Benchmark.RBinsToBins <> n:16 var
-R1308:1311 Output.Benchmark.RBinsToBins <> RZ_u constr
-binder 1271:1271 <> n:17
-R1317:1317 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1346:1350 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1318:1324 Output.Benchmark.RBinsToBins <> RBin_wf def
-R1327:1331 Output.Benchmark.RBinsToBins <> RB0_u constr
-R1334:1337 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R1339:1343 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R1338:1338 Output.Benchmark.RBinsToBins <> n:17 var
-R1351:1354 Corelib.Init.Logic <> True ind
-def 1419:1421 <> RB0
-R1427:1427 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1429:1430 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1437:1439 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1466:1466 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R1431:1436 Output.Benchmark.RBinsToBins <> RBin_u ind
-binder 1428:1428 <> n:18
-R1440:1440 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1450:1455 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1465:1465 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1441:1447 Output.Benchmark.RBinsToBins <> RBin_wf def
-R1449:1449 Output.Benchmark.RBinsToBins <> n:18 var
-R1457:1460 Corelib.Init.Logic <> ::type_scope:x_'<>'_x not
-R1456:1456 Output.Benchmark.RBinsToBins <> n:18 var
-R1461:1464 Output.Benchmark.RBinsToBins <> RZ_u constr
-binder 1424:1424 <> n:19
-R1470:1473 Output.Benchmark.RBinsToBins <> RBin abbrev
-R1480:1484 Corelib.Init.Specif <> exist constr
-R1510:1516 Output.Benchmark.RBinsToBins <> RB0_lem def
-R1518:1518 Output.Benchmark.RBinsToBins <> n:19 var
-R1489:1493 Output.Benchmark.RBinsToBins <> RB0_u constr
-R1496:1499 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R1501:1505 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R1500:1500 Output.Benchmark.RBinsToBins <> n:19 var
-def 1534:1540 <> RB1_lem
-R1546:1549 Output.Benchmark.RBinsToBins <> RBin abbrev
-binder 1543:1543 <> n:20
-R1553:1553 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1582:1586 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1554:1560 Output.Benchmark.RBinsToBins <> RBin_wf def
-R1563:1567 Output.Benchmark.RBinsToBins <> RB1_u constr
-R1570:1573 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R1575:1579 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R1574:1574 Output.Benchmark.RBinsToBins <> n:20 var
-R1587:1590 Corelib.Init.Logic <> True ind
-def 1655:1657 <> RB1
-R1663:1666 Output.Benchmark.RBinsToBins <> RBin abbrev
-binder 1660:1660 <> n:21
-R1670:1673 Output.Benchmark.RBinsToBins <> RBin abbrev
-R1680:1684 Corelib.Init.Specif <> exist constr
-R1710:1716 Output.Benchmark.RBinsToBins <> RB1_lem def
-R1718:1718 Output.Benchmark.RBinsToBins <> n:21 var
-R1689:1693 Output.Benchmark.RBinsToBins <> RB1_u constr
-R1696:1699 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R1701:1705 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R1700:1700 Output.Benchmark.RBinsToBins <> n:21 var
-def 1734:1739 <> RZ_lem
-R1742:1742 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1755:1759 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R1743:1749 Output.Benchmark.RBinsToBins <> RBin_wf def
-R1751:1754 Output.Benchmark.RBinsToBins <> RZ_u constr
-R1760:1763 Corelib.Init.Logic <> True ind
-def 1828:1829 <> RZ
-R1832:1835 Output.Benchmark.RBinsToBins <> RBin abbrev
-R1842:1846 Corelib.Init.Specif <> exist constr
-R1855:1860 Output.Benchmark.RBinsToBins <> RZ_lem def
-R1850:1853 Output.Benchmark.RBinsToBins <> RZ_u constr
-def 1875:1882 <> wf_RB0_n
-R1888:1893 Output.Benchmark.RBinsToBins <> RBin_u ind
-binder 1885:1885 <> n:22
-R1900:1906 Output.Benchmark.RBinsToBins <> RBin_wf def
-R1909:1913 Output.Benchmark.RBinsToBins <> RB0_u constr
-R1915:1915 Output.Benchmark.RBinsToBins <> n:22 var
-binder 1897:1897 <> p:23
-R1920:1926 Output.Benchmark.RBinsToBins <> RBin_wf def
-R1928:1928 Output.Benchmark.RBinsToBins <> n:22 var
-def 1975:1982 <> wf_RB1_n
-R1988:1993 Output.Benchmark.RBinsToBins <> RBin_u ind
-binder 1985:1985 <> n:24
-R2000:2006 Output.Benchmark.RBinsToBins <> RBin_wf def
-R2009:2013 Output.Benchmark.RBinsToBins <> RB1_u constr
-R2015:2015 Output.Benchmark.RBinsToBins <> n:24 var
-binder 1997:1997 <> p:25
-R2020:2026 Output.Benchmark.RBinsToBins <> RBin_wf def
-R2028:2028 Output.Benchmark.RBinsToBins <> n:24 var
-R2137:2143 Output.Benchmark.RBinsToBins <> RBin_wf def
-R2329:2331 Output.Benchmark.RBinsToBins <> RB0 def
-R2372:2374 Output.Benchmark.RBinsToBins <> RB1 def
-R2415:2416 Output.Benchmark.RBinsToBins <> RZ def
-ind 2445:2449 <> Bin_u
-constr 2466:2469 <> B0_u
-constr 2491:2494 <> B1_u
-constr 2516:2531 <> RBinsToBins__Z_u
-R2477:2480 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R2472:2476 Output.Benchmark.RBinsToBins <> Bin_u:26 ind
-R2481:2485 Output.Benchmark.RBinsToBins <> Bin_u:26 ind
-R2502:2505 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R2497:2501 Output.Benchmark.RBinsToBins <> Bin_u:26 ind
-R2506:2510 Output.Benchmark.RBinsToBins <> Bin_u:26 ind
-R2534:2538 Output.Benchmark.RBinsToBins <> Bin_u:26 ind
-scheme 2445:2449 <> Bin_u_rect
-scheme 2445:2449 <> Bin_u_ind
-scheme 2445:2449 <> Bin_u_rec
-scheme 2445:2449 <> Bin_u_sind
-def 2551:2556 <> Bin_eq
-R2562:2566 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 2559:2559 <> x:28
-R2573:2577 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 2570:2570 <> y:29
-R2581:2584 Corelib.Init.Datatypes <> bool ind
-R2597:2597 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2599:2600 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2602:2602 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2598:2598 Output.Benchmark.RBinsToBins <> x:28 var
-R2601:2601 Output.Benchmark.RBinsToBins <> y:29 var
-R2609:2609 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2616:2617 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2625:2625 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2610:2613 Output.Benchmark.RBinsToBins <> B0_u constr
-R2618:2621 Output.Benchmark.RBinsToBins <> B0_u constr
-R2635:2639 Corelib.Init.Datatypes <> ::bool_scope:x_'&&'_x not
-R2651:2651 Corelib.Init.Datatypes <> ::bool_scope:x_'&&'_x not
-R2631:2634 Corelib.Init.Datatypes <> true constr
-R2640:2645 Output.Benchmark.RBinsToBins <> Bin_eq:30 def
-R2647:2647 Output.Benchmark.RBinsToBins <> x:28 var
-R2656:2656 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2663:2664 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2672:2672 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2657:2660 Output.Benchmark.RBinsToBins <> B1_u constr
-R2665:2668 Output.Benchmark.RBinsToBins <> B1_u constr
-R2682:2686 Corelib.Init.Datatypes <> ::bool_scope:x_'&&'_x not
-R2698:2698 Corelib.Init.Datatypes <> ::bool_scope:x_'&&'_x not
-R2678:2681 Corelib.Init.Datatypes <> true constr
-R2687:2692 Output.Benchmark.RBinsToBins <> Bin_eq:30 def
-R2694:2694 Output.Benchmark.RBinsToBins <> x:28 var
-R2703:2703 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2720:2721 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2738:2738 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2704:2719 Output.Benchmark.RBinsToBins <> RBinsToBins__Z_u constr
-R2722:2737 Output.Benchmark.RBinsToBins <> RBinsToBins__Z_u constr
-R2743:2746 Corelib.Init.Datatypes <> true constr
-R2750:2750 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2752:2753 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2755:2755 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R2760:2764 Corelib.Init.Datatypes <> false constr
-prf 2780:2790 <> Bin_eq_refl
-R2805:2809 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 2802:2802 <> x:31
-R2814:2820 Corelib.Init.Datatypes <> is_true def
-R2823:2828 Output.Benchmark.RBinsToBins <> Bin_eq def
-R2830:2830 Output.Benchmark.RBinsToBins <> x:31 var
-R2832:2832 Output.Benchmark.RBinsToBins <> x:31 var
-prf 2924:2933 <> Bin_eqb_eq
-R2948:2952 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 2945:2945 <> s:32
-R2959:2963 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 2956:2956 <> t:33
-R2968:2968 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R2989:2994 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R3000:3000 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R2969:2975 Corelib.Init.Datatypes <> is_true def
-R2978:2983 Output.Benchmark.RBinsToBins <> Bin_eq def
-R2985:2985 Output.Benchmark.RBinsToBins <> s:32 var
-R2987:2987 Output.Benchmark.RBinsToBins <> t:33 var
-R2996:2998 Corelib.Init.Logic <> ::type_scope:x_'='_x not
-R2995:2995 Output.Benchmark.RBinsToBins <> s:32 var
-R2999:2999 Output.Benchmark.RBinsToBins <> t:33 var
-inst 3100:3114 <> leibnitz_eq_Bin
-R3118:3128 coqDeps.LiquidPreludeUtil <> LeibnitzEqB class
-R3180:3186 coqDeps.LiquidPreludeUtil <> eqb_eq' meth
-R3157:3161 coqDeps.LiquidPreludeUtil <> refl' meth
-R3137:3143 coqDeps.LiquidPreludeUtil <> equalB' meth
-R3148:3153 Output.Benchmark.RBinsToBins <> Bin_eq def
-R3166:3176 Output.Benchmark.RBinsToBins <> Bin_eq_refl thm
-R3191:3200 Output.Benchmark.RBinsToBins <> Bin_eqb_eq thm
-def 3214:3219 <> Bin_wf
-R3225:3229 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 3222:3222 <> x:34
-R3249:3249 Output.Benchmark.RBinsToBins <> x:34 var
-R3257:3260 Output.Benchmark.RBinsToBins <> B0_u constr
-R3269:3269 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R3278:3282 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R3270:3275 Output.Benchmark.RBinsToBins <> Bin_wf:35 def
-R3283:3286 Corelib.Init.Logic <> True ind
-R3292:3295 Output.Benchmark.RBinsToBins <> B1_u constr
-R3304:3304 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R3313:3317 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R3305:3310 Output.Benchmark.RBinsToBins <> Bin_wf:35 def
-R3318:3321 Corelib.Init.Logic <> True ind
-R3326:3341 Output.Benchmark.RBinsToBins <> RBinsToBins__Z_u constr
-R3346:3349 Corelib.Init.Logic <> True ind
-prf 3365:3374 <> Bin_wf_ref
-R3385:3388 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
-R3380:3384 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 3377:3377 <> p:37
-R3400:3400 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R3402:3403 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R3409:3411 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R3431:3431 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R3404:3408 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 3401:3401 <> v:38
-R3412:3412 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R3421:3426 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R3430:3430 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R3413:3418 Output.Benchmark.RBinsToBins <> Bin_wf def
-R3420:3420 Output.Benchmark.RBinsToBins <> v:38 var
-R3427:3427 Output.Benchmark.RBinsToBins <> p:37 var
-R3429:3429 Output.Benchmark.RBinsToBins <> v:38 var
-binder 3396:3397 <> tm:39
-R3435:3440 Output.Benchmark.RBinsToBins <> Bin_wf def
-R3443:3446 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R3449:3453 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R3447:3448 Output.Benchmark.RBinsToBins <> tm:39 var
-abbrev 3526:3528 <> Bin
-R3533:3533 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R3535:3536 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R3542:3544 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R3563:3563 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
-R3537:3541 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 3534:3534 <> x:40
-R3545:3545 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R3554:3558 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R3546:3551 Output.Benchmark.RBinsToBins <> Bin_wf def
-R3553:3553 Output.Benchmark.RBinsToBins <> x:40 var
-R3559:3562 Corelib.Init.Logic <> True ind
-def 3578:3583 <> B0_lem
-R3589:3591 Output.Benchmark.RBinsToBins <> Bin abbrev
-binder 3586:3586 <> n:41
-R3595:3595 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R3622:3626 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R3596:3601 Output.Benchmark.RBinsToBins <> Bin_wf def
-R3604:3607 Output.Benchmark.RBinsToBins <> B0_u constr
-R3610:3613 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R3615:3619 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R3614:3614 Output.Benchmark.RBinsToBins <> n:41 var
-R3627:3630 Corelib.Init.Logic <> True ind
-def 3695:3696 <> B0
-R3702:3704 Output.Benchmark.RBinsToBins <> Bin abbrev
-binder 3699:3699 <> n:42
-R3708:3710 Output.Benchmark.RBinsToBins <> Bin abbrev
-R3717:3721 Corelib.Init.Specif <> exist constr
-R3746:3751 Output.Benchmark.RBinsToBins <> B0_lem def
-R3753:3753 Output.Benchmark.RBinsToBins <> n:42 var
-R3726:3729 Output.Benchmark.RBinsToBins <> B0_u constr
-R3732:3735 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R3737:3741 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R3736:3736 Output.Benchmark.RBinsToBins <> n:42 var
-def 3769:3774 <> B1_lem
-R3780:3782 Output.Benchmark.RBinsToBins <> Bin abbrev
-binder 3777:3777 <> n:43
-R3786:3786 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R3813:3817 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R3787:3792 Output.Benchmark.RBinsToBins <> Bin_wf def
-R3795:3798 Output.Benchmark.RBinsToBins <> B1_u constr
-R3801:3804 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R3806:3810 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R3805:3805 Output.Benchmark.RBinsToBins <> n:43 var
-R3818:3821 Corelib.Init.Logic <> True ind
-def 3886:3887 <> B1
-R3893:3895 Output.Benchmark.RBinsToBins <> Bin abbrev
-binder 3890:3890 <> n:44
-R3899:3901 Output.Benchmark.RBinsToBins <> Bin abbrev
-R3908:3912 Corelib.Init.Specif <> exist constr
-R3937:3942 Output.Benchmark.RBinsToBins <> B1_lem def
-R3944:3944 Output.Benchmark.RBinsToBins <> n:44 var
-R3917:3920 Output.Benchmark.RBinsToBins <> B1_u constr
-R3923:3926 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R3928:3932 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
-R3927:3927 Output.Benchmark.RBinsToBins <> n:44 var
-def 3960:3977 <> RBinsToBins__Z_lem
-R3980:3980 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R4004:4008 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R3981:3986 Output.Benchmark.RBinsToBins <> Bin_wf def
-R3988:4003 Output.Benchmark.RBinsToBins <> RBinsToBins__Z_u constr
-R4009:4012 Corelib.Init.Logic <> True ind
-def 4077:4090 <> RBinsToBins__Z
-R4093:4095 Output.Benchmark.RBinsToBins <> Bin abbrev
-R4102:4106 Corelib.Init.Specif <> exist constr
-R4127:4144 Output.Benchmark.RBinsToBins <> RBinsToBins__Z_lem def
-R4110:4125 Output.Benchmark.RBinsToBins <> RBinsToBins__Z_u constr
-def 4159:4165 <> wf_B0_n
-R4171:4175 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 4168:4168 <> n:45
-R4182:4187 Output.Benchmark.RBinsToBins <> Bin_wf def
-R4190:4193 Output.Benchmark.RBinsToBins <> B0_u constr
-R4195:4195 Output.Benchmark.RBinsToBins <> n:45 var
-binder 4179:4179 <> p:46
-R4200:4205 Output.Benchmark.RBinsToBins <> Bin_wf def
-R4207:4207 Output.Benchmark.RBinsToBins <> n:45 var
-def 4254:4260 <> wf_B1_n
-R4266:4270 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 4263:4263 <> n:47
-R4277:4282 Output.Benchmark.RBinsToBins <> Bin_wf def
-R4285:4288 Output.Benchmark.RBinsToBins <> B1_u constr
-R4290:4290 Output.Benchmark.RBinsToBins <> n:47 var
-binder 4274:4274 <> p:48
-R4295:4300 Output.Benchmark.RBinsToBins <> Bin_wf def
-R4302:4302 Output.Benchmark.RBinsToBins <> n:47 var
-R4410:4415 Output.Benchmark.RBinsToBins <> Bin_wf def
-R4598:4599 Output.Benchmark.RBinsToBins <> B0 def
-R4640:4641 Output.Benchmark.RBinsToBins <> B1 def
-R4682:4695 Output.Benchmark.RBinsToBins <> RBinsToBins__Z def
-def 4725:4738 <> rbinToBin_spec
-R4744:4747 Output.Benchmark.RBinsToBins <> RBin abbrev
-binder 4741:4741 <> b:49
-R4761:4763 Output.Benchmark.RBinsToBins <> Bin abbrev
-R4789:4802 Output.Benchmark.RBinsToBins <> rbinToBin_spec def
-def 4829:4837 <> rbinToBin
-R4843:4846 Output.Benchmark.RBinsToBins <> RBin abbrev
-binder 4840:4840 <> b:50
-R4850:4863 Output.Benchmark.RBinsToBins <> rbinToBin_spec def
-R4865:4865 Output.Benchmark.RBinsToBins <> b:50 var
-R4989:5003 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R5013:5014 Output.Benchmark.RBinsToBins <> B0 def
-R5020:5034 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R5051:5055 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 5048:5048 <> n:51
-R5062:5062 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R5071:5075 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R5063:5068 Output.Benchmark.RBinsToBins <> Bin_wf def
-R5070:5070 Output.Benchmark.RBinsToBins <> n:51 var
-R5076:5079 Corelib.Init.Logic <> True ind
-R5036:5040 Output.Benchmark.RBinsToBins <> Bin_u ind
-R4989:5003 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R5013:5014 Output.Benchmark.RBinsToBins <> B0 def
-R5020:5034 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R5051:5055 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 5048:5048 <> n:52
-R5062:5062 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R5071:5075 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R5063:5068 Output.Benchmark.RBinsToBins <> Bin_wf def
-R5070:5070 Output.Benchmark.RBinsToBins <> n:52 var
-R5076:5079 Corelib.Init.Logic <> True ind
-R5036:5040 Output.Benchmark.RBinsToBins <> Bin_u ind
-R5186:5200 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R5210:5211 Output.Benchmark.RBinsToBins <> B1 def
-R5217:5231 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R5248:5252 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 5245:5245 <> n:53
-R5259:5259 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R5268:5272 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R5260:5265 Output.Benchmark.RBinsToBins <> Bin_wf def
-R5267:5267 Output.Benchmark.RBinsToBins <> n:53 var
-R5273:5276 Corelib.Init.Logic <> True ind
-R5233:5237 Output.Benchmark.RBinsToBins <> Bin_u ind
-R5186:5200 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R5210:5211 Output.Benchmark.RBinsToBins <> B1 def
-R5217:5231 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R5248:5252 Output.Benchmark.RBinsToBins <> Bin_u ind
-binder 5245:5245 <> n:54
-R5259:5259 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R5268:5272 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
-R5260:5265 Output.Benchmark.RBinsToBins <> Bin_wf def
-R5267:5267 Output.Benchmark.RBinsToBins <> n:54 var
-R5273:5276 Corelib.Init.Logic <> True ind
-R5233:5237 Output.Benchmark.RBinsToBins <> Bin_u ind
-R5383:5397 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R5403:5416 Output.Benchmark.RBinsToBins <> RBinsToBins__Z def
-R5383:5397 coqDeps.LiquidPreludeUtil <> subsumptionCast def
-R5403:5416 Output.Benchmark.RBinsToBins <> RBinsToBins__Z def
+R667:667 Output.Benchmark.RBinsToBins <> t:8 var
+R675:677 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R674:674 Output.Benchmark.RBinsToBins <> s:7 var
+R678:678 Output.Benchmark.RBinsToBins <> t:8 var
+inst 776:791 <> leibnitz_eq_RBin
+R794:804 coqDeps.LiquidPreludeUtil <> LeibnitzEqB class
+R866:872 coqDeps.LiquidPreludeUtil <> eqb_eq' meth
+R839:843 coqDeps.LiquidPreludeUtil <> refl' meth
+R815:821 coqDeps.LiquidPreludeUtil <> equalB' meth
+R826:832 Output.Benchmark.RBinsToBins <> RBin_eq def
+R848:859 Output.Benchmark.RBinsToBins <> RBin_eq_refl thm
+R877:887 Output.Benchmark.RBinsToBins <> RBin_eqb_eq thm
+def 902:908 <> RBin_wf
+R915:920 Output.Benchmark.RBinsToBins <> RBin_u ind
+binder 911:911 <> x:9
+R940:940 Output.Benchmark.RBinsToBins <> x:9 var
+R949:953 Output.Benchmark.RBinsToBins <> RB0_u constr
+R969:973 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R960:966 Output.Benchmark.RBinsToBins <> RBin_wf:10 def
+R975:979 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'≠'_x not
+R980:983 Output.Benchmark.RBinsToBins <> RZ_u constr
+R987:991 Output.Benchmark.RBinsToBins <> RB1_u constr
+R1007:1011 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R998:1004 Output.Benchmark.RBinsToBins <> RBin_wf:10 def
+R1012:1015 Corelib.Init.Logic <> True ind
+R1019:1022 Output.Benchmark.RBinsToBins <> RZ_u constr
+R1027:1030 Corelib.Init.Logic <> True ind
+prf 1046:1056 <> RBin_wf_ref
+R1069:1073 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'→'_x not
+R1063:1068 Output.Benchmark.RBinsToBins <> RBin_u ind
+binder 1059:1059 <> p:12
+R1086:1086 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1088:1089 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1096:1098 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1116:1116 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1090:1095 Output.Benchmark.RBinsToBins <> RBin_u ind
+binder 1087:1087 <> v:13
+R1108:1112 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R1099:1105 Output.Benchmark.RBinsToBins <> RBin_wf def
+R1107:1107 Output.Benchmark.RBinsToBins <> v:13 var
+R1113:1113 Output.Benchmark.RBinsToBins <> p:12 var
+R1115:1115 Output.Benchmark.RBinsToBins <> v:13 var
+binder 1081:1082 <> tm:14
+R1120:1126 Output.Benchmark.RBinsToBins <> RBin_wf def
+R1128:1131 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R1134:1138 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R1132:1133 Output.Benchmark.RBinsToBins <> tm:14 var
+abbrev 1206:1209 <> RBin
+R1214:1214 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1216:1217 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1224:1226 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1245:1245 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1218:1223 Output.Benchmark.RBinsToBins <> RBin_u ind
+binder 1215:1215 <> x:15
+R1236:1240 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R1227:1233 Output.Benchmark.RBinsToBins <> RBin_wf def
+R1235:1235 Output.Benchmark.RBinsToBins <> x:15 var
+R1241:1244 Corelib.Init.Logic <> True ind
+def 1260:1266 <> RB0_lem
+R1273:1273 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1275:1276 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1283:1285 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1310:1310 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1277:1282 Output.Benchmark.RBinsToBins <> RBin_u ind
+binder 1274:1274 <> n:16
+R1295:1299 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R1286:1292 Output.Benchmark.RBinsToBins <> RBin_wf def
+R1294:1294 Output.Benchmark.RBinsToBins <> n:16 var
+R1301:1305 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'≠'_x not
+R1300:1300 Output.Benchmark.RBinsToBins <> n:16 var
+R1306:1309 Output.Benchmark.RBinsToBins <> RZ_u constr
+binder 1269:1269 <> n:17
+R1340:1344 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R1314:1320 Output.Benchmark.RBinsToBins <> RBin_wf def
+R1323:1327 Output.Benchmark.RBinsToBins <> RB0_u constr
+R1329:1332 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R1334:1338 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R1333:1333 Output.Benchmark.RBinsToBins <> n:17 var
+R1345:1348 Corelib.Init.Logic <> True ind
+def 1412:1414 <> RB0
+R1421:1421 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1423:1424 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1431:1433 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1458:1458 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R1425:1430 Output.Benchmark.RBinsToBins <> RBin_u ind
+binder 1422:1422 <> n:18
+R1443:1447 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R1434:1440 Output.Benchmark.RBinsToBins <> RBin_wf def
+R1442:1442 Output.Benchmark.RBinsToBins <> n:18 var
+R1449:1453 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'≠'_x not
+R1448:1448 Output.Benchmark.RBinsToBins <> n:18 var
+R1454:1457 Output.Benchmark.RBinsToBins <> RZ_u constr
+binder 1417:1417 <> n:19
+R1462:1465 Output.Benchmark.RBinsToBins <> RBin abbrev
+R1472:1476 Corelib.Init.Specif <> exist constr
+R1500:1506 Output.Benchmark.RBinsToBins <> RB0_lem def
+R1508:1508 Output.Benchmark.RBinsToBins <> n:19 var
+R1481:1485 Output.Benchmark.RBinsToBins <> RB0_u constr
+R1487:1490 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R1492:1496 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R1491:1491 Output.Benchmark.RBinsToBins <> n:19 var
+def 1524:1530 <> RB1_lem
+R1537:1540 Output.Benchmark.RBinsToBins <> RBin abbrev
+binder 1533:1533 <> n:20
+R1570:1574 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R1544:1550 Output.Benchmark.RBinsToBins <> RBin_wf def
+R1553:1557 Output.Benchmark.RBinsToBins <> RB1_u constr
+R1559:1562 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R1564:1568 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R1563:1563 Output.Benchmark.RBinsToBins <> n:20 var
+R1575:1578 Corelib.Init.Logic <> True ind
+def 1642:1644 <> RB1
+R1651:1654 Output.Benchmark.RBinsToBins <> RBin abbrev
+binder 1647:1647 <> n:21
+R1658:1661 Output.Benchmark.RBinsToBins <> RBin abbrev
+R1668:1672 Corelib.Init.Specif <> exist constr
+R1696:1702 Output.Benchmark.RBinsToBins <> RB1_lem def
+R1704:1704 Output.Benchmark.RBinsToBins <> n:21 var
+R1677:1681 Output.Benchmark.RBinsToBins <> RB1_u constr
+R1683:1686 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R1688:1692 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R1687:1687 Output.Benchmark.RBinsToBins <> n:21 var
+def 1720:1725 <> RZ_lem
+R1741:1745 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R1729:1735 Output.Benchmark.RBinsToBins <> RBin_wf def
+R1737:1740 Output.Benchmark.RBinsToBins <> RZ_u constr
+R1746:1749 Corelib.Init.Logic <> True ind
+def 1813:1814 <> RZ
+R1818:1821 Output.Benchmark.RBinsToBins <> RBin abbrev
+R1828:1832 Corelib.Init.Specif <> exist constr
+R1841:1846 Output.Benchmark.RBinsToBins <> RZ_lem def
+R1836:1839 Output.Benchmark.RBinsToBins <> RZ_u constr
+def 1861:1868 <> wf_RB0_n
+R1875:1880 Output.Benchmark.RBinsToBins <> RBin_u ind
+binder 1871:1871 <> n:22
+R1888:1894 Output.Benchmark.RBinsToBins <> RBin_wf def
+R1897:1901 Output.Benchmark.RBinsToBins <> RB0_u constr
+R1903:1903 Output.Benchmark.RBinsToBins <> n:22 var
+binder 1884:1884 <> p:23
+R1908:1914 Output.Benchmark.RBinsToBins <> RBin_wf def
+R1916:1916 Output.Benchmark.RBinsToBins <> n:22 var
+def 2010:2017 <> wf_RB1_n
+R2024:2029 Output.Benchmark.RBinsToBins <> RBin_u ind
+binder 2020:2020 <> n:24
+R2037:2043 Output.Benchmark.RBinsToBins <> RBin_wf def
+R2046:2050 Output.Benchmark.RBinsToBins <> RB1_u constr
+R2052:2052 Output.Benchmark.RBinsToBins <> n:24 var
+binder 2033:2033 <> p:25
+R2057:2063 Output.Benchmark.RBinsToBins <> RBin_wf def
+R2065:2065 Output.Benchmark.RBinsToBins <> n:24 var
+R2221:2227 Output.Benchmark.RBinsToBins <> RBin_wf def
+R2315:2317 Output.Benchmark.RBinsToBins <> RB0 def
+R2358:2360 Output.Benchmark.RBinsToBins <> RB1 def
+R2401:2402 Output.Benchmark.RBinsToBins <> RZ def
+ind 2431:2435 <> Bin_u
+constr 2450:2453 <> B0_u
+constr 2474:2477 <> B1_u
+constr 2498:2513 <> RBinsToBins__Z_u
+R2461:2465 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'→'_x not
+R2456:2460 Output.Benchmark.RBinsToBins <> Bin_u:26 ind
+R2466:2470 Output.Benchmark.RBinsToBins <> Bin_u:26 ind
+R2485:2489 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'→'_x not
+R2480:2484 Output.Benchmark.RBinsToBins <> Bin_u:26 ind
+R2490:2494 Output.Benchmark.RBinsToBins <> Bin_u:26 ind
+R2516:2520 Output.Benchmark.RBinsToBins <> Bin_u:26 ind
+scheme 2431:2435 <> Bin_u_rect
+scheme 2431:2435 <> Bin_u_ind
+scheme 2431:2435 <> Bin_u_rec
+scheme 2431:2435 <> Bin_u_sind
+def 2533:2538 <> Bin_eq
+R2547:2551 Output.Benchmark.RBinsToBins <> Bin_u ind
+binder 2541:2541 <> x:28
+binder 2543:2543 <> y:29
+R2555:2558 Corelib.Init.Datatypes <> bool ind
+R2571:2571 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2573:2574 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2576:2576 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2572:2572 Output.Benchmark.RBinsToBins <> x:28 var
+R2575:2575 Output.Benchmark.RBinsToBins <> y:29 var
+R2587:2587 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2594:2595 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2603:2603 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2588:2591 Output.Benchmark.RBinsToBins <> B0_u constr
+R2596:2599 Output.Benchmark.RBinsToBins <> B0_u constr
+R2612:2615 Corelib.Init.Datatypes <> ::bool_scope:x_'&&'_x not
+R2608:2611 Corelib.Init.Datatypes <> true constr
+R2616:2621 Output.Benchmark.RBinsToBins <> Bin_eq:30 def
+R2632:2632 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2639:2640 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2648:2648 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2633:2636 Output.Benchmark.RBinsToBins <> B1_u constr
+R2641:2644 Output.Benchmark.RBinsToBins <> B1_u constr
+R2657:2660 Corelib.Init.Datatypes <> ::bool_scope:x_'&&'_x not
+R2653:2656 Corelib.Init.Datatypes <> true constr
+R2661:2666 Output.Benchmark.RBinsToBins <> Bin_eq:30 def
+R2677:2677 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2694:2695 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2712:2712 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2678:2693 Output.Benchmark.RBinsToBins <> RBinsToBins__Z_u constr
+R2696:2711 Output.Benchmark.RBinsToBins <> RBinsToBins__Z_u constr
+R2717:2720 Corelib.Init.Datatypes <> true constr
+R2726:2726 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2728:2729 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2731:2731 Corelib.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
+R2736:2740 Corelib.Init.Datatypes <> false constr
+prf 2758:2768 <> Bin_eq_refl
+R2772:2776 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R2786:2788 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R2781:2785 Output.Benchmark.RBinsToBins <> Bin_u ind
+binder 2777:2777 <> x:31
+R2789:2795 Corelib.Init.Datatypes <> is_true def
+R2798:2803 Output.Benchmark.RBinsToBins <> Bin_eq def
+R2805:2805 Output.Benchmark.RBinsToBins <> x:31 var
+R2807:2807 Output.Benchmark.RBinsToBins <> x:31 var
+prf 2896:2905 <> Bin_eqb_eq
+R2909:2913 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R2925:2927 Stdlib.Unicode.Utf8_core <> ::type_scope:'∀'_x_'..'_x_','_x not
+R2920:2924 Output.Benchmark.RBinsToBins <> Bin_u ind
+binder 2914:2914 <> s:32
+R2920:2924 Output.Benchmark.RBinsToBins <> Bin_u ind
+binder 2916:2916 <> t:33
+R2948:2952 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'→'_x not
+R2928:2934 Corelib.Init.Datatypes <> is_true def
+R2937:2942 Output.Benchmark.RBinsToBins <> Bin_eq def
+R2944:2944 Output.Benchmark.RBinsToBins <> s:32 var
+R2946:2946 Output.Benchmark.RBinsToBins <> t:33 var
+R2954:2956 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R2953:2953 Output.Benchmark.RBinsToBins <> s:32 var
+R2957:2957 Output.Benchmark.RBinsToBins <> t:33 var
+inst 3054:3068 <> leibnitz_eq_Bin
+R3071:3081 coqDeps.LiquidPreludeUtil <> LeibnitzEqB class
+R3141:3147 coqDeps.LiquidPreludeUtil <> eqb_eq' meth
+R3115:3119 coqDeps.LiquidPreludeUtil <> refl' meth
+R3092:3098 coqDeps.LiquidPreludeUtil <> equalB' meth
+R3103:3108 Output.Benchmark.RBinsToBins <> Bin_eq def
+R3124:3134 Output.Benchmark.RBinsToBins <> Bin_eq_refl thm
+R3152:3161 Output.Benchmark.RBinsToBins <> Bin_eqb_eq thm
+def 3176:3181 <> Bin_wf
+R3188:3192 Output.Benchmark.RBinsToBins <> Bin_u ind
+binder 3184:3184 <> x:34
+R3212:3212 Output.Benchmark.RBinsToBins <> x:34 var
+R3223:3226 Output.Benchmark.RBinsToBins <> B0_u constr
+R3241:3245 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R3233:3238 Output.Benchmark.RBinsToBins <> Bin_wf:35 def
+R3246:3249 Corelib.Init.Logic <> True ind
+R3255:3258 Output.Benchmark.RBinsToBins <> B1_u constr
+R3273:3277 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R3265:3270 Output.Benchmark.RBinsToBins <> Bin_wf:35 def
+R3278:3281 Corelib.Init.Logic <> True ind
+R3287:3302 Output.Benchmark.RBinsToBins <> RBinsToBins__Z_u constr
+R3307:3310 Corelib.Init.Logic <> True ind
+prf 3328:3337 <> Bin_wf_ref
+R3349:3353 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'→'_x not
+R3344:3348 Output.Benchmark.RBinsToBins <> Bin_u ind
+binder 3340:3340 <> p:37
+R3366:3366 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R3368:3369 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R3375:3377 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R3394:3394 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R3370:3374 Output.Benchmark.RBinsToBins <> Bin_u ind
+binder 3367:3367 <> v:38
+R3386:3390 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R3378:3383 Output.Benchmark.RBinsToBins <> Bin_wf def
+R3385:3385 Output.Benchmark.RBinsToBins <> v:38 var
+R3391:3391 Output.Benchmark.RBinsToBins <> p:37 var
+R3393:3393 Output.Benchmark.RBinsToBins <> v:38 var
+binder 3361:3362 <> tm:39
+R3398:3403 Output.Benchmark.RBinsToBins <> Bin_wf def
+R3405:3408 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R3411:3415 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R3409:3410 Output.Benchmark.RBinsToBins <> tm:39 var
+abbrev 3483:3485 <> Bin
+R3490:3490 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R3492:3493 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R3499:3501 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R3519:3519 Corelib.Init.Specif <> ::type_scope:'{'_x_':'_x_'|'_x_'}' not
+R3494:3498 Output.Benchmark.RBinsToBins <> Bin_u ind
+binder 3491:3491 <> x:40
+R3510:3514 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R3502:3507 Output.Benchmark.RBinsToBins <> Bin_wf def
+R3509:3509 Output.Benchmark.RBinsToBins <> x:40 var
+R3515:3518 Corelib.Init.Logic <> True ind
+def 3534:3539 <> B0_lem
+R3546:3548 Output.Benchmark.RBinsToBins <> Bin abbrev
+binder 3542:3542 <> n:41
+R3576:3580 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R3552:3557 Output.Benchmark.RBinsToBins <> Bin_wf def
+R3560:3563 Output.Benchmark.RBinsToBins <> B0_u constr
+R3565:3568 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R3570:3574 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R3569:3569 Output.Benchmark.RBinsToBins <> n:41 var
+R3581:3584 Corelib.Init.Logic <> True ind
+def 3648:3649 <> B0
+R3656:3658 Output.Benchmark.RBinsToBins <> Bin abbrev
+binder 3652:3652 <> n:42
+R3662:3664 Output.Benchmark.RBinsToBins <> Bin abbrev
+R3671:3675 Corelib.Init.Specif <> exist constr
+R3698:3703 Output.Benchmark.RBinsToBins <> B0_lem def
+R3705:3705 Output.Benchmark.RBinsToBins <> n:42 var
+R3680:3683 Output.Benchmark.RBinsToBins <> B0_u constr
+R3685:3688 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R3690:3694 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R3689:3689 Output.Benchmark.RBinsToBins <> n:42 var
+def 3721:3726 <> B1_lem
+R3733:3735 Output.Benchmark.RBinsToBins <> Bin abbrev
+binder 3729:3729 <> n:43
+R3763:3767 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R3739:3744 Output.Benchmark.RBinsToBins <> Bin_wf def
+R3747:3750 Output.Benchmark.RBinsToBins <> B1_u constr
+R3752:3755 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R3757:3761 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R3756:3756 Output.Benchmark.RBinsToBins <> n:43 var
+R3768:3771 Corelib.Init.Logic <> True ind
+def 3835:3836 <> B1
+R3843:3845 Output.Benchmark.RBinsToBins <> Bin abbrev
+binder 3839:3839 <> n:44
+R3849:3851 Output.Benchmark.RBinsToBins <> Bin abbrev
+R3858:3862 Corelib.Init.Specif <> exist constr
+R3885:3890 Output.Benchmark.RBinsToBins <> B1_lem def
+R3892:3892 Output.Benchmark.RBinsToBins <> n:44 var
+R3867:3870 Output.Benchmark.RBinsToBins <> B1_u constr
+R3872:3875 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R3877:3881 coqDeps.LiquidPreludeUtil <> :::'⌊'_x_'-⌋' not
+R3876:3876 Output.Benchmark.RBinsToBins <> n:44 var
+def 3908:3925 <> RBinsToBins__Z_lem
+R3952:3956 Stdlib.Unicode.Utf8_core <> ::type_scope:x_'∧'_x not
+R3929:3934 Output.Benchmark.RBinsToBins <> Bin_wf def
+R3936:3951 Output.Benchmark.RBinsToBins <> RBinsToBins__Z_u constr
+R3957:3960 Corelib.Init.Logic <> True ind
+def 4024:4037 <> RBinsToBins__Z
+R4041:4043 Output.Benchmark.RBinsToBins <> Bin abbrev
+R4050:4054 Corelib.Init.Specif <> exist constr
+R4075:4092 Output.Benchmark.RBinsToBins <> RBinsToBins__Z_lem def
+R4058:4073 Output.Benchmark.RBinsToBins <> RBinsToBins__Z_u constr
+def 4107:4113 <> wf_B0_n
+R4120:4124 Output.Benchmark.RBinsToBins <> Bin_u ind
+binder 4116:4116 <> n:45
+R4132:4137 Output.Benchmark.RBinsToBins <> Bin_wf def
+R4140:4143 Output.Benchmark.RBinsToBins <> B0_u constr
+R4145:4145 Output.Benchmark.RBinsToBins <> n:45 var
+binder 4128:4128 <> p:46
+R4150:4155 Output.Benchmark.RBinsToBins <> Bin_wf def
+R4157:4157 Output.Benchmark.RBinsToBins <> n:45 var
+def 4250:4256 <> wf_B1_n
+R4263:4267 Output.Benchmark.RBinsToBins <> Bin_u ind
+binder 4259:4259 <> n:47
+R4275:4280 Output.Benchmark.RBinsToBins <> Bin_wf def
+R4283:4286 Output.Benchmark.RBinsToBins <> B1_u constr
+R4288:4288 Output.Benchmark.RBinsToBins <> n:47 var
+binder 4271:4271 <> p:48
+R4293:4298 Output.Benchmark.RBinsToBins <> Bin_wf def
+R4300:4300 Output.Benchmark.RBinsToBins <> n:47 var
+R4454:4459 Output.Benchmark.RBinsToBins <> Bin_wf def
+R4546:4547 Output.Benchmark.RBinsToBins <> B0 def
+R4588:4589 Output.Benchmark.RBinsToBins <> B1 def
+R4630:4643 Output.Benchmark.RBinsToBins <> RBinsToBins__Z def
+def 4673:4686 <> rbinToBin_spec
+R4699:4702 Output.Benchmark.RBinsToBins <> RBin abbrev
+binder 4689:4695 <> ds_d4Ff:49
+R4716:4718 Output.Benchmark.RBinsToBins <> Bin abbrev
+R4744:4757 Output.Benchmark.RBinsToBins <> rbinToBin_spec def
+def 4784:4792 <> rbinToBin
+R4805:4808 Output.Benchmark.RBinsToBins <> RBin abbrev
+binder 4795:4801 <> ds_d4Ff:50
+R4812:4825 Output.Benchmark.RBinsToBins <> rbinToBin_spec def
+R4827:4833 Output.Benchmark.RBinsToBins <> ds_d4Ff:50 var
+R4940:4941 Output.Benchmark.RBinsToBins <> B0 def
+R4940:4941 Output.Benchmark.RBinsToBins <> B0 def
+R4994:4995 Output.Benchmark.RBinsToBins <> B1 def
+R4994:4995 Output.Benchmark.RBinsToBins <> B1 def
+R5047:5060 Output.Benchmark.RBinsToBins <> RBinsToBins__Z def
+R5047:5060 Output.Benchmark.RBinsToBins <> RBinsToBins__Z def

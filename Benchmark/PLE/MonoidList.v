@@ -2,269 +2,316 @@ From coqDeps Require Export LiquidPreludeUtil.
 Open Scope Z_scope.
 Open Scope Int_scope.
 Set Universe Polymorphism.
-Inductive L_u : Type := 
-	 | C_u: Z -> (L_u -> L_u)
-	 | Emp_u: L_u. 
-Fixpoint L_eq (x: L_u) (y: L_u): bool := 
-	match (x, y) with (C_u x x_1, C_u x' x_1') => ((true && (x ==? x')) && (L_eq x_1 x_1')) | (Emp_u, Emp_u) => true | (_, _) => false end. 
-Theorem L_eq_refl: (forall (x: L_u) , is_true (L_eq x x)). 
-Proof. 
-	eq_refl_rec. 
-Qed. 
-#[global] Hint Resolve L_eq_refl : eq_hint_db.
-Theorem L_eqb_eq: (forall (s: L_u) (t: L_u) , (is_true (L_eq s t)) -> (s = t)). 
-Proof. 
-	eqb_eq_lem. 
-Qed. 
-#[global] Hint Resolve L_eqb_eq : eq_hint_db.
-#[global] Instance leibnitz_eq_L : LeibnitzEqB := { 
-	equalB' := L_eq;
-	refl' := L_eq_refl;
-	eqb_eq' := L_eqb_eq
-}.
-Fixpoint L_wf (x: L_u): Prop := 
-	match x with (C_u VV VV_) => ((L_wf VV_) /\ True) | Emp_u => True end. 
-Theorem L_wf_ref [p: L_u -> Prop] (tm: {v: L_u | (L_wf v) /\ (p v)}): L_wf (⌊ tm -⌋). 
-Proof. 
-	destruct tm as [tm tm_p]. 
-	solver. 
-Qed. 
-Global Notation L := {x: L_u | (L_wf x) /\ True}. 
-Definition C_lem (VV: {VV: Z | True}) (VV_: L): (L_wf (C_u (⌊ VV -⌋) (⌊ VV_ -⌋))) /\ True. 
-Proof. 
-	repeat first [split; solver]. 
-Defined. 
-Definition C (VV: {VV: Z | True}) (VV_: L): L := 
-	exist _ (C_u (⌊ VV -⌋) (⌊ VV_ -⌋)) (C_lem VV VV_). 
-Definition Emp_lem: (L_wf Emp_u) /\ True. 
-Proof. 
-	repeat first [split; solver]. 
-Defined. 
-Definition Emp: L := 
-	exist _ Emp_u Emp_lem. 
-Definition wf_C_VV_ [VV: Z] [VV_: L_u] (p: L_wf (C_u VV VV_)): L_wf VV_. 
-Proof. 
-	quicksolve. 
-Defined. 
-#[global] Hint Resolve L_wf_ref : wf_constr_db.
-#[global] Hint Unfold L_wf : wf_constr_db.
-#[global] Hint Resolve L_eq : ref_constr_db.
-#[global] Hint Resolve wf_C_VV_ : ref_constr_db.
-#[global] Hint Unfold C : ref_constr_db.
-#[global] Hint Unfold Emp : ref_constr_db.
-Definition mappend_spec (lq_tmp0: L) (lq_tmp1: L): Type := 
-	L. 
-#[global] Hint Unfold mappend_spec : lia_unfold.
-Definition mappend (lq_tmp0: L) (lq_tmp1: L): mappend_spec lq_tmp0 lq_tmp1. 
-Proof. 
-	destruct lq_tmp0 as [lq_tmp0 lq_tmp0_p]. 
-	destruct lq_tmp1 as [lq_tmp1 lq_tmp1_p]. 
-	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
-	induction lq_tmp0 as [(*C*) x xs IH_xs | (*Emp*) ]. 
-	  - intros . 
-		refine (subsumptionCast _ _ 
-		(C (exist (fun (VV: Z) => True) x (ltac: (solver))) 
-		(IH_xs (ltac: (try clear IH_xs; 
-	solver)) lq_tmp1 (ltac: (try clear IH_xs; 
-	solver)))) _); 
-		solver.  
-	  - intros . 
-		refine (exist _ lq_tmp1 _); 
-		solver.  
-Defined. 
-Inductive mappend_rel : (L_u -> (L_u -> (L_u -> Prop))) := 
-	 | mappend_Emp: (forall lq_tmp1 , mappend_rel Emp_u lq_tmp1 lq_tmp1)
-	 | mappend_C: (forall lq_tmp1 x xs , forall (mappendres: L_u), (mappend_rel xs lq_tmp1 mappendres) -> (mappend_rel (C_u x xs) lq_tmp1 (C_u x mappendres))). 
-#[global] Hint Constructors mappend_rel : core_hint_db.
-#[global] Instance mappend_lookup_rel : dictionary rel mappend := { 
-	lookup' := mappend_rel
-}.
-#[global] Instance mappend_getF : getFunc mappend_rel := { 
-	getF' := mappend
-}.
-Theorem mappend_rel_funct [lq_tmp0: L_u] [lq_tmp1: L_u]: (forall (VV: L_u) (VV': L_u) (H: mappend_rel lq_tmp0 lq_tmp1 VV) (K: mappend_rel lq_tmp0 lq_tmp1 VV') , VV = VV'). 
-Proof. 
-	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
-	induction lq_tmp0 as [(*C*) x xs IH_xs | (*Emp*) ]; 
-	intros ; 
-	rel_functionhood_body. 
-Qed. 
-#[global] Hint Resolve mappend_rel_funct : f_rel_funct_db.
-Theorem mappend_Emp_lem (lq_tmp1: _): (mappend_rel Emp_u lq_tmp1 lq_tmp1) <-> True. 
-Proof. 
-	rel_back' ( _nil). 
-Qed. 
-#[global] Hint Rewrite mappend_Emp_lem : f_rel_back.
-Theorem mappend_C_lem (x: _) (xs: _) (lq_tmp1: _) (mappendres: L_u) (h_52086863: mappend_rel xs lq_tmp1 mappendres): (mappend_rel (C_u x xs) lq_tmp1 (C_u x mappendres)) <-> True. 
-Proof. 
-	rel_back' ( _nil). 
-Qed. 
-#[global] Hint Rewrite mappend_C_lem : f_rel_back.
-Theorem mappend_rel_ex (lq_tmp0: L_u) (lq_tmp1: L_u) (lq_tmp0_p: (L_wf lq_tmp0) /\ True) (lq_tmp1_p: (L_wf lq_tmp1) /\ True): mappend_rel lq_tmp0 lq_tmp1 
-		(⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋). 
-Proof. 
-	Opaque mappend.
-	existence_lemma_pre mappend; 
-	try revert lq_tmp1_p; generalize dependent lq_tmp1; 
-	induction lq_tmp0 as [(*C*) x xs IH_xs | (*Emp*) ]; 
-	intros ; 
-	[fix_notations; 
-	pose proof (IH_xs (ltac: (try clear IH_xs; 
-	solver)) lq_tmp1 (ltac: (try clear IH_xs; 
-	solver))) as IH_63046731; 
-	try clear IH_xs| 
-	fix_notations]; 
-	simpl in *. 
-	Transparent mappend.
-	all: existence_lemma_quicksolve mappend; 
-	f__f_rel_ex_body; 
-	f_rel_finish. 
-Qed. 
-#[global] Hint Resolve mappend_rel_ex : rel_ax_db.
-#[global] Opaque mappend. 
-Theorem mappend__mappend_rel_rw (lq_tmp0: L_u) (lq_tmp1: L_u) (lq_tmp0_p: (L_wf lq_tmp0) /\ True) (lq_tmp1_p: (L_wf lq_tmp1) /\ True) (VV: L_u): ((⌊ mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p) -⌋) = VV) <-> (mappend_rel lq_tmp0 lq_tmp1 VV). 
-Proof. 
-	f__f_rel_rw. 
-Qed. 
-#[global] Hint Rewrite mappend__mappend_rel_rw : f_rel_funct_db.
-#[global] Hint Resolve mappend__mappend_rel_rw : rel_ax_db.
-#[global] Instance mappend_lookup_rw : dictionary rwLem mappend := { 
-	lookup' := mappend__mappend_rel_rw
-}.
-Theorem mappend__mappend_rel (lq_tmp0_r: L) (lq_tmp1_r: L) (VV: L_u): ((⌊ mappend lq_tmp0_r lq_tmp1_r -⌋) = VV) <-> (mappend_rel (⌊ lq_tmp0_r -⌋) (⌊ lq_tmp1_r -⌋) VV). 
-Proof. 
-	f__f_rel. 
-Qed. 
-#[global] Hint Rewrite mappend__mappend_rel : f_rel_funct_db.
-Theorem mappend__mappend_rel' (lq_tmp0: L_u) (lq_tmp1: L_u) (lq_tmp0_r: L) (lq_tmp1_r: L) (VV: L_u): (lq_tmp0 = (⌊ lq_tmp0_r -⌋)) -> ((lq_tmp1 = (⌊ lq_tmp1_r -⌋)) -> (((⌊ mappend lq_tmp0_r lq_tmp1_r -⌋) = VV) <-> (mappend_rel lq_tmp0 lq_tmp1 VV))). 
-Proof. 
-	intros -> ->. 
-	refine (mappend__mappend_rel lq_tmp0_r lq_tmp1_r VV). 
-Qed. 
-#[global] Hint Resolve mappend__mappend_rel' : f_rel_funct_db.
-Theorem mappend_rel_mk [lq_tmp0: L_u] [lq_tmp1: L_u] (lq_tmp0_p: (L_wf lq_tmp0) /\ True) (lq_tmp1_p: (L_wf lq_tmp1) /\ True): {VV: _ | mappend_rel lq_tmp0 lq_tmp1 VV}. 
-Proof. 
-	intros ; 
-	refine (subsumptionCast _ (fun (VV: _) => (mappend_rel lq_tmp0 lq_tmp1 VV)) 
-		(mappend (exist _ lq_tmp0 lq_tmp0_p) (exist _ lq_tmp1 lq_tmp1_p)) _); 
-	rewrite <- mappend__mappend_rel'; 
-	quicksolve. 
-Qed. 
-#[global] Hint Resolve mappend_rel_mk : f_rel_funct_db.
-#[global] Instance mappendPack : (@Pack (L ::RT (fun (lq_tmp0_r: L) => (L ::RT (fun (lq_tmp1_r: L) => nilRT)))) (L_u ::UT (L_u ::UT nilUT)) (ltac: (mkProjectsArgListTG (L ::RT (fun (lq_tmp0_r: L) => (L ::RT (fun (lq_tmp1_r: L) => nilRT)))) (L_u ::UT (L_u ::UT nilUT)))) L_u (fun (x_46281847: (ArgList L ::RT (fun (lq_tmp0_r: L) => (L ::RT (fun (lq_tmp1_r: L) => nilRT))))) => (fun (v_x_46281847: L_u) => (ltac: (flattenP (fun (lq_tmp0_r: L) => (fun (lq_tmp1_r: L) => (fun (VV: L_u) => ((L_wf VV) /\ True)))) x_46281847 v_x_46281847))))).
-Proof. 
-	buildPackG mappend mappend_rel mappend__mappend_rel mappend_rel_funct. 
+From Coq Require Import Unicode.Utf8.
+
+Inductive L_u: Type :=
+  | C_u: Z → L_u → L_u | Emp_u: L_u.
+
+Fixpoint L_eq (x y : L_u): bool :=
+  match (x, y) with
+  | (C_u VV VV_, C_u VV' VV_') => (true && (VV ==? VV')) && L_eq VV_ VV_'
+  | (Emp_u, Emp_u) => true
+  | (_, _) => false
+  end.
+
+Theorem L_eq_refl : ∀ (x : L_u), is_true (L_eq x x).
+Proof.
+  eq_refl_rec.
+Qed.
+
+#[global] Hint Resolve L_eq_refl: eq_hint_db.
+
+Theorem L_eqb_eq : ∀ (s t : L_u), is_true (L_eq s t) → s = t.
+Proof.
+  eqb_eq_lem.
+Qed.
+
+#[global] Hint Resolve L_eqb_eq: eq_hint_db.
+
+#[global] Instance leibnitz_eq_L: LeibnitzEqB := {
+    equalB' := L_eq;
+    refl' := L_eq_refl;
+    eqb_eq' := L_eqb_eq }.
+
+Fixpoint L_wf (x : L_u): Prop :=
+  match x with | C_u VV VV_ => L_wf VV_ ∧ True | Emp_u => True end.
+
+Theorem L_wf_ref [p : L_u → Prop] (tm : {v: L_u | L_wf v ∧ p v}): L_wf ⌊ tm -⌋.
+Proof.
+  destruct tm as [tm tm_p]. solver.
+Qed.
+
+Global Notation L := {x: L_u | L_wf x ∧ True}.
+
+Definition C_lem (VV : {VV: Z | True}) (VV_ : L): L_wf (C_u ⌊ VV -⌋ ⌊ VV_ -⌋) ∧ True.
+Proof.
+  repeat first [split | solver].
 Defined.
-Definition mappend_assoc_spec (xs: L) (ys: L) (zs: L): Type := 
-	{{forall (mappendres: L_u), (mappend_rel (⌊ xs -⌋) (⌊ ys -⌋) mappendres) -> (forall (mappend_res_2: L_u), (mappend_rel mappendres (⌊ zs -⌋) mappend_res_2) -> (forall (mappend_res_3: L_u), (mappend_rel (⌊ ys -⌋) (⌊ zs -⌋) mappend_res_3) -> (forall (mappend_res_4: L_u), (mappend_rel (⌊ xs -⌋) mappend_res_3 mappend_res_4) -> (mappend_res_2 == mappend_res_4))))}}. 
-#[global] Hint Unfold mappend_assoc_spec : lia_unfold.
-Theorem mappend_assoc (xs: L) (ys: L) (zs: L): mappend_assoc_spec xs ys zs. 
-Proof. 
-	destruct xs as [xs xs_p]. 
-	destruct ys as [ys ys_p]. 
-	destruct zs as [zs zs_p]. 
-	try revert zs_p; generalize dependent zs; try revert ys_p; generalize dependent ys; 
-	induction xs as [(*C*) x xs IH_xs | (*Emp*) ]. 
-	  - intros . 
-		refine (subsumptionCast _ _ 
-		(IH_xs (ltac: (try clear IH_xs; 
-	solver)) ys (ltac: (try clear IH_xs; 
-	solver)) zs (ltac: (try clear IH_xs; 
-	solver))) _); 
-		solver.  
-	  - intros . 
-		refine (exist _ unit _); 
-		solver.  
-Qed. 
-Definition mempty_spec: Type := 
-	L. 
-#[global] Hint Unfold mempty_spec : lia_unfold.
-Definition mempty: mempty_spec. 
-Proof. 
-	refine (subsumptionCast _ _ Emp _); 
-	solver. 
-Defined. 
-Inductive mempty_rel : (L_u -> Prop) := 
-	 | mempty_def: mempty_rel Emp_u. 
-#[global] Hint Constructors mempty_rel : core_hint_db.
-#[global] Instance mempty_lookup_rel : dictionary rel mempty := { 
-	lookup' := mempty_rel
-}.
-#[global] Instance mempty_getF : getFunc mempty_rel := { 
-	getF' := mempty
-}.
-Theorem mempty_rel_funct: (forall (VV: L_u) (VV': L_u) (H: mempty_rel VV) (K: mempty_rel VV') , VV = VV'). 
-Proof. 
-	rel_functionhood_body. 
-Qed. 
-#[global] Hint Resolve mempty_rel_funct : f_rel_funct_db.
-Theorem mempty_def_lem: (mempty_rel Emp_u) <-> True. 
-Proof. 
-	rel_back' ( _nil). 
-Qed. 
-#[global] Hint Rewrite mempty_def_lem : f_rel_back.
-Theorem mempty_rel_ex: mempty_rel (⌊ mempty -⌋). 
-Proof. 
-	Opaque mempty.
-	existence_lemma_pre mempty; 
-	fix_notations; 
-	simpl in *. 
-	Transparent mempty.
-	all: existence_lemma_quicksolve mempty; 
-	f__f_rel_ex_body; 
-	f_rel_finish. 
-Qed. 
-#[global] Hint Resolve mempty_rel_ex : rel_ax_db.
-#[global] Opaque mempty. 
-Theorem mempty__mempty_rel_rw (VV: L_u): ((⌊ mempty -⌋) = VV) <-> (mempty_rel VV). 
-Proof. 
-	f__f_rel_rw. 
-Qed. 
-#[global] Hint Rewrite mempty__mempty_rel_rw : f_rel_funct_db.
-#[global] Hint Resolve mempty__mempty_rel_rw : rel_ax_db.
-#[global] Instance mempty_lookup_rw : dictionary rwLem mempty := { 
-	lookup' := mempty__mempty_rel_rw
-}.
-Theorem mempty__mempty_rel (VV: L_u): ((⌊ mempty -⌋) = VV) <-> (mempty_rel VV). 
-Proof. 
-	f__f_rel. 
-Qed. 
-#[global] Hint Rewrite mempty__mempty_rel : f_rel_funct_db.
-Theorem mempty__mempty_rel' (VV: L_u): ((⌊ mempty -⌋) = VV) <-> (mempty_rel VV). 
-Proof. 
-	intros . 
-	refine (mempty__mempty_rel VV). 
-Qed. 
-#[global] Hint Resolve mempty__mempty_rel' : f_rel_funct_db.
-Theorem mempty_rel_mk: {VV: _ | mempty_rel VV}. 
-Proof. 
-	intros ; 
-	refine (subsumptionCast _ (fun (VV: _) => (mempty_rel VV)) mempty _); 
-	rewrite <- mempty__mempty_rel'; 
-	quicksolve. 
-Qed. 
-#[global] Hint Resolve mempty_rel_mk : f_rel_funct_db.
-Definition mempty_left_spec (x: L): Type := 
-	{{forall (mappendres: L_u), (mappend_rel (⌊ mempty -⌋) (⌊ x -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
-#[global] Hint Unfold mempty_left_spec : lia_unfold.
-Theorem mempty_left (x: L): mempty_left_spec x. 
-Proof. 
-	destruct x as [x x_p]. 
-	refine (exist _ unit _); 
-	solver. 
-Qed. 
-Definition mempty_right_spec (x: L): Type := 
-	{{forall (mappendres: L_u), (mappend_rel (⌊ x -⌋) (⌊ mempty -⌋) mappendres) -> (mappendres = (⌊ x -⌋))}}. 
-#[global] Hint Unfold mempty_right_spec : lia_unfold.
-Theorem mempty_right (x: L): mempty_right_spec x. 
-Proof. 
-	destruct x as [x x_p]. 
-	induction x as [(*C*) x xs IH_xs | (*Emp*) ]. 
-	  - intros . 
-		refine (subsumptionCast _ _ (IH_xs (ltac: (try clear IH_xs; 
-	solver))) _); 
-		solver.  
-	  - intros . 
-		refine (exist _ unit _); 
-		solver.  
-Qed. 
+
+Definition C (VV : {VV: Z | True}) (VV_ : L): L :=
+  exist _ (C_u ⌊ VV -⌋ ⌊ VV_ -⌋) (C_lem VV VV_).
+
+Definition Emp_lem : L_wf Emp_u ∧ True.
+Proof.
+  repeat first [split | solver].
+Defined.
+
+Definition Emp : L :=
+  exist _ Emp_u Emp_lem.
+
+Definition wf_C_VV_ [VV : Z] [VV_ : L_u] (p : L_wf (C_u VV VV_)): L_wf VV_.
+Proof.
+  quicksolve.
+Defined.
+
+#[global] Hint Resolve wf_C_VV_: ref_constr_db.
+
+#[global] Hint Resolve L_wf_ref: wf_constr_db.
+
+#[global] Hint Unfold L_wf: wf_constr_db.
+
+#[global] Hint Resolve L_eq: ref_constr_db.
+
+#[global] Hint Unfold C: ref_constr_db.
+
+#[global] Hint Unfold Emp: ref_constr_db.
+
+Definition mappend_spec (ds_d3ZS ys : L): Type :=
+  L.
+
+#[global] Hint Unfold mappend_spec: lia_unfold.
+
+Definition mappend (ds_d3ZS ys : L): mappend_spec ds_d3ZS ys.
+Proof.
+  destruct ds_d3ZS as [ds_d3ZS ds_d3ZS_p].
+  destruct ys as [ys ys_p].
+  try revert ys_p; generalize dependent ys; induction ds_d3ZS as [x xs IH_xs|]; intros.
+  - refine (C (# x) (IH_xs ltac:(try clear IH_xs; solver) ys ltac:(try clear IH_xs; solver))).
+  - refine (exist (λ (ys : L_u), L_wf ys ∧ True) ys ltac:(solver)).
+Defined.
+
+Inductive mappend_rel: L_u → L_u → L_u → Prop :=
+  | mappend_C_x: ∀ x xs ys (mappend_res : L_u),
+                 mappend_rel xs ys mappend_res → mappend_rel (C_u x xs) ys (C_u x mappend_res)
+  | mappend_Emp_x: ∀ ys, mappend_rel Emp_u ys ys.
+
+#[global] Hint Constructors mappend_rel: core_hint_db.
+
+#[global] Instance mappend_lookup_rel: dictionary rel mappend := { lookup' := mappend_rel }.
+
+#[global] Instance mappend_getF: getFunc mappend_rel := { getF' := mappend }.
+
+Theorem mappend_rel_funct [ds_d3ZS ys : L_u]:
+  ∀ (VV VV' : L_u), mappend_rel ds_d3ZS ys VV → (mappend_rel ds_d3ZS ys VV' → VV = VV').
+Proof.
+  try revert ys_p; generalize dependent ys; induction ds_d3ZS as [x xs IH_xs|]; intros;
+  rel_functionhood_body.
+Qed.
+
+#[global] Hint Resolve mappend_rel_funct: f_rel_funct_db.
+
+#[global] Instance mappend_lookup_funct: dictionary functionhood mappend := {
+    lookup' := mappend_rel_funct }.
+
+Theorem mappend_C_x_lem x xs ys mappend_C_x_lem_res:
+  mappend_rel (C_u x xs) ys mappend_C_x_lem_res
+  ↔ ∃ (mappend_res : L_u), mappend_rel xs ys mappend_res ∧ mappend_C_x_lem_res == C_u x mappend_res.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite mappend_C_x_lem: f_rel_back.
+
+Theorem mappend_Emp_x_lem ys mappend_Emp_x_lem_res:
+  mappend_rel Emp_u ys mappend_Emp_x_lem_res ↔ mappend_Emp_x_lem_res == ys.
+Proof.
+  rel_back' _nil.
+Qed.
+
+#[global] Hint Rewrite mappend_Emp_x_lem: f_rel_back.
+
+Theorem mappend_rel_ex
+  (ds_d3ZS : L_u) (ds_d3ZS_p : L_wf ds_d3ZS ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
+  mappend_rel ds_d3ZS ys ⌊ mappend (exist _ ds_d3ZS ds_d3ZS_p) (exist _ ys ys_p) -⌋.
+Proof.
+  Opaque mappend.
+  existence_lemma_pre mappend;
+  try revert ys_p; generalize dependent ys; induction ds_d3ZS as [x xs IH_xs|]; intros;
+  [fix_notations;
+   pose proof (IH_xs ltac:(try clear IH_xs; solver) ys ltac:(try clear IH_xs; solver)) as IH_47088561;
+   try clear IH_xs |
+   fix_notations];
+  simpl in *.
+  Transparent mappend.
+  all: (existence_lemma_quicksolve mappend; f__f_rel_ex_body; f_rel_finish).
+Qed.
+
+#[global] Hint Resolve mappend_rel_ex: rel_ax_db.
+
+#[global] Opaque mappend.
+
+Theorem mappend__mappend_rel_rw
+  (ds_d3ZS : L_u) (ds_d3ZS_p : L_wf ds_d3ZS ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True) (VV : L_u):
+  ⌊ mappend (exist _ ds_d3ZS ds_d3ZS_p) (exist _ ys ys_p) -⌋ = VV ↔ mappend_rel ds_d3ZS ys VV.
+Proof.
+  f__f_rel_rw.
+Qed.
+
+#[global] Hint Rewrite mappend__mappend_rel_rw: f_rel_funct_db.
+
+#[global] Hint Resolve mappend__mappend_rel_rw: rel_ax_db.
+
+#[global] Instance mappend_lookup_rw: dictionary rwLem mappend := {
+    lookup' := mappend__mappend_rel_rw }.
+
+Theorem mappend__mappend_rel (ds_d3ZS ys : L) (VV : L_u):
+  ⌊ mappend ds_d3ZS ys -⌋ = VV ↔ mappend_rel ⌊ ds_d3ZS ⌋ ⌊ ys ⌋ VV.
+Proof.
+  f__f_rel.
+Qed.
+
+#[global] Hint Rewrite mappend__mappend_rel: f_rel_funct_db.
+
+Theorem mappend__mappend_rel' (ds_d3ZS_u ys_u : L_u) (ds_d3ZS ys : L) (VV : L_u):
+  ds_d3ZS_u = ⌊ ds_d3ZS ⌋
+  → (ys_u = ⌊ ys ⌋ → ⌊ mappend ds_d3ZS ys -⌋ = VV ↔ mappend_rel ds_d3ZS_u ys_u VV).
+Proof.
+  intros -> ->. refine (mappend__mappend_rel ds_d3ZS ys VV).
+Qed.
+
+#[global] Hint Resolve mappend__mappend_rel': f_rel_funct_db.
+
+Theorem mappend_rel_mk
+  (ds_d3ZS : L_u) (ds_d3ZS_p : L_wf ds_d3ZS ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
+  {VV: _ | mappend_rel ds_d3ZS ys VV}.
+Proof.
+  intros;
+  refine (subsumptionCast
+          _
+          (λ VV, mappend_rel ds_d3ZS ys VV)
+          (mappend (exist _ ds_d3ZS ds_d3ZS_p) (exist _ ys ys_p))
+          _);
+  rewrite <- mappend__mappend_rel';
+  quicksolve.
+Qed.
+
+#[global] Hint Resolve mappend_rel_mk: f_rel_funct_db.
+
+#[global] Instance mappend_pack:
+  @Pack
+  (L ::RT λ (ds_d3ZS : L), L ::RT λ (ys : L), nilRT)
+  (L_u ::UT (L_u ::UT nilUT))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d3ZS : L), L ::RT λ (ys : L), nilRT) ((L_u ::UT (L_u ::UT nilUT))))
+  L_u
+  (λ (x_14238839 : ArgList (L ::RT λ (ds_d3ZS : L), L ::RT λ (ys : L), nilRT)) (v_x_14238839 : L_u),
+   ltac:(flattenP (λ (ds_d3ZS ys : L) (VV : L_u), L_wf VV ∧ True) x_14238839 v_x_14238839)).
+Proof.
+  buildPackG mappend mappend_rel mappend__mappend_rel mappend_rel_funct.
+Defined.
+
+#[global] Instance mappend_upack: @uPack (L_u ::UT (L_u ::UT nilUT)) L_u.
+Proof.
+  buildUPackG mappend_rel mappend_rel_funct.
+Defined.
+
+Definition mappend_assoc_spec (ds_d3ZQ ys zs : L): Type :=
+  {{∃ (mappend_res : L_u),
+    mappend_rel ⌊ ds_d3ZQ -⌋ ⌊ ys -⌋ mappend_res
+    ∧ ∃ (mappend_res_2 : L_u),
+      mappend_rel mappend_res ⌊ zs -⌋ mappend_res_2
+      ∧ ∃ (mappend_res_3 : L_u),
+        mappend_rel ⌊ ys -⌋ ⌊ zs -⌋ mappend_res_3
+        ∧ ∃ (mappend_res_4 : L_u),
+          mappend_rel ⌊ ds_d3ZQ -⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4}}.
+
+#[global] Hint Unfold mappend_assoc_spec: lia_unfold.
+
+Theorem mappend_assoc (ds_d3ZQ ys zs : L): mappend_assoc_spec ds_d3ZQ ys zs.
+Proof.
+  destruct ds_d3ZQ as [ds_d3ZQ ds_d3ZQ_p].
+  destruct ys as [ys ys_p].
+  destruct zs as [zs zs_p].
+  try revert zs_p; generalize dependent zs; try revert ys_p; generalize dependent ys;
+  induction ds_d3ZQ as [x xs IH_xs|];
+  intros.
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∃ (mappend_res : L_u),
+             mappend_rel (C_u x xs) ys mappend_res
+             ∧ ∃ (mappend_res_2 : L_u),
+               mappend_rel mappend_res zs mappend_res_2
+               ∧ ∃ (mappend_res_3 : L_u),
+                 mappend_rel ys zs mappend_res_3
+                 ∧ ∃ (mappend_res_4 : L_u),
+                   mappend_rel (C_u x xs) mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
+            (IH_xs
+             ltac:(try clear IH_xs; solver)
+             ys
+             ltac:(try clear IH_xs; solver)
+             zs
+             ltac:(try clear IH_xs; solver))
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∃ (mappend_res : L_u),
+             mappend_rel Emp_u ys mappend_res
+             ∧ ∃ (mappend_res_2 : L_u),
+               mappend_rel mappend_res zs mappend_res_2
+               ∧ ∃ (mappend_res_3 : L_u),
+                 mappend_rel ys zs mappend_res_3
+                 ∧ ∃ (mappend_res_4 : L_u),
+                   mappend_rel Emp_u mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4)
+            (# unit)
+            ltac:(solver)).
+Qed.
+
+Definition mempty_spec : Type :=
+  L.
+
+#[global] Hint Unfold mempty_spec: lia_unfold.
+
+Definition mempty : mempty_spec.
+Proof.
+  refine Emp.
+Defined.
+
+Definition mempty_left_spec (xs : L): Type :=
+  {{∃ (mappend_res : L_u), mappend_rel ⌊ mempty -⌋ ⌊ xs -⌋ mappend_res ∧ mappend_res == ⌊ xs -⌋}}.
+
+#[global] Hint Unfold mempty_left_spec: lia_unfold.
+
+Theorem mempty_left (xs : L): mempty_left_spec xs.
+Proof.
+  destruct xs as [xs xs_p].
+  refine (subsumptionCast
+          Unit
+          (λ (VV : Unit), ∃ (mappend_res : L_u), mappend_rel ⌊ mempty -⌋ xs mappend_res ∧ mappend_res == xs)
+          (# unit)
+          ltac:(solver)).
+Qed.
+
+Definition mempty_right_spec (ds_d3ZR : L): Type :=
+  {{∃ (mappend_res : L_u),
+    mappend_rel ⌊ ds_d3ZR -⌋ ⌊ mempty -⌋ mappend_res ∧ mappend_res == ⌊ ds_d3ZR -⌋}}.
+
+#[global] Hint Unfold mempty_right_spec: lia_unfold.
+
+Theorem mempty_right (ds_d3ZR : L): mempty_right_spec ds_d3ZR.
+Proof.
+  destruct ds_d3ZR as [ds_d3ZR ds_d3ZR_p].
+  induction ds_d3ZR as [x xs IH_xs|].
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∃ (mappend_res : L_u), mappend_rel (C_u x xs) ⌊ mempty -⌋ mappend_res ∧ mappend_res == C_u x xs)
+            (IH_xs ltac:(try clear IH_xs; solver))
+            ltac:(solver)).
+  - refine (subsumptionCast
+            Unit
+            (λ (VV : Unit),
+             ∃ (mappend_res : L_u), mappend_rel Emp_u ⌊ mempty -⌋ mappend_res ∧ mappend_res == Emp_u)
+            (# unit)
+            ltac:(solver)).
+Qed.
