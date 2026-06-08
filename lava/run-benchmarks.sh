@@ -33,7 +33,7 @@ if [[ ! -d "$BENCH_DIR" ]]; then
     exit 1
 fi
 
-mapfile -t bin_files < <(find "$BENCH_DIR" -type f -name '*.ilh_no_elab.bin' | sort)
+mapfile -t bin_files < <(find "$BENCH_DIR" -type f -name '*.ilhb' | sort)
 
 if (( ${#bin_files[@]} == 0 )); then
     echo "no .ilh_no_elab.bin files under $BENCH_DIR" >&2
