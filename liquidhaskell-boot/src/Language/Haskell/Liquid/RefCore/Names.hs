@@ -21,3 +21,24 @@ freshVar x vars =
 -- | Produce an (almost certainly) unique number string for the given printable object
 hashName :: (Pretty a) => a -> Id
 hashName e = take 8 $ prettyShow (abs . hash $ prettyShow e)
+
+-- Builtin names
+
+boolTpName :: Id
+boolTpName = "Bool"
+
+ttTmName :: Id
+ttTmName = "True"
+
+ffTmName :: Id
+ffTmName = "False"
+
+unitTpName :: Id
+unitTpName = "Unit"
+
+unitTmName :: Id
+unitTmName = "unit"
+
+-- | The canonical refinement value variable (the @VV@ in @{VV : tp | …}@).
+vvName :: Id
+vvName = "VV"

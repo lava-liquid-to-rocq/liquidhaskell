@@ -30,22 +30,16 @@ import Language.Haskell.Liquid.RefCore.Calculus (ProjKind (..))
 import Lava.RocqNames
 
 {- ORMOLU_DISABLE -}
-unitTmName :: Id
-btrueTmName :: Id
-bfalseTmName :: Id
 unitTm :: CoqTerm
 btrue :: CoqTerm
 bfalse :: CoqTerm
 boolTp :: RocqType
 unitTp :: RocqType
-unitTmName = "unit"
-btrueTmName = "true"
-bfalseTmName = "false"
 unitTm = Cr unitTmName
 btrue = Cr btrueTmName
 bfalse = Cr bfalseTmName
-boolTp = TC "bool" []
-unitTp = TC "Unit" []
+boolTp = TC rboolTpName []
+unitTp = TC runitTpName []
 {- ORMOLU_ENABLE -}
 
 -- | List of builtin CoqInductives

@@ -22,15 +22,10 @@ module Language.Haskell.Liquid.RefCore.Calculus
   , ProofOp (..)
     -- * Builtin type and data constructors
   , boolTp
-  , boolTpName
   , ttTm
-  , ttTmName
   , ffTm
-  , ffTmName
   , unitTp
-  , unitTpName
   , unitTm
-  , unitTmName
     -- * Construction and destruction
   , mkVar
   , arrs
@@ -57,7 +52,8 @@ import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 
 import GHC.Generics (Generic)
-import Language.Haskell.Liquid.RefCore.Names (Id, freshVar)
+
+import Language.Haskell.Liquid.RefCore.Names (Id, freshVar, boolTpName, ttTmName, ffTmName, unitTpName, unitTmName)
 
 -- * The grammar
 
@@ -192,27 +188,13 @@ data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq, Generic, Binary)
 -- Builtin type and data constructors
 
 {- ORMOLU_DISABLE -}
-boolTp :: BaseType
-boolTpName :: Id
-ttTm :: Reft
-ttTmName :: Id
-ffTm :: Reft
-ffTmName :: Id
+boolTp, unitTp :: BaseType
+unitTm, ttTm, ffTm :: Reft
 boolTp = TC boolTpName
-boolTpName = "Bool"
-ttTm = DC ttTmName
-ttTmName = "True"
-ffTm = DC ffTmName
-ffTmName = "False"
-
-unitTp :: BaseType
-unitTpName :: Id
-unitTm :: Reft
-unitTmName :: Id
 unitTp = TC unitTpName
-unitTpName = "Unit"
+ttTm = DC ttTmName
+ffTm = DC ffTmName
 unitTm = DC unitTmName
-unitTmName = "unit"
 {- ORMOLU_ENABLE -}
 
 -- * Functions on the terms

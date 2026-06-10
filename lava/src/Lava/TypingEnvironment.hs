@@ -9,7 +9,7 @@ import Data.Set (fromList)
 
 import Text.PrettyPrint.HughesPJClass
 
-import Language.Haskell.Liquid.RefCore.Names (Id, freshVar)
+import Language.Haskell.Liquid.RefCore.Names (Id, freshVar, boolTpName, ttTmName, ffTmName, unitTpName, unitTmName)
 
 import Lava.CalculusUtil
 

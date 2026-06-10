@@ -17,7 +17,6 @@ module Lava.CalculusUtil
   , fromArrType
   , arity
   , defaultRef
-  , vvName
   , tpArgs
   , tpArgsArLoc
   , headVar
@@ -39,7 +38,7 @@ import Text.PrettyPrint.HughesPJClass
 import Debug.Trace (trace)
 
 import Language.Haskell.Liquid.RefCore.Calculus
-import Language.Haskell.Liquid.RefCore.Names (Id)
+import Language.Haskell.Liquid.RefCore.Names (Id, vvName)
 
 builtinDCs :: [Reft]
 builtinTCs :: [BaseType]
@@ -85,11 +84,6 @@ fromArrType _ = error "ArrType expected"
 arity :: RefType -> Integer
 arity (ArrType _ _ tp) = 1 + arity tp
 arity (RefType {}) = 0
-
--- | The canonical refinement value variable (the @VV@ in @{VV : tp | …}@).
--- TODO import from liquid-fixpoint instead?
-vvName :: Id
-vvName = "VV"
 
 -- | defaultRef tp := {VV : tp | True}
 defaultRef :: BaseType -> RefType

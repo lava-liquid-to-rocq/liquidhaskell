@@ -13,8 +13,10 @@ import Data.Bifunctor (second)
 import Data.Maybe (fromMaybe)
 import Text.PrettyPrint.HughesPJClass as PP
 
-import Lava.RocqNames
+import Language.Haskell.Liquid.RefCore.Names as LH
+
 import Lava.CalculusUtil as LH
+import Lava.RocqNames as Coq
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil
 
@@ -60,7 +62,7 @@ trBop LH.Iff = Coq.Equiv
 
 -- | Translation of datatypes
 utrDC :: Id -> Id
-utrDC c | c == LH.unitTmName = Coq.unitTmName
+utrDC c | c == LH.unitTmName = Coq.runitTmName
 utrDC c | c == LH.ttTmName = Coq.btrueTmName
 utrDC c | c == LH.ffTmName = Coq.bfalseTmName
 utrDC c = unrefinedConstrName c

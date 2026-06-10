@@ -7,6 +7,11 @@ module Lava.RocqNames
   , OUT (..)
   , outPostfix
   , preamble
+  , rboolTpName
+  , runitTpName
+  , runitTmName
+  , btrueTmName
+  , bfalseTmName
   , specName
   , unrefinedTCName
   , refinedConstrName
@@ -85,6 +90,13 @@ preamble equations =
     scope x = text "Open Scope" <+> text x <> text "_scope."
 
 {- ORMOLU_DISABLE -}
+
+rboolTpName, runitTpName, runitTmName, btrueTmName, bfalseTmName :: Id
+runitTpName = "Unit"
+rboolTpName = "bool"
+runitTmName = "unit"
+btrueTmName = "true"
+bfalseTmName = "false"
 
 specName :: Id -> Id
 specName def = def ++ "_spec"

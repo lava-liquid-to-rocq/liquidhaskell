@@ -17,7 +17,7 @@ import qualified Data.Set as Set
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 
-import Language.Haskell.Liquid.RefCore.Names (Id)
+import Language.Haskell.Liquid.RefCore.Names (Id, vvName, boolTpName)
 
 import Lava.CalculusUtil
 import Lava.TypingEnvironment hiding (delete)

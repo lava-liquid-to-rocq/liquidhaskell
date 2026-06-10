@@ -17,7 +17,7 @@ import qualified Language.Fixpoint.Types as F
 import           Language.Haskell.Liquid.Types.RType (PVarV (PV), RTVar (RTVar), RTyCon (RTyCon), RTyVar (RTV), RTypeV (..), SpecType, UReft, UReftV (MkUReft))
 
 import           Language.Haskell.Liquid.RefCore.Misc
-import           Language.Haskell.Liquid.RefCore.Names (Id)
+import           Language.Haskell.Liquid.RefCore.Names (Id, ttTmName, ffTmName)
 import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
 
 -- | Helper for unsupported constructs
@@ -298,8 +298,8 @@ builtinDCs =
   M.fromList
     [ ("()", Calc.unitTm),
       ("trivial", Calc.unitTm),
-      (Calc.ttTmName, Calc.ttTm),
-      (Calc.ffTmName, Calc.ffTm)
+      (ttTmName, Calc.ttTm),
+      (ffTmName, Calc.ffTm)
     ]
 
 -- | LH builtin types: the base types and the unit type constructor
