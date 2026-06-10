@@ -14,6 +14,7 @@ module Main (main) where
 
 import Data.Maybe ( fromMaybe )
 import Data.List (partition)
+import Data.Functor (void)
 import System.Environment (getArgs, getProgName)
 import System.Exit (exitFailure)
 import System.FilePath (dropExtensions, takeDirectory, takeFileName)
@@ -38,16 +39,6 @@ readFlags flags path = go (Opts False False Nothing path) flags
     go o ("--output-folder": dir : rest) = go o { optOutputFolder = Just dir } rest
     go _ (unknown : _)                   = Left ("unknown flag: " ++ unknown)
 
-parseArgs :: IO Opts
-parseArgs = do
-    args <- getArgs
-    let (flags, positional) = partition (\a -> take 2 a == "--") args
-    case positional of
-        [path] -> case readFlags flags path of
-            Right o  -> pure o
-            Left err -> die err
-        _ -> die "expected exactly one .ilhb file path"
-
 die :: String -> IO a
 die msg =
   do name <- getProgName
@@ -55,11 +46,20 @@ die msg =
      hPutStrLn stderr "usage: lava [--equations] [--has-imports] [--output-folder DIR] PATH.ilhb"
      exitFailure
 
+parseArgs :: IO Opts
+parseArgs =
+  do args <- getArgs
+     let (flags, positional) = partition (\a -> take 2 a == "--") args
+     case positional of
+         [path] -> case readFlags flags path of
+             Right o  -> pure o
+             Left err -> die err
+         _ -> die "expected exactly one .ilhb file path"
+
 run :: Opts -> IO ()
-run opts = do
-    calcSource <- parseIlh (optInputPath opts)
-    _ <- runFromCalculus (meta opts) calcSource (optEquations opts)
-    pure ()
+run opts =
+  do calcSource <- parseIlh (optInputPath opts)
+     void $ runFromCalculus (meta opts) calcSource (optEquations opts)
   where
     meta o = CalcMeta
         { cmOutputFolder = fromMaybe (takeDirectory (optInputPath o)) (optOutputFolder o)

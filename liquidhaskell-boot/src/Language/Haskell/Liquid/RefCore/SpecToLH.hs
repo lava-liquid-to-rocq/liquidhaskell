@@ -298,8 +298,8 @@ builtinDCs =
   M.fromList
     [ ("()", Calc.unitTm),
       ("trivial", Calc.unitTm),
-      ("True", Calc.ttTm),
-      ("False", Calc.ffTm)
+      (Calc.ttTmName, Calc.ttTm),
+      (Calc.ffTmName, Calc.ffTm)
     ]
 
 -- | LH builtin types: the base types and the unit type constructor

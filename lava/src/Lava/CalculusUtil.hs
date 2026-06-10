@@ -17,6 +17,7 @@ module Lava.CalculusUtil
   , fromArrType
   , arity
   , defaultRef
+  , vvName
   , tpArgs
   , tpArgsArLoc
   , headVar
@@ -85,9 +86,14 @@ arity :: RefType -> Integer
 arity (ArrType _ _ tp) = 1 + arity tp
 arity (RefType {}) = 0
 
+-- | The canonical refinement value variable (the @VV@ in @{VV : tp | …}@).
+-- TODO import from liquid-fixpoint instead?
+vvName :: Id
+vvName = "VV"
+
 -- | defaultRef tp := {VV : tp | True}
 defaultRef :: BaseType -> RefType
-defaultRef tp = RefType "VV" tp ttTm
+defaultRef tp = RefType vvName tp ttTm
 
 -- | tpArgs(x_i:R_i|r_i)_{i ≤ n} -> R) = [x_i]_{i ≤ n}
 tpArgs :: RefType -> [Id]
@@ -168,14 +174,14 @@ removeProjs allProjs vars' (RefType y a reft) = RefType y a (aux vars' reft)
       if x `elem` vars then projx else Var x Nothing loc
     aux _ projf@(Proj _ (Var _ (Just _) _)) = projf
     aux _ p@(Proj {}) =
-      error $ "Calculus.removeArgProjs should only be used at top-level, when projections are made only on local variables. Found term: " ++ prettyShow p
+      error $ "CalculusUtil.removeArgProjs should only be used at top-level, when projections are made only on local variables. Found term: " ++ prettyShow p
     aux _ r@(Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = r
     aux vars (App r1 r2) = App (aux vars r1) (aux vars r2)
     aux vars (Neg r) = Neg (aux vars r)
     aux vars (Bop bop r1 r2) = Bop bop (aux vars r1) (aux vars r2)
     aux vars (QMark r rh rp) = QMark (aux vars r) (aux vars rh) (aux vars rp)
     aux vars (Pop pop r1 r2) = Pop pop (aux vars r1) (aux vars r2)
-    aux _ (Sub {}; Inj {}) = error "Subsumption or injection cast found in type refinement in Calculus.removeArgProjs."
+    aux _ (Sub {}; Inj {}) = error "Subsumption or injection cast found in type refinement in CalculusUtil.removeArgProjs."
 
 -- | renameFresh(x,tm) gives x a fresh name in tm
 -- Unused, kept for reference.

@@ -20,6 +20,7 @@ import GHC.Plugins (CommandLineOption, ModuleName, Plugin (..), defaultPlugin, m
 import GHC.Tc.Types (TcGblEnv, TcM)
 import GHC.Unit.Module.ModSummary (ModSummary (..))
 import GHC.Unit.Types (moduleName)
+import           Language.Haskell.Liquid.GHC.Interface (modSummaryHsFile)
 import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
 import           Language.Haskell.Liquid.RefCore.Extract (CalcMeta (..), OUT (..), getOutputFolder, outPath)
 
@@ -36,7 +37,7 @@ plugin =
 lavaHook :: [CommandLineOption] -> ModSummary -> TcGblEnv -> TcM TcGblEnv
 lavaHook opts ms gblEnv =
   do let equations = "--equations" `elem` opts
-     liftIO $ do meta <- calcMetaFor (moduleName (ms_mod ms)) (ms_hspp_file ms)
+     liftIO $ do meta <- calcMetaFor (moduleName (ms_mod ms)) (modSummaryHsFile ms)
                  let binPath = outPath Bin meta
                  exists <- doesFileExist binPath
                  when exists $ do

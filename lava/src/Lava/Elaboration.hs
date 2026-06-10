@@ -33,7 +33,7 @@ elaborate = wfDecls initial
 
 -- | Singleton type of a literal
 litType :: Builtin -> Reft -> RefType
-litType tp l = RefType "VV" (Builtin tp) (Bop Eq (Var "VV" Nothing Local) l)
+litType tp l = RefType vvName (Builtin tp) (Bop Eq (Var vvName Nothing Local) l)
 
 -- | Type of negation, with singleton return type
 negType :: RefType
@@ -41,7 +41,7 @@ negType =
   ArrType
     "x"
     (RefType "x" boolTp ttTm)
-    (RefType "VV" boolTp (Bop Eq (Var "VV" Nothing Local) (Neg . Proj Sig1 $ Var "x" Nothing Local)))
+    (RefType vvName boolTp (Bop Eq (Var vvName Nothing Local) (Neg . Proj Sig1 $ Var "x" Nothing Local)))
 
 -- | Types of binary operators, with singleton return type
 bopTypes :: [(Bop, RefType)]
@@ -73,7 +73,7 @@ mkBopType :: Bop -> BaseType -> BaseType -> Reft -> BaseType -> RefType
 mkBopType bop a1 a2 r2 a3 =
   ArrType "x_1" (RefType "x_1" a1 ttTm) $
     ArrType "x_2" (RefType "x_2" a2 r2) $
-      RefType "VV" a3 (Bop Eq (Var "VV" Nothing Local) (Bop bop (Proj Sig1 $ Var "x_1" Nothing Local) (Proj Sig1 $ Var "x_2" Nothing Local)))
+      RefType vvName a3 (Bop Eq (Var vvName Nothing Local) (Bop bop (Proj Sig1 $ Var "x_1" Nothing Local) (Proj Sig1 $ Var "x_2" Nothing Local)))
 
 -- * Simple types, used for typing type refinements
 
