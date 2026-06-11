@@ -2353,11 +2353,9 @@ Definition PartialApp {X X': Type} {prX: (X' ⤖ X)} {argTps:forall (x:X'), ArgL
   {q: projectsArgListT (argTps x) uargTps}: 
   @Pack (argTps x) uargTps q T (fun args => p (x ::R args)).
 Proof.
-  unshelve refine {| f := fun args => f (x ::R args); frel := _; 
-              f_frel := _; funct := fun uargs => funct (⌊ x ⌋ ::U uargs) |};
-  destruct pack as [f rel f_frel funct].
-  refine (fun args => _). 
-  replace q with (projectsArgListCons x uargTps z) by (auto with pi_db).
+  unshelve refine {| f := fun args => f (x ::R args); frel := fun args => frel ((prX.(proj) x) ::U args); 
+              f_frel := fun args => _; funct := fun uargs => funct (⌊ x ⌋ ::U uargs) |}.
+  replace q with (projectsArgListCons x uargTps z) by (auto with pi_db). 
   rewrite <- prArgListCons.
   exact (f_frel (x ::R args)).
 Defined.
