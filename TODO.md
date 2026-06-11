@@ -26,6 +26,7 @@
       parameters but also of the result. we can also factorize common assumption in
       disjuncts (e.g. in applyLatePolicy)
 - [ ] cleanup Rocq grammar
+- [ ] translate full applications of the first component of a pack, by collecting the arguments into an ArgList, hugely simplifying the resulting Galina terms
 - [ ] bind opaque subsumption witnesses of hints before translating the hints themselves for simpler proof states and reduced memory-load (using the letSubCast tactic)
 - [ ] ensure let bound subterms and hints are declared one at a time (one binding per tactic, using refine (let : ... := ... in _) for typed hints (or assert if Prop-sorted) or pose proof for untyped ones)
 - [ ] assert injection and subsumption witnesses of hints before translating the hints, resulting in easier to read proof states and avoiding proving subgoals twice
