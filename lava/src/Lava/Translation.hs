@@ -10,13 +10,15 @@ module Lava.Translation where
 
 import Data.Bifunctor (second)
 -- import Debug.Trace (trace)
-
 import Data.Maybe (fromMaybe)
-import Lava.Calculus as LH
+import Text.PrettyPrint.HughesPJClass as PP
+
+import Language.Haskell.Liquid.RefCore.Names as RefCoreNames
+
+import Lava.CalculusUtil as LH
+import Lava.RocqNames as RocqNames
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil
-import Lava.Names
-import Text.PrettyPrint.HughesPJClass as PP
 
 -- * Generic translations
 
@@ -60,9 +62,9 @@ trBop LH.Iff = Coq.Equiv
 
 -- | Translation of datatypes
 utrDC :: Id -> Id
-utrDC c | c == LH.unitTmName = Coq.unitTmName
-utrDC c | c == LH.ttTmName = Coq.btrueTmName
-utrDC c | c == LH.ffTmName = Coq.bfalseTmName
+utrDC c | c == LH.unitTmName = runitTmName
+utrDC c | c == LH.ttTmName = btrueTmName
+utrDC c | c == LH.ffTmName = bfalseTmName
 utrDC c = unrefinedConstrName c
 
 -- | Translation of refinement types

@@ -78,11 +78,10 @@ relationalTestGroups =
   , "relational-neg"
   ]
 
-lavaTestGroups :: [Text]
-lavaTestGroups =
-  [ "benchmark-lava"
-  , "benchmark-lava-ple"
-  , "import-lava"
+refcoreTestGroups :: [Text]
+refcoreTestGroups =
+  [ "benchmark-refcore"
+  , "benchmark-refcore-ple"
   ]
 
 -- | Update this when you add new "classes" of test groups
@@ -93,5 +92,5 @@ allTestGroupNames =
           , proverTestGroups
           , errorsTestGroups
           , relationalTestGroups
-          , lavaTestGroups
+          , refcoreTestGroups
           ]

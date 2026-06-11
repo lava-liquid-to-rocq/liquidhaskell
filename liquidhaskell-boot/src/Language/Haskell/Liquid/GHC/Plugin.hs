@@ -16,8 +16,6 @@ module Language.Haskell.Liquid.GHC.Plugin (
 
   ) where
 
-import Language.Haskell.Liquid.Lava.Translate (runLava, SrcInfo (..))
-
 import qualified Liquid.GHC.API         as O
 import           Liquid.GHC.API         as GHC hiding (Type)
 import qualified Text.PrettyPrint.HughesPJ               as PJ
@@ -78,6 +76,8 @@ import           Language.Haskell.Liquid.Bare
 import qualified Language.Haskell.Liquid.Bare.Resolve as Resolve
 import           Language.Haskell.Liquid.UX.CmdLine
 import           Language.Haskell.Liquid.UX.Config
+import           Language.Haskell.Liquid.RefCore.Extract (SrcInfo (..), extractCalculus, writeIlh, writeIlhBin)
+
 
 -- | Represents an abnormal but non-fatal state of the plugin. Because it is not
 -- meant to escape the plugin, it is not thrown in IO but instead carried around
@@ -419,17 +419,17 @@ liquidHaskellCheckWithConfig cfg pipelineData modSummary = do
     reportErrs :: (Show e, F.PPrint e) => [TError e] -> TcM (Either LiquidCheckException a)
     reportErrs  = LH.filterReportErrors thisFile GHC.failM continue (getFilters cfg) Full
 
--- NOTE: Addition for Lava
 mkSrcInfo :: LiquidHaskellContext -> TargetInfo -> AnnInfo SpecType -> SrcInfo
-mkSrcInfo lhContext targetInfo infTypes =
-  SrcInfo
-    { s_moduleName = moduleName $ ms_mod $ lhModuleSummary lhContext,
-      s_summary = lhModuleSummary lhContext,
-      s_targetInfo = targetInfo,
-      s_infTypes = infTypes,
-      s_imports = lhRelevantModules lhContext
+mkSrcInfo lhContext targetInfo infTypes = SrcInfo
+    { s_moduleName = moduleName $ ms_mod $ lhModuleSummary lhContext
+    , s_summary    = lhModuleSummary lhContext
+    , s_targetInfo = targetInfo
+    , s_infTypes   = infTypes
+    , s_imports    = lhRelevantModules lhContext
     }
 
+-- | When the @--refcore@ flag is set, extract Calculus
+--   declarations and write the .bin file.
 checkLiquidHaskellContext :: LiquidHaskellContext -> TcM (Either LiquidCheckException LiquidLib)
 checkLiquidHaskellContext lhContext = do
   pmr <- processModule lhContext
@@ -440,13 +440,12 @@ checkLiquidHaskellContext lhContext = do
       (out, infTypes) <- liftIO $ LH.checkTargetInfo pmrTargetInfo
 
       let bareSpec = lhInputSpec lhContext
+          cfg     = lhGlobalCfg lhContext
 
-      -- NOTE: Addition for Lava
-      when (lava $ lhGlobalCfg lhContext) (
-        liftIO $ runLava (mkSrcInfo lhContext pmrTargetInfo infTypes) False)
-      -- NOTE: Addition for Lava
-      when (lavaEquations $ lhGlobalCfg lhContext) (
-        liftIO $ runLava (mkSrcInfo lhContext pmrTargetInfo infTypes) True)
+      when (refcore cfg) $ liftIO $ do
+        (calcSource, meta) <- extractCalculus (mkSrcInfo lhContext pmrTargetInfo infTypes)
+        writeIlh meta calcSource
+        writeIlhBin meta calcSource
 
       withPragmas (lhGlobalCfg lhContext) (Ms.pragmas bareSpec) $ \moduleCfg ->  do
         let filters = getFilters moduleCfg

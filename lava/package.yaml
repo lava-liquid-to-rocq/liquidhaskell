@@ -21,6 +21,19 @@ dependencies:
 
 library:
   source-dirs: src
+  exposed-modules:
+    - Lava.CalculusUtil
+    - Lava.Coq
+    - Lava.CoqSyntaxUtil
+    - Lava.Declaration
+    - Lava.Elaboration
+    - Lava.IlhParse
+    - Lava.Plugin
+    - Lava.RocqNames
+    - Lava.TopologicalSort
+    - Lava.Translate
+    - Lava.Translation
+    - Lava.TypingEnvironment
   # exposed-modules:
     # - Lava
   # ghc-options: -Wdefault -Wall -Wno-missing-signatures -Wno-incomplete-uni-patterns -Wno-x-partial -Wno-orphans +RTS -K0 -RTS
@@ -36,6 +49,7 @@ library:
     - ghc-boot
     - unordered-containers
     - directory
+    - filepath
     - pretty
     - exceptions
     - binary
@@ -43,6 +57,16 @@ library:
     - bytestring
     - yjtools
     - text
+    - liquid-fixpoint
+    - liquidhaskell-boot == 0.9.12.2.1
+
+executables:
+  lava:
+    main: Main.hs
+    source-dirs: app
+    dependencies:
+      - lava
+      - filepath
 
 # benchmarks:
 #   lh-examples-bench:

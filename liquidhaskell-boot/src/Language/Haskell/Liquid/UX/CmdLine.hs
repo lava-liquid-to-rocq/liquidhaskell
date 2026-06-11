@@ -430,12 +430,9 @@ defConfig = Config {
           &= name "ddump-timings"
           &= explicit
 
-  , lava
-    = False &= help "Translate the Liquid Haskell program to Rocq"
-           &= name "lava"
-  , lavaEquations
-    = False &= help "Translate the Liquid Haskell program to Rocq using Equations"
-           &= name "lava-equations"
+  , refcore
+    = False &= help "Extract RefCore Calculus declarations"
+           &= name "refcore"
   } &= program "liquidhaskell"
     &= help    "Refinement Types for Haskell"
     &= summary copyright
