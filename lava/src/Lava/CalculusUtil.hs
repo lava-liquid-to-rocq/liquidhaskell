@@ -6,7 +6,7 @@
 --   Re-exports the shared 'Language.Haskell.Liquid.RefCore.Calculus'
 --   and adds the AST-manipulation helpers that only the translation needs.
 module Lava.CalculusUtil
-  ( module Language.Haskell.Liquid.RefCore.Calculus
+  ( module Language.Haskell.Liquid.RefCore.Calculus,
   , builtinDCs
   , builtinTCs
   , mkVarWithAnnot

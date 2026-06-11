@@ -13,10 +13,10 @@ import Data.Bifunctor (second)
 import Data.Maybe (fromMaybe)
 import Text.PrettyPrint.HughesPJClass as PP
 
-import Language.Haskell.Liquid.RefCore.Names as LH
+import Language.Haskell.Liquid.RefCore.Names as RefCoreNames
 
 import Lava.CalculusUtil as LH
-import Lava.RocqNames as Coq
+import Lava.RocqNames as RocqNames
 import Lava.Coq as Coq
 import Lava.CoqSyntaxUtil
 
@@ -62,9 +62,9 @@ trBop LH.Iff = Coq.Equiv
 
 -- | Translation of datatypes
 utrDC :: Id -> Id
-utrDC c | c == LH.unitTmName = Coq.runitTmName
-utrDC c | c == LH.ttTmName = Coq.btrueTmName
-utrDC c | c == LH.ffTmName = Coq.bfalseTmName
+utrDC c | c == LH.unitTmName = runitTmName
+utrDC c | c == LH.ttTmName = btrueTmName
+utrDC c | c == LH.ffTmName = bfalseTmName
 utrDC c = unrefinedConstrName c
 
 -- | Translation of refinement types

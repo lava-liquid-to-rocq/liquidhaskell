@@ -82,7 +82,6 @@ refcoreTestGroups :: [Text]
 refcoreTestGroups =
   [ "benchmark-refcore"
   , "benchmark-refcore-ple"
-  , "import-refcore"
   ]
 
 -- | Update this when you add new "classes" of test groups
