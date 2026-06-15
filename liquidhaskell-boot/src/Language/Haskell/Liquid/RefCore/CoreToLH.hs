@@ -170,27 +170,27 @@ flattenCoreApp modId infTypes f e =
         x = "x_" ++ hashName tm
 
 -- | Translate a flattened application to Calculus.
-transFlattenedApp :: AppHead -> [Calc.Reft] -> Calc.Reft
-transFlattenedApp (ReftHead h) args = foldl Calc.App h args
-transFlattenedApp (VarHead (HDC n)) args = foldl Calc.App (Calc.DC n) args
-transFlattenedApp (VarHead (HGeneric n)) args = foldl Calc.App (Calc.mkVar n) args
-transFlattenedApp (VarHead HNot) [tm] = Calc.Neg tm
-transFlattenedApp (VarHead (HBinOp op)) (_ : _ : a : b : _) = Calc.Bop op a b
-transFlattenedApp (VarHead (HConst tm)) _ = tm
-transFlattenedApp (VarHead HUnbox) [singleArg] = singleArg
-transFlattenedApp (VarHead HPatError) _ = undefinedReft
-transFlattenedApp (VarHead (HEqChain pop)) [_, fstTerm, lstTerm] = Calc.Pop pop fstTerm lstTerm
+transFlattenedApp :: AppHead -> [Calc.Reft] -> Calc.Expr
+transFlattenedApp (ReftHead h) args = Calc.Reft $ foldl Calc.App h args
+transFlattenedApp (VarHead (HDC n)) args = Calc.Reft $ foldl Calc.App (Calc.DC n) args
+transFlattenedApp (VarHead (HGeneric n)) args = Calc.Reft $ foldl Calc.App (Calc.mkVar n) args
+transFlattenedApp (VarHead HNot) [tm] = Calc.Reft $ Calc.Neg tm
+transFlattenedApp (VarHead (HBinOp op)) (_ : _ : a : b : _) = Calc.Reft $ Calc.Bop op a b
+transFlattenedApp (VarHead (HConst tm)) _ = Calc.Reft tm
+transFlattenedApp (VarHead HUnbox) [singleArg] = Calc.Reft singleArg
+transFlattenedApp (VarHead HPatError) _ = Calc.Reft undefinedReft
+transFlattenedApp (VarHead (HEqChain pop)) [_, fstTerm, lstTerm] = Calc.Reft $ Calc.Pop pop fstTerm lstTerm
 transFlattenedApp (VarHead HCast) [_, tm, Calc.DC "QED"] =
-  Calc.QMark Calc.unitTm tm Calc.ttTm
+  Calc.QMark (Calc.Reft Calc.unitTm) (Calc.Reft tm) Calc.ttTm
 transFlattenedApp (VarHead HQmark) (_ : _ : firstArg : secondArg : _) =
-  Calc.QMark firstArg secondArg Calc.ttTm
-transFlattenedApp (VarHead HNot) args = unexpected "not" args
-transFlattenedApp (VarHead HLambda) args = unexpected "lambda" args
-transFlattenedApp (VarHead (HEqChain pop)) args = unexpected (prettyShow pop) args
-transFlattenedApp (VarHead HCast) args = unexpected "***" args
-transFlattenedApp (VarHead HQmark) args = unexpected "?" args
-transFlattenedApp (VarHead HUnbox) args = unexpected "unbox" args
-transFlattenedApp (VarHead (HBinOp _)) args = unexpected "binop" args
+  Calc.QMark (Calc.Reft firstArg) (Calc.Reft secondArg) Calc.ttTm
+transFlattenedApp (VarHead HNot) args = Calc.Reft $ unexpected "not" args
+transFlattenedApp (VarHead HLambda) args = Calc.Reft $ unexpected "lambda" args
+transFlattenedApp (VarHead (HEqChain pop)) args = Calc.Reft $ unexpected (prettyShow pop) args
+transFlattenedApp (VarHead HCast) args = Calc.Reft $ unexpected "***" args
+transFlattenedApp (VarHead HQmark) args = Calc.Reft $ unexpected "?" args
+transFlattenedApp (VarHead HUnbox) args = Calc.Reft $ unexpected "unbox" args
+transFlattenedApp (VarHead (HBinOp _)) args = Calc.Reft $ unexpected "binop" args
 
 unexpected :: Id -> [Calc.Reft] -> a
 unexpected n as = error $ "transFlattenedApp: unexpected args for " ++ n ++ ": " ++ prettyShow as
@@ -232,7 +232,7 @@ transGHCType t = error $ "Polymorphism not supported: " ++ toStr t
 
 -- | Translate applications by flattening them and translating the parsed application.
 transApp :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> Calc.Expr
-transApp modId infTypes f app = letBinders . Calc.Reft $ transFlattenedApp appHead sArgs
+transApp modId infTypes f app = letBinders $ transFlattenedApp appHead sArgs
   where
     (letBinders, (appHead, sArgs)) = flattenCoreApp modId infTypes f app
 

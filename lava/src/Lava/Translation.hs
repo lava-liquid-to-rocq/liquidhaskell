@@ -115,7 +115,6 @@ utrReft eq r0 = case r0 of
     if op `elem` [LH.And, LH.Or, LH.Impl, LH.Iff] && not (isValue r1) && not (isValue r2)
       then error $ "Refinement " ++ prettyShow r0 ++ "cannot be translated to a boolean type because of the presence of applications."
       else Coq.Bop (Binop (trBop op) UnrefOp) (utrReft eq r1) (utrReft eq r2)
-  LH.QMark r _ _ -> utrReft eq r
   LH.Pop _ _ r -> utrReft eq r
   LH.Sub r _ _ -> utrReft eq r
   LH.Inj r _ -> utrReft eq r
@@ -194,7 +193,6 @@ extractApps r0 = go [] r0
           -- apply the function on a list of arguments
           seqNames arg (curEnv, curArgs) = second (: curArgs) $ go curEnv arg
       -- We do not care about extracting applications of the subterms we will erase in QMark and Pop
-      QMark r' rh rp -> second (\r'' -> QMark r'' rh rp) $ go env r'
       Pop pop r1 r2 -> second (Pop pop r1) $ go env r2
       Inj r' tp -> second (`Inj` tp) $ go env r'
       Sub r' from to -> second (\r'' -> Sub r'' from to) $ go env r'
@@ -316,9 +314,6 @@ trReft _ (LH.FloatLit d) = Coq.FloatLiteral d
 trReft _ (LH.DC c) = Cr (trDC c)
 trReft eq (LH.Neg tm) = Coq.Neg RefOp $ trReft eq tm
 trReft eq (LH.Bop op tm1 tm2) = Coq.Bop (Binop (trBop op) RefOp) (trReft eq tm1) (trReft eq tm2)
-trReft eq r@(LH.QMark {}; LH.Pop {}) =
-  let (r', proofs) = parseProofTerm r
-   in trProofCombinators eq proofs (trReft eq r')
 trReft eq (LH.Sub tm from to) = Coq.SubCast (trRefType eq to) (trRefType eq from) (trReft eq tm) (if eq then ProofHole else ByTac Oracle)
 trReft eq (LH.Inj tm tp) = mkExist eq (trRefType eq tp) (trReft eq tm)
 trReft _ tm@(LH.Proj {}) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
@@ -455,7 +450,7 @@ mkMatching eq trans tm alts genVars =
 
 -- | A proof term of Liquid Haskell:
 --   either a hint with the proposition it proves or an (in)equation
-data Proof = Hint Reft Reft | Eqn ProofOp Reft Reft [Proof] deriving (Eq, Show)
+data Proof = Hint Expr Reft | Eqn ProofOp Reft Reft [Proof] deriving (Eq, Show)
 
 instance Pretty Proof where
   pPrint (Hint rh rp) = pPrint rh <+> char '?' <+> parens (pPrint rp)
@@ -470,7 +465,7 @@ trProofCombinators eq proofs tm = foldr ($) tm (map trProofCombinator proofs)
   where
     trProofCombinator :: Proof -> CoqTerm -> CoqTerm
     trProofCombinator p@(Hint rh rp) =
-      Coq.Let hypName (Just . Prop $ utrReftProp eq rp) (Coq.mkProj Sig2 $ trReft eq rh)
+      Coq.Let hypName (Just . Prop $ utrReftProp eq rp) (Coq.mkProj Sig2 $ trExpr eq rh)
       where
         hypName = "H_" ++ hashName p
     trProofCombinator p@(Eqn pop r1 r2 proofs') =
@@ -482,23 +477,24 @@ trProofCombinators eq proofs tm = foldr ($) tm (map trProofCombinator proofs)
       where
         hypName = "H_" ++ hashName p
 
+{-
 -- | Given a term r ? h1 ? … ? hn where the hi's can be either hints or (in)equations
 --   and r is minimal, return (r, [h1, …, hn])
-qmarks :: Reft -> (Reft, [Proof])
-qmarks (QMark r rh@(Pop {}) _) =
+qmarks :: Expr -> (Expr, [Proof])
+qmarks (QMark r rh@(Reft Pop {}) _) =
   let (_, eqns) = parseProofTerm rh
    in second (++ eqns) $ qmarks r
 qmarks (QMark r rh rp) = second (++ [Hint rh rp]) $ qmarks r
 qmarks r = (r, [])
 
 -- | Retrieve the top-level hints and (in)equations from a term
-parseProofTerm :: Reft -> (Reft, [Proof])
-parseProofTerm (Pop pop r1 r2) =
-  let (r1', hints1) = qmarks r1
+parseProofTerm :: Expr -> (Expr, [Proof])
+parseProofTerm (Reft (Pop pop r1 r2)) =
+  let (r1', hints1) = qmarks (Reft r1)
       (r1'', proofs) = parseProofTerm r1'
-      (r2', proofs2) = qmarks r2
+      (r2', proofs2) = qmarks (Reft r2)
    in (r2', proofs ++ [Eqn pop r1'' r2' hints1] ++ proofs2)
 parseProofTerm r@(QMark {}) =
   let (r', hints) = qmarks r
    in second (++ hints) $ parseProofTerm r'
-parseProofTerm r = (r, [])
+parseProofTerm r = (r, [])-}

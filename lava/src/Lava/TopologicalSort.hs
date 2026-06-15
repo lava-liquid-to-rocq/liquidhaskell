@@ -39,7 +39,6 @@ instance Dependencies LH.Reft where
   dependsOn (LH.App f t) name = dependsOn f name || dependsOn t name
   dependsOn (LH.Neg p) name = dependsOn p name
   dependsOn (LH.Bop _ s t) name = dependsOn s name || dependsOn t name
-  dependsOn (LH.QMark r rh rp) name = dependsOn r name || dependsOn rh name || dependsOn rp name
   dependsOn (LH.Pop _ r1 r2) name = dependsOn r1 name || dependsOn r2 name
   dependsOn (LH.Sub r _ _) name = dependsOn r name
   dependsOn (LH.Inj r _) name = dependsOn r name
@@ -57,6 +56,7 @@ instance Dependencies LH.Expr where
   dependsOn (LH.Reft r) name = dependsOn r name
   dependsOn (LH.Let x tp df tm) name = (df `dependsOn` name || tm `dependsOn` name || tp `dependsOn` name) && x /= name
   dependsOn (LH.Case r branches _) name = dependsOn r name || any (`dependsBranchCalc` name) branches
+  dependsOn (LH.QMark r rh rp) name = dependsOn r name || dependsOn rh name || dependsOn rp name
 
 instance Dependencies LH.Decl where
   dependsOn (LH.Data n constrs) name =

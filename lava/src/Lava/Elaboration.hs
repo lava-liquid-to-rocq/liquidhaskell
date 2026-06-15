@@ -145,7 +145,7 @@ smpTpCheck γ r@(Bop bop r1 r2) = do
     then return (tp, Bop bop r1' r2')
     else Left . SmpTpErr $ "Wrong types for the arguments of the operator" <+> pPrint r
 smpTpCheck γ (Proj k r) = second (Proj k) <$> smpTpCheck γ r
-smpTpCheck _ r@(Sub {}; Inj {}; QMark {}; Pop {}) =
+smpTpCheck _ r@(Sub {}; Inj {}; Pop {}) =
   error . render $ "Unexpected term" <+> pPrint r <+> "found in type refinement"
 
 -- * Subtyping
@@ -271,6 +271,7 @@ removeRedundantMatches (Let x _ (Reft tm) (Case (Var x' _ _) branches genVars))
       x `elem` map fst ys || not (x `Set.member` freeVars e)
 removeRedundantMatches (Let x tpx ex e) =
   Let x tpx (removeRedundantMatches ex) (removeRedundantMatches e)
+removeRedundantMatches (QMark r rh rp) = QMark (removeRedundantMatches r) (removeRedundantMatches rh) rp
 
 -- * Type synthesis for refinements
 
@@ -334,14 +335,14 @@ synReft γ (Bop bop r1 r2) = do
   r2' <- checkReft γ r2 tp2
   return (substs [(r2', x2), (r1', x1)] tp, Bop bop r1' r2')
 -- (S-Hint)
-synReft γ r0@(QMark r rh _) = do
+{-synReft γ r0@(QMark r rh _) = do
   (tph, rh') <- synReft γ rh
   case tph of
     RefType x _ rp -> do
       let γ' = insertLocalVar (x, tph) γ
       (tp, r') <- synReft γ' r
       return (tp, QMark r' rh' rp)
-    _ -> Left . SynErr $ "Higher-order value found as a hint in" <+> pPrint r0
+    _ -> Left . SynErr $ "Higher-order value found as a hint in" <+> pPrint r0-}
 -- Not in the paper
 -- We only check that the terms of the equalities have the same type,
 -- since we do not use the refinements in the translation
@@ -402,6 +403,13 @@ checkExpr γ state e0@(Case r branches _) tp = do
       branches'' <- if Set.null indVars then return branches' else mapM instantiateAllIndVars branches'
       return (Case r' branches'' genVars)
     _ -> Left . CheckingErr $ "Matched term is not of an inductive type in expression" <+> pPrint e0
+  checkExpr γ state (QMark r rh rp) tp = do 
+    (tph, rh') <- synReft γ rh
+    case tph of
+      RefType x _ rp -> do
+        let γ' = insertLocalVar (x, tph) γ
+    r' <- checkExpr γ' state r
+    return $ QMark r' rh tp
   where
     -- if we match on a parameter x, matchedParamAndPos contains the name x and
     -- the position of the parameter
@@ -518,11 +526,11 @@ checkExpr γ state e0@(Case r branches _) tp = do
                 (r2', indVars2) = instRecReft inds r2
              in (Bop bop r1' r2', indVars1 `Set.union` indVars2)
           Neg r' -> first Neg $ instRecReft inds r'
-          QMark r' rh rp ->
+          {-QMark r' rh rp ->
             let (r'', indVars1) = instRecReft inds r'
                 (rh', indVars2) = instRecReft inds rh
                 (rp', indVars3) = instRecReft inds rp
-             in (QMark r'' rh' rp', Set.unions [indVars1, indVars2, indVars3])
+             in (QMark r'' rh' rp', Set.unions [indVars1, indVars2, indVars3])-}
           Pop pop r1 r2 ->
             let (r1', indVars1) = instRecReft inds r1
                 (r2', indVars2) = instRecReft inds r2

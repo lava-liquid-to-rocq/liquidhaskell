@@ -100,6 +100,7 @@ data Decl
 -- > e ::= r
 -- >     | let x (:: R)? := e in e
 -- >     | case r of (C [(x,bool)]* |-> (e | unreachable))*
+-- >     | e ? (e proves r)
 data Expr
   = -- | Refinement used as expression
     Reft Reft
@@ -112,6 +113,7 @@ data Expr
     --   The last element indicates if the case must be translated to
     --   destruct (Nothing) or induction, in which case we have the list of variables to generalize
     Case Reft [((Id, [(Id, Bool)]), Maybe Expr)] (Maybe [Id])
+  | QMark Expr Expr Reft
   deriving (Data, Show, Generic, Binary)
 
 -- | Simple LH terms including formulas.
@@ -125,7 +127,6 @@ data Expr
 -- >     | r r
 -- >     | ¬r
 -- >     | r `op` r
--- >     | r ? (r proves r)
 -- >     | r `pop` r
 data Reft
   = Var Id (Maybe BaseType) Localization
@@ -136,7 +137,6 @@ data Reft
   | App Reft Reft
   | Neg Reft
   | Bop Bop Reft Reft
-  | QMark Reft Reft Reft
   | Pop ProofOp Reft Reft
   | Sub Reft RefType RefType
   | Inj Reft RefType
@@ -279,7 +279,6 @@ instance HasVars Reft where
   freeVarsAnnot (Bop _ r1 r2) = freeVarsAnnot [r1, r2]
   freeVarsAnnot (Neg r) = freeVarsAnnot r
   freeVarsAnnot (StringLit _; IntLit _; FloatLit _; DC _) = Map.empty
-  freeVarsAnnot (QMark r rh rp) = freeVarsAnnot [r, rh, rp]
   freeVarsAnnot (Pop _ r1 r2) = freeVarsAnnot [r1, r2]
   freeVarsAnnot (Sub r from to) = freeVarsAnnot r `Map.union` freeVarsAnnot [from, to]
   freeVarsAnnot (Inj r tp) = freeVarsAnnot r `Map.union` freeVarsAnnot tp
@@ -290,7 +289,6 @@ instance HasVars Reft where
   boundVars (App hd arg) = boundVars [hd, arg]
   boundVars (Bop _ r1 r2) = boundVars [r1, r2]
   boundVars (Neg r) = boundVars r
-  boundVars (QMark r rh rp) = boundVars [r, rh, rp]
   boundVars (Pop _ r1 r2) = boundVars [r1, r2]
   boundVars (Sub r from to) = boundVars r `Set.union` boundVars [from, to]
   boundVars (Inj r tp) = boundVars r `Set.union` boundVars tp
@@ -302,7 +300,6 @@ instance HasVars Reft where
     App h arg -> App (subst r' x h) (subst r' x arg)
     Bop bop r1 r2 -> Bop bop (subst r' x r1) (subst r' x r2)
     Neg r -> Neg $ subst r' x r
-    QMark r rh rp -> QMark (subst r' x r) (subst r' x rh) (subst r' x rp)
     Pop pop r1 r2 -> Pop pop (subst r' x r1) (subst r' x r2)
     Sub r tps tpt -> Sub (subst r' x r) (subst r' x tps) (subst r' x tpt)
     Inj r tp -> Inj (subst r' x r) (subst r' x tp)
@@ -316,6 +313,7 @@ instance HasVars Expr where
     freeVarsAnnot r `Map.union` Map.unions (map fvBranch branches)
     where
       fvBranch ((_, ys), ebr) = freeVarsAnnot ebr `Map.withoutKeys` Set.fromList (map fst ys)
+  freeVarsAnnot (QMark r rh rp) = freeVarsAnnot [r, rh, Reft rp]
 
   boundVars (Reft r) = boundVars r
   boundVars (Let x tp ex e) =
@@ -324,6 +322,7 @@ instance HasVars Expr where
     boundVars r `Set.union` Set.unions (map bvBranch branches)
     where
       bvBranch ((_, ys), e) = Set.fromList (map fst ys) `Set.union` boundVars e
+  boundVars (QMark r rh rp) = boundVars [r, rh, Reft rp]
 
   subst r x e = case e of
     Reft re -> Reft $ subst r x re
@@ -347,6 +346,7 @@ instance HasVars Expr where
               if y `elem` freeVars r
                 then freshVar y (fvre `Set.union` Set.fromList vars) : vars
                 else y : vars
+    QMark r' rh rp -> QMark (subst r x r') (subst r x rh) (subst r x rp)
     where
       fvre = freeVars r `Set.union` freeVars e
 
@@ -500,6 +500,8 @@ instance Pretty Expr where
       des = case genVars of Nothing -> "destruct"; Just _ -> "induct"
       ppAlt (pat, e) = sep [char '|' <+> ppPat pat <+> "->", nest identNb $ maybe "undefined" pPrint e]
       ppPat (c, ys) = text c <+> hsep (map (text . fst) ys)
+  pPrint (QMark r rh rp) =
+    pPrint r <+> char '?' <+> parens (pPrint rh <+> "proves" <+> pPrint rp)
 
 instance Pretty Reft where
   pPrintPrec _ _ (Var x _ _) = text x
@@ -513,8 +515,6 @@ instance Pretty Reft where
     maybeParens (p > appPrec) $ "not" <+> pPrintPrec l (appPrec + 1) r
   pPrintPrec l p (Bop bop r1 r2) =
     maybeParens (p > bopPrec bop) $ pPrintPrec l (bopPrec bop) r1 <+> pPrint bop <+> pPrintPrec l (bopPrec bop) r2
-  pPrintPrec l p (QMark r rh rp) =
-    maybeParens (p > appPrec) $ pPrintPrec l p r <+> char '?' <+> parens (pPrint rh <+> "proves" <+> pPrint rp)
   pPrintPrec l p (Pop pop r1 r2) =
     maybeParens (p > popPrec pop) $ pPrintPrec l (popPrec pop) r1 <+> pPrint pop <+> pPrintPrec l (popPrec pop) r2
   pPrintPrec _ p (Sub r from to) =
