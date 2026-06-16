@@ -404,9 +404,10 @@ checkExpr γ state e0@(Case r branches _) tp = do
       return (Case r' branches'' genVars)
     _ -> Left . CheckingErr $ "Matched term is not of an inductive type in expression" <+> pPrint e0
   checkExpr γ state (QMark r rh rp) tp = do 
+    rh' <- checkExpr γ state rh
     (tph, rh') <- synReft γ rh
     case tph of
-      RefType x _ rp -> do
+      RefType x _ rp' | rp == rp' -> do
         let γ' = insertLocalVar (x, tph) γ
     r' <- checkExpr γ' state r
     return $ QMark r' rh tp

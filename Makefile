@@ -136,7 +136,7 @@ timeTranslation:
 	time stack exec --rts-options -t -- ghc tests/lava/TranslationTests/MonadList.hs
 
 translation: 
-	clear && time cabal run tests:benchmark-lava || echo "Translation failed!"
+	clear && time cabal run tests:benchmark-refcore; echo "Translation finished!"
 
 cleanLava:
 	cd dist-newstyle/build/x86_64-linux/ghc-9.12.2/liquidhaskell-boot-0.9.12.2.1/opt/build/Language/Haskell/Liquid/Lava && rm $(GHCO) || echo ""

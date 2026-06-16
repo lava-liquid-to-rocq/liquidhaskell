@@ -373,6 +373,17 @@ trExprTacs eq (Case tm alts genVars) =
       trAltBody Nothing = [mkConcat $ [Intros [], Exfalso] ++ [Oracle | not eq]]
       trAltBody (Just e) = trExprTacs eq e
    in [mkMatching eq trAltBody tm alts genVars]
+trExprTacs eq (LH.QMark r rh rp) =
+  hint ++ [trExprTacs eq r]
+  where
+    hint = translateHint eq rh rp
+
+translateHint :: LH.Expr LH.Reft
+translateHint prf goal = case rh of
+  AssertTacs x goal prf where
+    x = "h_" ++ hashName goal
+    prf = trExprTacs eq prf
+
 
 -- | Translation of expressions as a proof term (for Equations)
 trExpr :: Bool -> LH.Expr -> CoqTerm
