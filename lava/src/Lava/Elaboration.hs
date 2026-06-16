@@ -17,7 +17,7 @@ import qualified Data.Set as Set
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 
-import Language.Haskell.Liquid.RefCore.Names (Id, vvName, boolTpName, hashName)
+import Language.Haskell.Liquid.RefCore.Names (Id, vvName, boolTpName)
 
 import Lava.CalculusUtil
 import Lava.TypingEnvironment hiding (delete)
@@ -287,7 +287,8 @@ synReft γ (Var x _ locx) = do
     (_, Recursive {}) ->
       case locx of
         Recursive {} -> return (tp, mkVarWithAnnot x tp locx)
-        _ -> Left . SynErr $ "Impossible to build induction for an occurence of the function" <+> text x <> ". Found locx =" <+> pPrint locx
+        -- Local {} -> return (tp, mkVarWithAnnot x tp locx)
+        _ -> Left . SynErr $ "Impossible to build induction for an occurence of the function" <+> text x <> ". Found locx =" <+> pPrint locx <> ". tp =" <+> text (show . pPrint $ tp) <> ". res=" <+> text (show . pPrint $ mkVarWithAnnot x tp locx)
     -- (S-Var)
     _ -> return (tp, mkVarWithAnnot x tp locγ)
 -- (S-Lit)
@@ -368,13 +369,16 @@ checkExpr :: TypEnv -> [DesState] -> Expr -> RefType -> Either TypeError Expr
 -- checkExpr _ _ e tp | traceFunc "checkExpr" [pPrint e, pPrint tp] = undefined
 -- (C-Syn)
 checkExpr γ _ (Reft r) tp = Reft <$> checkReft γ r tp
-checkExpr γ state (QMark r rh rp) tp = do 
-  let x = hashName rp
-  let tpx = (RefType "_" unitTp rp)
-  let γ' = insertLocalVar (x, tpx) γ
-  rh' <- checkExpr γ state rh tpx
-  r' <- checkExpr γ' state r tp
-  return $ QMark r' rh' rp
+checkExpr γ state (QMark r rh rp) tp = do
+  (tph, rh') <- case rh of
+    Reft rh_ -> synReft γ rh_
+  r' <- case tph of
+    RefType x _ _ -> 
+      let γ' = insertLocalVar (x, tph) γ in
+      checkExpr γ' state r tp
+  return $ case tph of
+    RefType _ _ rp' -> 
+      QMark r' (Reft rh') rp'
 -- (C-Let)
 checkExpr γ state (Let x (Just tpx) ex e) tp = do
   _ <- wfRefType γ tp -- check that tp does not depend on x

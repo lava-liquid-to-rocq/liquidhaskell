@@ -180,8 +180,9 @@ transFlattenedApp (VarHead (HConst tm)) _ = Calc.Reft tm
 transFlattenedApp (VarHead HUnbox) [singleArg] = Calc.Reft singleArg
 transFlattenedApp (VarHead HPatError) _ = Calc.Reft undefinedReft
 transFlattenedApp (VarHead (HEqChain pop)) [_, fstTerm, lstTerm] = Calc.Reft $ Calc.Pop pop fstTerm lstTerm
-transFlattenedApp (VarHead HCast) [_, tm, Calc.DC "QED"] =
-  Calc.QMark (Calc.Reft Calc.unitTm) (Calc.Reft tm) Calc.ttTm
+transFlattenedApp (VarHead HCast) [bla, tm, Calc.DC "QED"] =
+  -- Calc.QMark (Calc.Reft Calc.unitTm) (Calc.Reft tm) Calc.ttTm
+  trace (show bla) $ Calc.QMark (Calc.Reft Calc.unitTm) (Calc.Reft tm) bla
 transFlattenedApp (VarHead HQmark) (_ : _ : firstArg : secondArg : _) =
   Calc.QMark (Calc.Reft firstArg) (Calc.Reft secondArg) Calc.ttTm
 transFlattenedApp (VarHead HNot) args = Calc.Reft $ unexpected "not" args

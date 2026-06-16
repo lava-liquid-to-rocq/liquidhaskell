@@ -316,7 +316,10 @@ trReft eq (LH.Neg tm) = Coq.Neg RefOp $ trReft eq tm
 trReft eq (LH.Bop op tm1 tm2) = Coq.Bop (Binop (trBop op) RefOp) (trReft eq tm1) (trReft eq tm2)
 trReft eq (LH.Sub tm from to) = Coq.SubCast (trRefType eq to) (trRefType eq from) (trReft eq tm) (if eq then ProofHole else ByTac Oracle)
 trReft eq (LH.Inj tm tp) = mkExist eq (trRefType eq tp) (trReft eq tm)
-trReft _ tm@(LH.Proj {}) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
+trReft eq (LH.Proj prKind (LH.Sub tm _ _)) = trReft eq (LH.Proj prKind tm)
+trReft eq (LH.Proj _ (LH.Inj tm _)) = trReft eq tm
+trReft eq (LH.Proj prKind tm) = Coq.Proj prKind $ trReft eq tm
+-- trReft _ tm@(LH.Proj {}) = error $ "Projection " ++ prettyShow tm ++ " found outside of type refinements in Translation.trReft"
 -- TODO: we do not use packs for theorems, maybe we need to change that
 trReft eq tm@(LH.App {}) = case apps tm of
   -- recursive call
@@ -328,6 +331,7 @@ trReft eq tm@(LH.App {}) = case apps tm of
   (LH.Var f (Just tp) Global, args) | tp /= LH.unitTp -> Coq.App (Coq.Def f) (map (trReft eq) args)
   -- other cases
   (hd, args) -> Coq.App (trReft eq hd) (map (trReft eq) args)
+trReft eq (Pop _ _ r) = trReft eq r
 
 -- | Translation of expressions as tactics
 -- Some other cases might be necessary because of branches coming from Core.
