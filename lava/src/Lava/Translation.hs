@@ -62,9 +62,9 @@ trBop LH.Iff = Coq.Equiv
 
 -- | Translation of datatypes
 utrDC :: Id -> Id
-utrDC c | c == LH.unitTmName = runitTmName
-utrDC c | c == LH.ttTmName = btrueTmName
-utrDC c | c == LH.ffTmName = bfalseTmName
+utrDC c | c == RefCoreNames.unitTmName = runitTmName
+utrDC c | c == RefCoreNames.ttTmName = btrueTmName
+utrDC c | c == RefCoreNames.ffTmName = bfalseTmName
 utrDC c = unrefinedConstrName c
 
 -- | Translation of refinement types
@@ -245,9 +245,9 @@ hypsRV eq rv graphRel = \p -> foldr hyp p rv
 
 -- | Translation of datatypes
 trDC :: Id -> Id
-trDC c | c == LH.unitTmName = Coq.unitTmName
-trDC c | c == LH.ttTmName = Coq.btrueTmName
-trDC c | c == LH.ffTmName = Coq.bfalseTmName
+trDC c | c == RefCoreNames.unitTmName = RocqNames.unitTmName
+trDC c | c == RefCoreNames.ttTmName = RocqNames.btrueTmName
+trDC c | c == RefCoreNames.ffTmName = RocqNames.bfalseTmName
 trDC c = c
 
 -- | Translation of refinement types
@@ -374,15 +374,15 @@ trExprTacs eq (Case tm alts genVars) =
       trAltBody (Just e) = trExprTacs eq e
    in [mkMatching eq trAltBody tm alts genVars]
 trExprTacs eq (LH.QMark r rh rp) =
-  hint ++ [trExprTacs eq r]
+  hint ++ trExprTacs eq r
   where
     hint = translateHint eq rh rp
 
-translateHint :: LH.Expr LH.Reft
-translateHint prf goal = case rh of
-  AssertTacs x goal prf where
+translateHint :: Bool -> LH.Expr -> LH.Reft -> [Tactic]
+translateHint eq z goal = case z of
+  _ -> [AssertTacs x (Prop $ trReft eq goal) prf] where
     x = "h_" ++ hashName goal
-    prf = trExprTacs eq prf
+    prf = trExprTacs eq z
 
 
 -- | Translation of expressions as a proof term (for Equations)
@@ -400,6 +400,7 @@ trExpr eq (Case tm alts _) =
       case e of
         Just e' -> trExpr eq e'
         Nothing -> PrfTerm Hole $ ByTac Exfalso
+trExpr eq (LH.QMark r _ _) = trExpr eq r
 
 -- ** Utility functions for the refined translation
 

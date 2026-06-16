@@ -11,13 +11,13 @@ import Control.Monad (foldM, mapAndUnzipM, when)
 import Data.Bifunctor (first, second)
 import Data.List (delete, elemIndex, (!?), (\\))
 import Data.Maybe (fromJust, isJust)
-import Data.Set (Set)
+import Data.Set (Set, toList)
 import qualified Data.Set as Set
 
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 
-import Language.Haskell.Liquid.RefCore.Names (Id, vvName, boolTpName)
+import Language.Haskell.Liquid.RefCore.Names (Id, vvName, boolTpName, hashName)
 
 import Lava.CalculusUtil
 import Lava.TypingEnvironment hiding (delete)
@@ -368,6 +368,13 @@ checkExpr :: TypEnv -> [DesState] -> Expr -> RefType -> Either TypeError Expr
 -- checkExpr _ _ e tp | traceFunc "checkExpr" [pPrint e, pPrint tp] = undefined
 -- (C-Syn)
 checkExpr γ _ (Reft r) tp = Reft <$> checkReft γ r tp
+checkExpr γ state (QMark r rh rp) tp = do 
+  let x = hashName rp
+  let tpx = (RefType "_" unitTp rp)
+  let γ' = insertLocalVar (x, tpx) γ
+  rh' <- checkExpr γ state rh tpx
+  r' <- checkExpr γ' state r tp
+  return $ QMark r' rh' rp
 -- (C-Let)
 checkExpr γ state (Let x (Just tpx) ex e) tp = do
   _ <- wfRefType γ tp -- check that tp does not depend on x
@@ -403,14 +410,6 @@ checkExpr γ state e0@(Case r branches _) tp = do
       branches'' <- if Set.null indVars then return branches' else mapM instantiateAllIndVars branches'
       return (Case r' branches'' genVars)
     _ -> Left . CheckingErr $ "Matched term is not of an inductive type in expression" <+> pPrint e0
-  checkExpr γ state (QMark r rh rp) tp = do 
-    rh' <- checkExpr γ state rh
-    (tph, rh') <- synReft γ rh
-    case tph of
-      RefType x _ rp' | rp == rp' -> do
-        let γ' = insertLocalVar (x, tph) γ
-    r' <- checkExpr γ' state r
-    return $ QMark r' rh tp
   where
     -- if we match on a parameter x, matchedParamAndPos contains the name x and
     -- the position of the parameter
@@ -480,6 +479,12 @@ checkExpr γ state e0@(Case r branches _) tp = do
               (ex', indVars2) = instRec inds ex
               (e'', indVars3) = instRec (delete x inds) e'
            in (Let x tpx' ex' e'', Set.unions [indVars1, indVars2, indVars3])
+        instRec inds (QMark e' rh rp) = 
+          let 
+            (rp', indVars0) = instRecReft inds rp
+            (rh', indVars1) = instRec (toList indVars0) rh
+            (e'', indVars2) = instRec (toList indVars1) e'
+          in (QMark e'' rh' rp', indVars2)
         instRec inds (Case tm alts genVars) =
           let (tm', indVars0) = instRecReft inds tm
               (alts', indVars) = unzip $ map instRecBranch alts

@@ -6,7 +6,7 @@
 --   Re-exports the shared 'Language.Haskell.Liquid.RefCore.Calculus'
 --   and adds the AST-manipulation helpers that only the translation needs.
 module Lava.CalculusUtil
-  ( module Language.Haskell.Liquid.RefCore.Calculus,
+  ( module Language.Haskell.Liquid.RefCore.Calculus
   , builtinDCs
   , builtinTCs
   , mkVarWithAnnot
@@ -39,6 +39,7 @@ import Debug.Trace (trace)
 
 import Language.Haskell.Liquid.RefCore.Calculus
 import Language.Haskell.Liquid.RefCore.Names (Id, vvName)
+import Language.Haskell.Liquid.RefCore.Names as RefCoreNames
 
 builtinDCs :: [Reft]
 builtinTCs :: [BaseType]
@@ -118,7 +119,6 @@ isValue r@(App {}) =
   case apps r of
     (DC _, args) -> all isValue args
     _ -> False
-isValue (QMark r _ _) = isValue r
 isValue (Pop _ _ r) = isValue r
 isValue (Sub r _ _) = isValue r
 isValue (Inj r _) = isValue r
@@ -173,7 +173,6 @@ removeProjs allProjs vars' (RefType y a reft) = RefType y a (aux vars' reft)
     aux vars (App r1 r2) = App (aux vars r1) (aux vars r2)
     aux vars (Neg r) = Neg (aux vars r)
     aux vars (Bop bop r1 r2) = Bop bop (aux vars r1) (aux vars r2)
-    aux vars (QMark r rh rp) = QMark (aux vars r) (aux vars rh) (aux vars rp)
     aux vars (Pop pop r1 r2) = Pop pop (aux vars r1) (aux vars r2)
     aux _ (Sub {}; Inj {}) = error "Subsumption or injection cast found in type refinement in CalculusUtil.removeArgProjs."
 

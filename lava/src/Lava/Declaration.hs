@@ -875,7 +875,6 @@ mkIndSkel _ (Reft r) specIhs =
     findRecCalls (LH.Var {}; StringLit {}; IntLit {}; FloatLit {}; DC {}) = []
     findRecCalls (LH.Neg r') = findRecCalls r'
     findRecCalls (LH.Bop _ r1 r2) = findRecCalls r1 `union` findRecCalls r2
-    findRecCalls (QMark r' rh rp) = findRecCalls r' `union` (findRecCalls rh `union` findRecCalls rp)
     findRecCalls (Pop _ r1 r2) = findRecCalls r1 `union` findRecCalls r2
     findRecCalls (Sub r' _ _) = findRecCalls r'
     findRecCalls (Inj r' _) = findRecCalls r'
