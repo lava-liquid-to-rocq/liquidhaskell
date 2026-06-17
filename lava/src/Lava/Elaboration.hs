@@ -390,13 +390,24 @@ checkExpr γ state (Let x (Just tpx) ex e) tp = do
   e' <- checkExpr γ' state e tp
   return (Let x (Just tpx') ex' e')
 -- Not in the paper, but in case we have no annotation
-checkExpr γ state (Let x Nothing (Reft r) e) tp = do
+checkExpr γ state (Let x Nothing tm e) tp = do
   _ <- wfRefType γ tp -- check that tp does not depend on x
-  (tpr, r') <- synReft γ r
+  (tpr, r') <- let
+    synExpr :: TypEnv -> Expr -> Either TypeError (RefType, Expr)
+    synExpr γ_ (Reft r) = second Reft <$> synReft γ_ r
+    synExpr γ_ (QMark r _ _) = synExpr γ_ r
+    synExpr γ_ (Let y yTpO ry ey) = do
+      (yTp, ry') <- case yTpO of
+        Just yTp -> (yTp, ) <$> checkExpr γ_ state ry yTp
+        Nothing -> synExpr γ_ ry
+      let γy = insertLocalVar (y, yTp) γ_
+      (tpEy, ey') <- synExpr γy ey
+      return (tpEy, (Let y (Just yTp) ry' ey'))
+    synExpr _ Case{} = Left . CheckingErr $ "Unsupported" in
+        synExpr γ tm
   let γ' = insertLocalVar (x, tpr) γ
   e' <- checkExpr γ' state e tp
-  return (Let x (Just tpr) (Reft r') e')
-checkExpr _ _ e@(Let {}) _ = Left . CheckingErr $ "Type annotation expected for the let-binding" <+> pPrint e
+  return (Let x (Just tpr) r' e')
 -- (C-Case)
 checkExpr γ state e0@(Case r branches _) tp = do
   (tpr, r') <- synReft γ r
