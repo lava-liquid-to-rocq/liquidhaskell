@@ -11,7 +11,7 @@ import Control.Monad (foldM, mapAndUnzipM, when)
 import Data.Bifunctor (first, second)
 import Data.List (delete, elemIndex, (!?), (\\))
 import Data.Maybe (fromJust, isJust)
-import Data.Set (Set, toList)
+import Data.Set (Set)
 import qualified Data.Set as Set
 
 import Text.PrettyPrint
@@ -369,16 +369,16 @@ checkExpr :: TypEnv -> [DesState] -> Expr -> RefType -> Either TypeError Expr
 -- checkExpr _ _ e tp | traceFunc "checkExpr" [pPrint e, pPrint tp] = undefined
 -- (C-Syn)
 checkExpr γ _ (Reft r) tp = Reft <$> checkReft γ r tp
-checkExpr γ state (QMark r rh rp) tp = do
-  (tph, rh') <- case rh of
-    Reft rh_ -> synReft γ rh_
-  r' <- case tph of
-    RefType x _ _ -> 
+checkExpr γ state (QMark r (Reft rh) _) tp = do
+  (tph, rh') <- synReft γ rh
+  (x, rp') <- case tph of
+    RefType x _ rp' -> Right (x, rp')
+    _ -> Left . CheckingErr $ "Unexpected function type in type of hint"
+  r' <- 
       let γ' = insertLocalVar (x, tph) γ in
       checkExpr γ' state r tp
-  return $ case tph of
-    RefType _ _ rp' -> 
-      QMark r' (Reft rh') rp'
+  return $ QMark r' (Reft rh') rp'
+checkExpr _ _ (QMark _ _ _) _ = Left . CheckingErr $ "Hint of unexpected shape"
 -- (C-Let)
 checkExpr γ state (Let x (Just tpx) ex e) tp = do
   _ <- wfRefType γ tp -- check that tp does not depend on x
@@ -442,7 +442,7 @@ checkExpr γ state e0@(Case r branches _) tp = do
     -- Encodes patError
     checkBranch _ (c, Just (Reft (Var "undefined" _ _))) = return ((c, Nothing), Set.empty)
     checkBranch _ (c, Nothing) = return ((c, Nothing), Set.empty)
-    checkBranch matched ((c, ys), Just e) = do
+    checkBranch matched ((c, ys), Just e) = {-trace (unwords ["checkBranch", show (c, ys), show e]) $-} do
       tpc <- lookupDC c γ
       -- Replace the binders in tpc by the names of the match in ys
       let tpcRenamed = renameParams (map fst ys) tpc
@@ -486,9 +486,9 @@ checkExpr γ state e0@(Case r branches _) tp = do
         instRec inds (QMark e' rh rp) = 
           let 
             (rp', indVars0) = instRecReft inds rp
-            (rh', indVars1) = instRec (toList indVars0) rh
-            (e'', indVars2) = instRec (toList indVars1) e'
-          in (QMark e'' rh' rp', indVars2)
+            (rh', indVars1) = instRec inds rh
+            (e'', indVars2) = instRec inds e'
+          in (QMark e'' rh' rp', Set.unions [indVars0, indVars1, indVars2])
         instRec inds (Case tm alts genVars) =
           let (tm', indVars0) = instRecReft inds tm
               (alts', indVars) = unzip $ map instRecBranch alts
@@ -509,8 +509,8 @@ checkExpr γ state e0@(Case r branches _) tp = do
               (tp'', indVars2) = instRecRefType (delete x inds) tp'
            in (ArrType x tpx' tp'', indVars1 `Set.union` indVars2)
 
-        -- NOTE: we should be able to check that the recursive call is supported: for
-        -- this, the arguments at the Destructed positions must be equal to what is in the IH
+        -- NOTE: we should be able to check that the recursive call is supported: for this,
+        -- the arguments at the Destructed positions must be equal to what is in the IH
         instRecReft :: [Id] -> Reft -> (Reft, Set Id)
         instRecReft inds tm = case tm of
           (Var {}; StringLit _; IntLit _; FloatLit _; DC _) -> (tm, Set.empty)

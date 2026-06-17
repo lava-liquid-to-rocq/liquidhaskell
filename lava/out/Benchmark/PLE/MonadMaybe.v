@@ -71,8 +71,8 @@ Definition Nothing : MaybeInt :=
 #[global] Hint Unfold Nothing: ref_constr_db.
 
 Definition bind_spec
-  (ds_d3S4 : MaybeInt)
-  (ds_d3S5 : @Pack
+  (ds_d3TI : MaybeInt)
+  (ds_d3TJ : @Pack
              ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
              (Z ::UT nilUT)
              ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
@@ -87,8 +87,8 @@ Definition bind_spec
 #[global] Hint Unfold bind_spec: lia_unfold.
 
 Definition bind
-  (ds_d3S4 : MaybeInt)
-  (ds_d3S5 : @Pack
+  (ds_d3TI : MaybeInt)
+  (ds_d3TJ : @Pack
              ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
              (Z ::UT nilUT)
              ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
@@ -97,19 +97,19 @@ Definition bind
                 (v_x_10329927 : MaybeInt_u),
               ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : MaybeInt_u),
  MaybeInt_wf VV ∧ True) x_10329927 v_x_10329927))):
-  bind_spec ds_d3S4 ds_d3S5.
+  bind_spec ds_d3TI ds_d3TJ.
 Proof.
-  destruct ds_d3S4 as [ds_d3S4 ds_d3S4_p].
-  destruct ds_d3S4 as [m|].
-  - refine (getPackF ds_d3S5 (# m)).
+  destruct ds_d3TI as [ds_d3TI ds_d3TI_p].
+  destruct ds_d3TI as [m|].
+  - refine (getPackF ds_d3TJ (# m)).
   - refine Nothing.
 Defined.
 
 Inductive bind_rel: MaybeInt_u → @uPack (Z ::UT nilUT) MaybeInt_u → MaybeInt_u → Prop :=
-  | bind_Just_x: ∀ m (ds_d3S5 : @uPack (Z ::UT nilUT) MaybeInt_u) (ds_d3S5_res : MaybeInt_u),
-                 getUPackRel ds_d3S5 m ds_d3S5_res → bind_rel (Just_u m) ds_d3S5 ds_d3S5_res
-  | bind_Nothing_x: ∀ (ds_d3S5 : @uPack (Z ::UT nilUT) MaybeInt_u),
-                    bind_rel Nothing_u ds_d3S5 Nothing_u.
+  | bind_Just_x: ∀ m (ds_d3TJ : @uPack (Z ::UT nilUT) MaybeInt_u) (ds_d3TJ_res : MaybeInt_u),
+                 getUPackRel ds_d3TJ m ds_d3TJ_res → bind_rel (Just_u m) ds_d3TJ ds_d3TJ_res
+  | bind_Nothing_x: ∀ (ds_d3TJ : @uPack (Z ::UT nilUT) MaybeInt_u),
+                    bind_rel Nothing_u ds_d3TJ Nothing_u.
 
 #[global] Hint Constructors bind_rel: core_hint_db.
 
@@ -117,10 +117,10 @@ Inductive bind_rel: MaybeInt_u → @uPack (Z ::UT nilUT) MaybeInt_u → MaybeInt
 
 #[global] Instance bind_getF: getFunc bind_rel := { getF' := bind }.
 
-Theorem bind_rel_funct [ds_d3S4 : MaybeInt_u] [ds_d3S5 : @uPack (Z ::UT nilUT) MaybeInt_u]:
-  ∀ (VV VV' : MaybeInt_u), bind_rel ds_d3S4 ds_d3S5 VV → (bind_rel ds_d3S4 ds_d3S5 VV' → VV = VV').
+Theorem bind_rel_funct [ds_d3TI : MaybeInt_u] [ds_d3TJ : @uPack (Z ::UT nilUT) MaybeInt_u]:
+  ∀ (VV VV' : MaybeInt_u), bind_rel ds_d3TI ds_d3TJ VV → (bind_rel ds_d3TI ds_d3TJ VV' → VV = VV').
 Proof.
-  destruct ds_d3S4 as [m|]; rel_functionhood_body.
+  destruct ds_d3TI as [m|]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve bind_rel_funct: f_rel_funct_db.
@@ -128,18 +128,18 @@ Qed.
 #[global] Instance bind_lookup_funct: dictionary functionhood bind := {
     lookup' := bind_rel_funct }.
 
-Theorem bind_Just_x_lem ds_d3S5 m bind_Just_x_lem_res:
-  bind_rel (Just_u m) ds_d3S5 bind_Just_x_lem_res
-  ↔ ∃ (ds_d3S5_res : MaybeInt_u),
-    getUPackRel ds_d3S5 m ds_d3S5_res ∧ bind_Just_x_lem_res == ds_d3S5_res.
+Theorem bind_Just_x_lem ds_d3TJ m bind_Just_x_lem_res:
+  bind_rel (Just_u m) ds_d3TJ bind_Just_x_lem_res
+  ↔ ∃ (ds_d3TJ_res : MaybeInt_u),
+    getUPackRel ds_d3TJ m ds_d3TJ_res ∧ bind_Just_x_lem_res == ds_d3TJ_res.
 Proof.
   rel_back' _nil.
 Qed.
 
 #[global] Hint Rewrite bind_Just_x_lem: f_rel_back.
 
-Theorem bind_Nothing_x_lem ds_d3S5 bind_Nothing_x_lem_res:
-  bind_rel Nothing_u ds_d3S5 bind_Nothing_x_lem_res ↔ bind_Nothing_x_lem_res == Nothing_u.
+Theorem bind_Nothing_x_lem ds_d3TJ bind_Nothing_x_lem_res:
+  bind_rel Nothing_u ds_d3TJ bind_Nothing_x_lem_res ↔ bind_Nothing_x_lem_res == Nothing_u.
 Proof.
   rel_back' _nil.
 Qed.
@@ -147,9 +147,9 @@ Qed.
 #[global] Hint Rewrite bind_Nothing_x_lem: f_rel_back.
 
 Theorem bind_rel_ex
-  (ds_d3S4 : MaybeInt_u)
-  (ds_d3S4_p : MaybeInt_wf ds_d3S4 ∧ True)
-  (ds_d3S5 : @Pack
+  (ds_d3TI : MaybeInt_u)
+  (ds_d3TI_p : MaybeInt_wf ds_d3TI ∧ True)
+  (ds_d3TJ : @Pack
              ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
              (Z ::UT nilUT)
              ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
@@ -158,11 +158,11 @@ Theorem bind_rel_ex
                 (v_x_82647028 : MaybeInt_u),
               ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : MaybeInt_u),
  MaybeInt_wf VV ∧ True) x_82647028 v_x_82647028))):
-  bind_rel ds_d3S4 ⌊ ds_d3S5 ⌋ ⌊ bind (exist _ ds_d3S4 ds_d3S4_p) ds_d3S5 -⌋.
+  bind_rel ds_d3TI ⌊ ds_d3TJ ⌋ ⌊ bind (exist _ ds_d3TI ds_d3TI_p) ds_d3TJ -⌋.
 Proof.
   Opaque bind.
   existence_lemma_pre bind;
-  destruct ds_d3S4 as [m|];
+  destruct ds_d3TI as [m|];
   [fix_notations | fix_notations];
   simpl in *.
   Transparent bind.
@@ -174,9 +174,9 @@ Qed.
 #[global] Opaque bind.
 
 Theorem bind__bind_rel_rw
-  (ds_d3S4 : MaybeInt_u)
-  (ds_d3S4_p : MaybeInt_wf ds_d3S4 ∧ True)
-  (ds_d3S5 : @Pack
+  (ds_d3TI : MaybeInt_u)
+  (ds_d3TI_p : MaybeInt_wf ds_d3TI ∧ True)
+  (ds_d3TJ : @Pack
              ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
              (Z ::UT nilUT)
              ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
@@ -186,7 +186,7 @@ Theorem bind__bind_rel_rw
               ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : MaybeInt_u),
  MaybeInt_wf VV ∧ True) x_82647028 v_x_82647028)))
   (VV : MaybeInt_u):
-  ⌊ bind (exist _ ds_d3S4 ds_d3S4_p) ds_d3S5 -⌋ = VV ↔ bind_rel ds_d3S4 ⌊ ds_d3S5 ⌋ VV.
+  ⌊ bind (exist _ ds_d3TI ds_d3TI_p) ds_d3TJ -⌋ = VV ↔ bind_rel ds_d3TI ⌊ ds_d3TJ ⌋ VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -198,8 +198,8 @@ Qed.
 #[global] Instance bind_lookup_rw: dictionary rwLem bind := { lookup' := bind__bind_rel_rw }.
 
 Theorem bind__bind_rel
-  (ds_d3S4 : MaybeInt)
-  (ds_d3S5 : @Pack
+  (ds_d3TI : MaybeInt)
+  (ds_d3TJ : @Pack
              ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
              (Z ::UT nilUT)
              ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
@@ -209,7 +209,7 @@ Theorem bind__bind_rel
               ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : MaybeInt_u),
  MaybeInt_wf VV ∧ True) x_10329927 v_x_10329927)))
   (VV : MaybeInt_u):
-  ⌊ bind ds_d3S4 ds_d3S5 -⌋ = VV ↔ bind_rel ⌊ ds_d3S4 ⌋ ⌊ ds_d3S5 ⌋ VV.
+  ⌊ bind ds_d3TI ds_d3TJ -⌋ = VV ↔ bind_rel ⌊ ds_d3TI ⌋ ⌊ ds_d3TJ ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
@@ -217,10 +217,10 @@ Qed.
 #[global] Hint Rewrite bind__bind_rel: f_rel_funct_db.
 
 Theorem bind__bind_rel'
-  (ds_d3S4_u : MaybeInt_u)
-  (ds_d3S5_u : @uPack (Z ::UT nilUT) MaybeInt_u)
-  (ds_d3S4 : MaybeInt)
-  (ds_d3S5 : @Pack
+  (ds_d3TI_u : MaybeInt_u)
+  (ds_d3TJ_u : @uPack (Z ::UT nilUT) MaybeInt_u)
+  (ds_d3TI : MaybeInt)
+  (ds_d3TJ : @Pack
              ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT)
              (Z ::UT nilUT)
              ltac:(mkProjectsArgListTG ({VV: Z | True} ::RT λ (lq_tmp2 : {VV: Z | True}), nilRT) ((Z ::UT nilUT)))
@@ -230,18 +230,18 @@ Theorem bind__bind_rel'
               ltac:(flattenP (λ (lq_tmp2 : {VV: Z | True}) (VV : MaybeInt_u),
  MaybeInt_wf VV ∧ True) x_10329927 v_x_10329927)))
   (VV : MaybeInt_u):
-  ds_d3S4_u = ⌊ ds_d3S4 ⌋
-  → (ds_d3S5_u = ⌊ ds_d3S5 ⌋ → ⌊ bind ds_d3S4 ds_d3S5 -⌋ = VV ↔ bind_rel ds_d3S4_u ds_d3S5_u VV).
+  ds_d3TI_u = ⌊ ds_d3TI ⌋
+  → (ds_d3TJ_u = ⌊ ds_d3TJ ⌋ → ⌊ bind ds_d3TI ds_d3TJ -⌋ = VV ↔ bind_rel ds_d3TI_u ds_d3TJ_u VV).
 Proof.
-  intros -> ->. refine (bind__bind_rel ds_d3S4 ds_d3S5 VV).
+  intros -> ->. refine (bind__bind_rel ds_d3TI ds_d3TJ VV).
 Qed.
 
 #[global] Hint Resolve bind__bind_rel': f_rel_funct_db.
 
 Theorem bind_rel_mk
-  (ds_d3S4 : MaybeInt_u)
-  (ds_d3S4_p : MaybeInt_wf ds_d3S4 ∧ True)
-  (ds_d3S5 : @Pack
+  (ds_d3TI : MaybeInt_u)
+  (ds_d3TI_p : MaybeInt_wf ds_d3TI ∧ True)
+  (ds_d3TJ : @Pack
              ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT)
              (Z ::UT nilUT)
              ltac:(mkProjectsArgListTG ({lq_tmp2: Z | True} ::RT λ (lq_tmp2 : {lq_tmp2: Z | True}), nilRT) ((Z ::UT nilUT)))
@@ -250,13 +250,13 @@ Theorem bind_rel_mk
                 (v_x_82647028 : MaybeInt_u),
               ltac:(flattenP (λ (lq_tmp2 : {lq_tmp2: Z | True}) (VV : MaybeInt_u),
  MaybeInt_wf VV ∧ True) x_82647028 v_x_82647028))):
-  {VV: _ | bind_rel ds_d3S4 (packProj ds_d3S5) VV}.
+  {VV: _ | bind_rel ds_d3TI (packProj ds_d3TJ) VV}.
 Proof.
   intros;
   refine (subsumptionCast
           _
-          (λ VV, bind_rel ds_d3S4 (packProj ds_d3S5) VV)
-          (bind (exist _ ds_d3S4 ds_d3S4_p) ds_d3S5)
+          (λ VV, bind_rel ds_d3TI (packProj ds_d3TJ) VV)
+          (bind (exist _ ds_d3TI ds_d3TI_p) ds_d3TJ)
           _);
   rewrite <- bind__bind_rel';
   quicksolve.
@@ -416,16 +416,16 @@ Proof.
           ltac:(solver)).
 Qed.
 
-Definition right_identity_spec (ds_d3S3 : MaybeInt): Type :=
+Definition right_identity_spec (ds_d3TH : MaybeInt): Type :=
   {{∃ (bind_res : MaybeInt_u),
-    bind_rel ⌊ ds_d3S3 -⌋ retrn_upack bind_res ∧ bind_res == ⌊ ds_d3S3 -⌋}}.
+    bind_rel ⌊ ds_d3TH -⌋ retrn_upack bind_res ∧ bind_res == ⌊ ds_d3TH -⌋}}.
 
 #[global] Hint Unfold right_identity_spec: lia_unfold.
 
-Theorem right_identity (ds_d3S3 : MaybeInt): right_identity_spec ds_d3S3.
+Theorem right_identity (ds_d3TH : MaybeInt): right_identity_spec ds_d3TH.
 Proof.
-  destruct ds_d3S3 as [ds_d3S3 ds_d3S3_p].
-  destruct ds_d3S3 as [x|].
+  destruct ds_d3TH as [ds_d3TH ds_d3TH_p].
+  destruct ds_d3TH as [x|].
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
