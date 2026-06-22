@@ -532,6 +532,11 @@ Ltac final_shape_based := match goal with
   however this should only ever show up in the translation in branches that are anyways impossible, so we might as well use exfalso *)
   | [ |- {_: _ | _} ] => idtac "We need to synthesize a refined term, but it's unclear which term to pick, giving up and trying to prove a contradiction!"; exfalso
   *)
+  | |- ?rel ?z _ => do_nonbranching (destruct z; try easy); fast_done
+  | |- ?rel ?z _ _ => do_nonbranching (destruct z; try easy); fast_done
+  | |- ?rel ?z _ _ _ => do_nonbranching (destruct z; try easy); fast_done
+  | |- ?rel ?z _ _ _ _ => do_nonbranching (destruct z; try easy); fast_done
+  | |- ?rel ?z _ _ _ _ _ => do_nonbranching (destruct z; try easy); fast_done
   end.
 
 Create HintDb fix_notation_hints.
@@ -754,14 +759,34 @@ Ltac quick_cleanup := simpl_ref_constr;
   try (lia_simpl; simpl_proj).
 Ltac quick_simpl := quick_cleanup;  repeat shape_based.
 
+Ltac is_loc_def h :=
+  tryif (tryif (subst h) then fail else idtac) then fail else idtac.
+
 Ltac cleanup_hints := repeat match goal with
-  | [hint: {_: Unit | ?r} |- _ ] => destruct hint as [_ hint]
-  | [h: (exists v, _) /\ ?t |- _] => destruct h as [? h]
-  | [h: ?s /\ (exists v, _) |- _] => destruct h as [h ?]
+  | [hint: {_: Unit | ?r} |- _ ] => 
+    destruct hint as [_ hint]
+  | [hint:= ?f ?x : ?spec ?x |- _] => unfold spec in hint
+  | [hint:= ?f ?x ?y: ?spec ?x ?y |- _] => unfold spec in hint
+  | [hint:= ?f ?x ?y ?z : ?spec ?x ?y ?z|- _] => unfold spec in hint
+  | [hint:= ?f ?x1 ?x2 ?x3 ?x4 : ?spec ?x1 ?x2 ?x3 ?x4 |- _] => unfold spec in hint
+  | [hint:= ?f ?x1 ?x2 ?x3 ?x4 ?x5 : ?spec ?x1 ?x2 ?x3 ?x4 ?x5 |- _] => unfold spec in hint
+  | [h:= _ : {_: ?b | _} |- _] => neq_fail b Unit; subst h
+  | [h: (exists v, _) /\ ?t |- _] => 
+    tryif (subst h) then fail else idtac;
+    destruct h as [? h]
+  (*| [h: exists v, _ /\ ?t |- _] => 
+    tryif (subst h) then fail else idtac;
+    destruct h as [? [? h]]*)
+  | [h: ?s /\ (exists v, _) |- _] => 
+    tryif (subst h) then fail else idtac;
+    destruct h as [h ?]
   | [hint: {x: ?A | ?r} |- _ ] => 
+    tryif (subst hint) then fail else idtac;
     let hint_r := fresh "hint_r" in
     destruct hint as [hint hint_r]
-  | [ h: ?s == ?t |- _] => idtac h; rewrite <- generic_equalb_eq in h
+  | [ h: ?s == ?t |- _] => 
+    tryif (subst h) then fail else idtac;
+    idtac h; rewrite <- generic_equalb_eq in h
   end.
 
 Ltac simpl_hyp := match goal with

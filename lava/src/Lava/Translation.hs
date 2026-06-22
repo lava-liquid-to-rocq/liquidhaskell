@@ -63,8 +63,8 @@ trBop LH.Iff = Coq.Equiv
 -- | Translation of datatypes
 utrDC :: Id -> Id
 utrDC c | c == RefCoreNames.unitTmName = runitTmName
-utrDC c | c == RefCoreNames.ttTmName = btrueTmName
-utrDC c | c == RefCoreNames.ffTmName = bfalseTmName
+utrDC c | c == RefCoreNames.ttTmName = "true"
+utrDC c | c == RefCoreNames.ffTmName = "false"
 utrDC c = unrefinedConstrName c
 
 -- | Translation of refinement types
@@ -326,9 +326,9 @@ trReft eq tm@(LH.App {}) = case apps tm of
   (LH.Var f _ (Recursive indVar state), args) ->
     trRecCall (if eq then Right f else Left indVar) state args
   -- apply local function
-  (LH.Var f (Just tp) Local, args) | tp /= LH.unitTp -> Coq.App (packGetF (Coq.Var f)) (map (trReft eq) args)
+  (LH.Var f (Just tp) Local, args) | tp /= LH.unitTp -> mkLetApp (packGetF (Coq.Var f)) (map (trReft eq) args)
   -- apply global function
-  (LH.Var f (Just tp) Global, args) | tp /= LH.unitTp -> Coq.App (Coq.Def f) (map (trReft eq) args)
+  (LH.Var f (Just tp) Global, args) | tp /= LH.unitTp -> mkLetApp (Coq.Def f) (map (trReft eq) args)
   -- other cases
   (hd, args) -> Coq.App (trReft eq hd) (map (trReft eq) args)
 trReft eq (Pop _ _ r) = trReft eq r
@@ -343,7 +343,7 @@ trExprTacs eq (LH.Reft tm) =
    in if eq then [mkConcat [refine, Try Oracle]] else [refine]
 trExprTacs _ (LH.Let _ Nothing _ _) = error "Found let-binding with no annotation while translating."
 -- TODO: maybe we need to do something special for let-bindings of a value of unit (return) type
-trExprTacs eq (LH.Let x (Just tpx@(RefType {})) e1 e2) =
+trExprTacs eq (LH.Let x (Just tpx@(RefType {})) e1 e2) = 
   [ AssertTacs x' (trRefType eq tpx) (trExprTacs eq e1),
     DestructConj x' x (subsetWitnessNm x)
   ]
@@ -382,12 +382,48 @@ trExprTacs eq (LH.QMark r rh rp) =
   where
     hint = translateHint eq rh rp
 
+poseSubterm :: Bool -> Id -> LH.Reft -> [Tactic]
+poseSubterm eq x tm = case tm of
+  ap@LH.App{} -> assArgs ++ [Pose x fAppl] where
+    (f, ts) = apps ap
+    xis :: [Id]
+    xis = zipWith (\_ i -> x ++ "_" ++ show i) ts [1..]
+    assArgs = concat $ zipWith (\yi t -> poseSubterm eq yi t) xis ts
+    fAppl = trReft eq $ foldl (\fAp v -> LH.App fAp (LH.mkVar v)) f xis
+  Sub r from to -> poseSubterm eq r_name r ++ poseCastTm where
+    r_name = "tm_" ++ hashName r
+    castTm = simplifySubCast $ Coq.SubCast (trRefType eq to) (trRefType eq from) (Coq.Var r_name) (if eq then ProofHole else ByTac Oracle)
+    poseCastTm = {-case castTm of
+      SubCast nd@(Subset y b need) hv@(Subset y' b' have) t tac | b == b' && tac `elem` [ProofHole, ByTac Oracle] ->
+        Try (Concat [Assert witName wit (Concat [ProofPose "?" haveWit, Custom $ "subst " ++ r_name, Oracle]), Custom $ "cbv beta in " ++ witName]) : 
+          [Pose x (SubCast nd hv t (Coq.ByTac . Custom $ "(intros; exact " ++ witName ++ ")"))] where
+          wit = Prop $ Coq.App (Coq.Lambda y b need) [Coq.Proj Sig1 t]
+          witName = "subs_wit_" ++ hashName wit
+          haveWit = Coq.Proj Sig2 t-}
+      [Concat [Pose x castTm, Try . Custom $ "clearWitPosedSubCast " ++ x]]
+  Inj t tp@(RefType _ _ ry_) -> Try (Assert wit rf Oracle) : [Pose x $ Exist (Lambda y yTp ry) r (Coq.CoqProofTerm wit)] where
+    wit = y ++ "_inj_wit_" ++ hashName (LH.App ry_ t)
+    rf = Prop $ Coq.App (Lambda y yTp ry) [r]
+    Subset y yTp ry = trRefType eq tp
+    r = trReft eq t
+  LH.Bop op t1 t2 -> poseSubterm eq tm1 t1 ++ poseSubterm eq tm2 t2 ++ [Pose x (trReft eq (LH.Bop op (LH.mkVar tm1) (LH.mkVar tm2)))] where
+    tm1 = "tm_" ++ hashName t1
+    tm2 = "tm_" ++ hashName t2
+  _ -> [Pose x (trReft eq tm)]
+
 translateHint :: Bool -> LH.Expr -> LH.Reft -> [Tactic]
 translateHint eq z goal = case z of
-  _ -> [AssertTacs x (Prop $ trReft eq goal) prf] where
+  Reft r -> poseSubterm eq ("h_" ++ hashName r) r
+  LH.Let x tp e (LH.Reft (LH.Var x' _ _)) | x == x' -> 
+    translateHint eq e goal
+  LH.QMark r rh rp -> translateHint eq rh rp ++ translateHint eq r goal
+  _ -> [AssertTacs x (Prop $ trReft eq goal) prf] 
+  where
     x = "h_" ++ hashName goal
     prf = trExprTacs eq z
 
+mkLetApp :: CoqTerm -> [CoqTerm] -> CoqTerm
+mkLetApp f ts = Coq.App f ts-- foldr (\fApp (t, i) -> Coq.Let ("arg_" ++ show i) Nothing t fApp) (Coq.App f (map (\_ i -> ("arg_" ++ show i)) (zip ts [1..]))) (zip ts [1..])
 
 -- | Translation of expressions as a proof term (for Equations)
 trExpr :: Bool -> LH.Expr -> CoqTerm

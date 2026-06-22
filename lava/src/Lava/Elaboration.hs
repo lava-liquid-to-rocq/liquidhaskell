@@ -369,6 +369,8 @@ checkExpr :: TypEnv -> [DesState] -> Expr -> RefType -> Either TypeError Expr
 -- checkExpr _ _ e tp | traceFunc "checkExpr" [pPrint e, pPrint tp] = undefined
 -- (C-Syn)
 checkExpr γ _ (Reft r) tp = Reft <$> checkReft γ r tp
+checkExpr γ state (QMark (Let x _ qmark (Reft (Var x' _ _))) rh rp) tp | x == x' = 
+  checkExpr γ state (QMark qmark rh rp) tp
 checkExpr γ state (QMark r (Reft rh) _) tp = do
   (tph, rh') <- synReft γ rh
   (x, rp') <- case tph of
@@ -389,6 +391,7 @@ checkExpr γ state (Let x (Just tpx) ex e) tp = do
   let γ' = insertLocalVar (x, tpx') γ
   e' <- checkExpr γ' state e tp
   return (Let x (Just tpx') ex' e')
+checkExpr γ state (Let x Nothing tm (QMark (Reft (Var x' _ _)) rh rp)) tp | x' == x = checkExpr γ state (QMark tm rh rp) tp
 -- Not in the paper, but in case we have no annotation
 checkExpr γ state (Let x Nothing tm e) tp = do
   _ <- wfRefType γ tp -- check that tp does not depend on x

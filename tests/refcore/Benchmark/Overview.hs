@@ -31,11 +31,11 @@ llen Nil = 0
 get :: IList -> Int -> Int
 get (Cons x xs') i' = if i' == 0 then x else get xs' (i' - 1)
 
-{-@ reflect evil @-}
-{-@ evil :: xs:IList -> x:{v:Int | 5 < v} -> i:{i:Int | 0 <= i } -> {get (Cons x xs) (i + 1) = get xs i } @-}
-evil :: IList -> Int -> Int -> Proof
-evil (Cons y ys) x i = if i == 0 then trivial else evil ys x (i-1)
-evil Nil x i = trivial
+-- works but totally screws up performance
+{-@ reflect applyToFirst @-}
+{-@ applyToFirst :: f:(Int -> {y:Int | 5 < y}) -> {xs:IList | llen xs /= 0} -> {v:Int | v = f (get xs 0)} @-}
+applyToFirst :: (Int -> Int) -> IList -> Int
+applyToFirst f (Cons x l') = f x
 
 -- Theorem
 
@@ -61,12 +61,6 @@ thm2 xs (Cons y ys) i =
   thm2 xs ys i
     -- ? (atIndex (append ys xs) (i + llen ys) == atIndex (Cons y (append ys xs)) ((i + llen ys)+1))
     ? thm1 (append ys xs) y (i + llen ys)
-
--- works but totally screws up performance
-{-@ reflect applyToFirst @-}
-{-@ applyToFirst :: f:(Int -> {y:Int | 5 < y}) -> {xs:IList | llen xs /= 0} -> {v:Int | v = f (get xs 0)} @-}
-applyToFirst :: (Int -> Int) -> IList -> Int
-applyToFirst f (Cons x l') = f x
 
 {- {-@ reflect imap @-}
 {-@ imap :: f:(Int -> {v':Int | 5 < v'}) -> xs:IList -> {v:IList | llen v = llen xs} @-}

@@ -76,16 +76,16 @@ Defined.
 
 #[global] Hint Unfold Emp: ref_constr_db.
 
-Definition mappend_spec (ds_d41t ys : L): Type :=
+Definition mappend_spec (ds_d3ZP ys : L): Type :=
   L.
 
 #[global] Hint Unfold mappend_spec: lia_unfold.
 
-Definition mappend (ds_d41t ys : L): mappend_spec ds_d41t ys.
+Definition mappend (ds_d3ZP ys : L): mappend_spec ds_d3ZP ys.
 Proof.
-  destruct ds_d41t as [ds_d41t ds_d41t_p].
+  destruct ds_d3ZP as [ds_d3ZP ds_d3ZP_p].
   destruct ys as [ys ys_p].
-  try revert ys_p; generalize dependent ys; induction ds_d41t as [x xs IH_xs|]; intros.
+  try revert ys_p; generalize dependent ys; induction ds_d3ZP as [x xs IH_xs|]; intros.
   - refine (C (# x) (IH_xs ltac:(try clear IH_xs; solver) ys ltac:(try clear IH_xs; solver))).
   - refine (exist (λ (ys : L_u), L_wf ys ∧ True) ys ltac:(solver)).
 Defined.
@@ -101,10 +101,10 @@ Inductive mappend_rel: L_u → L_u → L_u → Prop :=
 
 #[global] Instance mappend_getF: getFunc mappend_rel := { getF' := mappend }.
 
-Theorem mappend_rel_funct [ds_d41t ys : L_u]:
-  ∀ (VV VV' : L_u), mappend_rel ds_d41t ys VV → (mappend_rel ds_d41t ys VV' → VV = VV').
+Theorem mappend_rel_funct [ds_d3ZP ys : L_u]:
+  ∀ (VV VV' : L_u), mappend_rel ds_d3ZP ys VV → (mappend_rel ds_d3ZP ys VV' → VV = VV').
 Proof.
-  try revert ys_p; generalize dependent ys; induction ds_d41t as [x xs IH_xs|]; intros;
+  try revert ys_p; generalize dependent ys; induction ds_d3ZP as [x xs IH_xs|]; intros;
   rel_functionhood_body.
 Qed.
 
@@ -131,12 +131,12 @@ Qed.
 #[global] Hint Rewrite mappend_Emp_x_lem: f_rel_back.
 
 Theorem mappend_rel_ex
-  (ds_d41t : L_u) (ds_d41t_p : L_wf ds_d41t ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
-  mappend_rel ds_d41t ys ⌊ mappend (exist _ ds_d41t ds_d41t_p) (exist _ ys ys_p) -⌋.
+  (ds_d3ZP : L_u) (ds_d3ZP_p : L_wf ds_d3ZP ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
+  mappend_rel ds_d3ZP ys ⌊ mappend (exist _ ds_d3ZP ds_d3ZP_p) (exist _ ys ys_p) -⌋.
 Proof.
   Opaque mappend.
   existence_lemma_pre mappend;
-  try revert ys_p; generalize dependent ys; induction ds_d41t as [x xs IH_xs|]; intros;
+  try revert ys_p; generalize dependent ys; induction ds_d3ZP as [x xs IH_xs|]; intros;
   [fix_notations;
    pose proof (IH_xs ltac:(try clear IH_xs; solver) ys ltac:(try clear IH_xs; solver)) as IH_47088561;
    try clear IH_xs |
@@ -151,8 +151,8 @@ Qed.
 #[global] Opaque mappend.
 
 Theorem mappend__mappend_rel_rw
-  (ds_d41t : L_u) (ds_d41t_p : L_wf ds_d41t ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True) (VV : L_u):
-  ⌊ mappend (exist _ ds_d41t ds_d41t_p) (exist _ ys ys_p) -⌋ = VV ↔ mappend_rel ds_d41t ys VV.
+  (ds_d3ZP : L_u) (ds_d3ZP_p : L_wf ds_d3ZP ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True) (VV : L_u):
+  ⌊ mappend (exist _ ds_d3ZP ds_d3ZP_p) (exist _ ys ys_p) -⌋ = VV ↔ mappend_rel ds_d3ZP ys VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -164,32 +164,32 @@ Qed.
 #[global] Instance mappend_lookup_rw: dictionary rwLem mappend := {
     lookup' := mappend__mappend_rel_rw }.
 
-Theorem mappend__mappend_rel (ds_d41t ys : L) (VV : L_u):
-  ⌊ mappend ds_d41t ys -⌋ = VV ↔ mappend_rel ⌊ ds_d41t ⌋ ⌊ ys ⌋ VV.
+Theorem mappend__mappend_rel (ds_d3ZP ys : L) (VV : L_u):
+  ⌊ mappend ds_d3ZP ys -⌋ = VV ↔ mappend_rel ⌊ ds_d3ZP ⌋ ⌊ ys ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite mappend__mappend_rel: f_rel_funct_db.
 
-Theorem mappend__mappend_rel' (ds_d41t_u ys_u : L_u) (ds_d41t ys : L) (VV : L_u):
-  ds_d41t_u = ⌊ ds_d41t ⌋
-  → (ys_u = ⌊ ys ⌋ → ⌊ mappend ds_d41t ys -⌋ = VV ↔ mappend_rel ds_d41t_u ys_u VV).
+Theorem mappend__mappend_rel' (ds_d3ZP_u ys_u : L_u) (ds_d3ZP ys : L) (VV : L_u):
+  ds_d3ZP_u = ⌊ ds_d3ZP ⌋
+  → (ys_u = ⌊ ys ⌋ → ⌊ mappend ds_d3ZP ys -⌋ = VV ↔ mappend_rel ds_d3ZP_u ys_u VV).
 Proof.
-  intros -> ->. refine (mappend__mappend_rel ds_d41t ys VV).
+  intros -> ->. refine (mappend__mappend_rel ds_d3ZP ys VV).
 Qed.
 
 #[global] Hint Resolve mappend__mappend_rel': f_rel_funct_db.
 
 Theorem mappend_rel_mk
-  (ds_d41t : L_u) (ds_d41t_p : L_wf ds_d41t ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
-  {VV: _ | mappend_rel ds_d41t ys VV}.
+  (ds_d3ZP : L_u) (ds_d3ZP_p : L_wf ds_d3ZP ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
+  {VV: _ | mappend_rel ds_d3ZP ys VV}.
 Proof.
   intros;
   refine (subsumptionCast
           _
-          (λ VV, mappend_rel ds_d41t ys VV)
-          (mappend (exist _ ds_d41t ds_d41t_p) (exist _ ys ys_p))
+          (λ VV, mappend_rel ds_d3ZP ys VV)
+          (mappend (exist _ ds_d3ZP ds_d3ZP_p) (exist _ ys ys_p))
           _);
   rewrite <- mappend__mappend_rel';
   quicksolve.
@@ -199,12 +199,12 @@ Qed.
 
 #[global] Instance mappend_pack:
   @Pack
-  (L ::RT λ (ds_d41t : L), L ::RT λ (ys : L), nilRT)
+  (L ::RT λ (ds_d3ZP : L), L ::RT λ (ys : L), nilRT)
   (L_u ::UT (L_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d41t : L), L ::RT λ (ys : L), nilRT) ((L_u ::UT (L_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d3ZP : L), L ::RT λ (ys : L), nilRT) ((L_u ::UT (L_u ::UT nilUT))))
   L_u
-  (λ (x_20389548 : ArgList (L ::RT λ (ds_d41t : L), L ::RT λ (ys : L), nilRT)) (v_x_20389548 : L_u),
-   ltac:(flattenP (λ (ds_d41t ys : L) (VV : L_u), L_wf VV ∧ True) x_20389548 v_x_20389548)).
+  (λ (x_83637771 : ArgList (L ::RT λ (ds_d3ZP : L), L ::RT λ (ys : L), nilRT)) (v_x_83637771 : L_u),
+   ltac:(flattenP (λ (ds_d3ZP ys : L) (VV : L_u), L_wf VV ∧ True) x_83637771 v_x_83637771)).
 Proof.
   buildPackG mappend mappend_rel mappend__mappend_rel mappend_rel_funct.
 Defined.
@@ -214,25 +214,25 @@ Proof.
   buildUPackG mappend_rel mappend_rel_funct.
 Defined.
 
-Definition mappend_assoc_spec (ds_d41r ys zs : L): Type :=
+Definition mappend_assoc_spec (ds_d3ZN ys zs : L): Type :=
   {{∃ (mappend_res : L_u),
-    mappend_rel ⌊ ds_d41r -⌋ ⌊ ys -⌋ mappend_res
+    mappend_rel ⌊ ds_d3ZN -⌋ ⌊ ys -⌋ mappend_res
     ∧ ∃ (mappend_res_2 : L_u),
       mappend_rel mappend_res ⌊ zs -⌋ mappend_res_2
       ∧ ∃ (mappend_res_3 : L_u),
         mappend_rel ⌊ ys -⌋ ⌊ zs -⌋ mappend_res_3
         ∧ ∃ (mappend_res_4 : L_u),
-          mappend_rel ⌊ ds_d41r -⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4}}.
+          mappend_rel ⌊ ds_d3ZN -⌋ mappend_res_3 mappend_res_4 ∧ mappend_res_2 == mappend_res_4}}.
 
 #[global] Hint Unfold mappend_assoc_spec: lia_unfold.
 
-Theorem mappend_assoc (ds_d41r ys zs : L): mappend_assoc_spec ds_d41r ys zs.
+Theorem mappend_assoc (ds_d3ZN ys zs : L): mappend_assoc_spec ds_d3ZN ys zs.
 Proof.
-  destruct ds_d41r as [ds_d41r ds_d41r_p].
+  destruct ds_d3ZN as [ds_d3ZN ds_d3ZN_p].
   destruct ys as [ys ys_p].
   destruct zs as [zs zs_p].
   try revert zs_p; generalize dependent zs; try revert ys_p; generalize dependent ys;
-  induction ds_d41r as [x xs IH_xs|];
+  induction ds_d3ZN as [x xs IH_xs|];
   intros.
   - refine (subsumptionCast
             Unit
@@ -292,16 +292,16 @@ Proof.
           ltac:(solver)).
 Qed.
 
-Definition mempty_right_spec (ds_d41s : L): Type :=
+Definition mempty_right_spec (ds_d3ZO : L): Type :=
   {{∃ (mappend_res : L_u),
-    mappend_rel ⌊ ds_d41s -⌋ ⌊ mempty -⌋ mappend_res ∧ mappend_res == ⌊ ds_d41s -⌋}}.
+    mappend_rel ⌊ ds_d3ZO -⌋ ⌊ mempty -⌋ mappend_res ∧ mappend_res == ⌊ ds_d3ZO -⌋}}.
 
 #[global] Hint Unfold mempty_right_spec: lia_unfold.
 
-Theorem mempty_right (ds_d41s : L): mempty_right_spec ds_d41s.
+Theorem mempty_right (ds_d3ZO : L): mempty_right_spec ds_d3ZO.
 Proof.
-  destruct ds_d41s as [ds_d41s ds_d41s_p].
-  induction ds_d41s as [x xs IH_xs|].
+  destruct ds_d3ZO as [ds_d3ZO ds_d3ZO_p].
+  induction ds_d3ZO as [x xs IH_xs|].
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),

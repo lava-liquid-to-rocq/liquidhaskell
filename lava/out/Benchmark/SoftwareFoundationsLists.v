@@ -74,15 +74,15 @@ Defined.
 
 #[global] Hint Unfold Pair: ref_constr_db.
 
-Definition fstSF_spec (ds_d9hq : Natprod): Type :=
+Definition fstSF_spec (ds_d9eH : Natprod): Type :=
   MyNat.
 
 #[global] Hint Unfold fstSF_spec: lia_unfold.
 
-Definition fstSF (ds_d9hq : Natprod): fstSF_spec ds_d9hq.
+Definition fstSF (ds_d9eH : Natprod): fstSF_spec ds_d9eH.
 Proof.
-  destruct ds_d9hq as [ds_d9hq ds_d9hq_p].
-  destruct ds_d9hq as [n1 n2].
+  destruct ds_d9eH as [ds_d9eH ds_d9eH_p].
+  destruct ds_d9eH as [n1 n2].
   - refine (exist (λ (n1 : MyNat_u), MyNat_wf n1 ∧ True) n1 ltac:(solver)).
 Defined.
 
@@ -95,10 +95,10 @@ Inductive fstSF_rel: Natprod_u → MyNat_u → Prop :=
 
 #[global] Instance fstSF_getF: getFunc fstSF_rel := { getF' := fstSF }.
 
-Theorem fstSF_rel_funct [ds_d9hq : Natprod_u]:
-  ∀ (VV VV' : MyNat_u), fstSF_rel ds_d9hq VV → (fstSF_rel ds_d9hq VV' → VV = VV').
+Theorem fstSF_rel_funct [ds_d9eH : Natprod_u]:
+  ∀ (VV VV' : MyNat_u), fstSF_rel ds_d9eH VV → (fstSF_rel ds_d9eH VV' → VV = VV').
 Proof.
-  destruct ds_d9hq as [n1 n2]; rel_functionhood_body.
+  destruct ds_d9eH as [n1 n2]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve fstSF_rel_funct: f_rel_funct_db.
@@ -114,12 +114,12 @@ Qed.
 
 #[global] Hint Rewrite fstSF_Pair_lem: f_rel_back.
 
-Theorem fstSF_rel_ex (ds_d9hq : Natprod_u) (ds_d9hq_p : Natprod_wf ds_d9hq ∧ True):
-  fstSF_rel ds_d9hq ⌊ fstSF (exist _ ds_d9hq ds_d9hq_p) -⌋.
+Theorem fstSF_rel_ex (ds_d9eH : Natprod_u) (ds_d9eH_p : Natprod_wf ds_d9eH ∧ True):
+  fstSF_rel ds_d9eH ⌊ fstSF (exist _ ds_d9eH ds_d9eH_p) -⌋.
 Proof.
   Opaque fstSF.
   existence_lemma_pre fstSF;
-  destruct ds_d9hq as [n1 n2];
+  destruct ds_d9eH as [n1 n2];
   [fix_notations];
   simpl in *.
   Transparent fstSF.
@@ -131,8 +131,8 @@ Qed.
 #[global] Opaque fstSF.
 
 Theorem fstSF__fstSF_rel_rw
-  (ds_d9hq : Natprod_u) (ds_d9hq_p : Natprod_wf ds_d9hq ∧ True) (VV : MyNat_u):
-  ⌊ fstSF (exist _ ds_d9hq ds_d9hq_p) -⌋ = VV ↔ fstSF_rel ds_d9hq VV.
+  (ds_d9eH : Natprod_u) (ds_d9eH_p : Natprod_wf ds_d9eH ∧ True) (VV : MyNat_u):
+  ⌊ fstSF (exist _ ds_d9eH ds_d9eH_p) -⌋ = VV ↔ fstSF_rel ds_d9eH VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -143,27 +143,27 @@ Qed.
 
 #[global] Instance fstSF_lookup_rw: dictionary rwLem fstSF := { lookup' := fstSF__fstSF_rel_rw }.
 
-Theorem fstSF__fstSF_rel (ds_d9hq : Natprod) (VV : MyNat_u):
-  ⌊ fstSF ds_d9hq -⌋ = VV ↔ fstSF_rel ⌊ ds_d9hq ⌋ VV.
+Theorem fstSF__fstSF_rel (ds_d9eH : Natprod) (VV : MyNat_u):
+  ⌊ fstSF ds_d9eH -⌋ = VV ↔ fstSF_rel ⌊ ds_d9eH ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite fstSF__fstSF_rel: f_rel_funct_db.
 
-Theorem fstSF__fstSF_rel' (ds_d9hq_u : Natprod_u) (ds_d9hq : Natprod) (VV : MyNat_u):
-  ds_d9hq_u = ⌊ ds_d9hq ⌋ → ⌊ fstSF ds_d9hq -⌋ = VV ↔ fstSF_rel ds_d9hq_u VV.
+Theorem fstSF__fstSF_rel' (ds_d9eH_u : Natprod_u) (ds_d9eH : Natprod) (VV : MyNat_u):
+  ds_d9eH_u = ⌊ ds_d9eH ⌋ → ⌊ fstSF ds_d9eH -⌋ = VV ↔ fstSF_rel ds_d9eH_u VV.
 Proof.
-  intros ->. refine (fstSF__fstSF_rel ds_d9hq VV).
+  intros ->. refine (fstSF__fstSF_rel ds_d9eH VV).
 Qed.
 
 #[global] Hint Resolve fstSF__fstSF_rel': f_rel_funct_db.
 
-Theorem fstSF_rel_mk (ds_d9hq : Natprod_u) (ds_d9hq_p : Natprod_wf ds_d9hq ∧ True):
-  {VV: _ | fstSF_rel ds_d9hq VV}.
+Theorem fstSF_rel_mk (ds_d9eH : Natprod_u) (ds_d9eH_p : Natprod_wf ds_d9eH ∧ True):
+  {VV: _ | fstSF_rel ds_d9eH VV}.
 Proof.
   intros;
-  refine (subsumptionCast _ (λ VV, fstSF_rel ds_d9hq VV) (fstSF (exist _ ds_d9hq ds_d9hq_p)) _);
+  refine (subsumptionCast _ (λ VV, fstSF_rel ds_d9eH VV) (fstSF (exist _ ds_d9eH ds_d9eH_p)) _);
   rewrite <- fstSF__fstSF_rel';
   quicksolve.
 Qed.
@@ -172,12 +172,12 @@ Qed.
 
 #[global] Instance fstSF_pack:
   @Pack
-  (Natprod ::RT λ (ds_d9hq : Natprod), nilRT)
+  (Natprod ::RT λ (ds_d9eH : Natprod), nilRT)
   (Natprod_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG (Natprod ::RT λ (ds_d9hq : Natprod), nilRT) ((Natprod_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Natprod ::RT λ (ds_d9eH : Natprod), nilRT) ((Natprod_u ::UT nilUT)))
   MyNat_u
-  (λ (x_48371858 : ArgList (Natprod ::RT λ (ds_d9hq : Natprod), nilRT)) (v_x_48371858 : MyNat_u),
-   ltac:(flattenP (λ (ds_d9hq : Natprod) (VV : MyNat_u), MyNat_wf VV ∧ True) x_48371858 v_x_48371858)).
+  (λ (x_74135001 : ArgList (Natprod ::RT λ (ds_d9eH : Natprod), nilRT)) (v_x_74135001 : MyNat_u),
+   ltac:(flattenP (λ (ds_d9eH : Natprod) (VV : MyNat_u), MyNat_wf VV ∧ True) x_74135001 v_x_74135001)).
 Proof.
   buildPackG fstSF fstSF_rel fstSF__fstSF_rel fstSF_rel_funct.
 Defined.
@@ -187,15 +187,15 @@ Proof.
   buildUPackG fstSF_rel fstSF_rel_funct.
 Defined.
 
-Definition sndSF_spec (ds_d9hp : Natprod): Type :=
+Definition sndSF_spec (ds_d9eG : Natprod): Type :=
   MyNat.
 
 #[global] Hint Unfold sndSF_spec: lia_unfold.
 
-Definition sndSF (ds_d9hp : Natprod): sndSF_spec ds_d9hp.
+Definition sndSF (ds_d9eG : Natprod): sndSF_spec ds_d9eG.
 Proof.
-  destruct ds_d9hp as [ds_d9hp ds_d9hp_p].
-  destruct ds_d9hp as [n1 n2].
+  destruct ds_d9eG as [ds_d9eG ds_d9eG_p].
+  destruct ds_d9eG as [n1 n2].
   - refine (exist (λ (n2 : MyNat_u), MyNat_wf n2 ∧ True) n2 ltac:(solver)).
 Defined.
 
@@ -208,10 +208,10 @@ Inductive sndSF_rel: Natprod_u → MyNat_u → Prop :=
 
 #[global] Instance sndSF_getF: getFunc sndSF_rel := { getF' := sndSF }.
 
-Theorem sndSF_rel_funct [ds_d9hp : Natprod_u]:
-  ∀ (VV VV' : MyNat_u), sndSF_rel ds_d9hp VV → (sndSF_rel ds_d9hp VV' → VV = VV').
+Theorem sndSF_rel_funct [ds_d9eG : Natprod_u]:
+  ∀ (VV VV' : MyNat_u), sndSF_rel ds_d9eG VV → (sndSF_rel ds_d9eG VV' → VV = VV').
 Proof.
-  destruct ds_d9hp as [n1 n2]; rel_functionhood_body.
+  destruct ds_d9eG as [n1 n2]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve sndSF_rel_funct: f_rel_funct_db.
@@ -227,12 +227,12 @@ Qed.
 
 #[global] Hint Rewrite sndSF_Pair_lem: f_rel_back.
 
-Theorem sndSF_rel_ex (ds_d9hp : Natprod_u) (ds_d9hp_p : Natprod_wf ds_d9hp ∧ True):
-  sndSF_rel ds_d9hp ⌊ sndSF (exist _ ds_d9hp ds_d9hp_p) -⌋.
+Theorem sndSF_rel_ex (ds_d9eG : Natprod_u) (ds_d9eG_p : Natprod_wf ds_d9eG ∧ True):
+  sndSF_rel ds_d9eG ⌊ sndSF (exist _ ds_d9eG ds_d9eG_p) -⌋.
 Proof.
   Opaque sndSF.
   existence_lemma_pre sndSF;
-  destruct ds_d9hp as [n1 n2];
+  destruct ds_d9eG as [n1 n2];
   [fix_notations];
   simpl in *.
   Transparent sndSF.
@@ -244,8 +244,8 @@ Qed.
 #[global] Opaque sndSF.
 
 Theorem sndSF__sndSF_rel_rw
-  (ds_d9hp : Natprod_u) (ds_d9hp_p : Natprod_wf ds_d9hp ∧ True) (VV : MyNat_u):
-  ⌊ sndSF (exist _ ds_d9hp ds_d9hp_p) -⌋ = VV ↔ sndSF_rel ds_d9hp VV.
+  (ds_d9eG : Natprod_u) (ds_d9eG_p : Natprod_wf ds_d9eG ∧ True) (VV : MyNat_u):
+  ⌊ sndSF (exist _ ds_d9eG ds_d9eG_p) -⌋ = VV ↔ sndSF_rel ds_d9eG VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -256,27 +256,27 @@ Qed.
 
 #[global] Instance sndSF_lookup_rw: dictionary rwLem sndSF := { lookup' := sndSF__sndSF_rel_rw }.
 
-Theorem sndSF__sndSF_rel (ds_d9hp : Natprod) (VV : MyNat_u):
-  ⌊ sndSF ds_d9hp -⌋ = VV ↔ sndSF_rel ⌊ ds_d9hp ⌋ VV.
+Theorem sndSF__sndSF_rel (ds_d9eG : Natprod) (VV : MyNat_u):
+  ⌊ sndSF ds_d9eG -⌋ = VV ↔ sndSF_rel ⌊ ds_d9eG ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite sndSF__sndSF_rel: f_rel_funct_db.
 
-Theorem sndSF__sndSF_rel' (ds_d9hp_u : Natprod_u) (ds_d9hp : Natprod) (VV : MyNat_u):
-  ds_d9hp_u = ⌊ ds_d9hp ⌋ → ⌊ sndSF ds_d9hp -⌋ = VV ↔ sndSF_rel ds_d9hp_u VV.
+Theorem sndSF__sndSF_rel' (ds_d9eG_u : Natprod_u) (ds_d9eG : Natprod) (VV : MyNat_u):
+  ds_d9eG_u = ⌊ ds_d9eG ⌋ → ⌊ sndSF ds_d9eG -⌋ = VV ↔ sndSF_rel ds_d9eG_u VV.
 Proof.
-  intros ->. refine (sndSF__sndSF_rel ds_d9hp VV).
+  intros ->. refine (sndSF__sndSF_rel ds_d9eG VV).
 Qed.
 
 #[global] Hint Resolve sndSF__sndSF_rel': f_rel_funct_db.
 
-Theorem sndSF_rel_mk (ds_d9hp : Natprod_u) (ds_d9hp_p : Natprod_wf ds_d9hp ∧ True):
-  {VV: _ | sndSF_rel ds_d9hp VV}.
+Theorem sndSF_rel_mk (ds_d9eG : Natprod_u) (ds_d9eG_p : Natprod_wf ds_d9eG ∧ True):
+  {VV: _ | sndSF_rel ds_d9eG VV}.
 Proof.
   intros;
-  refine (subsumptionCast _ (λ VV, sndSF_rel ds_d9hp VV) (sndSF (exist _ ds_d9hp ds_d9hp_p)) _);
+  refine (subsumptionCast _ (λ VV, sndSF_rel ds_d9eG VV) (sndSF (exist _ ds_d9eG ds_d9eG_p)) _);
   rewrite <- sndSF__sndSF_rel';
   quicksolve.
 Qed.
@@ -285,12 +285,12 @@ Qed.
 
 #[global] Instance sndSF_pack:
   @Pack
-  (Natprod ::RT λ (ds_d9hp : Natprod), nilRT)
+  (Natprod ::RT λ (ds_d9eG : Natprod), nilRT)
   (Natprod_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG (Natprod ::RT λ (ds_d9hp : Natprod), nilRT) ((Natprod_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Natprod ::RT λ (ds_d9eG : Natprod), nilRT) ((Natprod_u ::UT nilUT)))
   MyNat_u
-  (λ (x_69758033 : ArgList (Natprod ::RT λ (ds_d9hp : Natprod), nilRT)) (v_x_69758033 : MyNat_u),
-   ltac:(flattenP (λ (ds_d9hp : Natprod) (VV : MyNat_u), MyNat_wf VV ∧ True) x_69758033 v_x_69758033)).
+  (λ (x_21597439 : ArgList (Natprod ::RT λ (ds_d9eG : Natprod), nilRT)) (v_x_21597439 : MyNat_u),
+   ltac:(flattenP (λ (ds_d9eG : Natprod) (VV : MyNat_u), MyNat_wf VV ∧ True) x_21597439 v_x_21597439)).
 Proof.
   buildPackG sndSF sndSF_rel sndSF__sndSF_rel sndSF_rel_funct.
 Defined.
@@ -323,18 +323,18 @@ Proof.
           ltac:(solver)).
 Qed.
 
-Definition surjective_pairing_spec (ds_d9hl : Natprod): Type :=
+Definition surjective_pairing_spec (ds_d9eC : Natprod): Type :=
   {{∃ (sndSF_res : MyNat_u),
-    sndSF_rel ⌊ ds_d9hl -⌋ sndSF_res
+    sndSF_rel ⌊ ds_d9eC -⌋ sndSF_res
     ∧ ∃ (fstSF_res : MyNat_u),
-      fstSF_rel ⌊ ds_d9hl -⌋ fstSF_res ∧ ⌊ ds_d9hl -⌋ == Pair_u fstSF_res sndSF_res}}.
+      fstSF_rel ⌊ ds_d9eC -⌋ fstSF_res ∧ ⌊ ds_d9eC -⌋ == Pair_u fstSF_res sndSF_res}}.
 
 #[global] Hint Unfold surjective_pairing_spec: lia_unfold.
 
-Theorem surjective_pairing (ds_d9hl : Natprod): surjective_pairing_spec ds_d9hl.
+Theorem surjective_pairing (ds_d9eC : Natprod): surjective_pairing_spec ds_d9eC.
 Proof.
-  destruct ds_d9hl as [ds_d9hl ds_d9hl_p].
-  destruct ds_d9hl as [n m].
+  destruct ds_d9eC as [ds_d9eC ds_d9eC_p].
+  destruct ds_d9eC as [n m].
   - refine (subsumptionCast
             Unit
             (λ (VV : Unit),
@@ -346,15 +346,15 @@ Proof.
             ltac:(solver)).
 Qed.
 
-Definition swap_pair_spec (ds_d9hm : Natprod): Type :=
+Definition swap_pair_spec (ds_d9eD : Natprod): Type :=
   Natprod.
 
 #[global] Hint Unfold swap_pair_spec: lia_unfold.
 
-Definition swap_pair (ds_d9hm : Natprod): swap_pair_spec ds_d9hm.
+Definition swap_pair (ds_d9eD : Natprod): swap_pair_spec ds_d9eD.
 Proof.
-  destruct ds_d9hm as [ds_d9hm ds_d9hm_p].
-  destruct ds_d9hm as [x y].
+  destruct ds_d9eD as [ds_d9eD ds_d9eD_p].
+  destruct ds_d9eD as [x y].
   - refine (Pair
             (exist (λ (n2 : MyNat_u), MyNat_wf n2 ∧ True) y ltac:(solver))
             (exist (λ (n1 : MyNat_u), MyNat_wf n1 ∧ True) x ltac:(solver))).
@@ -369,10 +369,10 @@ Inductive swap_pair_rel: Natprod_u → Natprod_u → Prop :=
 
 #[global] Instance swap_pair_getF: getFunc swap_pair_rel := { getF' := swap_pair }.
 
-Theorem swap_pair_rel_funct [ds_d9hm : Natprod_u]:
-  ∀ (VV VV' : Natprod_u), swap_pair_rel ds_d9hm VV → (swap_pair_rel ds_d9hm VV' → VV = VV').
+Theorem swap_pair_rel_funct [ds_d9eD : Natprod_u]:
+  ∀ (VV VV' : Natprod_u), swap_pair_rel ds_d9eD VV → (swap_pair_rel ds_d9eD VV' → VV = VV').
 Proof.
-  destruct ds_d9hm as [x y]; rel_functionhood_body.
+  destruct ds_d9eD as [x y]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve swap_pair_rel_funct: f_rel_funct_db.
@@ -388,12 +388,12 @@ Qed.
 
 #[global] Hint Rewrite swap_pair_Pair_lem: f_rel_back.
 
-Theorem swap_pair_rel_ex (ds_d9hm : Natprod_u) (ds_d9hm_p : Natprod_wf ds_d9hm ∧ True):
-  swap_pair_rel ds_d9hm ⌊ swap_pair (exist _ ds_d9hm ds_d9hm_p) -⌋.
+Theorem swap_pair_rel_ex (ds_d9eD : Natprod_u) (ds_d9eD_p : Natprod_wf ds_d9eD ∧ True):
+  swap_pair_rel ds_d9eD ⌊ swap_pair (exist _ ds_d9eD ds_d9eD_p) -⌋.
 Proof.
   Opaque swap_pair.
   existence_lemma_pre swap_pair;
-  destruct ds_d9hm as [x y];
+  destruct ds_d9eD as [x y];
   [fix_notations];
   simpl in *.
   Transparent swap_pair.
@@ -405,8 +405,8 @@ Qed.
 #[global] Opaque swap_pair.
 
 Theorem swap_pair__swap_pair_rel_rw
-  (ds_d9hm : Natprod_u) (ds_d9hm_p : Natprod_wf ds_d9hm ∧ True) (VV : Natprod_u):
-  ⌊ swap_pair (exist _ ds_d9hm ds_d9hm_p) -⌋ = VV ↔ swap_pair_rel ds_d9hm VV.
+  (ds_d9eD : Natprod_u) (ds_d9eD_p : Natprod_wf ds_d9eD ∧ True) (VV : Natprod_u):
+  ⌊ swap_pair (exist _ ds_d9eD ds_d9eD_p) -⌋ = VV ↔ swap_pair_rel ds_d9eD VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -418,30 +418,30 @@ Qed.
 #[global] Instance swap_pair_lookup_rw: dictionary rwLem swap_pair := {
     lookup' := swap_pair__swap_pair_rel_rw }.
 
-Theorem swap_pair__swap_pair_rel (ds_d9hm : Natprod) (VV : Natprod_u):
-  ⌊ swap_pair ds_d9hm -⌋ = VV ↔ swap_pair_rel ⌊ ds_d9hm ⌋ VV.
+Theorem swap_pair__swap_pair_rel (ds_d9eD : Natprod) (VV : Natprod_u):
+  ⌊ swap_pair ds_d9eD -⌋ = VV ↔ swap_pair_rel ⌊ ds_d9eD ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite swap_pair__swap_pair_rel: f_rel_funct_db.
 
-Theorem swap_pair__swap_pair_rel' (ds_d9hm_u : Natprod_u) (ds_d9hm : Natprod) (VV : Natprod_u):
-  ds_d9hm_u = ⌊ ds_d9hm ⌋ → ⌊ swap_pair ds_d9hm -⌋ = VV ↔ swap_pair_rel ds_d9hm_u VV.
+Theorem swap_pair__swap_pair_rel' (ds_d9eD_u : Natprod_u) (ds_d9eD : Natprod) (VV : Natprod_u):
+  ds_d9eD_u = ⌊ ds_d9eD ⌋ → ⌊ swap_pair ds_d9eD -⌋ = VV ↔ swap_pair_rel ds_d9eD_u VV.
 Proof.
-  intros ->. refine (swap_pair__swap_pair_rel ds_d9hm VV).
+  intros ->. refine (swap_pair__swap_pair_rel ds_d9eD VV).
 Qed.
 
 #[global] Hint Resolve swap_pair__swap_pair_rel': f_rel_funct_db.
 
-Theorem swap_pair_rel_mk (ds_d9hm : Natprod_u) (ds_d9hm_p : Natprod_wf ds_d9hm ∧ True):
-  {VV: _ | swap_pair_rel ds_d9hm VV}.
+Theorem swap_pair_rel_mk (ds_d9eD : Natprod_u) (ds_d9eD_p : Natprod_wf ds_d9eD ∧ True):
+  {VV: _ | swap_pair_rel ds_d9eD VV}.
 Proof.
   intros;
   refine (subsumptionCast
           _
-          (λ VV, swap_pair_rel ds_d9hm VV)
-          (swap_pair (exist _ ds_d9hm ds_d9hm_p))
+          (λ VV, swap_pair_rel ds_d9eD VV)
+          (swap_pair (exist _ ds_d9eD ds_d9eD_p))
           _);
   rewrite <- swap_pair__swap_pair_rel';
   quicksolve.
@@ -451,12 +451,12 @@ Qed.
 
 #[global] Instance swap_pair_pack:
   @Pack
-  (Natprod ::RT λ (ds_d9hm : Natprod), nilRT)
+  (Natprod ::RT λ (ds_d9eD : Natprod), nilRT)
   (Natprod_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG (Natprod ::RT λ (ds_d9hm : Natprod), nilRT) ((Natprod_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (Natprod ::RT λ (ds_d9eD : Natprod), nilRT) ((Natprod_u ::UT nilUT)))
   Natprod_u
-  (λ (x_50855086 : ArgList (Natprod ::RT λ (ds_d9hm : Natprod), nilRT)) (v_x_50855086 : Natprod_u),
-   ltac:(flattenP (λ (ds_d9hm : Natprod) (VV : Natprod_u), Natprod_wf VV ∧ True) x_50855086 v_x_50855086)).
+  (λ (x_57962745 : ArgList (Natprod ::RT λ (ds_d9eD : Natprod), nilRT)) (v_x_57962745 : Natprod_u),
+   ltac:(flattenP (λ (ds_d9eD : Natprod) (VV : Natprod_u), Natprod_wf VV ∧ True) x_57962745 v_x_57962745)).
 Proof.
   buildPackG swap_pair swap_pair_rel swap_pair__swap_pair_rel swap_pair_rel_funct.
 Defined.

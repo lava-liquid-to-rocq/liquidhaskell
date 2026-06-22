@@ -44,8 +44,8 @@ out/Benchmark/PLE/Append.v
 out/Benchmark/RBinsToBins.v
 out/Benchmark/PeanoNats.v
 # out/Benchmark/Half.v
-out/Benchmark/SoftwareFoundations.v
 out/Benchmark/Overview.v
+out/Benchmark/SoftwareFoundations.v
 
 #out/TranslationTests/FunctorId.v
 #out/TranslationTests/FunctorMaybe.v

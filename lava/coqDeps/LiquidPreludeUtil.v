@@ -148,6 +148,21 @@ Ltac letSubCast arg A H x :=
     refine (let arg : {y:A | H y} := subsumptionCast A H arg_uncast arg_p in _); subst arg_uncast
   end.
 
+Ltac clearWitPosedSubCast h :=
+  let hRefl := fresh "hRefl" in
+  pose proof (eq_refl h) as hRefl;
+  unfold h in hRefl;
+  match type of hRefl with
+  | _ = @subsumptionCast _ _ _ _ ?p => clear hRefl;
+    let sub_wit := fresh "sub_wit" in
+    set p as sub_wit in *;
+    clearbody sub_wit
+  | _ = subCast _ _ _ ?z => clear hRefl;
+    let sub_wit := fresh "sub_wit" in
+    set z as sub_wit in *;
+    clearbody sub_wit
+  end.
+
 Ltac unsaturating_solver := first [
   quick_wff_wit
   | lia_preprocessor; lia 
@@ -193,3 +208,8 @@ Ltac preInstExist :=
   repeat unfold rel_u in *;
   simpl_proj; 
   try unify_vars.
+
+Ltac postInstExist :=
+  try specialize_hyps; try unify_vars;
+  try timeout 1 simpl_loop;
+  inversion_cleanup.

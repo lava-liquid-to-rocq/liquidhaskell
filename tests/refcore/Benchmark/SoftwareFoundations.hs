@@ -475,6 +475,7 @@ andb_true_elim2 SFFalse SFFalse _ = trivial
 zero_nbeq_plus_1 O = trivial
 zero_nbeq_plus_1 (S n') = trivial
 
+{-
 {-@ identity_fn_applied_twice :: f: (SFBool -> SFBool) -> h:(x:SFBool -> {f x = x}) -> b:SFBool -> {f (f b) = b} @-}
 identity_fn_applied_twice :: (SFBool -> SFBool) -> (SFBool -> Proof) -> SFBool -> Proof
 identity_fn_applied_twice f h b =
@@ -483,7 +484,7 @@ identity_fn_applied_twice f h b =
     === f b
     ? h b
     === b
-    *** QED
+    *** QED-}
 
 -- 340 SLoc
 

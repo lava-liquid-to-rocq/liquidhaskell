@@ -646,6 +646,9 @@ instance Pretty CoqTerm where
   pPrintPrec _ _ (IntLiteral n) = integer n
   pPrintPrec _ _ (FloatLiteral f) = double f
   pPrintPrec l p (App f []) = pPrintPrec l p f
+  pPrintPrec l p (App f@Lambda{} ts) =
+    maybeParens (p < appPrec)
+      $ sep (parens (pPrintPrec l appPrec f) : map (pPrintPrec l (appPrec - 1)) ts)
   pPrintPrec l p (App f ts) =
     maybeParens (p < appPrec)
       $ sep (pPrintPrec l appPrec f : map (pPrintPrec l (appPrec - 1)) ts)
@@ -833,7 +836,7 @@ instance Pretty Tactic where
   pPrintPrec l p (ProofPose abbr tm) =
     dotted p $ "pose proof" <+> pPrintPrec l (appPrec - 1) tm <+> "as" <+> text abbr
   pPrintPrec l p (Assert n claim prf) =
-    dotted p $ "assert" <+> parens (pPrintArg ((n, claim), False)) <+> "by" <+> pPrintPrec l (appPrec - 1) prf
+    dotted p $ "assert" <+> (pPrintArg ((n, claim), False)) <+> "by" <+> parens (pPrintPrec l nodotPrec prf)
   pPrintPrec _ p (Intros pats) =
     dotted p $ "intros" <+> sep (map pPrint pats)
   pPrintPrec _ p (GeneralizeDependent xs) =

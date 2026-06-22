@@ -76,16 +76,16 @@ Defined.
 
 #[global] Hint Unfold Emp: ref_constr_db.
 
-Definition append_spec (ds_d3xt ys : L): Type :=
+Definition append_spec (ds_d3vP ys : L): Type :=
   L.
 
 #[global] Hint Unfold append_spec: lia_unfold.
 
-Definition append (ds_d3xt ys : L): append_spec ds_d3xt ys.
+Definition append (ds_d3vP ys : L): append_spec ds_d3vP ys.
 Proof.
-  destruct ds_d3xt as [ds_d3xt ds_d3xt_p].
+  destruct ds_d3vP as [ds_d3vP ds_d3vP_p].
   destruct ys as [ys ys_p].
-  try revert ys_p; generalize dependent ys; induction ds_d3xt as [x xs IH_xs|]; intros.
+  try revert ys_p; generalize dependent ys; induction ds_d3vP as [x xs IH_xs|]; intros.
   - refine (C (# x) (IH_xs ltac:(try clear IH_xs; solver) ys ltac:(try clear IH_xs; solver))).
   - refine (exist (λ (ys : L_u), L_wf ys ∧ True) ys ltac:(solver)).
 Defined.
@@ -101,10 +101,10 @@ Inductive append_rel: L_u → L_u → L_u → Prop :=
 
 #[global] Instance append_getF: getFunc append_rel := { getF' := append }.
 
-Theorem append_rel_funct [ds_d3xt ys : L_u]:
-  ∀ (VV VV' : L_u), append_rel ds_d3xt ys VV → (append_rel ds_d3xt ys VV' → VV = VV').
+Theorem append_rel_funct [ds_d3vP ys : L_u]:
+  ∀ (VV VV' : L_u), append_rel ds_d3vP ys VV → (append_rel ds_d3vP ys VV' → VV = VV').
 Proof.
-  try revert ys_p; generalize dependent ys; induction ds_d3xt as [x xs IH_xs|]; intros;
+  try revert ys_p; generalize dependent ys; induction ds_d3vP as [x xs IH_xs|]; intros;
   rel_functionhood_body.
 Qed.
 
@@ -131,12 +131,12 @@ Qed.
 #[global] Hint Rewrite append_Emp_x_lem: f_rel_back.
 
 Theorem append_rel_ex
-  (ds_d3xt : L_u) (ds_d3xt_p : L_wf ds_d3xt ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
-  append_rel ds_d3xt ys ⌊ append (exist _ ds_d3xt ds_d3xt_p) (exist _ ys ys_p) -⌋.
+  (ds_d3vP : L_u) (ds_d3vP_p : L_wf ds_d3vP ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
+  append_rel ds_d3vP ys ⌊ append (exist _ ds_d3vP ds_d3vP_p) (exist _ ys ys_p) -⌋.
 Proof.
   Opaque append.
   existence_lemma_pre append;
-  try revert ys_p; generalize dependent ys; induction ds_d3xt as [x xs IH_xs|]; intros;
+  try revert ys_p; generalize dependent ys; induction ds_d3vP as [x xs IH_xs|]; intros;
   [fix_notations;
    pose proof (IH_xs ltac:(try clear IH_xs; solver) ys ltac:(try clear IH_xs; solver)) as IH_47088561;
    try clear IH_xs |
@@ -151,8 +151,8 @@ Qed.
 #[global] Opaque append.
 
 Theorem append__append_rel_rw
-  (ds_d3xt : L_u) (ds_d3xt_p : L_wf ds_d3xt ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True) (VV : L_u):
-  ⌊ append (exist _ ds_d3xt ds_d3xt_p) (exist _ ys ys_p) -⌋ = VV ↔ append_rel ds_d3xt ys VV.
+  (ds_d3vP : L_u) (ds_d3vP_p : L_wf ds_d3vP ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True) (VV : L_u):
+  ⌊ append (exist _ ds_d3vP ds_d3vP_p) (exist _ ys ys_p) -⌋ = VV ↔ append_rel ds_d3vP ys VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -164,32 +164,32 @@ Qed.
 #[global] Instance append_lookup_rw: dictionary rwLem append := {
     lookup' := append__append_rel_rw }.
 
-Theorem append__append_rel (ds_d3xt ys : L) (VV : L_u):
-  ⌊ append ds_d3xt ys -⌋ = VV ↔ append_rel ⌊ ds_d3xt ⌋ ⌊ ys ⌋ VV.
+Theorem append__append_rel (ds_d3vP ys : L) (VV : L_u):
+  ⌊ append ds_d3vP ys -⌋ = VV ↔ append_rel ⌊ ds_d3vP ⌋ ⌊ ys ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite append__append_rel: f_rel_funct_db.
 
-Theorem append__append_rel' (ds_d3xt_u ys_u : L_u) (ds_d3xt ys : L) (VV : L_u):
-  ds_d3xt_u = ⌊ ds_d3xt ⌋
-  → (ys_u = ⌊ ys ⌋ → ⌊ append ds_d3xt ys -⌋ = VV ↔ append_rel ds_d3xt_u ys_u VV).
+Theorem append__append_rel' (ds_d3vP_u ys_u : L_u) (ds_d3vP ys : L) (VV : L_u):
+  ds_d3vP_u = ⌊ ds_d3vP ⌋
+  → (ys_u = ⌊ ys ⌋ → ⌊ append ds_d3vP ys -⌋ = VV ↔ append_rel ds_d3vP_u ys_u VV).
 Proof.
-  intros -> ->. refine (append__append_rel ds_d3xt ys VV).
+  intros -> ->. refine (append__append_rel ds_d3vP ys VV).
 Qed.
 
 #[global] Hint Resolve append__append_rel': f_rel_funct_db.
 
 Theorem append_rel_mk
-  (ds_d3xt : L_u) (ds_d3xt_p : L_wf ds_d3xt ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
-  {VV: _ | append_rel ds_d3xt ys VV}.
+  (ds_d3vP : L_u) (ds_d3vP_p : L_wf ds_d3vP ∧ True) (ys : L_u) (ys_p : L_wf ys ∧ True):
+  {VV: _ | append_rel ds_d3vP ys VV}.
 Proof.
   intros;
   refine (subsumptionCast
           _
-          (λ VV, append_rel ds_d3xt ys VV)
-          (append (exist _ ds_d3xt ds_d3xt_p) (exist _ ys ys_p))
+          (λ VV, append_rel ds_d3vP ys VV)
+          (append (exist _ ds_d3vP ds_d3vP_p) (exist _ ys ys_p))
           _);
   rewrite <- append__append_rel';
   quicksolve.
@@ -199,12 +199,12 @@ Qed.
 
 #[global] Instance append_pack:
   @Pack
-  (L ::RT λ (ds_d3xt : L), L ::RT λ (ys : L), nilRT)
+  (L ::RT λ (ds_d3vP : L), L ::RT λ (ys : L), nilRT)
   (L_u ::UT (L_u ::UT nilUT))
-  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d3xt : L), L ::RT λ (ys : L), nilRT) ((L_u ::UT (L_u ::UT nilUT))))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d3vP : L), L ::RT λ (ys : L), nilRT) ((L_u ::UT (L_u ::UT nilUT))))
   L_u
-  (λ (x_40735895 : ArgList (L ::RT λ (ds_d3xt : L), L ::RT λ (ys : L), nilRT)) (v_x_40735895 : L_u),
-   ltac:(flattenP (λ (ds_d3xt ys : L) (VV : L_u), L_wf VV ∧ True) x_40735895 v_x_40735895)).
+  (λ (x_84976641 : ArgList (L ::RT λ (ds_d3vP : L), L ::RT λ (ys : L), nilRT)) (v_x_84976641 : L_u),
+   ltac:(flattenP (λ (ds_d3vP ys : L) (VV : L_u), L_wf VV ∧ True) x_84976641 v_x_84976641)).
 Proof.
   buildPackG append append_rel append__append_rel append_rel_funct.
 Defined.
@@ -214,16 +214,16 @@ Proof.
   buildUPackG append_rel append_rel_funct.
 Defined.
 
-Definition propConst1_spec (ds_d3xA : {{True}}): Type :=
+Definition propConst1_spec (ds_d3vW : {{True}}): Type :=
   {{∃ (append_res : L_u),
     append_rel (C_u 1 Emp_u) Emp_u append_res
     ∧ ∃ (append_res_2 : L_u), append_rel append_res Emp_u append_res_2 ∧ append_res_2 == C_u 1 Emp_u}}.
 
 #[global] Hint Unfold propConst1_spec: lia_unfold.
 
-Theorem propConst1 (ds_d3xA : {{True}}): propConst1_spec ds_d3xA.
+Theorem propConst1 (ds_d3vW : {{True}}): propConst1_spec ds_d3vW.
 Proof.
-  destruct ds_d3xA as [ds_d3xA ds_d3xA_p].
+  destruct ds_d3vW as [ds_d3vW ds_d3vW_p].
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
@@ -234,7 +234,7 @@ Proof.
           ltac:(solver)).
 Qed.
 
-Definition propConst2_spec (ds_d3xz : {{True}}): Type :=
+Definition propConst2_spec (ds_d3vV : {{True}}): Type :=
   {{∃ (append_res : L_u),
     append_rel (C_u 1 (C_u 2 Emp_u)) Emp_u append_res
     ∧ ∃ (append_res_2 : L_u),
@@ -242,9 +242,9 @@ Definition propConst2_spec (ds_d3xz : {{True}}): Type :=
 
 #[global] Hint Unfold propConst2_spec: lia_unfold.
 
-Theorem propConst2 (ds_d3xz : {{True}}): propConst2_spec ds_d3xz.
+Theorem propConst2 (ds_d3vV : {{True}}): propConst2_spec ds_d3vV.
 Proof.
-  destruct ds_d3xz as [ds_d3xz ds_d3xz_p].
+  destruct ds_d3vV as [ds_d3vV ds_d3vV_p].
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
@@ -256,7 +256,7 @@ Proof.
           ltac:(solver)).
 Qed.
 
-Definition propConst3_spec (ds_d3xy : {{True}}): Type :=
+Definition propConst3_spec (ds_d3vU : {{True}}): Type :=
   {{∃ (append_res : L_u),
     append_rel (C_u 1 (C_u 2 (C_u 3 Emp_u))) Emp_u append_res
     ∧ ∃ (append_res_2 : L_u),
@@ -264,9 +264,9 @@ Definition propConst3_spec (ds_d3xy : {{True}}): Type :=
 
 #[global] Hint Unfold propConst3_spec: lia_unfold.
 
-Theorem propConst3 (ds_d3xy : {{True}}): propConst3_spec ds_d3xy.
+Theorem propConst3 (ds_d3vU : {{True}}): propConst3_spec ds_d3vU.
 Proof.
-  destruct ds_d3xy as [ds_d3xy ds_d3xy_p].
+  destruct ds_d3vU as [ds_d3vU ds_d3vU_p].
   refine (subsumptionCast
           Unit
           (λ (VV : Unit),
@@ -278,15 +278,15 @@ Proof.
           ltac:(solver)).
 Qed.
 
-Definition length_spec (ds_d3xw : L): Type :=
+Definition length_spec (ds_d3vS : L): Type :=
   {VV: Z | gebZ_rel VV 0 true}.
 
 #[global] Hint Unfold length_spec: lia_unfold.
 
-Definition length (ds_d3xw : L): length_spec ds_d3xw.
+Definition length (ds_d3vS : L): length_spec ds_d3vS.
 Proof.
-  destruct ds_d3xw as [ds_d3xw ds_d3xw_p].
-  induction ds_d3xw as [ds_d3xx xs IH_xs|].
+  destruct ds_d3vS as [ds_d3vS ds_d3vS_p].
+  induction ds_d3vS as [ds_d3vT xs IH_xs|].
   - refine (subsumptionCast
             Z
             (λ (VV : Z), gebZ_rel VV 0 true)
@@ -301,9 +301,9 @@ Proof.
 Defined.
 
 Inductive length_rel: L_u → Z → Prop :=
-  | length_C: ∀ ds_d3xx xs (length_res : Z),
+  | length_C: ∀ ds_d3vT xs (length_res : Z),
               length_rel xs length_res
-              → ∀ (addZ_res : Z), addZ_rel 1 length_res addZ_res → length_rel (C_u ds_d3xx xs) addZ_res
+              → ∀ (addZ_res : Z), addZ_rel 1 length_res addZ_res → length_rel (C_u ds_d3vT xs) addZ_res
   | length_Emp: length_rel Emp_u 0.
 
 #[global] Hint Constructors length_rel: core_hint_db.
@@ -312,10 +312,10 @@ Inductive length_rel: L_u → Z → Prop :=
 
 #[global] Instance length_getF: getFunc length_rel := { getF' := length }.
 
-Theorem length_rel_funct [ds_d3xw : L_u]:
-  ∀ (VV VV' : Z), length_rel ds_d3xw VV → (length_rel ds_d3xw VV' → VV = VV').
+Theorem length_rel_funct [ds_d3vS : L_u]:
+  ∀ (VV VV' : Z), length_rel ds_d3vS VV → (length_rel ds_d3vS VV' → VV = VV').
 Proof.
-  induction ds_d3xw as [ds_d3xx xs IH_xs|]; rel_functionhood_body.
+  induction ds_d3vS as [ds_d3vT xs IH_xs|]; rel_functionhood_body.
 Qed.
 
 #[global] Hint Resolve length_rel_funct: f_rel_funct_db.
@@ -323,8 +323,8 @@ Qed.
 #[global] Instance length_lookup_funct: dictionary functionhood length := {
     lookup' := length_rel_funct }.
 
-Theorem length_C_lem ds_d3xx xs length_C_lem_res:
-  length_rel (C_u ds_d3xx xs) length_C_lem_res
+Theorem length_C_lem ds_d3vT xs length_C_lem_res:
+  length_rel (C_u ds_d3vT xs) length_C_lem_res
   ↔ ∃ (length_res : Z),
     length_rel xs length_res
     ∧ ∃ (addZ_res : Z), addZ_rel 1 length_res addZ_res ∧ length_C_lem_res == addZ_res.
@@ -342,12 +342,12 @@ Qed.
 
 #[global] Hint Rewrite length_Emp_lem: f_rel_back.
 
-Theorem length_rel_ex (ds_d3xw : L_u) (ds_d3xw_p : L_wf ds_d3xw ∧ True):
-  length_rel ds_d3xw ⌊ length (exist _ ds_d3xw ds_d3xw_p) -⌋.
+Theorem length_rel_ex (ds_d3vS : L_u) (ds_d3vS_p : L_wf ds_d3vS ∧ True):
+  length_rel ds_d3vS ⌊ length (exist _ ds_d3vS ds_d3vS_p) -⌋.
 Proof.
   Opaque length.
   existence_lemma_pre length;
-  induction ds_d3xw as [ds_d3xx xs IH_xs|];
+  induction ds_d3vS as [ds_d3vT xs IH_xs|];
   [fix_notations; pose proof (IH_xs ltac:(try clear IH_xs; solver)) as IH_67415571; try clear IH_xs |
    fix_notations];
   simpl in *.
@@ -359,8 +359,8 @@ Qed.
 
 #[global] Opaque length.
 
-Theorem length__length_rel_rw (ds_d3xw : L_u) (ds_d3xw_p : L_wf ds_d3xw ∧ True) (VV : Z):
-  ⌊ length (exist _ ds_d3xw ds_d3xw_p) -⌋ = VV ↔ length_rel ds_d3xw VV.
+Theorem length__length_rel_rw (ds_d3vS : L_u) (ds_d3vS_p : L_wf ds_d3vS ∧ True) (VV : Z):
+  ⌊ length (exist _ ds_d3vS ds_d3vS_p) -⌋ = VV ↔ length_rel ds_d3vS VV.
 Proof.
   f__f_rel_rw.
 Qed.
@@ -372,27 +372,27 @@ Qed.
 #[global] Instance length_lookup_rw: dictionary rwLem length := {
     lookup' := length__length_rel_rw }.
 
-Theorem length__length_rel (ds_d3xw : L) (VV : Z):
-  ⌊ length ds_d3xw -⌋ = VV ↔ length_rel ⌊ ds_d3xw ⌋ VV.
+Theorem length__length_rel (ds_d3vS : L) (VV : Z):
+  ⌊ length ds_d3vS -⌋ = VV ↔ length_rel ⌊ ds_d3vS ⌋ VV.
 Proof.
   f__f_rel.
 Qed.
 
 #[global] Hint Rewrite length__length_rel: f_rel_funct_db.
 
-Theorem length__length_rel' (ds_d3xw_u : L_u) (ds_d3xw : L) (VV : Z):
-  ds_d3xw_u = ⌊ ds_d3xw ⌋ → ⌊ length ds_d3xw -⌋ = VV ↔ length_rel ds_d3xw_u VV.
+Theorem length__length_rel' (ds_d3vS_u : L_u) (ds_d3vS : L) (VV : Z):
+  ds_d3vS_u = ⌊ ds_d3vS ⌋ → ⌊ length ds_d3vS -⌋ = VV ↔ length_rel ds_d3vS_u VV.
 Proof.
-  intros ->. refine (length__length_rel ds_d3xw VV).
+  intros ->. refine (length__length_rel ds_d3vS VV).
 Qed.
 
 #[global] Hint Resolve length__length_rel': f_rel_funct_db.
 
-Theorem length_rel_mk (ds_d3xw : L_u) (ds_d3xw_p : L_wf ds_d3xw ∧ True):
-  {VV: _ | length_rel ds_d3xw VV}.
+Theorem length_rel_mk (ds_d3vS : L_u) (ds_d3vS_p : L_wf ds_d3vS ∧ True):
+  {VV: _ | length_rel ds_d3vS VV}.
 Proof.
   intros;
-  refine (subsumptionCast _ (λ VV, length_rel ds_d3xw VV) (length (exist _ ds_d3xw ds_d3xw_p)) _);
+  refine (subsumptionCast _ (λ VV, length_rel ds_d3vS VV) (length (exist _ ds_d3vS ds_d3vS_p)) _);
   rewrite <- length__length_rel';
   quicksolve.
 Qed.
@@ -401,12 +401,12 @@ Qed.
 
 #[global] Instance length_pack:
   @Pack
-  (L ::RT λ (ds_d3xw : L), nilRT)
+  (L ::RT λ (ds_d3vS : L), nilRT)
   (L_u ::UT nilUT)
-  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d3xw : L), nilRT) ((L_u ::UT nilUT)))
+  ltac:(mkProjectsArgListTG (L ::RT λ (ds_d3vS : L), nilRT) ((L_u ::UT nilUT)))
   Z
-  (λ (x_49047770 : ArgList (L ::RT λ (ds_d3xw : L), nilRT)) (v_x_49047770 : Z),
-   ltac:(flattenP (λ (ds_d3xw : L) (VV : Z), gebZ_rel VV 0 true) x_49047770 v_x_49047770)).
+  (λ (x_45869651 : ArgList (L ::RT λ (ds_d3vS : L), nilRT)) (v_x_45869651 : Z),
+   ltac:(flattenP (λ (ds_d3vS : L) (VV : Z), gebZ_rel VV 0 true) x_45869651 v_x_45869651)).
 Proof.
   buildPackG length length_rel length__length_rel length_rel_funct.
 Defined.
