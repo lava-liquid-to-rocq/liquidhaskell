@@ -341,6 +341,10 @@ trExprTacs :: Bool -> LH.Expr -> [Tactic]
 trExprTacs eq (LH.Reft tm) =
   let refine = Refine $ trReft eq tm
    in if eq then [mkConcat [refine, Try Oracle]] else [refine]
+-- handle Pops properly
+trExprTacs eq (LH.Let x1 (Just tpx@(RefType {})) e1 (LH.QMark (Reft (Sub (Inj r _) _ to)) rh rp)) = 
+  trExprTacs eq (LH.Let x1 (Just tpx) e1 (LH.QMark (Reft (Inj r to)) rh rp))
+trExprTacs eq (LH.Let x1 (Just (RefType _ _ goal)) e1 (LH.QMark r@(Reft (Inj (DC unt) rTp)) (Reft (Inj (LH.Var x1' _ _) rhTp)) rp)) | x1 == x1' && unt == unitTmName = translateHint eq e1 goal ++ trExprTacs eq r  
 trExprTacs _ (LH.Let _ Nothing _ _) = error "Found let-binding with no annotation while translating."
 -- TODO: maybe we need to do something special for let-bindings of a value of unit (return) type
 trExprTacs eq (LH.Let x (Just tpx@(RefType {})) e1 e2) = 
@@ -414,6 +418,10 @@ poseSubterm eq x tm = case tm of
 translateHint :: Bool -> LH.Expr -> LH.Reft -> [Tactic]
 translateHint eq z goal = case z of
   Reft r -> poseSubterm eq ("h_" ++ hashName r) r
+  LH.Let x tp e (Reft (LH.Pop po (Inj (LH.Var x' Nothing Local) _) rhs)) | x == x' ->
+    eHints ++ translateHint eq (Reft (LH.Pop po (LH.mkVar xn) rhs)) goal where
+      xn = "x_" ++ hashName e
+      eHints = poseSubExpr eq xn e
   LH.Let x tp e (LH.Reft (LH.Var x' _ _)) | x == x' -> 
     translateHint eq e goal
   LH.QMark r rh rp -> translateHint eq rh rp ++ translateHint eq r goal
@@ -421,6 +429,18 @@ translateHint eq z goal = case z of
   where
     x = "h_" ++ hashName goal
     prf = trExprTacs eq z
+  
+poseSubExpr :: Bool -> Id -> LH.Expr -> [Tactic]
+poseSubExpr eq x tm = case tm of
+  Reft r -> poseSubterm eq x r
+  LH.Let x tp e (Reft (LH.Pop po (Inj (LH.Var x' Nothing Local) (RefType _ _ goal)) rhs)) | x == x' ->
+    eHints ++ translateHint eq (Reft (LH.Pop po (LH.mkVar xn) rhs)) goal where
+      xn = "x_" ++ hashName e
+      eHints = poseSubExpr eq xn e
+  LH.Let x tp e (LH.QMark (Reft (Inj (LH.Var x' Nothing Local) _)) hint goal) | x == x' ->
+    poseSubExpr eq x (LH.QMark e hint goal)
+  LH.QMark e hint goal -> translateHint eq hint goal ++ poseSubExpr eq x e
+  _ -> error $ unwords [prettyShow tm] 
 
 mkLetApp :: CoqTerm -> [CoqTerm] -> CoqTerm
 mkLetApp f ts = Coq.App f ts-- foldr (\fApp (t, i) -> Coq.Let ("arg_" ++ show i) Nothing t fApp) (Coq.App f (map (\_ i -> ("arg_" ++ show i)) (zip ts [1..]))) (zip ts [1..])

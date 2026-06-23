@@ -398,7 +398,14 @@ checkExpr γ state (Let x Nothing tm e) tp = do
   (tpr, r') <- let
     synExpr :: TypEnv -> Expr -> Either TypeError (RefType, Expr)
     synExpr γ_ (Reft r) = second Reft <$> synReft γ_ r
-    synExpr γ_ (QMark r _ _) = synExpr γ_ r
+    synExpr γ_ (QMark r rh rp) = do
+      (tph, rh') <- synExpr γ_ rh
+      (x, rp') <- case tph of
+        RefType x _ rp' -> Right (x, rp')
+        _ -> Left . CheckingErr $ "Unexpected function type in type of hint"
+      let γ' = insertLocalVar (x, tph) γ_
+      (tp, r') <- synExpr γ' r
+      return (tp, QMark r' rh' rp')
     synExpr γ_ (Let y yTpO ry ey) = do
       (yTp, ry') <- case yTpO of
         Just yTp -> (yTp, ) <$> checkExpr γ_ state ry yTp
