@@ -15,19 +15,16 @@
 -- - (E)Coq grammar, printer to .ecoq file and suable functions
 module Lava.Coq where
 
-import Prelude hiding ((<>))
 import Data.Bifunctor
 import Data.Data
 import Data.List (isSuffixOf, stripPrefix, unsnoc)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (isNothing)
-
+import Language.Haskell.Liquid.RefCore.Calculus (ProjKind (..))
+import Lava.RocqNames
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
-
-import Language.Haskell.Liquid.RefCore.Calculus (ProjKind (..))
-
-import Lava.RocqNames
+import Prelude hiding ((<>))
 
 {- ORMOLU_DISABLE -}
 unitTm :: CoqTerm
@@ -596,7 +593,7 @@ pPrintForall l p (("_", t) : tl) ret =
   maybeParens (p < 99) $ sep [pPrint t, "→", pPrintForall l 200 tl ret]
 pPrintForall _ p args ret = sep [
   if null args then empty
-  else maybeParens (p < 10) "∀" <+> pPrintArgs (map (,False) args) <> comma, pPrint ret]
+  else maybeParens (p < 10) $ "∀" <+> pPrintArgs (map (,False) args) <> comma, pPrint ret]
 
 instance Pretty RocqType where
   pPrint tp = pPrintRocqType prettyNormal 200 tp True
@@ -614,7 +611,7 @@ instance Pretty CoqTerm where
     let (vars, tm') = concatForalls tm
      in pPrintForall l p vars tm'
   pPrintPrec _ p (Exists vars tm) =
-     maybeParens (p < 10) . sep $
+     maybeParens (p < 200) . sep $
        ["∃" <+> pPrintArgs (map (,False) vars) <> comma | not (null vars)] ++ [pPrint tm]
   pPrintPrec l p (Neg PropOp (IsTrue (Bop (Binop Eq RefOp) s t))) =
     pPrintPrec l p . IsTrue $ Bop (Binop Neq UnrefOp) s t
