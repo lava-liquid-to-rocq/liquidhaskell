@@ -9,37 +9,40 @@
 -- | Grammars, printer and suable functions for ILH
 module Language.Haskell.Liquid.RefCore.Calculus
   ( -- * Grammar
-    Builtin (..)
-  , BaseType (..)
-  , RefType (..)
-  , Decl (..)
-  , Expr (..)
-  , Reft (..)
-  , ProjKind (..)
-  , Localization (..)
-  , DesState (..)
-  , Bop (..)
-  , ProofOp (..)
-    -- * Builtin type and data constructors
-  , boolTp
-  , ttTm
-  , ffTm
-  , unitTp
-  , unitTm
-    -- * Construction and destruction
-  , mkVar
-  , arrs
-  , apps
-  , renameParams
-    -- * Free variables and substitution
-  , HasVars (..)
-  , freeVars
-  , fresh
-  , rename
-  , substs
-  ) where
+    Builtin (..),
+    BaseType (..),
+    RefType (..),
+    Decl (..),
+    Expr (..),
+    Reft (..),
+    ProjKind (..),
+    Localization (..),
+    DesState (..),
+    Bop (..),
+    ProofOp (..),
 
-import Prelude hiding (lookup, (<>))
+    -- * Builtin type and data constructors
+    boolTp,
+    ttTm,
+    ffTm,
+    unitTp,
+    unitTm,
+
+    -- * Construction and destruction
+    mkVar,
+    arrs,
+    apps,
+    renameParams,
+
+    -- * Free variables and substitution
+    HasVars (..),
+    freeVars,
+    fresh,
+    rename,
+    substs,
+  )
+where
+
 import Data.Bifunctor (first)
 import Data.Binary (Binary)
 import Data.Data
@@ -47,13 +50,11 @@ import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
-
+import GHC.Generics (Generic)
+import Language.Haskell.Liquid.RefCore.Names (Id, boolTpName, ffTmName, freshVar, ttTmName, unitTmName, unitTpName)
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
-
-import GHC.Generics (Generic)
-
-import Language.Haskell.Liquid.RefCore.Names (Id, freshVar, boolTpName, ttTmName, ffTmName, unitTpName, unitTmName)
+import Prelude hiding (lookup, (<>))
 
 -- * The grammar
 
@@ -230,7 +231,9 @@ renameParams = aux []
     aux σ (y : ys) (ArrType x tpx tp)
       | x `notElem` freeVars tp || x == y =
           ArrType y (renames σ tpx) (aux σ ys tp)
-    -- TODO: handle by renaming
+    -- NOTE: we could handle some of the error cases by applying the
+    -- substitutions globally for each binder, or by traversing the type in the
+    -- opposite direction. But with reasonable namings that should not be necessary
     aux _ (y : _) tp0@(ArrType x _ tp)
       | y `elem` freeVars tp =
           error . render $ "Name clash while renaming variable" <+> text x <+> "to" <+> text y <+> "in" <+> pPrint tp0
