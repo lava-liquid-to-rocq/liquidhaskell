@@ -9,7 +9,7 @@
 - [x] fix translation of proof combinators
 - [x] fix position of assertions using proof combinators
 - [x] bind arguments to function calls in hints if they appear in the type of subsequent hints, possibly bind other recurring subterms as well
-- [ ] fix [missing brackets](https://github.com/lava-liquid-to-rocq/liquidhaskell/blob/e161493afe617ed8e9ca5bd4cb10e0972b9cb795/lava/out/Benchmark/PeanoNats.v#L1330-L1331) in printer
+- [x] fix [missing brackets](https://github.com/lava-liquid-to-rocq/liquidhaskell/blob/e161493afe617ed8e9ca5bd4cb10e0972b9cb795/lava/out/Benchmark/PeanoNats.v#L1330-L1331) in printer
 - [X] fix printing of recurring branch delimiters -, +, *, ...
 - [X] fix overload of names imported in Rocq (ex: SFBin.Z)
 - [X] fix type annotation in andb_commutative
@@ -18,7 +18,7 @@
 - [X] something with SoftwareFoundations.identity_fn_applied_twice, where a subsumption might be necessary
 
 ### Rocq:
-- [ ] test automation tactics on fixed translation output
+- [x] test automation tactics on fixed translation output
 - [ ] figure out why axiomatize_next_term loops (or just takes a long time) in foldrUniversal
 
 ## Possible improvements (non-priorities)
