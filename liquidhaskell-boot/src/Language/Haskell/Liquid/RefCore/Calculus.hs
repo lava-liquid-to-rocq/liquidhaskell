@@ -129,7 +129,7 @@ data Expr
 -- >     | r `op` r
 -- >     | r `pop` r
 data Reft
-  = Var Id (Maybe BaseType) Localization
+  = Var Id (Maybe (Int, BaseType)) Localization
   | StringLit String
   | IntLit Integer
   | FloatLit Double
@@ -244,7 +244,7 @@ renameParams = aux []
 
 class HasVars a where
   -- | Return the free variables with their return type and localization
-  freeVarsAnnot :: a -> Map Id (Maybe BaseType, Localization)
+  freeVarsAnnot :: a -> Map Id (Maybe (Int, BaseType), Localization)
 
   -- | Return the bound variables with their type (they are all local)
   boundVars :: a -> Set Id
