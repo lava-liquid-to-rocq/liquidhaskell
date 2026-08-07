@@ -23,20 +23,17 @@ hashName e = take 8 $ prettyShow (abs . hash $ prettyShow e)
 
 -- Builtin names
 
-boolTpName :: Id
+boolTpName, unitTpName, listTpName :: Id
 boolTpName = "Bool"
-
-ttTmName :: Id
-ttTmName = "True"
-
-ffTmName :: Id
-ffTmName = "False"
-
-unitTpName :: Id
 unitTpName = "Unit"
+listTpName = "list"
 
-unitTmName :: Id
+ttTmName, ffTmName, unitTmName, consTmName, nilTmName :: Id
+ttTmName = "True"
+ffTmName = "False"
 unitTmName = "unit"
+consTmName = "cons"
+nilTmName = "nil"
 
 -- | The canonical refinement value variable (the @VV@ in @{VV : tp | …}@).
 vvName :: Id

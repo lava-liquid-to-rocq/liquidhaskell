@@ -292,6 +292,8 @@ builtinDCs =
       ("trivial", Calc.unitTm),
       (ttTmName, Calc.ttTm),
       (ffTmName, Calc.ffTm)
+      (consTmName, Calc.consTm),
+      (nilTmName, Calc.nilTm)
     ]
 
 -- | LH builtin types: the base types and the unit type constructor
@@ -301,5 +303,6 @@ builtinTCs =
     [ ("Integer", Calc.Builtin Calc.Integer),
       ("Int", Calc.Builtin Calc.Integer),
       ("Float", Calc.Builtin Calc.Double),
-      ("()", Calc.unitTp)
+      ("()", Calc.unitTp),
+      ("list", Calc.listTp)
     ]

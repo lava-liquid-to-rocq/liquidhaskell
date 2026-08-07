@@ -26,6 +26,9 @@ module Language.Haskell.Liquid.RefCore.Calculus
     ffTm,
     unitTp,
     unitTm,
+    listTp,
+    consTm,
+    nilTm,
 
     -- * Construction and destruction
     mkVar,
@@ -42,7 +45,6 @@ module Language.Haskell.Liquid.RefCore.Calculus
   )
 where
 
-import Data.Bifunctor (first)
 import Data.Binary (Binary)
 import Data.Data
 import Data.Map.Strict (Map)
@@ -50,10 +52,11 @@ import qualified Data.Map.Strict as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
 import GHC.Generics (Generic)
-import Language.Haskell.Liquid.RefCore.Names (Id, boolTpName, ffTmName, freshVar, ttTmName, unitTmName, unitTpName)
+import Language.Haskell.Liquid.RefCore.Names (Id, boolTpName, ffTmName, listTpName, freshVar, ttTmName, unitTmName, unitTpName, consTmName, nilTmName)
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding (lookup, (<>))
+import Data.Tuple.Extra (first3, second3)
 
 -- * The grammar
 
@@ -69,26 +72,27 @@ data Builtin = Integer | Double | String deriving (Data, Eq, Show, Generic, Bina
 
 -- | Base Types
 --
--- > A ::= B | TC
-data BaseType = Builtin Builtin | TC Id deriving (Data, Eq, Show, Generic, Binary)
+-- > A ::= B | TC R* | α
+data BaseType = Builtin Builtin | TC Id [RefType] | TyVar Id deriving (Data, Eq, Show, Generic, Binary)
 
 -- | Refinement types
 --
--- > R ::= {x: A | r} | x:Rx -> R
+-- > R ::= {x: A | r} | x:Rx -> R | ∀α, R
 data RefType
   = RefType Id BaseType Reft
   | ArrType Id RefType RefType
+  | FAType Id RefType
   deriving (Data, Show, Generic, Binary)
 
 -- ** Declaration-level grammar
 
 -- | Declarations
 --
--- > D ::= data tc := (C :: R)*
+-- > D ::= data tc α* := (C :: R)*
 -- >     | (reflect)? def f :: R := e
 data Decl
-  = -- | type constructor: name and branches with (constructor name, type)
-    Data Id [(Id, RefType)]
+  = -- | type constructor: name, type variables (for now all considered positive) and branches with (constructor name, type)
+    Data Id [Id] [(Id, RefType)]
   | -- | (function) definition: name, type, body, is it reflected
     Definition Id RefType Expr Bool
   | -- | imported module: module name and its declarations
@@ -125,6 +129,7 @@ data Expr
 -- >     | lit ∈ B
 -- >     | C
 -- >     | r r
+-- >     | r [R]
 -- >     | ¬r
 -- >     | r `op` r
 -- >     | r `pop` r
@@ -135,6 +140,7 @@ data Reft
   | FloatLit Double
   | DC Id
   | App Reft Reft
+  | TyApp Reft RefType
   | Neg Reft
   | Bop Bop Reft Reft
   | Pop ProofOp Reft Reft
@@ -188,15 +194,18 @@ data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq, Generic, Binary)
 -- Builtin type and data constructors
 
 boolTp, unitTp :: BaseType
-unitTm, ttTm, ffTm :: Reft
-boolTp = TC boolTpName
-unitTp = TC unitTpName
+boolTp = TC boolTpName []
+unitTp = TC unitTpName []
 
+listTp :: RefType -> BaseType
+listTp tp = TC listTpName [tp]
+
+unitTm, ttTm, ffTm, consTm, nilTm :: Reft
 ttTm = DC ttTmName
-
 ffTm = DC ffTmName
-
 unitTm = DC unitTmName
+consTm = DC consTmName
+nilTm = DC nilTmName
 
 -- * Functions on the terms
 
@@ -208,10 +217,11 @@ mkVar x = Var x Nothing Local
 
 -- ** Other functions
 
--- | arrs(R) := (x_i:R_i)_{i ≤ n} -> R' where n is maximal
-arrs :: RefType -> ([(Id, RefType)], (Id, BaseType, Reft))
-arrs (RefType x a r) = ([], (x, a, r))
-arrs (ArrType x tpx tp) = ((x, tpx) :) `first` arrs tp
+-- | arrs(R) := forall (α_j)_{j ≤ m}, (x_i:R_i)_{i ≤ n} -> R' where n is maximal
+arrs :: RefType -> ([Id], [(Id, RefType)], (Id, BaseType, Reft))
+arrs (RefType x a r) = ([], [], (x, a, r))
+arrs (ArrType x tpx tp) = ((x, tpx) :) `second3` arrs tp
+arrs (FAType α tp) = (α :) `first3` arrs tp
 
 -- | Flattens an application
 apps :: Reft -> (Reft, [Reft])
@@ -239,6 +249,7 @@ renameParams = aux []
           error . render $ "Name clash while renaming variable" <+> text x <+> "to" <+> text y <+> "in" <+> pPrint tp0
     aux σ (y : ys) (ArrType x tpx tp) =
       ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
+    aux σ ys (FAType α tp) = FAType α (aux σ ys tp)
 
 -- * Typeclass related to free variables
 
@@ -280,6 +291,7 @@ substs = flip (foldr (uncurry subst))
 instance HasVars Reft where
   freeVarsAnnot (Var x tp loc) = Map.singleton x (tp, loc)
   freeVarsAnnot (App hd arg) = freeVarsAnnot [hd, arg]
+  freeVarsAnnot (TyApp r tp) = freeVarsAnnot r `Map.union` freeVarsAnnot tp
   freeVarsAnnot (Bop _ r1 r2) = freeVarsAnnot [r1, r2]
   freeVarsAnnot (Neg r) = freeVarsAnnot r
   freeVarsAnnot (StringLit _; IntLit _; FloatLit _; DC _) = Map.empty
@@ -289,8 +301,9 @@ instance HasVars Reft where
   freeVarsAnnot (Proj _ r) = freeVarsAnnot r
 
   -- Empty on unelaborated refinements, but has the bound variables of the types in casts
-  boundVars (Var {}; StringLit _; IntLit _; FloatLit _; DC _) = Set.empty
+  boundVars (Var {};  StringLit _; IntLit _; FloatLit _; DC _) = Set.empty
   boundVars (App hd arg) = boundVars [hd, arg]
+  boundVars (TyApp r tp) = boundVars r `Set.union` boundVars tp
   boundVars (Bop _ r1 r2) = boundVars [r1, r2]
   boundVars (Neg r) = boundVars r
   boundVars (Pop _ r1 r2) = boundVars [r1, r2]
@@ -301,6 +314,7 @@ instance HasVars Reft where
   subst r' x (Var y _ _) | y == x = r'
   subst _ _ r0@(Var {}; StringLit _; IntLit _; FloatLit _; DC _) = r0
   subst r' x (App h arg) = App (subst r' x h) (subst r' x arg)
+  subst r' x (TyApp r tp) = TyApp (subst r' x r) (subst r' x tp)
   subst r' x (Bop bop r1 r2) = Bop bop (subst r' x r1) (subst r' x r2)
   subst r' x (Neg r) = Neg $ subst r' x r
   subst r' x (Pop pop r1 r2) = Pop pop (subst r' x r1) (subst r' x r2)
@@ -356,9 +370,11 @@ instance HasVars RefType where
   freeVarsAnnot (RefType x _ r) = Map.delete x (freeVarsAnnot r)
   freeVarsAnnot (ArrType x tpx tp) =
     freeVarsAnnot tpx `Map.union` Map.delete x (freeVarsAnnot tp)
+  freeVarsAnnot (FAType _ tp) = freeVarsAnnot tp
 
   boundVars (RefType x _ r) = Set.singleton x `Set.union` boundVars r
   boundVars (ArrType x tpx tp) = Set.singleton x `Set.union` boundVars [tpx, tp]
+  boundVars (FAType _ tp) = boundVars tp
 
   subst _ x tp@(RefType y _ _) | y == x = tp
   subst r x (RefType y b reft) = RefType y b $ subst r x reft
@@ -369,6 +385,9 @@ instance HasVars RefType where
     | otherwise = ArrType y (subst r x tpy) (subst r x tp')
     where
       z = freshVar y (freeVars r `Set.union` freeVars (ArrType y tpy tp'))
+  subst r x tp@(FAType α tp')
+    | α == x = tp
+    | otherwise = FAType α (subst r x tp')
 
 instance (HasVars a) => HasVars [a] where
   freeVarsAnnot tms = Map.unions $ map freeVarsAnnot tms
@@ -391,6 +410,10 @@ instance Eq RefType where
     let z = fresh x [tp1, tp2]
         (α1, α2) = if x /= y then ([(z, x)], [(z, y)]) else ([], [])
      in tpx == tpy && renames α1 tp1' == renames α2 tp2'
+  tp1@(FAType x tp1') == tp2@(FAType y tp2') =
+    let z = fresh x [tp1, tp2]
+        (α1, α2) = if x /= y then ([(z, x)], [(z, y)]) else ([], [])
+     in renames α1 tp1' == renames α2 tp2'
   _ == _ = False
 
 instance Eq Expr where
@@ -456,7 +479,8 @@ instance Pretty Builtin where
 
 instance Pretty BaseType where
   pPrint (Builtin b) = pPrint b
-  pPrint (TC tc) = text tc
+  pPrint (TC tc tps) = hsep $ text tc : map pPrint tps
+  pPrint (TyVar α) = text α
 
 instance Pretty RefType where
   pPrintPrec _ _ (RefType _ a r) | r == ttTm = braces $ pPrint a
@@ -465,12 +489,13 @@ instance Pretty RefType where
     braces (text x <> colon <+> pPrint a <+> char '|' <+> pPrint r)
   pPrintPrec l p (ArrType x tpx tp) =
     maybeParens (p > arrPrec) $ sep [text x <> colon <+> pPrintPrec l (arrPrec + 1) tpx, "->" <+> pPrintPrec l arrPrec tp]
+  pPrintPrec _ _ (FAType α tp) = sep ["∀" <> text α <> comma, pPrint tp]
 
 instance Pretty Decl where
-  pPrint (Data tc constrs) =
+  pPrint (Data tc αs constrs) =
     sep [ppTC, nest identNb . sep $ map (\dc -> char '|' <+> ppConstr dc) constrs]
     where
-      ppTC = "data" <+> text tc <+> ":="
+      ppTC = "data" <+> hsep (map text (tc : αs)) <+> ":="
       ppConstr (c, tpc) = text c <+> "::" <+> pPrint tpc
   pPrint (Definition f tp e isRefl) =
     sep [ppRefl <+> ppF, nest identNb (pPrint e)]
@@ -505,6 +530,8 @@ instance Pretty Reft where
   pPrintPrec _ _ (DC c) = text c
   pPrintPrec l p (App r1 r2) =
     maybeParens (p > appPrec) $ pPrintPrec l p r1 <+> pPrintPrec l (appPrec + 1) r2
+  pPrintPrec l p (TyApp r tp) =
+    maybeParens (p > appPrec) $ pPrintPrec l p r <+> brackets (pPrint tp)
   pPrintPrec l p (Neg r) =
     maybeParens (p > appPrec) $ "not" <+> pPrintPrec l (appPrec + 1) r
   pPrintPrec l p (Bop bop r1 r2) =
