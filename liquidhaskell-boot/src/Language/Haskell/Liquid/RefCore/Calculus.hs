@@ -34,6 +34,7 @@ module Language.Haskell.Liquid.RefCore.Calculus
     mkVar,
     arrs,
     apps,
+    mkArrows,
     renameParams,
 
     -- * Free variables and substitution
@@ -222,6 +223,12 @@ arrs :: RefType -> ([Id], [(Id, RefType)], (Id, BaseType, Reft))
 arrs (RefType x a r) = ([], [], (x, a, r))
 arrs (ArrType x tpx tp) = ((x, tpx) :) `second3` arrs tp
 arrs (FAType α tp) = (α :) `first3` arrs tp
+
+-- | Inverse operation of arrs
+mkArrows :: ([Id], [(Id, RefType)], RefType) -> RefType
+mkArrows (αs, args, ret) =
+  let monoArrow = foldr (\(n, t) acc -> ArrType n t acc) ret args
+   in foldr FAType monoArrow αs
 
 -- | Flattens an application
 apps :: Reft -> (Reft, [Reft])

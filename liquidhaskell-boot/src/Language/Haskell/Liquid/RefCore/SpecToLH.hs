@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wall #-}
 
-module Language.Haskell.Liquid.RefCore.SpecToLH (transSig, transType, showppStripped, bops, builtinDCs, builtinTCs, InternalCont (..)) where
+module Language.Haskell.Liquid.RefCore.SpecToLH (transSig, transType, showppStripped, bops, builtinDCs, builtinTCs, InternalCont (..), transVarName) where
 
 import Control.Monad (filterM)
 import Control.Monad.Extra (allM, ifM)
@@ -9,25 +9,16 @@ import Data.Char (isUpper)
 import Data.List (isInfixOf)
 import qualified Data.Map.Strict as M
 import Data.Maybe (fromMaybe)
-
-import           Language.Fixpoint.Types (PPrint)
+import Language.Fixpoint.Types (PPrint)
 import qualified Language.Fixpoint.Types as F
-import           Language.Haskell.Liquid.Types.RType (PVarBV (PV), RTVar (RTVar), RTyCon (RTyCon), RTyVar (RTV), RTypeBV (..), SpecType, UReft, UReftBV (MkUReft))
-
-import           Language.Haskell.Liquid.RefCore.Misc
-import           Language.Haskell.Liquid.RefCore.Names (Id, ttTmName, ffTmName)
 import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
+import Language.Haskell.Liquid.RefCore.Misc
+import Language.Haskell.Liquid.RefCore.Names (Id, ffTmName, ttTmName)
+import Language.Haskell.Liquid.Types.RType (PVarBV (PV), RTVar (RTVar), RTyCon (RTyCon), RTyVar (RTV), RTypeBV (..), SpecType, UReft, UReftBV (MkUReft))
 
 -- | Helper for unsupported constructs
 unsupported :: String -> a
 unsupported msg = error $ "[SpecToLH] " ++ msg
-
--- | Translation of an RTyCon as a builtin or as a type constructor
-transCon :: Id -> RTyCon -> Calc.BaseType
-transCon modId (RTyCon tc [] _) = M.findWithDefault (Calc.TC name) name builtinTCs
-  where
-    name = showppStripped modId tc
-transCon _ c = unsupported $ "Type constructor with type args not supported (no polymorphism): " ++ show c
 
 showppStripped :: (PPrint a) => Id -> a -> String
 showppStripped modId = stripLegalName modId . F.showpp
@@ -94,7 +85,7 @@ transType :: Id -> InternalCont -> SpecType -> Calc.RefType
 -- \| Type variables
 transType modId intCont (RVar n ref) = case x of
   "()" -> Calc.RefType x Calc.unitTp reft
-  _ -> Calc.RefType x (Calc.TC x) reft
+  _ -> Calc.RefType x (Calc.TC x []) reft
   where
     x = showName modId n
     reft = transRef modId intCont x ref
@@ -107,22 +98,32 @@ transType modId intCont (RFun f _ arg ret _) =
     argTp' = transType modId intCont arg
     retTp' = transType modId intCont ret
 -- \| Forall?
-transType modId intCont (RAllT (RTVar (RTV n) _) typ ref) =
+{- transType modId intCont (RAllT (RTVar (RTV n) _) typ ref) =
   wrapWith x r (transType modId intCont typ)
   where
     x = showName modId n
-    r = transRef modId intCont x ref
+    r = transRef modId intCont x ref -}
+transType modId intCont (RAllT (RTVar (RTV n) _) typ _) =
+  Calc.FAType (showName modId n) (transType modId intCont typ)
 -- \| Abstract refinements
 transType modId intCont (RAllP (PV n _ _) typ) =
   wrapWith x Calc.ttTm (transType modId intCont typ)
   where
     x = showName modId n
 -- \| Application of type constructor/builtin to types
-transType modId intCont (RApp f _ _ reft) = Calc.RefType x transT r
+transType modId intCont (RApp f args _ reft) = Calc.RefType x (transCon f) r
   where
-    transT = transCon modId f
     x = refVar modId intCont reft
     r = transRef modId intCont x reft
+    -- Translation of an RTyCon as a builtin or as a type constructor
+    -- TODO: translation of builtin list
+    transCon :: RTyCon -> Calc.BaseType
+    transCon (RTyCon tc [] _) = M.findWithDefault (Calc.TC name argsT) name builtinTCs
+      where
+        name = showppStripped modId tc
+        argsT = map (transType modId intCont) args
+    transCon c =
+      unsupported $ "Type constructor applied to predicate variables: abstract refinements are not supported: " ++ show c
 transType _ _ (REx {}) = unsupported "transType: unsupported REx"
 transType _ _ (RExprArg {}) = unsupported "transType: unsupported RExprArg"
 transType _ _ (RAppTy {}) = unsupported "transType: unsupported RAppTy"
@@ -135,6 +136,8 @@ transType _ _ (RHole {}) = unsupported "transType: unsupported RHole"
 wrapWith :: Id -> Calc.Reft -> Calc.RefType -> Calc.RefType
 wrapWith x reft (Calc.RefType _ tp _) = Calc.RefType x tp reft
 wrapWith x reft arr@Calc.ArrType {} = Calc.ArrType x arr (Calc.RefType "_" Calc.unitTp reft)
+-- TODO: this case
+wrapWith _ _ (Calc.FAType {}) = unsupported "wrapWith: unsupported FAType"
 
 showName :: (Show a) => Id -> a -> String
 showName modId = transVarName modId . show
@@ -292,8 +295,6 @@ builtinDCs =
       ("trivial", Calc.unitTm),
       (ttTmName, Calc.ttTm),
       (ffTmName, Calc.ffTm)
-      (consTmName, Calc.consTm),
-      (nilTmName, Calc.nilTm)
     ]
 
 -- | LH builtin types: the base types and the unit type constructor
@@ -303,6 +304,5 @@ builtinTCs =
     [ ("Integer", Calc.Builtin Calc.Integer),
       ("Int", Calc.Builtin Calc.Integer),
       ("Float", Calc.Builtin Calc.Double),
-      ("()", Calc.unitTp),
-      ("list", Calc.listTp)
+      ("()", Calc.unitTp)
     ]
