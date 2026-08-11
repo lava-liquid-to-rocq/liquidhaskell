@@ -1,4 +1,5 @@
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE OrPatterns #-}
 {-# OPTIONS_GHC -Wall #-}
 
 -- |
@@ -30,7 +31,7 @@ import qualified Language.Haskell.Liquid.Types.Types ()
 
 import qualified Language.Haskell.Liquid.RefCore.SpecToLH as SLH
 import           Language.Haskell.Liquid.RefCore.Misc
-import           Language.Haskell.Liquid.RefCore.Names (Id, hashName)
+import           Language.Haskell.Liquid.RefCore.Names (Id, hashName, vvName)
 import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
 
 -- | Constraint synonym for GHC Core binder variables
@@ -51,6 +52,9 @@ data Def = Def
 
 -- | A case branch in Calculus format
 type Branch = ((Id, [(Id, Bool)]), Maybe Calc.Expr)
+
+-- | An argument in Calculus, either a type or an expression
+data CalcArg = TypeArg Calc.RefType | ExprArg Calc.Expr
 
 brCon :: Branch -> Id
 brCon = fst . fst
@@ -136,11 +140,11 @@ instance Pretty AppHead where
 
 -- | Flatten and translate an application, returning a structured head and
 -- surrounding let-bindings used to extract expressions from refinements
-flattenCoreApp :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> (Calc.Expr -> Calc.Expr, (AppHead, [Calc.Reft]))
+flattenCoreApp :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> (Calc.Expr -> Calc.Expr, (AppHead, [CalcArg]))
 flattenCoreApp modId infTypes f e =
   let (hd, args) = apps e
-      argsT = map (trans modId infTypes f) args
-      (letBindersArgs, sArgs) = first (foldr (.) id) . unzip $ map toReft argsT
+      argsT = map (transArg modId infTypes f) args
+      (letBindersArgs, sArgs) = first (foldr (.) id) . unzip $ map extractLets argsT
       (letBinderHd, appHd) =
         case hd of
           Var name -> (id, VarHead headSym)
@@ -148,15 +152,15 @@ flattenCoreApp modId infTypes f e =
               headSym = case classifyHead . stripLegalName modId $ show name of
                 HGeneric n | isDataConId name -> HDC n
                 h -> h
-          _ -> second ReftHead . toReft $ trans modId infTypes f hd
+          _ -> second ReftHead . extractLets . ExprArg $ trans modId infTypes f hd
    in (letBinderHd . letBindersArgs, (appHd, sArgs))
   where
     apps :: Expr b -> (Expr b, [Expr b])
     apps (App tm1 tm2) = second (++ [tm2]) $ apps tm1
     apps tm = (tm, [])
-    toReft :: Calc.Expr -> (Calc.Expr -> Calc.Expr, Calc.Reft)
-    toReft (Calc.Reft t) = (id, t)
-    toReft tm = (Calc.Let x Nothing tm, Calc.mkVar x)
+    extractLets :: CalcArg -> (Calc.Expr -> Calc.Expr, CalcArg)
+    extractLets tm@(ExprArg (Calc.Reft _); TypeArg _) = (id, tm)
+    extractLets (ExprArg tm) = (Calc.Let x Nothing tm, ExprArg . Calc.Reft $ Calc.mkVar x)
       where
         x = "x_" ++ hashName tm
 
@@ -210,24 +214,31 @@ trans modId infTypes f app@App {} = transApp modId infTypes f app
 trans modId infTypes f (Case e _ _ alts) = transCase modId infTypes f e alts
 trans modId infTypes f (Let bind e) = transLet modId infTypes f bind e
 trans modId infTypes f (Tick _ e) = trans modId infTypes f e
-trans _ _ _ (Type t) = transGHCType t
 trans _ _ _ (Lit lit) = Calc.Reft $ transLit lit
+trans _ _ _ t@Type {} = error $ "found type Core expression that is not an argument: " ++ toStr t
 trans _ _ _ c@Coercion {} = error $ "coercion expression not supported: " ++ toStr c
 trans _ _ _ c@Cast {} = error $ "cast expression not supported: " ++ toStr c
 trans _ _ _ l@(Lam {}) = error $ "lambda-abstraction outside of let-binding not supported: " ++ toStr l
 
--- | Translate type arguments.
-transGHCType :: Type -> Calc.Expr
-transGHCType (GHC.Core.TyCo.Rep.TyConApp tyCon []) = Calc.Reft (Calc.mkVar $ show tyCon)
-transGHCType t = error $ "Polymorphism not supported: " ++ toStr t
+transArg :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> CalcArg
+transArg modId _ _ (Type t) = transGHCType modId t
+transArg modId infTypes f e = ExprArg $ trans modId infTypes f e
 
--- | Translate applications by flattening them and translating the parsed application.
+-- | Translate type arguments
+transGHCType :: Id -> Type -> CalcArg
+transGHCType _ (GHC.Core.TyCo.Rep.TyConApp tyCon []) = ExprArg . Calc.Reft . Calc.mkVar $ show tyCon
+transGHCType modId (GHC.Core.TyCo.Rep.TyVarTy α) =
+  TypeArg $ Calc.RefType vvName (Calc.TyVar $ strippedName) Calc.ttTm
+  where strippedName = stripLegalName modId $ show α
+transGHCType _ t = error $ "GHC Core term not supported in CoreToLH.transGHCtype: " ++ toStr t
+
+-- | Translate applications by flattening them and translating the parsed application
 transApp :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> Calc.Expr
 transApp modId infTypes f app = letBinders $ transFlattenedApp appHead sArgs
   where
     (letBinders, (appHead, sArgs)) = flattenCoreApp modId infTypes f app
 
--- | Translate case expressions.
+-- | Translate case expressions
 transCase :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> [Alt b] -> Calc.Expr
 transCase modId infTypes f e [] = trans modId infTypes f e
 -- TODO: we now support match on simple terms, so change mkCase to support it
@@ -240,7 +251,7 @@ transCase modId infTypes f e alts = mkCaseExpr eT
     y = "x_" ++ hashName eT
     branches = map (altToClause modId infTypes f) alts
 
--- | Translate let bindings.
+-- | Translate let bindings
 transLet :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Bind b -> Expr b -> Calc.Expr
 transLet modId infTypes f bind body =
   let (x, ex) = deconstructBind bind
@@ -269,7 +280,7 @@ transLit (LitFloat x) = Calc.FloatLit $ fromRational x
 transLit (LitDouble x) = Calc.FloatLit $ fromRational x
 transLit other = error $ "Unsupported literal " ++ toStr other
 
--- | Fall back to non-mutually recursive binds.
+-- | Fall back to non-mutually recursive binds
 deconstructBind :: (NamedThing b) => Bind b -> (b, Expr b)
 deconstructBind (NonRec b e) = (b, e)
 deconstructBind (Rec [(b, e)]) = (b, e)
