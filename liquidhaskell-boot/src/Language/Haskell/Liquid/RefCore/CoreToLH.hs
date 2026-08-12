@@ -1,5 +1,6 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE OrPatterns #-}
+{-# LANGUAGE LambdaCase #-}
 {-# OPTIONS_GHC -Wall #-}
 
 -- |
@@ -53,8 +54,12 @@ data Def = Def
 -- | A case branch in Calculus format
 type Branch = ((Id, [(Id, Bool)]), Maybe Calc.Expr)
 
--- | An argument in Calculus, either a type or an expression
-data CalcArg = TypeArg Calc.RefType | ExprArg Calc.Expr
+-- | An argument in Calculus, either a type or a refinement
+data CalcArg = TypeArg Calc.RefType | ReftArg Calc.Reft
+
+instance Pretty CalcArg where
+  pPrint (TypeArg tp) = pPrint tp
+  pPrint (ReftArg r) = pPrint r
 
 brCon :: Branch -> Id
 brCon = fst . fst
@@ -143,8 +148,7 @@ instance Pretty AppHead where
 flattenCoreApp :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> (Calc.Expr -> Calc.Expr, (AppHead, [CalcArg]))
 flattenCoreApp modId infTypes f e =
   let (hd, args) = apps e
-      argsT = map (transArg modId infTypes f) args
-      (letBindersArgs, sArgs) = first (foldr (.) id) . unzip $ map extractLets argsT
+      (letBindersArgs, sArgs) = first (foldr (.) id) . unzip $ map transArg args
       (letBinderHd, appHd) =
         case hd of
           Var name -> (id, VarHead headSym)
@@ -152,32 +156,38 @@ flattenCoreApp modId infTypes f e =
               headSym = case classifyHead . stripLegalName modId $ show name of
                 HGeneric n | isDataConId name -> HDC n
                 h -> h
-          _ -> second ReftHead . extractLets . ExprArg $ trans modId infTypes f hd
+          _ -> second ReftHead . extractLets $ trans modId infTypes f hd
    in (letBinderHd . letBindersArgs, (appHd, sArgs))
   where
+    -- Flattens an application
     apps :: Expr b -> (Expr b, [Expr b])
     apps (App tm1 tm2) = second (++ [tm2]) $ apps tm1
     apps tm = (tm, [])
-    extractLets :: CalcArg -> (Calc.Expr -> Calc.Expr, CalcArg)
-    extractLets tm@(ExprArg (Calc.Reft _); TypeArg _) = (id, tm)
-    extractLets (ExprArg tm) = (Calc.Let x Nothing tm, ExprArg . Calc.Reft $ Calc.mkVar x)
+    -- Translates an argument as a let-binding context and a CalcArg
+    transArg :: (CoreBinder b) => Expr b -> (Calc.Expr -> Calc.Expr, CalcArg)
+    transArg (Type t) = (id, transGHCType modId t)
+    transArg tm = second ReftArg . extractLets $ trans modId infTypes f tm
+    -- Extracts structural expressions into let-bindings
+    extractLets :: Calc.Expr -> (Calc.Expr -> Calc.Expr, Calc.Reft)
+    extractLets (Calc.Reft tm) = (id, tm)
+    extractLets tm = (Calc.Let x Nothing tm, Calc.mkVar x)
       where
         x = "x_" ++ hashName tm
 
 -- | Translate a flattened application to Calculus.
-transFlattenedApp :: AppHead -> [Calc.Reft] -> Calc.Expr
-transFlattenedApp (ReftHead h) args = Calc.Reft $ foldl Calc.App h args
-transFlattenedApp (VarHead (HDC n)) args = Calc.Reft $ foldl Calc.App (Calc.DC n) args
-transFlattenedApp (VarHead (HGeneric n)) args = Calc.Reft $ foldl Calc.App (Calc.mkVar n) args
-transFlattenedApp (VarHead HNot) [tm] = Calc.Reft $ Calc.Neg tm
-transFlattenedApp (VarHead (HBinOp op)) (_ : _ : a : b : _) = Calc.Reft $ Calc.Bop op a b
+transFlattenedApp :: AppHead -> [CalcArg] -> Calc.Expr
+transFlattenedApp (ReftHead h) args = Calc.Reft $ mkApp h args
+transFlattenedApp (VarHead (HDC n)) args = Calc.Reft $ mkApp (Calc.DC n) args
+transFlattenedApp (VarHead (HGeneric n)) args = Calc.Reft $ mkApp (Calc.mkVar n) args
+transFlattenedApp (VarHead HNot) [ReftArg tm] = Calc.Reft $ Calc.Neg tm
+transFlattenedApp (VarHead (HBinOp op)) (_ : _ : ReftArg a : ReftArg b : _) = Calc.Reft $ Calc.Bop op a b
 transFlattenedApp (VarHead (HConst tm)) _ = Calc.Reft tm
-transFlattenedApp (VarHead HUnbox) [singleArg] = Calc.Reft singleArg
+transFlattenedApp (VarHead HUnbox) [ReftArg singleArg] = Calc.Reft singleArg
 transFlattenedApp (VarHead HPatError) _ = Calc.Reft undefinedReft
-transFlattenedApp (VarHead (HEqChain pop)) [_, fstTerm, lstTerm] = Calc.Reft $ Calc.Pop pop fstTerm lstTerm
-transFlattenedApp (VarHead HCast) [tm0, tm, Calc.DC "QED"] =
+transFlattenedApp (VarHead (HEqChain pop)) [_, ReftArg fstTerm, ReftArg lstTerm] = Calc.Reft $ Calc.Pop pop fstTerm lstTerm
+transFlattenedApp (VarHead HCast) [ReftArg tm0, ReftArg tm, ReftArg (Calc.DC "QED")] =
   Calc.QMark (Calc.Reft Calc.unitTm) (Calc.Reft tm) tm0
-transFlattenedApp (VarHead HQmark) (_ : _ : firstArg : secondArg : _) =
+transFlattenedApp (VarHead HQmark) (_ : _ : ReftArg firstArg : ReftArg secondArg : _) =
   Calc.QMark (Calc.Reft firstArg) (Calc.Reft secondArg) Calc.ttTm
 transFlattenedApp (VarHead HNot) args = Calc.Reft $ unexpected "not" args
 transFlattenedApp (VarHead HLambda) args = Calc.Reft $ unexpected "lambda" args
@@ -187,8 +197,12 @@ transFlattenedApp (VarHead HQmark) args = Calc.Reft $ unexpected "?" args
 transFlattenedApp (VarHead HUnbox) args = Calc.Reft $ unexpected "unbox" args
 transFlattenedApp (VarHead (HBinOp _)) args = Calc.Reft $ unexpected "binop" args
 
-unexpected :: Id -> [Calc.Reft] -> a
+unexpected :: Id -> [CalcArg] -> a
 unexpected n as = error $ "transFlattenedApp: unexpected args for " ++ n ++ ": " ++ prettyShow as
+
+-- | Creates an application containing potential term and type arguments
+mkApp :: Calc.Reft -> [CalcArg] -> Calc.Reft
+mkApp hd args = foldl (\acc arg -> case arg of ReftArg r -> Calc.App acc r; TypeArg tp -> Calc.TyApp acc tp) hd args
 
 transName :: Id -> Calc.Reft
 transName "?" = error "Impossible: '?'"
@@ -220,13 +234,9 @@ trans _ _ _ c@Coercion {} = error $ "coercion expression not supported: " ++ toS
 trans _ _ _ c@Cast {} = error $ "cast expression not supported: " ++ toStr c
 trans _ _ _ l@(Lam {}) = error $ "lambda-abstraction outside of let-binding not supported: " ++ toStr l
 
-transArg :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> CalcArg
-transArg modId _ _ (Type t) = transGHCType modId t
-transArg modId infTypes f e = ExprArg $ trans modId infTypes f e
-
 -- | Translate type arguments
 transGHCType :: Id -> Type -> CalcArg
-transGHCType _ (GHC.Core.TyCo.Rep.TyConApp tyCon []) = ExprArg . Calc.Reft . Calc.mkVar $ show tyCon
+transGHCType _ (GHC.Core.TyCo.Rep.TyConApp tyCon []) = ReftArg . Calc.mkVar $ show tyCon
 transGHCType modId (GHC.Core.TyCo.Rep.TyVarTy α) =
   TypeArg $ Calc.RefType vvName (Calc.TyVar $ strippedName) Calc.ttTm
   where strippedName = stripLegalName modId $ show α
