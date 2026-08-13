@@ -6,7 +6,7 @@ import Control.Monad (filterM)
 import Control.Monad.Extra (allM, ifM)
 import Control.Monad.Reader (Reader, asks, runReader)
 import Data.Char (isUpper)
-import Data.List (isInfixOf, stripPrefix)
+import Data.List (isInfixOf)
 import qualified Data.Map.Strict as M
 import Data.Maybe (fromMaybe)
 import Language.Fixpoint.Types (PPrint)
@@ -15,6 +15,8 @@ import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
 import Language.Haskell.Liquid.RefCore.Misc
 import Language.Haskell.Liquid.RefCore.Names (Id, ffTmName, ttTmName, vvName)
 import Language.Haskell.Liquid.Types.RType (PVarBV (PV), RTVar (RTVar), RTyCon (RTyCon), RTyVar (RTV), RTypeBV (..), SpecType, UReft, UReftBV (MkUReft))
+import GHC.Types.Var (isTyVar)
+import GHC.Types.Name (getOccString)
 
 -- | Helper for unsupported constructs
 unsupported :: String -> a
@@ -84,13 +86,19 @@ parseConstrPred modId symb = case split '$' $ F.showpp symb of
 transType :: Id -> InternalCont -> SpecType -> Calc.RefType
 -- Type variables and type constructors
 transType modId intCont (RVar (RTV n) ref) =
-  case stripPrefix "RTV " x of
+  if isTyVar n
+    then Calc.RefType vvName (Calc.TyVar x) reft
+    else case x of
+      "()" -> Calc.RefType x Calc.unitTp reft
+      _ -> Calc.RefType x (Calc.TC x []) reft
+  {- case stripPrefix "RTV " x of
     Just α -> Calc.RefType vvName (Calc.TyVar α) reft
     Nothing -> case x of
       "()" -> Calc.RefType x Calc.unitTp reft
-      _ -> Calc.RefType x (Calc.TC x []) reft
+      _ -> Calc.RefType x (Calc.TC x []) reft -}
   where
-    x = showName modId n
+    -- x = showName modId n
+    x = getOccString n
     reft = transRef modId intCont vvName ref
 -- Functions
 transType modId intCont (RFun f _ arg ret _) =
@@ -100,17 +108,9 @@ transType modId intCont (RFun f _ arg ret _) =
     x = transVarName modId f
     argTp' = transType modId intCont arg
     retTp' = transType modId intCont ret
--- Forall?
-{- transType modId intCont (RAllT (RTVar (RTV n) _) typ ref) =
-  wrapWith x r (transType modId intCont typ)
-  where
-    x = showName modId n
-    r = transRef modId intCont x ref -}
+-- Forall
 transType modId intCont (RAllT (RTVar (RTV n) _) typ _) =
-  Calc.FAType α (transType modId intCont typ)
-  where
-    n' = showName modId n
-    α = fromMaybe n' (stripPrefix "RTV " n')
+  Calc.FAType (getOccString n) (transType modId intCont typ)
 -- Abstract refinements
 transType modId intCont (RAllP (PV n _ _) typ) =
   wrapWith x Calc.ttTm (transType modId intCont typ)

@@ -100,6 +100,8 @@ data Decl
     Import Id [Decl]
   deriving (Data, Eq, Show, Generic, Binary)
 
+-- TODO: make QMark, equality (and others?) actually polymorphic
+
 -- | Structural expressions
 --
 -- > e ::= r

@@ -25,6 +25,7 @@ import Data.List (sortOn)
 import Data.Set (fromList)
 import Data.Tuple.Extra (snd3, thd3)
 import GHC.Types.Var (Var, varName)
+import GHC.Types.Name (getOccString)
 import qualified Language.Fixpoint.Types as F (Located (..))
 import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
 import Language.Haskell.Liquid.RefCore.CoreToLH (Def (..))
@@ -71,7 +72,7 @@ parsePData modId (PData cs typConstrs) =
     -- we translate every type constructor that is not already built-in
     typeNames =
       map
-        (\(LhLib.TyConP _ con αs _ _ _ _) -> (SLH.showppStripped modId con, map (SLH.transVarName modId . show) αs))
+         (\(LhLib.TyConP _ con αs _ _ _ _) -> (SLH.showppStripped modId con, map (\(LhLib.RTV α) -> getOccString α) αs))
         typConstrs
     -- find the translated branches corresponding to typeName
     getConstrs :: Id -> [(Id, Calc.RefType)]

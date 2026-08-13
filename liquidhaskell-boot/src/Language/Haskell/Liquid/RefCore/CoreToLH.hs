@@ -23,7 +23,7 @@ import Debug.Trace (trace)
 import GHC.Core
 import GHC.Core.TyCo.Rep
 import GHC.Types.Literal
-import GHC.Types.Name (NamedThing, getSrcSpan)
+import GHC.Types.Name (NamedThing, getSrcSpan, getOccString)
 import GHC.Utils.Outputable (ppr, showSDocUnsafe)
 import           Language.Haskell.Liquid.GHC.Misc (isDataConId)
 import           Language.Haskell.Liquid.Types.RType (SpecType)
@@ -185,6 +185,7 @@ transFlattenedApp (VarHead (HConst tm)) _ = Calc.Reft tm
 transFlattenedApp (VarHead HUnbox) [ReftArg singleArg] = Calc.Reft singleArg
 transFlattenedApp (VarHead HPatError) _ = Calc.Reft undefinedReft
 transFlattenedApp (VarHead (HEqChain pop)) [_, ReftArg fstTerm, ReftArg lstTerm] = Calc.Reft $ Calc.Pop pop fstTerm lstTerm
+-- TODO: change this: the first argument to *** is the type argument
 transFlattenedApp (VarHead HCast) [ReftArg tm0, ReftArg tm, ReftArg (Calc.DC "QED")] =
   Calc.QMark (Calc.Reft Calc.unitTm) (Calc.Reft tm) tm0
 transFlattenedApp (VarHead HQmark) (_ : _ : ReftArg firstArg : ReftArg secondArg : _) =
@@ -236,10 +237,13 @@ trans _ _ _ l@(Lam {}) = error $ "lambda-abstraction outside of let-binding not 
 
 -- | Translate type arguments
 transGHCType :: Id -> Type -> CalcArg
-transGHCType _ (GHC.Core.TyCo.Rep.TyConApp tyCon []) = ReftArg . Calc.mkVar $ show tyCon
-transGHCType modId (GHC.Core.TyCo.Rep.TyVarTy α) =
-  TypeArg $ Calc.RefType vvName (Calc.TyVar $ strippedName) Calc.ttTm
-  where strippedName = stripLegalName modId $ show α
+transGHCType _ (GHC.Core.TyCo.Rep.TyConApp tyCon []) =
+  TypeArg $ Calc.RefType vvName (M.findWithDefault (Calc.TC tc []) tc SLH.builtinTCs) Calc.ttTm
+  where tc = getOccString tyCon
+transGHCType _ (GHC.Core.TyCo.Rep.TyVarTy α) =
+  TypeArg $ Calc.RefType vvName (Calc.TyVar $ getOccString α) Calc.ttTm
+  {- TypeArg $ Calc.RefType vvName (Calc.TyVar $ strippedName) Calc.ttTm
+  where strippedName = stripLegalName modId $ show α -}
 transGHCType _ t = error $ "GHC Core term not supported in CoreToLH.transGHCtype: " ++ toStr t
 
 -- | Translate applications by flattening them and translating the parsed application
