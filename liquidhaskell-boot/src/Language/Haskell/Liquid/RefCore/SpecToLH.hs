@@ -17,6 +17,7 @@ import Language.Haskell.Liquid.RefCore.Names (Id, ffTmName, ttTmName, vvName)
 import Language.Haskell.Liquid.Types.RType (PVarBV (PV), RTVar (RTVar), RTyCon (RTyCon), RTyVar (RTV), RTypeBV (..), SpecType, UReft, UReftBV (MkUReft))
 import GHC.Types.Var (isTyVar)
 import GHC.Types.Name (getOccString)
+-- import Debug.Trace (trace)
 
 -- | Helper for unsupported constructs
 unsupported :: String -> a
@@ -88,9 +89,7 @@ transType :: Id -> InternalCont -> SpecType -> Calc.RefType
 transType modId intCont (RVar (RTV n) ref) =
   if isTyVar n
     then Calc.RefType vvName (Calc.TyVar x) reft
-    else case x of
-      "()" -> Calc.RefType x Calc.unitTp reft
-      _ -> Calc.RefType x (Calc.TC x []) reft
+    else Calc.RefType x (M.findWithDefault (Calc.TC x []) x builtinTCs) reft
   {- case stripPrefix "RTV " x of
     Just α -> Calc.RefType vvName (Calc.TyVar α) reft
     Nothing -> case x of
@@ -102,7 +101,7 @@ transType modId intCont (RVar (RTV n) ref) =
     reft = transRef modId intCont vvName ref
 -- Functions
 transType modId intCont (RFun f _ arg ret _) =
-  --  trace ("transType RFun" ++ show (ur_reft ref)) $
+  -- trace ("transType RFun" ++ show func) $
   Calc.ArrType x argTp' retTp'
   where
     x = transVarName modId f
@@ -117,6 +116,7 @@ transType modId intCont (RAllP (PV n _ _) typ) =
   where
     x = showName modId n
 -- Application of type constructor/builtin to types
+-- transType _ _ rapp@(RApp {}) | trace ("transType " ++ show rapp) False = undefined
 transType modId intCont (RApp f args _ reft) = Calc.RefType x (transCon f) r
   where
     x = refVar modId intCont reft

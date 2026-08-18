@@ -24,8 +24,9 @@ import Data.Bifunctor (first)
 import Data.List (sortOn)
 import Data.Set (fromList)
 import Data.Tuple.Extra (snd3, thd3)
-import GHC.Types.Var (Var, varName)
+-- import Debug.Trace (trace)
 import GHC.Types.Name (getOccString)
+import GHC.Types.Var (Var, varName)
 import qualified Language.Fixpoint.Types as F (Located (..))
 import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
 import Language.Haskell.Liquid.RefCore.CoreToLH (Def (..))
@@ -35,6 +36,7 @@ import qualified Language.Haskell.Liquid.RefCore.SpecToLH as SLH
 import qualified Language.Haskell.Liquid.Types.RType as LhLib
 import System.Directory (doesFileExist)
 import System.FilePath (joinPath, (<.>), (</>))
+-- import Text.PrettyPrint.Annotated.HughesPJClass hiding (first)
 
 -- ** LH -> Calculus parsing
 
@@ -72,7 +74,7 @@ parsePData modId (PData cs typConstrs) =
     -- we translate every type constructor that is not already built-in
     typeNames =
       map
-         (\(LhLib.TyConP _ con αs _ _ _ _) -> (SLH.showppStripped modId con, map (\(LhLib.RTV α) -> getOccString α) αs))
+        (\(LhLib.TyConP _ con αs _ _ _ _) -> (SLH.showppStripped modId con, map (\(LhLib.RTV α) -> getOccString α) αs))
         typConstrs
     -- find the translated branches corresponding to typeName
     getConstrs :: Id -> [(Id, Calc.RefType)]
@@ -110,22 +112,34 @@ isLemma = (== "()") . typeName . snd3 . thd3 . Calc.arrs
     typeName (Calc.TC n _) = n
     typeName (Calc.TyVar α) = α
 
+-- TODO: also rename type variables
 parseDef :: (Def, Maybe Calc.RefType, Bool) -> Calc.Decl
 parseDef (Def dname args body _, Just sig, b) =
   Calc.Definition dname fullTp body b
   where
-    sig' = Calc.renameParams args sig
-    (αs, sigArgs, sRes) = signatureToArgsRet sig'
+    -- In the representation of Def, we don't have type and term arguments
+    -- separated, so we do it here
+    (sigTyArgs, sig') = extractTypeArgs sig
+      where
+        extractTypeArgs (Calc.FAType α tp) = first (α :) (extractTypeArgs tp)
+        extractTypeArgs tp = ([], tp)
+    (tyArgs, args') = splitAt (length sigTyArgs) args
+    -- TODO: also rename type arguments (sigTyArgs and tyArgs)
+    sigRenamed = Calc.renameParams args' sig'
+    -- As long as we don't include type variables in the renaming, the first
+    -- element of the triple will be empty
+    (_, sigArgs, sRes) = signatureToArgsRet sigRenamed
     retTp =
-      if isLemma sig'
+      if isLemma sigRenamed
         then case sRes of
           Calc.RefType _ _ reft -> Calc.RefType (dname ++ "_claim") Calc.unitTp reft
           _ -> error $ "Lemma " ++ dname ++ " has unexpected arrow return type"
         else sRes
-    fullTp = Calc.mkArrows (αs, zip args sigArgs, retTp)
+    fullTp = Calc.mkArrows (sigTyArgs, zip args' sigArgs, retTp)
 parseDef (Def dname _ _ _, Nothing, _) = error $ "Top-level definition or lemma " ++ dname ++ " without signature is forbidden."
 
 -- | replace the names of variables v in refinement types {v:A|p} of arguments x by x
+-- TODO: extend with type variables
 signatureToArgsRet :: Calc.RefType -> ([Id], [Calc.RefType], Calc.RefType)
 signatureToArgsRet sig = (αs, args, ret)
   where
@@ -146,4 +160,4 @@ signatureToArgsRet sig = (αs, args, ret)
 defaultBind :: Calc.RefType -> (Id, Calc.RefType)
 defaultBind r@(Calc.RefType nm _ _) = (nm, r)
 defaultBind a@(Calc.ArrType nm _ _) = (nm, a)
-defaultBind fa@(Calc.FAType nm _) = (nm, fa)
+defaultBind fa@(Calc.FAType nm _) = {- trace ("defaultBind" ++ show fa) -} (nm, fa)

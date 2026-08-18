@@ -52,12 +52,13 @@ import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Data.Tuple.Extra (first3, second3)
+-- import Debug.Trace (trace)
 import GHC.Generics (Generic)
-import Language.Haskell.Liquid.RefCore.Names (Id, boolTpName, ffTmName, listTpName, freshVar, ttTmName, unitTmName, unitTpName, consTmName, nilTmName)
+import Language.Haskell.Liquid.RefCore.Names (Id, boolTpName, consTmName, ffTmName, freshVar, listTpName, nilTmName, ttTmName, unitTmName, unitTpName)
 import Text.PrettyPrint
 import Text.PrettyPrint.HughesPJClass hiding (first)
 import Prelude hiding (lookup, (<>))
-import Data.Tuple.Extra (first3, second3)
 
 -- * The grammar
 
@@ -242,11 +243,16 @@ apps tm = (tm, [])
 -- > renameParams([y1,y2], x1:{x1:B | True} -> x2:{x2:B | x1 == x2} -> {v:B | v = x1 + x2})
 -- >   = y1:{x1:B | True} -> y2:{x2:B | y1 == x2} -> {v:B | v = y1 + y2}
 renameParams :: [Id] -> RefType -> RefType
+-- renameParams ys tp | trace (render $ "renameParams (" <> pPrint ys <> comma <+> pPrint tp <> ")") False = undefined
 renameParams = aux []
   where
     aux :: [(Id, Id)] -> [Id] -> RefType -> RefType
-    aux σ _ tp@(RefType {}) = renames σ tp
+    -- aux σ ys tp | trace (render $ "renameParams.aux (" <+> pPrint σ <> comma <+> pPrint ys <> comma <+> pPrint tp <> ")") False = undefined
     aux σ [] tp = renames σ tp
+    aux σ _ tp@(RefType {}) = renames σ tp
+  -- TODO: rename type variables too, this is just a temporary fix
+    -- aux σ (_ : ys) (FAType α tp) = FAType α (aux σ ys tp)
+    aux _ _ (FAType {}) = error "TODO: renameParams for forall"
     aux σ (y : ys) (ArrType x tpx tp)
       | x `notElem` freeVars tp || x == y =
           ArrType y (renames σ tpx) (aux σ ys tp)
@@ -258,9 +264,10 @@ renameParams = aux []
           error . render $ "Name clash while renaming variable" <+> text x <+> "to" <+> text y <+> "in" <+> pPrint tp0
     aux σ (y : ys) (ArrType x tpx tp) =
       ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
-    aux σ ys (FAType α tp) = FAType α (aux σ ys tp)
 
 -- * Typeclass related to free variables
+
+data Subable = TypeSub RefType | TermSub Reft
 
 class HasVars a where
   -- | Return the free variables with their return type and localization
@@ -270,7 +277,7 @@ class HasVars a where
   boundVars :: a -> Set Id
 
   -- | subst r x tm is {r/x}tm
-  subst :: Reft -> Id -> a -> a
+  subst :: Subable -> Id -> a -> a
 
 freeVars :: (HasVars a) => a -> Set Id
 freeVars tm = Map.keysSet $ freeVarsAnnot tm
@@ -310,7 +317,7 @@ instance HasVars Reft where
   freeVarsAnnot (Proj _ r) = freeVarsAnnot r
 
   -- Empty on unelaborated refinements, but has the bound variables of the types in casts
-  boundVars (Var {};  StringLit _; IntLit _; FloatLit _; DC _) = Set.empty
+  boundVars (Var {}; StringLit _; IntLit _; FloatLit _; DC _) = Set.empty
   boundVars (App hd arg) = boundVars [hd, arg]
   boundVars (TyApp r tp) = boundVars r `Set.union` boundVars tp
   boundVars (Bop _ r1 r2) = boundVars [r1, r2]
@@ -540,7 +547,7 @@ instance Pretty Reft where
   pPrintPrec l p (App r1 r2) =
     maybeParens (p > appPrec) $ pPrintPrec l p r1 <+> pPrintPrec l (appPrec + 1) r2
   pPrintPrec l p (TyApp r tp) =
-    maybeParens (p > appPrec) $ pPrintPrec l p r <+> brackets (pPrint tp)
+    maybeParens (p > appPrec) $ pPrintPrec l p r <+> pPrint tp
   pPrintPrec l p (Neg r) =
     maybeParens (p > appPrec) $ "not" <+> pPrintPrec l (appPrec + 1) r
   pPrintPrec l p (Bop bop r1 r2) =

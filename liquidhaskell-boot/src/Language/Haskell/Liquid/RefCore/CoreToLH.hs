@@ -42,6 +42,8 @@ type CoreBinder b = (Data b, Show b, NamedThing b)
 data Def = Def
   { -- | the name of the definition
     defName :: Id,
+    -- -- | the type variable arguments
+    -- defTyArgs :: [Id],
     -- | the argument names
     defArgs :: [Id],
     -- | the translated body
@@ -185,9 +187,8 @@ transFlattenedApp (VarHead (HConst tm)) _ = Calc.Reft tm
 transFlattenedApp (VarHead HUnbox) [ReftArg singleArg] = Calc.Reft singleArg
 transFlattenedApp (VarHead HPatError) _ = Calc.Reft undefinedReft
 transFlattenedApp (VarHead (HEqChain pop)) [_, ReftArg fstTerm, ReftArg lstTerm] = Calc.Reft $ Calc.Pop pop fstTerm lstTerm
--- TODO: change this: the first argument to *** is the type argument
-transFlattenedApp (VarHead HCast) [ReftArg tm0, ReftArg tm, ReftArg (Calc.DC "QED")] =
-  Calc.QMark (Calc.Reft Calc.unitTm) (Calc.Reft tm) tm0
+transFlattenedApp (VarHead HCast) [TypeArg _, ReftArg tm, ReftArg (Calc.DC "QED")] =
+  Calc.QMark (Calc.Reft Calc.unitTm) (Calc.Reft tm) Calc.unitTm
 transFlattenedApp (VarHead HQmark) (_ : _ : ReftArg firstArg : ReftArg secondArg : _) =
   Calc.QMark (Calc.Reft firstArg) (Calc.Reft secondArg) Calc.ttTm
 transFlattenedApp (VarHead HNot) args = Calc.Reft $ unexpected "not" args
