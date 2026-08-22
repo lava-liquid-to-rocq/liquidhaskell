@@ -38,22 +38,28 @@ module Language.Haskell.Liquid.RefCore.Calculus
     renameParams,
 
     -- * Free variables and substitution
+    Subable (..),
+    subableFreeVars,
     HasVars (..),
+    freeTermVars,
+    freeTypeVars,
     freeVars,
     fresh,
-    rename,
     substs,
   )
 where
 
+import Data.Bifunctor (first)
 import Data.Binary (Binary)
 import Data.Data
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
+-- import Debug.Trace (trace)
+
+import Data.Maybe (isNothing)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Tuple.Extra (first3, second3)
--- import Debug.Trace (trace)
 import GHC.Generics (Generic)
 import Language.Haskell.Liquid.RefCore.Names (Id, boolTpName, consTmName, ffTmName, freshVar, listTpName, nilTmName, ttTmName, unitTmName, unitTpName)
 import Text.PrettyPrint
@@ -250,28 +256,40 @@ renameParams = aux []
     -- aux σ ys tp | trace (render $ "renameParams.aux (" <+> pPrint σ <> comma <+> pPrint ys <> comma <+> pPrint tp <> ")") False = undefined
     aux σ [] tp = renames σ tp
     aux σ _ tp@(RefType {}) = renames σ tp
-  -- TODO: rename type variables too, this is just a temporary fix
+    -- TODO: rename type variables too, this is just a temporary fix
     -- aux σ (_ : ys) (FAType α tp) = FAType α (aux σ ys tp)
     aux _ _ (FAType {}) = error "TODO: renameParams for forall"
     aux σ (y : ys) (ArrType x tpx tp)
-      | x `notElem` freeVars tp || x == y =
+      | x `notElem` freeTermVars tp || x == y =
           ArrType y (renames σ tpx) (aux σ ys tp)
     -- NOTE: we could handle some of the error cases by applying the
     -- substitutions globally for each binder, or by traversing the type in the
     -- opposite direction. But with reasonable namings that should not be necessary
     aux _ (y : _) tp0@(ArrType x _ tp)
-      | y `elem` freeVars tp =
+      | y `elem` freeTermVars tp =
           error . render $ "Name clash while renaming variable" <+> text x <+> "to" <+> text y <+> "in" <+> pPrint tp0
     aux σ (y : ys) (ArrType x tpx tp) =
       ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
+    renames σ = substs (map (first Rename) σ)
+
+-- ** Substitution and free variables
+
+data Subable = TypeSub RefType | TermSub Reft | Rename Id
+
+-- | Free variables of a subable term
+-- Defined separately because we do not know if a Rename variable is a type or
+-- term variable, and thus cannot define freeVarsMap
+subableFreeVars :: Subable -> Set Id
+subableFreeVars (TypeSub tp) = freeVars tp
+subableFreeVars (TermSub r) = freeVars r
+subableFreeVars (Rename x) = Set.singleton x
 
 -- * Typeclass related to free variables
 
-data Subable = TypeSub RefType | TermSub Reft
-
 class HasVars a where
-  -- | Return the free variables with their return type and localization
-  freeVarsAnnot :: a -> Map Id (Maybe BaseType, Localization)
+  -- | Return the free variables
+  -- `Nothing` for type variables and the return type and localization for term variables
+  freeVarsMap :: a -> Map Id (Maybe (Maybe BaseType, Localization))
 
   -- | Return the bound variables with their type (they are all local)
   boundVars :: a -> Set Id
@@ -279,42 +297,41 @@ class HasVars a where
   -- | subst r x tm is {r/x}tm
   subst :: Subable -> Id -> a -> a
 
+-- | Free term variables with return type and localization annotations
+freeTermVarsAnnot :: (HasVars a) => a -> Map Id (Maybe BaseType, Localization)
+freeTermVarsAnnot = Map.mapMaybe id . freeVarsMap
+
+-- | Free term variables
+freeTermVars :: (HasVars a) => a -> Set Id
+freeTermVars = Map.keysSet . freeTermVarsAnnot
+
+-- | Free type variables
+freeTypeVars :: (HasVars a) => a -> Set Id
+freeTypeVars = Map.keysSet . Map.filter isNothing . freeVarsMap
+
+-- | Free term and type variables
 freeVars :: (HasVars a) => a -> Set Id
-freeVars tm = Map.keysSet $ freeVarsAnnot tm
+freeVars = Map.keysSet . freeVarsMap
 
 -- | return a variable fresh wrt to the free and bound variables in the second argument
 fresh :: (HasVars a) => Id -> a -> Id
 fresh x tm = freshVar x (freeVars tm `Set.union` boundVars tm)
 
--- | Rename the second argument to the first in the third
---
--- > rename y x tm = {y/x}tm
-rename :: (HasVars a) => Id -> Id -> a -> a
-rename new old tm =
-  maybe
-    tm
-    (\(tp, loc) -> subst (Var new tp loc) old tm)
-    (Map.lookup old $ freeVarsAnnot tm)
-
--- | Apply a list of renamings, starting from the right
-renames :: (HasVars a) => [(Id, Id)] -> a -> a
-renames = flip (foldr (uncurry rename))
-
 -- | Apply a list of substitutions, starting from the right
-substs :: (HasVars a) => [(Reft, Id)] -> a -> a
+substs :: (HasVars a) => [(Subable, Id)] -> a -> a
 substs = flip (foldr (uncurry subst))
 
 instance HasVars Reft where
-  freeVarsAnnot (Var x tp loc) = Map.singleton x (tp, loc)
-  freeVarsAnnot (App hd arg) = freeVarsAnnot [hd, arg]
-  freeVarsAnnot (TyApp r tp) = freeVarsAnnot r `Map.union` freeVarsAnnot tp
-  freeVarsAnnot (Bop _ r1 r2) = freeVarsAnnot [r1, r2]
-  freeVarsAnnot (Neg r) = freeVarsAnnot r
-  freeVarsAnnot (StringLit _; IntLit _; FloatLit _; DC _) = Map.empty
-  freeVarsAnnot (Pop _ r1 r2) = freeVarsAnnot [r1, r2]
-  freeVarsAnnot (Sub r from to) = freeVarsAnnot r `Map.union` freeVarsAnnot [from, to]
-  freeVarsAnnot (Inj r tp) = freeVarsAnnot r `Map.union` freeVarsAnnot tp
-  freeVarsAnnot (Proj _ r) = freeVarsAnnot r
+  freeVarsMap (Var x tp loc) = Map.singleton x (Just (tp, loc))
+  freeVarsMap (App hd arg) = freeVarsMap [hd, arg]
+  freeVarsMap (TyApp r tp) = freeVarsMap r `Map.union` freeVarsMap tp
+  freeVarsMap (Bop _ r1 r2) = freeVarsMap [r1, r2]
+  freeVarsMap (Neg r) = freeVarsMap r
+  freeVarsMap (StringLit _; IntLit _; FloatLit _; DC _) = Map.empty
+  freeVarsMap (Pop _ r1 r2) = freeVarsMap [r1, r2]
+  freeVarsMap (Sub r from to) = freeVarsMap r `Map.union` freeVarsMap [from, to]
+  freeVarsMap (Inj r tp) = freeVarsMap r `Map.union` freeVarsMap tp
+  freeVarsMap (Proj _ r) = freeVarsMap r
 
   -- Empty on unelaborated refinements, but has the bound variables of the types in casts
   boundVars (Var {}; StringLit _; IntLit _; FloatLit _; DC _) = Set.empty
@@ -327,7 +344,8 @@ instance HasVars Reft where
   boundVars (Inj r tp) = boundVars r `Set.union` boundVars tp
   boundVars (Proj _ r) = boundVars r
 
-  subst r' x (Var y _ _) | y == x = r'
+  subst (TermSub r') x (Var y _ _) | y == x = r'
+  subst (Rename z) x (Var y tp loc) | y == x = Var z tp loc
   subst _ _ r0@(Var {}; StringLit _; IntLit _; FloatLit _; DC _) = r0
   subst r' x (App h arg) = App (subst r' x h) (subst r' x arg)
   subst r' x (TyApp r tp) = TyApp (subst r' x r) (subst r' x tp)
@@ -339,14 +357,14 @@ instance HasVars Reft where
   subst r' x (Proj kind r) = Proj kind (subst r' x r)
 
 instance HasVars Expr where
-  freeVarsAnnot (Reft r) = freeVarsAnnot r
-  freeVarsAnnot (Let x tp ex e) =
-    freeVarsAnnot tp `Map.union` Map.delete x (freeVarsAnnot [ex, e])
-  freeVarsAnnot (Case r branches _) =
-    freeVarsAnnot r `Map.union` Map.unions (map fvBranch branches)
+  freeVarsMap (Reft r) = freeVarsMap r
+  freeVarsMap (Let x tp ex e) =
+    freeVarsMap tp `Map.union` Map.delete x (freeVarsMap [ex, e])
+  freeVarsMap (Case r branches _) =
+    freeVarsMap r `Map.union` Map.unions (map fvBranch branches)
     where
-      fvBranch ((_, ys), ebr) = freeVarsAnnot ebr `Map.withoutKeys` Set.fromList (map fst ys)
-  freeVarsAnnot (QMark r rh rp) = freeVarsAnnot [r, rh, Reft rp]
+      fvBranch ((_, ys), ebr) = freeVarsMap ebr `Map.withoutKeys` Set.fromList (map fst ys)
+  freeVarsMap (QMark r rh rp) = freeVarsMap [r, rh, Reft rp]
 
   boundVars (Reft r) = boundVars r
   boundVars (Let x tp ex e) =
@@ -360,92 +378,129 @@ instance HasVars Expr where
   subst r x (Reft re) = Reft $ subst r x re
   subst r x (Let y tp ey e')
     | y == x = Let y (subst r x tp) (subst r x ey) e'
-    | y `Set.member` freeVars r && x `Set.member` freeVars e' =
-        Let z (subst r x tp) (subst r x ey) (subst r x $ rename z y e')
+    | y `Set.member` subableFreeVars r && x `Set.member` freeVars e' =
+        Let z (subst r x tp) (subst r x ey) (substs [(r, x), (Rename z, y)] e')
     | otherwise = Let y (subst r x tp) (subst r x ey) (subst r x e')
     where
-      z = freshVar y (freeVars r `Set.union` freeVars (Let y tp ey e'))
+      z = freshVar y (subableFreeVars r `Set.union` freeVars (Let y tp ey e'))
   subst r x (Case r' branches genVars) =
     Case (subst r x r') (map substBranch branches) genVars
     where
       substBranch br@((_, ys), ebr)
         | x `elem` map fst ys || maybe True (notElem x . freeVars) ebr = br
-      substBranch ((c, ys), ebr) = ((c, ys'), subst r x $ renames α ebr)
+      substBranch ((c, ys), ebr) = ((c, ys'), subst r x $ substs α ebr)
         where
           freshYs = foldr freshVars [] ys
-          α = filter (uncurry (/=)) $ zipWith (\(y, _) z -> (z, y)) ys freshYs
+          α = map (first Rename) . filter (uncurry (/=)) $ zipWith (\(y, _) z -> (z, y)) ys freshYs
           ys' = zipWith (\(_, b) z -> (z, b)) ys freshYs
           freshVars (y, _) vars =
-            if y `elem` freeVars r
+            if y `elem` subableFreeVars r
               then freshVar y (fvre `Set.union` Set.fromList vars) : vars
               else y : vars
-          fvre = freeVars r `Set.union` freeVars (Case r' branches genVars)
+          fvre = subableFreeVars r `Set.union` freeVars (Case r' branches genVars)
   subst r x (QMark r' rh rp) = QMark (subst r x r') (subst r x rh) (subst r x rp)
 
 instance HasVars RefType where
-  freeVarsAnnot (RefType x _ r) = Map.delete x (freeVarsAnnot r)
-  freeVarsAnnot (ArrType x tpx tp) =
-    freeVarsAnnot tpx `Map.union` Map.delete x (freeVarsAnnot tp)
-  freeVarsAnnot (FAType _ tp) = freeVarsAnnot tp
+  freeVarsMap (RefType x tp r) = fvtp `Map.union` Map.delete x (freeVarsMap r)
+    where
+      fvtp = case tp of
+        Builtin _ -> Map.empty
+        TC _ tps -> freeVarsMap tps
+        TyVar α -> Map.singleton α Nothing
+  freeVarsMap (ArrType x tpx tp) = freeVarsMap tpx `Map.union` Map.delete x (freeVarsMap tp)
+  freeVarsMap (FAType α tp) = Map.delete α (freeVarsMap tp)
 
-  boundVars (RefType x _ r) = Set.singleton x `Set.union` boundVars r
+  boundVars (RefType x tp r) = Set.unions [Set.singleton x, bvtp, boundVars r]
+    where
+      bvtp = case tp of
+        (Builtin _; TC {}) -> Set.empty
+        TyVar α -> Set.singleton α
   boundVars (ArrType x tpx tp) = Set.singleton x `Set.union` boundVars [tpx, tp]
-  boundVars (FAType _ tp) = boundVars tp
+  boundVars (FAType α tp) = Set.singleton α `Set.union` boundVars tp
 
-  subst _ x tp@(RefType y _ _) | y == x = tp
-  subst r x (RefType y b reft) = RefType y b $ subst r x reft
+  subst (TypeSub tp) α tp0@(RefType x (TyVar α') rx) | α == α' =
+    case tp of
+      RefType y b ry ->
+        let rx' = subst (Rename y) x rx
+         in RefType y b (Bop And rx' ry)
+      ArrType {} ->
+        if rx == ttTm
+          then tp
+          else
+            error
+              ( render $
+                  "TODO: trying to replace type variable with non-trivial refinement for arrow type: {" <> pPrint tp <> "/" <> text α <> "}" <+> pPrint tp0
+              )
+      FAType {} -> error "Forall found inside refined type (subst instance for RefType)"
+  subst r x (RefType y b reft) =
+    if y == x then RefType y bSubbed reft else RefType y bSubbed (subst r x reft)
+    where
+      bSubbed = case b of
+        TC tc tps -> TC tc (map (subst r x) tps)
+        (TyVar _; Builtin _) -> b
   subst r x (ArrType y tpy tp')
     | y == x = ArrType y (subst r x tpy) tp'
-    | y `Set.member` freeVars r && x `Set.member` freeVars tp' =
-        ArrType z (subst r x tpy) (subst r x $ rename z y tp')
+    | y `Set.member` subableFreeVars r && x `Set.member` freeVars tp' =
+        ArrType z (subst r x tpy) (substs [(r, x), (Rename z, y)] tp')
     | otherwise = ArrType y (subst r x tpy) (subst r x tp')
     where
-      z = freshVar y (freeVars r `Set.union` freeVars (ArrType y tpy tp'))
+      z = freshVar y (subableFreeVars r `Set.union` freeVars (ArrType y tpy tp'))
   subst r x tp@(FAType α tp')
     | α == x = tp
+    | α `Set.member` subableFreeVars r =
+        FAType α' (substs [(r, x), (Rename α', α)] tp')
     | otherwise = FAType α (subst r x tp')
+    where
+      α' = freshVar α (subableFreeVars r `Set.union` freeVars tp)
 
 instance (HasVars a) => HasVars [a] where
-  freeVarsAnnot tms = Map.unions $ map freeVarsAnnot tms
+  freeVarsMap tms = Map.unions $ map freeVarsMap tms
   boundVars tms = Set.unions $ map boundVars tms
   subst r x = fmap (subst r x)
 
 instance (HasVars a) => HasVars (Maybe a) where
-  freeVarsAnnot = maybe Map.empty freeVarsAnnot
+  freeVarsMap = maybe Map.empty freeVarsMap
   boundVars = maybe Set.empty boundVars
   subst r x = fmap (subst r x)
+
+{- instance HasVars Subable where
+  freeVarsMap (TypeSub tp) = freeVarsMap tp
+  freeVarsMap (TermSub tm) = freeVarsMap tm
+  freeVarsMap (Rename x) = Map.singleton
+  boundVars =
+  subst r x = -}
 
 -- * Equality instance using α-renaming
 
 instance Eq RefType where
   tp1@(RefType x tpx rx) == tp2@(RefType y tpy ry) =
     let z = fresh x [tp1, tp2]
-        (α1, α2) = if x /= y then ([(z, x)], [(z, y)]) else ([], [])
-     in tpx == tpy && renames α1 rx == renames α2 ry
+        (α1, α2) = if x /= y then ([(Rename z, x)], [(Rename z, y)]) else ([], [])
+     in tpx == tpy && substs α1 rx == substs α2 ry
   tp1@(ArrType x tpx tp1') == tp2@(ArrType y tpy tp2') =
     let z = fresh x [tp1, tp2]
-        (α1, α2) = if x /= y then ([(z, x)], [(z, y)]) else ([], [])
-     in tpx == tpy && renames α1 tp1' == renames α2 tp2'
+        (α1, α2) = if x /= y then ([(Rename z, x)], [(Rename z, y)]) else ([], [])
+     in tpx == tpy && substs α1 tp1' == substs α2 tp2'
   tp1@(FAType x tp1') == tp2@(FAType y tp2') =
     let z = fresh x [tp1, tp2]
-        (α1, α2) = if x /= y then ([(z, x)], [(z, y)]) else ([], [])
-     in renames α1 tp1' == renames α2 tp2'
+        (α1, α2) = if x /= y then ([(Rename z, x)], [(Rename z, y)]) else ([], [])
+     in substs α1 tp1' == substs α2 tp2'
   _ == _ = False
 
 instance Eq Expr where
   Reft r1 == Reft r2 = r1 == r2
   e1@(Let x tpx ex e1') == e2@(Let y tpy ey e2') =
     let z = fresh x [e1, e2]
-        (α1, α2) = if x /= y then ([(z, x)], [(z, y)]) else ([], [])
-     in tpx == tpy && ex == ey && renames α1 e1' == renames α2 e2'
+        (α1, α2) = if x /= y then ([(Rename z, x)], [(Rename z, y)]) else ([], [])
+     in tpx == tpy && ex == ey && substs α1 e1' == substs α2 e2'
   e1@(Case r1 alts1 genVars1) == e2@(Case r2 alts2 genVars2) =
     -- Equality is sensitive to the order of the alternatives
     r1 == r2 && all eqBranch (zip alts1 alts2) && genVars1 == genVars2
     where
       eqBranch (((c1, ys1), ebr1), ((c2, ys2), ebr2)) =
         let freshYs = foldr freshVars [] (zip ys1 ys2)
-            α ys = filter (uncurry (/=)) $ zipWith (\(y, _) z -> (z, y)) ys freshYs
-         in c1 == c2 && renames (α ys1) ebr1 == renames (α ys2) ebr2
+            α ys = map (first Rename) . filter (uncurry (/=)) $ zipWith (\(y, _) z -> (z, y)) ys freshYs
+         in c1 == c2 && substs (α ys1) ebr1 == substs (α ys2) ebr2
       freshVars ((y1, _), (y2, _)) vars =
         if y1 /= y2
           then freshVar y1 (freeVars [e1, e2] `Set.union` Set.fromList vars) : vars

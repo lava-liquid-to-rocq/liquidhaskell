@@ -347,14 +347,14 @@ transCaseExpr = recurse []
     recurse :: [(Id, (Id, [Id]))] -> Maybe Id -> Id -> Bool -> [Branch] -> Calc.Expr
     recurse prevPats fO indVar _ cases' =
       {- traceFuncRet ["recurse", show prevPats, show fO, indVar, show isRec, show cases] $ -}
-      Calc.substs (map (\(x, r) -> (r, x)) substs) res
+      Calc.substs (map (\(x, r) -> (Calc.TermSub r, x)) substs) res
       where
         -- Replace occurrences of the induction variable with the constructor application in each branch
         cases =
           map
             ( \br ->
                 let conApp = foldl Calc.App (Calc.DC (brCon br)) (map Calc.mkVar (brVars br))
-                 in modifyBrBody (Calc.subst conApp indVar) br
+                 in modifyBrBody (Calc.subst (Calc.TermSub conApp) indVar) br
             )
             cases'
         res = caseOrInduct indVar branches

@@ -146,9 +146,9 @@ signatureToArgsRet sig = (αs, args, ret)
     (αs, sigArgs, (v0, sResTp, sResReft)) = Calc.arrs sig
     names = map fst sigArgs
     v = freshVar v0 (fromList names)
-    ret = Calc.RefType v sResTp $ Calc.subst (Calc.mkVar v) v0 sResReft
+    ret = Calc.RefType v sResTp $ Calc.subst (Calc.Rename v) v0 sResReft
     args = map renameArg sigArgs
-    renameArg (n, Calc.RefType x tp reft) = Calc.RefType m tp (Calc.subst (Calc.mkVar m) x reft)
+    renameArg (n, Calc.RefType x tp reft) = Calc.RefType m tp (Calc.subst (Calc.Rename m) x reft)
       where
         m = if n /= "" then n else x
     renameArg (_, arr@Calc.ArrType {}) = arr

@@ -157,7 +157,7 @@ transRefType modId intCont (MkUReft (F.Reft (s, tm)) _) = (s, runReader (transEx
 transRef :: Id -> InternalCont -> String -> UReft -> Calc.Reft
 transRef modId intCont x r =
   let (s, ref') = transRefType modId intCont r
-   in Calc.subst (Calc.mkVar x) (transVarName modId s) ref'
+   in Calc.subst (Calc.Rename x) (transVarName modId s) ref'
 
 refVar :: Id -> InternalCont -> UReft -> String
 refVar modId intCont = transVarName modId . fst . transRefType modId intCont
