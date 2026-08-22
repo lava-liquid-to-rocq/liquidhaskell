@@ -246,8 +246,8 @@ apps tm = (tm, [])
 
 -- | Rename all the arguments of an arrow:
 --
--- > renameParams([y1,y2], x1:{x1:B | True} -> x2:{x2:B | x1 == x2} -> {v:B | v = x1 + x2})
--- >   = y1:{x1:B | True} -> y2:{x2:B | y1 == x2} -> {v:B | v = y1 + y2}
+-- > renameParams([β,y1,y2], ∀α, x1:{x1:α | True} -> x2:{x2:α | x1 == x2} -> {v:α | v = x1 + x2})
+-- >   = ∀β, y1:{x1:β | True} -> y2:{x2:β | y1 == x2} -> {v:β | v = y1 + y2}
 renameParams :: [Id] -> RefType -> RefType
 -- renameParams ys tp | trace (render $ "renameParams (" <> pPrint ys <> comma <+> pPrint tp <> ")") False = undefined
 renameParams = aux []
@@ -256,20 +256,23 @@ renameParams = aux []
     -- aux σ ys tp | trace (render $ "renameParams.aux (" <+> pPrint σ <> comma <+> pPrint ys <> comma <+> pPrint tp <> ")") False = undefined
     aux σ [] tp = renames σ tp
     aux σ _ tp@(RefType {}) = renames σ tp
-    -- TODO: rename type variables too, this is just a temporary fix
-    -- aux σ (_ : ys) (FAType α tp) = FAType α (aux σ ys tp)
-    aux _ _ (FAType {}) = error "TODO: renameParams for forall"
+    aux σ (β : ys) (FAType α tp)
+      | α `notElem` freeTypeVars tp || α == β =
+          FAType α (aux σ ys tp)
     aux σ (y : ys) (ArrType x tpx tp)
       | x `notElem` freeTermVars tp || x == y =
           ArrType y (renames σ tpx) (aux σ ys tp)
     -- NOTE: we could handle some of the error cases by applying the
     -- substitutions globally for each binder, or by traversing the type in the
     -- opposite direction. But with reasonable namings that should not be necessary
+    aux _ (β : _) (FAType α tp)
+      | β `elem` freeVars tp =
+          error . render $ "Name clash while renaming variable" <+> text α <+> "to" <+> text β <+> "in" <+> pPrint tp
     aux _ (y : _) tp0@(ArrType x _ tp)
-      | y `elem` freeTermVars tp =
+      | y `elem` freeVars tp =
           error . render $ "Name clash while renaming variable" <+> text x <+> "to" <+> text y <+> "in" <+> pPrint tp0
-    aux σ (y : ys) (ArrType x tpx tp) =
-      ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
+    aux σ (β : ys) (FAType α tp) = FAType β (aux ((β, α) : σ) ys tp)
+    aux σ (y : ys) (ArrType x tpx tp) = ArrType y (renames σ tpx) (aux ((y, x) : σ) ys tp)
     renames σ = substs (map (first Rename) σ)
 
 -- ** Substitution and free variables

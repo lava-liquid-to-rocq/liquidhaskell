@@ -112,30 +112,24 @@ isLemma = (== "()") . typeName . snd3 . thd3 . Calc.arrs
     typeName (Calc.TC n _) = n
     typeName (Calc.TyVar α) = α
 
--- TODO: also rename type variables
 parseDef :: (Def, Maybe Calc.RefType, Bool) -> Calc.Decl
 parseDef (Def dname args body _, Just sig, b) =
   Calc.Definition dname fullTp body b
   where
-    -- In the representation of Def, we don't have type and term arguments
-    -- separated, so we do it here
-    (sigTyArgs, sig') = extractTypeArgs sig
+    sigRenamed = Calc.renameParams args sig
+    (sigTyArgs, sigArgs, sRes) = signatureToArgsRet sigRenamed
+    fullTp = Calc.mkArrows (sigTyArgs, zip argsNoTyVar sigArgs, retTp)
+    -- argsNoTyVar are the names added on the dependent arrows
+    argsNoTyVar = drop (nbOfForalls sig) args
       where
-        extractTypeArgs (Calc.FAType α tp) = first (α :) (extractTypeArgs tp)
-        extractTypeArgs tp = ([], tp)
-    (tyArgs, args') = splitAt (length sigTyArgs) args
-    -- TODO: also rename type arguments (sigTyArgs and tyArgs)
-    sigRenamed = Calc.renameParams args' sig'
-    -- As long as we don't include type variables in the renaming, the first
-    -- element of the triple will be empty
-    (_, sigArgs, sRes) = signatureToArgsRet sigRenamed
+        nbOfForalls (Calc.FAType _ tp) = 1 + nbOfForalls tp
+        nbOfForalls _ = 0
     retTp =
       if isLemma sigRenamed
         then case sRes of
           Calc.RefType _ _ reft -> Calc.RefType (dname ++ "_claim") Calc.unitTp reft
           _ -> error $ "Lemma " ++ dname ++ " has unexpected arrow return type"
         else sRes
-    fullTp = Calc.mkArrows (sigTyArgs, zip args' sigArgs, retTp)
 parseDef (Def dname _ _ _, Nothing, _) = error $ "Top-level definition or lemma " ++ dname ++ " without signature is forbidden."
 
 -- | replace the names of variables v in refinement types {v:A|p} of arguments x by x
