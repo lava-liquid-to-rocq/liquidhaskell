@@ -33,8 +33,9 @@ module Language.Haskell.Liquid.RefCore.Calculus
     -- * Construction and destruction
     mkVar,
     arrs,
-    apps,
     mkArrows,
+    apps,
+    mkApplications,
     renameParams,
 
     -- * Free variables and substitution
@@ -240,9 +241,18 @@ mkArrows (αs, args, ret) =
    in foldr FAType monoArrow αs
 
 -- | Flattens an application
-apps :: Reft -> (Reft, [Reft])
-apps (App tm1 tm2) = let (hd, args) = apps tm1 in (hd, args ++ [tm2])
-apps tm = (tm, [])
+apps :: Reft -> (Reft, [RefType], [Reft])
+apps (App tm1 tm2) = let (hd, args, refts) = apps tm1 in (hd, args, refts ++ [tm2])
+apps tm@(TyApp {}) = let (hd, tpArgs) = aux tm in (hd, tpArgs, [])
+  where
+    aux (TyApp tm1 tm2) = let (hd, tpArgs) = aux tm1 in (hd, tpArgs ++ [tm2])
+    aux (App {}) = error "Calculus.apps: found term application before type application"
+    aux tm' = (tm', [])
+apps tm = (tm, [], [])
+
+-- | Inversion operaton of apps
+mkApplications :: Reft -> [RefType] -> [Reft] -> Reft
+mkApplications hd tpArgs args = foldl App (foldl TyApp hd tpArgs) args
 
 -- | Rename all the arguments of an arrow:
 --
@@ -425,7 +435,8 @@ instance HasVars RefType where
     case tp of
       RefType y b ry ->
         let rx' = subst (Rename y) x rx
-         in RefType y b (Bop And rx' ry)
+            conj = if rx' == ttTm then ry else if ry == ttTm then rx' else Bop And rx' ry
+         in RefType y b conj
       ArrType {} ->
         if rx == ttTm
           then tp
