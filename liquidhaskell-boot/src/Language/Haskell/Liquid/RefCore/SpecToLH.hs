@@ -209,7 +209,7 @@ transExp modId binder = transExpr
       Calc.Bop (transBrel brel) <$> transExpr e1 <*> transExpr e2
     go app@(F.EApp {}) = goApp (flattenFixApp app)
     go (F.EVar sym) = pure $ mkVarOrDC (transVarName modId sym)
-    go (F.PAnd es) = foldAnds <$> (mapM transExpr =<< filterM (fmap not . internalConstrRef modId) es)
+    go (F.PAnd es) = Calc.mkAnd <$> (mapM transExpr =<< filterM (fmap not . internalConstrRef modId) es)
     go (F.POr es) = foldOrs <$> mapM transExpr es
     go (F.PIff ante concl) = Calc.Bop Calc.Iff <$> transExpr ante <*> transExpr concl
     go (F.PImp ante concl) = Calc.Bop Calc.Impl <$> transExpr ante <*> transExpr concl
@@ -224,13 +224,11 @@ transExp modId binder = transExpr
       cTm <- transExpr cond
       tTm <- transExpr thenE
       eTm <- transExpr elseE
-      pure $ Calc.Bop Calc.Or (Calc.Bop Calc.And cTm tTm) (Calc.Bop Calc.And (Calc.Neg cTm) eTm)
+      pure $ Calc.Bop Calc.Or (Calc.mkAnd [cTm, tTm]) (Calc.mkAnd [Calc.Neg cTm, eTm])
     go (F.ESym sym) = unsupported $ "Uninterpreted symbol encountered: " ++ show sym
     go term = unsupported $ "Undefined expr translation: \n" ++ F.showpp term
     goApp (F.EVar f, ts) = foldl Calc.App (mkVarOrDC (transVarName modId f)) <$> mapM transExpr ts
     goApp (other, _) = unsupported $ "Expected variable at head of application in transExp, got: " ++ F.showpp other
-    foldAnds [] = Calc.ttTm
-    foldAnds rs = foldl1 (Calc.Bop Calc.And) rs
     foldOrs [] = Calc.ttTm -- TODO: [LP] An empty disjunction should be false no?
     foldOrs rs = foldl1 (Calc.Bop Calc.Or) rs
 

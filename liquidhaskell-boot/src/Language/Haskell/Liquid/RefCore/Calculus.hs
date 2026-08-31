@@ -32,6 +32,8 @@ module Language.Haskell.Liquid.RefCore.Calculus
 
     -- * Construction and destruction
     mkVar,
+    mkAnd,
+    isTrivial,
     arrs,
     mkArrows,
     apps,
@@ -220,13 +222,24 @@ nilTm = DC nilTmName
 
 -- * Functions on the terms
 
--- ** Constructions
-
 -- | Make a local variable reference with a dummy type
 mkVar :: Id -> Reft
 mkVar x = Var x Nothing Local
 
--- ** Other functions
+-- | Wrapper for And, defined as TT for empty conjuncts list
+mkAnd :: [Reft] -> Reft
+mkAnd args = if null args' then ttTm else foldl1 (Bop And) args'
+  where
+    args' = filter (not . isTrivial) args
+
+-- | Whether a term is superficially equivalent to True
+isTrivial :: Reft -> Bool
+isTrivial r | r == ttTm = True
+isTrivial (Neg (Neg r)) = isTrivial r
+isTrivial (Neg r) | r == ffTm = True
+isTrivial (Bop And r1 r2) = isTrivial r1 && isTrivial r2
+isTrivial (Bop Or r1 r2) = isTrivial r1 || isTrivial r2
+isTrivial _ = False
 
 -- | arrs(R) := forall (α_j)_{j ≤ m}, (x_i:R_i)_{i ≤ n} -> R' where n is maximal
 arrs :: RefType -> ([Id], [(Id, RefType)], (Id, BaseType, Reft))
@@ -433,10 +446,7 @@ instance HasVars RefType where
 
   subst (TypeSub tp) α tp0@(RefType x (TyVar α') rx) | α == α' =
     case tp of
-      RefType y b ry ->
-        let rx' = subst (Rename y) x rx
-            conj = if rx' == ttTm then ry else if ry == ttTm then rx' else Bop And rx' ry
-         in RefType y b conj
+      RefType y b ry -> RefType y b (mkAnd [subst (Rename y) x rx, ry])
       ArrType {} ->
         if rx == ttTm
           then tp
