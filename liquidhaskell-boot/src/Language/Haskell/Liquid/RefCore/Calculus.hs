@@ -21,6 +21,8 @@ module Language.Haskell.Liquid.RefCore.Calculus
     ProofOp (..),
 
     -- * Builtin type and data constructors
+    builtinDCs,
+    builtinTCs,
     boolTp,
     ttTm,
     ffTm,
@@ -205,6 +207,13 @@ data Bop
 data ProofOp = PEq | PLeq | PGeq deriving (Data, Eq, Generic, Binary)
 
 -- Builtin type and data constructors
+
+-- TODO: add lists as builtin
+builtinDCs :: [Reft]
+builtinTCs :: [BaseType]
+builtinDCs = [ttTm, ffTm, unitTm, consTm, nilTm]
+
+builtinTCs = [boolTp, unitTp]
 
 boolTp, unitTp :: BaseType
 boolTp = TC boolTpName []
@@ -444,38 +453,50 @@ instance HasVars RefType where
   boundVars (ArrType x tpx tp) = Set.singleton x `Set.union` boundVars [tpx, tp]
   boundVars (FAType α tp) = Set.singleton α `Set.union` boundVars tp
 
-  subst (TypeSub tp) α tp0@(RefType x (TyVar α') rx) | α == α' =
-    case tp of
-      RefType y b ry -> RefType y b (mkAnd [subst (Rename y) x rx, ry])
-      ArrType {} ->
-        if rx == ttTm
-          then tp
-          else
-            error
-              ( render $
-                  "TODO: trying to replace type variable with non-trivial refinement for arrow type: {" <> pPrint tp <> "/" <> text α <> "}" <+> pPrint tp0
-              )
-      FAType {} -> error "Forall found inside refined type (subst instance for RefType)"
-  subst r x (RefType y b reft) =
-    if y == x then RefType y bSubbed reft else RefType y bSubbed (subst r x reft)
-    where
-      bSubbed = case b of
-        TC tc tps -> TC tc (map (subst r x) tps)
-        (TyVar _; Builtin _) -> b
-  subst r x (ArrType y tpy tp')
-    | y == x = ArrType y (subst r x tpy) tp'
-    | y `Set.member` subableFreeVars r && x `Set.member` freeVars tp' =
-        ArrType z (subst r x tpy) (substs [(r, x), (Rename z, y)] tp')
-    | otherwise = ArrType y (subst r x tpy) (subst r x tp')
-    where
-      z = freshVar y (subableFreeVars r `Set.union` freeVars (ArrType y tpy tp'))
-  subst r x tp@(FAType α tp')
-    | α == x = tp
-    | α `Set.member` subableFreeVars r =
-        FAType α' (substs [(r, x), (Rename α', α)] tp')
-    | otherwise = FAType α (subst r x tp')
-    where
-      α' = freshVar α (subableFreeVars r `Set.union` freeVars tp)
+  subst s α tp = substInType False s α tp
+
+-- Auxiliary function for substitution using a boolean to indicate whether we
+-- are substitution the type argument of a type constructor
+-- If so, we keep the refinement of the subable, even if equal to True
+-- Otherwise, we eliminate superfluous True
+-- The alternative is to never eliminate superfluous True, which just makes the output more heavy
+substInType :: Bool -> Subable -> Id -> RefType -> RefType
+substInType underTC (TypeSub tp) α tp0@(RefType x (TyVar α') rx) | α == α' =
+  case tp of
+    RefType y b ry ->
+      RefType y b (if keepTrue b then Bop And ry (subst (Rename y) x rx) else mkAnd [ry, subst (Rename y) x rx])
+    ArrType {} ->
+      if rx == ttTm
+        then tp
+        else
+          error
+            ( render $
+                "TODO: trying to replace type variable with non-trivial refinement for arrow type: {" <> pPrint tp <> "/" <> text α <> "}" <+> pPrint tp0
+            )
+    FAType {} -> error "Forall found inside refined type (subst instance for RefType)"
+  where
+    keepTrue (Builtin _) = underTC
+    keepTrue b = underTC && b `elem` builtinTCs
+substInType _ r x (RefType y b reft) =
+  if y == x then RefType y bSubbed reft else RefType y bSubbed (subst r x reft)
+  where
+    bSubbed = case b of
+      TC tc tps -> TC tc (map (substInType True r x) tps)
+      (TyVar _; Builtin _) -> b
+substInType underTC r x (ArrType y tpy tp')
+  | y == x = ArrType y (substInType underTC r x tpy) tp'
+  | y `Set.member` subableFreeVars r && x `Set.member` freeVars tp' =
+      ArrType z (substInType underTC r x tpy) (substs [(r, x), (Rename z, y)] tp')
+  | otherwise = ArrType y (substInType underTC r x tpy) (substInType underTC r x tp')
+  where
+    z = freshVar y (subableFreeVars r `Set.union` freeVars (ArrType y tpy tp'))
+substInType underTC r x tp@(FAType α tp')
+  | α == x = tp
+  | α `Set.member` subableFreeVars r =
+      FAType α' (substs [(r, x), (Rename α', α)] tp')
+  | otherwise = FAType α (substInType underTC r x tp')
+  where
+    α' = freshVar α (subableFreeVars r `Set.union` freeVars tp)
 
 instance (HasVars a) => HasVars [a] where
   freeVarsMap tms = Map.unions $ map freeVarsMap tms
@@ -612,13 +633,16 @@ instance Pretty Expr where
     vcat $ (des <+> pPrint r <+> "of") : map ppAlt alts
     where
       des = case genVars of Nothing -> "destruct"; Just _ -> "induct"
+      -- des = case genVars of Nothing -> "destruct"; Just genvars' -> "induct" <+> pPrint genvars'
       ppAlt (pat, e) = sep [char '|' <+> ppPat pat <+> "->", nest identNb $ maybe "undefined" pPrint e]
       ppPat (c, ys) = text c <+> hsep (map (text . fst) ys)
+  -- ppPat (c, ys) = text c <+> hsep (map pPrint ys)
   pPrint (QMark r rh rp) =
     pPrint r <+> char '?' <+> parens (pPrint rh <+> "proves" <+> pPrint rp)
 
 instance Pretty Reft where
   pPrintPrec _ _ (Var x _ _) = text x
+  -- pPrintPrec _ _ (Var x _ loc) = text x <> "/" <> parens (pPrint loc)
   pPrintPrec _ _ (StringLit s) = quotes $ text s
   pPrintPrec _ _ (IntLit i) = integer i
   pPrintPrec _ _ (FloatLit f) = double f
