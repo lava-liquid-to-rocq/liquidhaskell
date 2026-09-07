@@ -87,12 +87,16 @@ occursFreeIn x e = x `S.member` Calc.freeVars e
 undefinedReft :: Calc.Reft
 undefinedReft = Calc.mkVar "undefined"
 
+instance Show a => Show (AnnInfo a) where
+  show (AI hm) = show (HM.toList hm)
+
 -- | Translate Haskell binders, with mutually recursive binders unsupported for now.
 -- Entry point for the translations in this module
 --
 -- > transBind(NonRec f = e) = trans(f,e)
 -- > transBind(Rec [f_1 = e_1, …, f_n = e_n]) = trans(f_1,e_1)
 transBind :: (CoreBinder b) => String -> AnnInfo SpecType -> Bind b -> Def
+-- transBind _ infTypes _ | trace ("infTypes = " ++ show infTypes) False = undefined
 transBind modId infTypes binds = case binds of
   NonRec b e -> mkDef b e
   Rec [(b, e)] -> mkDef b e
@@ -153,8 +157,9 @@ flattenCoreApp modId infTypes f e =
       (letBindersArgs, sArgs) = first (foldr (.) id) . unzip $ map transArg args
       (letBinderHd, appHd) =
         case hd of
-          Var name -> (id, VarHead headSym)
+          Var name -> trace ("type of " ++ show name ++ " = " ++ show tphd) (id, VarHead headSym)
             where
+              tphd = SLH.transType "" (SLH.ConstrArgsCtx Nothing []) <$> binderType infTypes name
               headSym = case classifyHead . stripLegalName modId $ show name of
                 HGeneric n | isDataConId name -> HDC n
                 h -> h
@@ -277,10 +282,10 @@ transLet modId infTypes f bind body =
           -- variables bound in the translated type using the names introduced
           -- by the λs in Core
           let (ys, ex') = collectLambdas ex
-              tp = SLH.transType "" (SLH.ConstrArgsCtx Nothing []) $ binderType infTypes x
+              tp = SLH.transType "" (SLH.ConstrArgsCtx Nothing []) <$> binderType infTypes x
            in Calc.Let
                 (stripLegalName modId $ show x)
-                (Just $ Calc.renameParams ys tp)
+                (Calc.renameParams ys <$> tp)
                 (trans modId infTypes f ex')
                 (trans modId infTypes f body)
   where
@@ -303,12 +308,13 @@ deconstructBind (Rec (_ : _)) = error "Found list of mutually recursive binders 
 deconstructBind (Rec []) = error "Found empty list of mutually recursive binders while translating."
 
 -- | Retrieves the type inferred by Liquid Haskell for a variable
-binderType :: (Show b, NamedThing b) => AnnInfo SpecType -> b -> SpecType
+binderType :: (Show b, NamedThing b) => AnnInfo SpecType -> b -> Maybe SpecType
 binderType (AI infTypes) x =
   case HM.lookup (getSrcSpan x) infTypes of
     Just [(Just qualifName, tp)] ->
-      assert (Text.unpack (snd $ Text.breakOnEnd (Text.singleton '.') qualifName) == show x) tp
-    _ -> error $ "Type annotation for " ++ show x ++ " not found."
+      return $ assert (Text.unpack (snd $ Text.breakOnEnd (Text.singleton '.') qualifName) == show x) tp
+    Just ann -> trace ("For " ++ show x ++ ", found: " ++ show ann) Nothing
+    _ -> trace ("Type annotation for " ++ show x ++ " not found.") Nothing
 
 -- | Straightforward translation of Haskell cases
 altToClause :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Alt b -> Branch
@@ -325,6 +331,7 @@ altToClause modId infTypes f (Alt con bs e) =
 --
 -- > flattenFun(λx1. λx2.…λxn.e) = λx1…xn.trans(e)
 flattenFun :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> ([Id], Calc.Expr)
+flattenFun _ _ f _ | trace ("Translatating " ++ f) False = undefined
 flattenFun modId infTypes f (Lam b e) = first ((stripLegalName modId . show) b :) $ flattenFun modId infTypes f e
 flattenFun modId infTypes f e = ([], trans modId infTypes f e)
 
