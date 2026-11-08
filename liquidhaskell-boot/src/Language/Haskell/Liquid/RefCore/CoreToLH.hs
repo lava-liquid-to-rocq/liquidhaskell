@@ -163,7 +163,7 @@ flattenCoreApp modId infTypes f e =
 -- | Translate a flattened application to Calculus.
 transFlattenedApp :: AppHead -> [Calc.Reft] -> Calc.Expr
 transFlattenedApp (ReftHead h) args = Calc.Reft $ foldl Calc.App h args
-transFlattenedApp (VarHead (HDC n)) args = Calc.Reft $ foldl Calc.App (Calc.DC n) args
+transFlattenedApp (VarHead (HDC n)) args = Calc.Reft $ foldl Calc.App (Calc.DC n Nothing) args
 transFlattenedApp (VarHead (HGeneric n)) args = Calc.Reft $ foldl Calc.App (Calc.mkVar n) args
 transFlattenedApp (VarHead HNot) [tm] = Calc.Reft $ Calc.Neg tm
 transFlattenedApp (VarHead (HBinOp op)) (_ : _ : a : b : _) = Calc.Reft $ Calc.Bop op a b
@@ -171,7 +171,7 @@ transFlattenedApp (VarHead (HConst tm)) _ = Calc.Reft tm
 transFlattenedApp (VarHead HUnbox) [singleArg] = Calc.Reft singleArg
 transFlattenedApp (VarHead HPatError) _ = Calc.Reft undefinedReft
 transFlattenedApp (VarHead (HEqChain pop)) [_, fstTerm, lstTerm] = Calc.Reft $ Calc.Pop pop fstTerm lstTerm
-transFlattenedApp (VarHead HCast) [tm0, tm, Calc.DC "QED"] =
+transFlattenedApp (VarHead HCast) [tm0, tm, Calc.DC "QED" _] =
   Calc.QMark (Calc.Reft Calc.unitTm) (Calc.Reft tm) tm0
 transFlattenedApp (VarHead HQmark) (_ : _ : firstArg : secondArg : _) =
   Calc.QMark (Calc.Reft firstArg) (Calc.Reft secondArg) Calc.ttTm
@@ -200,7 +200,7 @@ toStr = showConstr . toConstr
 trans :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> Calc.Expr
 trans modId _ _ (Var n)
   | M.member strippedName SLH.builtinDCs = Calc.Reft $ transName strippedName
-  | isDataConId n = Calc.Reft $ Calc.DC strippedName
+  | isDataConId n = Calc.Reft $ Calc.DC strippedName Nothing
   | otherwise =
       -- trace ("VAR: " ++ show n ++ " -> " ++ strippedName ++ " isDC=" ++ show (isDataConId n)) $
       Calc.Reft $ transName strippedName
@@ -327,7 +327,7 @@ transCaseExpr = recurse []
         cases =
           map
             ( \br ->
-                let conApp = foldl Calc.App (Calc.DC (brCon br)) (map Calc.mkVar (brVars br))
+                let conApp = foldl Calc.App (Calc.DC (brCon br) Nothing) (map Calc.mkVar (brVars br))
                  in modifyBrBody (Calc.subst conApp indVar) br
             )
             cases'

@@ -133,7 +133,7 @@ data Reft
   | StringLit String
   | IntLit Integer
   | FloatLit Double
-  | DC Id
+  | DC Id (Maybe Int)
   | App Reft Reft
   | Neg Reft
   | Bop Bop Reft Reft
@@ -192,11 +192,11 @@ unitTm, ttTm, ffTm :: Reft
 boolTp = TC boolTpName
 unitTp = TC unitTpName
 
-ttTm = DC ttTmName
+ttTm = DC ttTmName (Just 0)
 
-ffTm = DC ffTmName
+ffTm = DC ffTmName (Just 0)
 
-unitTm = DC unitTmName
+unitTm = DC unitTmName (Just 0)
 
 -- * Functions on the terms
 
@@ -282,14 +282,14 @@ instance HasVars Reft where
   freeVarsAnnot (App hd arg) = freeVarsAnnot [hd, arg]
   freeVarsAnnot (Bop _ r1 r2) = freeVarsAnnot [r1, r2]
   freeVarsAnnot (Neg r) = freeVarsAnnot r
-  freeVarsAnnot (StringLit _; IntLit _; FloatLit _; DC _) = Map.empty
+  freeVarsAnnot (StringLit _; IntLit _; FloatLit _; DC _ _) = Map.empty
   freeVarsAnnot (Pop _ r1 r2) = freeVarsAnnot [r1, r2]
   freeVarsAnnot (Sub r from to) = freeVarsAnnot r `Map.union` freeVarsAnnot [from, to]
   freeVarsAnnot (Inj r tp) = freeVarsAnnot r `Map.union` freeVarsAnnot tp
   freeVarsAnnot (Proj _ r) = freeVarsAnnot r
 
   -- Empty on unelaborated refinements, but has the bound variables of the types in casts
-  boundVars (Var {}; StringLit _; IntLit _; FloatLit _; DC _) = Set.empty
+  boundVars (Var {}; StringLit _; IntLit _; FloatLit _; DC _ _) = Set.empty
   boundVars (App hd arg) = boundVars [hd, arg]
   boundVars (Bop _ r1 r2) = boundVars [r1, r2]
   boundVars (Neg r) = boundVars r
@@ -299,7 +299,7 @@ instance HasVars Reft where
   boundVars (Proj _ r) = boundVars r
 
   subst r' x (Var y _ _) | y == x = r'
-  subst _ _ r0@(Var {}; StringLit _; IntLit _; FloatLit _; DC _) = r0
+  subst _ _ r0@(Var {}; StringLit _; IntLit _; FloatLit _; DC _ _) = r0
   subst r' x (App h arg) = App (subst r' x h) (subst r' x arg)
   subst r' x (Bop bop r1 r2) = Bop bop (subst r' x r1) (subst r' x r2)
   subst r' x (Neg r) = Neg $ subst r' x r
@@ -502,7 +502,7 @@ instance Pretty Reft where
   pPrintPrec _ _ (StringLit s) = quotes $ text s
   pPrintPrec _ _ (IntLit i) = integer i
   pPrintPrec _ _ (FloatLit f) = double f
-  pPrintPrec _ _ (DC c) = text c
+  pPrintPrec _ _ (DC c _) = text c
   pPrintPrec l p (App r1 r2) =
     maybeParens (p > appPrec) $ pPrintPrec l p r1 <+> pPrintPrec l (appPrec + 1) r2
   pPrintPrec l p (Neg r) =

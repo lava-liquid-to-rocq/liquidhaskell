@@ -191,7 +191,7 @@ transExp modId binder = transExpr
     mkVarOrDC s = M.findWithDefault dflt s builtinDCs
       where
         dflt
-          | s /= binder, c : _ <- s, isUpper c = Calc.DC s
+          | s /= binder, c : _ <- s, isUpper c = Calc.DC s Nothing
           | otherwise = Calc.mkVar s
     transExpr :: F.Expr -> Reader InternalCont Calc.Reft
     transExpr term = ifM (internal modId term) (pure Calc.ttTm) (go term)
