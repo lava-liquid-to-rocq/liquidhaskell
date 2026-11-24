@@ -14,6 +14,7 @@ module Language.Haskell.Liquid.RefCore.Calculus
     Decl (..),
     Expr (..),
     Reft (..),
+    TermVar (..),
     ProjKind (..),
     Localization (..),
     DesState (..),
@@ -140,7 +141,8 @@ data Expr
 --   Variables are annotated with their localization and,
 --   if they are a function type, with their unrefined return type
 --
--- > r ::= x/(A,loc)
+-- > v ::= x/(A,loc)
+-- > r ::= v
 -- >     | lit ∈ B
 -- >     | C
 -- >     | r r
@@ -148,8 +150,9 @@ data Expr
 -- >     | ¬r
 -- >     | r `op` r
 -- >     | r `pop` r
+-- >     | inj(v, R)
 data Reft
-  = Var Id (Maybe BaseType) Localization
+  = Var TermVar
   | StringLit String
   | IntLit Integer
   | FloatLit Double
@@ -160,8 +163,12 @@ data Reft
   | Bop Bop Reft Reft
   | Pop ProofOp Reft Reft
   | Sub Reft RefType RefType
-  | Inj Reft RefType
+  | Inj TermVar RefType
   | Proj ProjKind Reft
+  deriving (Data, Eq, Show, Generic, Binary)
+
+-- | A term variable with its optional return base type and localization.
+data TermVar = TermVar Id (Maybe BaseType) Localization
   deriving (Data, Eq, Show, Generic, Binary)
 
 -- | The different kinds of projections:
@@ -233,7 +240,7 @@ nilTm = DC nilTmName
 
 -- | Make a local variable reference with a dummy type
 mkVar :: Id -> Reft
-mkVar x = Var x Nothing Local
+mkVar x = Var (TermVar x Nothing Local)
 
 -- | Wrapper for And, defined as TT for empty conjuncts list
 mkAnd :: [Reft] -> Reft
@@ -357,7 +364,7 @@ substs :: (HasVars a) => [(Subable, Id)] -> a -> a
 substs = flip (foldr (uncurry subst))
 
 instance HasVars Reft where
-  freeVarsMap (Var x tp loc) = Map.singleton x (Just (tp, loc))
+  freeVarsMap (Var (TermVar x tp loc)) = Map.singleton x (Just (tp, loc))
   freeVarsMap (App hd arg) = freeVarsMap [hd, arg]
   freeVarsMap (TyApp r tp) = freeVarsMap r `Map.union` freeVarsMap tp
   freeVarsMap (Bop _ r1 r2) = freeVarsMap [r1, r2]
@@ -365,7 +372,7 @@ instance HasVars Reft where
   freeVarsMap (StringLit _; IntLit _; FloatLit _; DC _) = Map.empty
   freeVarsMap (Pop _ r1 r2) = freeVarsMap [r1, r2]
   freeVarsMap (Sub r from to) = freeVarsMap r `Map.union` freeVarsMap [from, to]
-  freeVarsMap (Inj r tp) = freeVarsMap r `Map.union` freeVarsMap tp
+  freeVarsMap (Inj v tp) = freeVarsMap (Var v) `Map.union` freeVarsMap tp
   freeVarsMap (Proj _ r) = freeVarsMap r
 
   -- Empty on unelaborated refinements, but has the bound variables of the types in casts
@@ -376,11 +383,11 @@ instance HasVars Reft where
   boundVars (Neg r) = boundVars r
   boundVars (Pop _ r1 r2) = boundVars [r1, r2]
   boundVars (Sub r from to) = boundVars r `Set.union` boundVars [from, to]
-  boundVars (Inj r tp) = boundVars r `Set.union` boundVars tp
+  boundVars (Inj _ tp) = boundVars tp
   boundVars (Proj _ r) = boundVars r
 
-  subst (TermSub r') x (Var y _ _) | y == x = r'
-  subst (Rename z) x (Var y tp loc) | y == x = Var z tp loc
+  subst (TermSub r') x (Var (TermVar y _ _)) | y == x = r'
+  subst (Rename z) x (Var (TermVar y tp loc)) | y == x = Var (TermVar z tp loc)
   subst _ _ r0@(Var {}; StringLit _; IntLit _; FloatLit _; DC _) = r0
   subst r' x (App h arg) = App (subst r' x h) (subst r' x arg)
   subst r' x (TyApp r tp) = TyApp (subst r' x r) (subst r' x tp)
@@ -388,7 +395,10 @@ instance HasVars Reft where
   subst r' x (Neg r) = Neg $ subst r' x r
   subst r' x (Pop pop r1 r2) = Pop pop (subst r' x r1) (subst r' x r2)
   subst r' x (Sub r tps tpt) = Sub (subst r' x r) (subst r' x tps) (subst r' x tpt)
-  subst r' x (Inj r tp) = Inj (subst r' x r) (subst r' x tp)
+  subst (TermSub r) x (Inj (TermVar y _ _) _) | x == y = r
+  subst (Rename z) x (Inj (TermVar y tp loc) target) | x == y =
+    Inj (TermVar z tp loc) (subst (Rename z) x target)
+  subst s x (Inj v tp) = Inj v (subst s x tp)
   subst r' x (Proj kind r) = Proj kind (subst r' x r)
 
 instance HasVars Expr where
@@ -641,8 +651,8 @@ instance Pretty Expr where
     pPrint r <+> char '?' <+> parens (pPrint rh <+> "proves" <+> pPrint rp)
 
 instance Pretty Reft where
-  pPrintPrec _ _ (Var x _ _) = text x
-  -- pPrintPrec _ _ (Var x _ loc) = text x <> "/" <> parens (pPrint loc)
+  pPrintPrec _ _ (Var (TermVar x _ _)) = text x
+  -- pPrintPrec _ _ (Var (TermVar x _ loc)) = text x <> "/" <> parens (pPrint loc)
   pPrintPrec _ _ (StringLit s) = quotes $ text s
   pPrintPrec _ _ (IntLit i) = integer i
   pPrintPrec _ _ (FloatLit f) = double f
@@ -659,8 +669,8 @@ instance Pretty Reft where
     maybeParens (p > popPrec pop) $ pPrintPrec l (popPrec pop) r1 <+> pPrint pop <+> pPrintPrec l (popPrec pop) r2
   pPrintPrec _ p (Sub r from to) =
     maybeParens (p > appPrec) $ "sub" <+> parens (hsep $ punctuate comma (pPrint r : map pPrint [from, to]))
-  pPrintPrec _ p (Inj r tp) =
-    maybeParens (p > appPrec) $ "inj" <+> parens (pPrint r <> comma <+> pPrint tp)
+  pPrintPrec _ p (Inj v tp) =
+    maybeParens (p > appPrec) $ "inj" <+> parens (pPrint (Var v) <> comma <+> pPrint tp)
   pPrintPrec l p (Proj _ r) =
     maybeParens (p > appPrec) $ "proj" <+> pPrintPrec l (appPrec + 1) r
 

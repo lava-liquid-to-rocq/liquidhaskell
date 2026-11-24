@@ -264,7 +264,7 @@ transCase modId infTypes f e [] = trans modId infTypes f e
 -- TODO: we now support match on simple terms, so change mkCase to support it
 transCase modId infTypes f e alts = mkCaseExpr eT
   where
-    mkCaseExpr (Calc.Reft (Calc.Var x' _ _)) = mkCase f x' branches
+    mkCaseExpr (Calc.Reft (Calc.Var (Calc.TermVar x' _ _))) = mkCase f x' branches
     mkCaseExpr (Calc.Reft {}) = Calc.Let y Nothing eT (mkCase f y branches)
     mkCaseExpr _ = error $ "unexpected case: case " ++ prettyShow eT ++ " of \n" ++ intercalate "\n" (map show branches)
     eT = trans modId infTypes f e
@@ -371,7 +371,7 @@ transCaseExpr = recurse []
         isRecursive e = maybe False (`occursFreeIn` e) fO
         branches = map (modifyBrBody transBranchE) cleanedCases
         transBranchE :: Calc.Expr -> Calc.Expr
-        transBranchE e@(Calc.Case (Calc.Var x _ _) css _) = recurse prevPats fO x (isRecursive e) css
+        transBranchE e@(Calc.Case (Calc.Var (Calc.TermVar x _ _)) css _) = recurse prevPats fO x (isRecursive e) css
         transBranchE   (Calc.Let x tpx def' tm) = Calc.Let x tpx (transBranchE def') (transBranchE tm)
         transBranchE e = e
         caseOrInduct :: Id -> [Branch] -> Calc.Expr
@@ -408,7 +408,7 @@ transCaseExpr = recurse []
 
     -- \| Translate nested matches, replacing redundant matches with the translation of the only matching branch
     cutRedundantMatches :: [(Id, (Id, [Id]))] -> Calc.Expr -> Maybe (Calc.Expr, [(Id, Calc.Reft)])
-    cutRedundantMatches prevPats (Calc.Case (Calc.Var m _ _) branches _) | m `elem` map fst prevPats = res
+    cutRedundantMatches prevPats (Calc.Case (Calc.Var (Calc.TermVar m _ _)) branches _) | m `elem` map fst prevPats = res
       where
         -- \| The previous pattern in which we already matched on the same variable as we do now, if any
         prevPat = find ((== m) . fst) prevPats
@@ -432,7 +432,7 @@ transCaseExpr = recurse []
           )
             =<< caseExpr
         res = second (++ caseVarSub) <$> recO
-    cutRedundantMatches prevPats (Calc.Case r@(Calc.Var m _ _) branches b) = Just (Calc.Case r branches' b, subs)
+    cutRedundantMatches prevPats (Calc.Case r@(Calc.Var (Calc.TermVar m _ _)) branches b) = Just (Calc.Case r branches' b, subs)
       where
         (branches', subs) = cutRedundantBranches m prevPats branches
     cutRedundantMatches _ tm = Just (tm, [])

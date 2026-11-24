@@ -204,7 +204,7 @@ mkImportDecl moduleId allPData rawSpecs modName = Calc.Import modName (dataDs ++
       Calc.Definition
         (stripLegalName moduleId (show (varName v)))
         (SLH.transSig moduleId Nothing (F.val locSpec))
-        (Calc.Reft (Calc.Var "imported" Nothing Calc.Global))
+        (Calc.Reft (Calc.Var (Calc.TermVar "imported" Nothing Calc.Global)))
         False
 
 pairLHDefsWithSigs :: Id -> [CLH.Def] -> M.Map Id Calc.RefType -> [Var] -> [(CLH.Def, Maybe Calc.RefType, Bool)]
