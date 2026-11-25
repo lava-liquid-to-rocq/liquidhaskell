@@ -273,7 +273,8 @@ setLocation γ p = γ { cgLoc = Sp.push p $ cgLoc γ }
 ------------------------------------------------------------------------
 setBind :: CGEnv -> Var -> CGEnv
 ------------------------------------------------------------------------
-setBind γ x = γ `setLocation` Sp.Var x `setBind'` x
+-- RefCore records the binder even when its GHC span or constraint tag is absent.
+setBind γ x = γ {refCoreBinder = Just x} `setLocation` Sp.Var x `setBind'` x
 
 setBind' :: CGEnv -> Tg.TagKey -> CGEnv
 setBind' γ k

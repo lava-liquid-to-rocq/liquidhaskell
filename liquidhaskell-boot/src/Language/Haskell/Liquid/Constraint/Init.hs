@@ -215,6 +215,7 @@ measEnv sp xts cbs _tcb lt1s lt2s asms itys hs info = CGE
   , cerr     = Nothing
   , cgInfo   = info
   , cgVar    = Nothing
+  , refCoreBinder = Nothing -- RefCore export metadata
   }
   where
       tce         = gsTcEmbeds (gsName sp)
@@ -280,6 +281,7 @@ initCGI cfg info = CGInfo {
   , localRewrites = mempty
   , ebinds        = []
   , annotMap      = AI M.empty
+  , refCoreTypeApps = mempty -- RefCore export metadata
   , newTyEnv      = M.fromList (fmap val <$> gsNewTypes (gsSig spc))
   , tyConInfo     = tyi
   , tyConEmbed    = tce

@@ -4,6 +4,11 @@ module Language.Haskell.Liquid.RefCore.Misc where
 import Data.List (intercalate, stripPrefix, uncons, unfoldr)
 import Data.Maybe (fromMaybe)
 import GHC.Core
+import GHC.Types.Var (Var)
+import qualified Data.Map.Strict as M
+import qualified Language.Fixpoint.Types as F
+import qualified Language.Haskell.Liquid.GHC.Misc as GM
+import Language.Haskell.Liquid.Types.RType (SpecType)
 import Language.Haskell.Liquid.RefCore.Names (Id)
 
 -- * Name manipulation
@@ -63,6 +68,15 @@ rocqReservedNames = [
   "Proof", "Qed", "Defined", "Opaque", "Transparent",
   "Resolve", "Global", "global", "Instance", "Notation", "Rewrite",
   "match", "with", "let", "in", "by", "end", "if", "then", "else"]
+
+-- | ANF scopes distinguish identical application prefixes in different binds.
+-- Retain the full key and diagnose collisions within a bind during extraction.
+type TypeAppSite = (F.Symbol, String)
+
+type TypeApplications = M.Map TypeAppSite [SpecType]
+
+typeAppSite :: Var -> CoreExpr -> TypeAppSite
+typeAppSite binder expr = (F.symbol binder, GM.showPpr expr)
 
 -- * GHC Core helpers
 

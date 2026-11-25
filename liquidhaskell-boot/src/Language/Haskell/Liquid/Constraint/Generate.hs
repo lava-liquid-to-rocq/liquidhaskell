@@ -32,6 +32,8 @@ import qualified Language.Haskell.Liquid.GHC.Misc              as GM -- ( isInte
 import Text.PrettyPrint.HughesPJ ( text )
 import           Control.Monad ( foldM, forM, forM_, when, void, unless)
 import           Control.Monad.State
+import qualified Data.Map.Strict as Map
+import           Language.Haskell.Liquid.RefCore.Misc (typeAppSite) -- RefCore export metadata
 import           Data.Bifunctor                                (first)
 import           Data.Maybe                                    (fromMaybe, isJust, mapMaybe)
 import           Data.Either.Extra                             (eitherToMaybe)
@@ -71,7 +73,7 @@ import           Language.Haskell.Liquid.Bare.DataType (dataConMap, makeDataConC
 import Language.Haskell.Liquid.UX.Config
     ( HasConfig(getConfig),
       Config(typeclass, extensionality,
-             nopolyinfer, dependantCase, rankNTypes, warnOnTermHoles),
+             nopolyinfer, dependantCase, rankNTypes, warnOnTermHoles, refcore),
       patternFlag,
       higherOrderFlag, warnOnTermHoles )
 import qualified GHC.Data.Strict as Strict
@@ -857,6 +859,11 @@ consEApp γ e'@(App e a@(Type τ))
                          else trueTy (typeclass (getConfig γ)) τ
        addW          $ WfC γ t
        t'           <- refreshVV t
+       -- RefCore observes the argument actually substituted below. This does
+       -- not generate constraints, allocate KVars, or modify the Core tree.
+       when (refcore (getConfig γ)) $
+         forM_ (refCoreBinder γ) $ \binder ->
+           modify $ \s -> s {refCoreTypeApps = Map.insertWith (++) (typeAppSite binder e') [t'] (refCoreTypeApps s)}
        tt0          <- instantiatePreds γ e' (subsTyVarMeet' (ty_var_value α, t') te)
        let tyVarSym  = F.symbol (ty_var_value α)
            tyVarSort = typeSort (emb γ) (Ghc.expandTypeSynonyms τ)

@@ -77,6 +77,7 @@ import           Language.Haskell.Liquid.Bare
 import qualified Language.Haskell.Liquid.Bare.Resolve as Resolve
 import           Language.Haskell.Liquid.UX.CmdLine
 import           Language.Haskell.Liquid.UX.Config
+import           Language.Haskell.Liquid.RefCore.Misc (TypeApplications) -- RefCore export metadata
 import           Language.Haskell.Liquid.RefCore.Extract (SrcInfo (..), extractCalculus, writeIlh, writeIlhBin)
 
 
@@ -441,13 +442,14 @@ liquidHaskellCheckWithConfig cfg pipelineData modSummary = do
     reportErrs :: F.PPrint e => [TError e] -> TcM (Either LiquidCheckException a)
     reportErrs  = LH.filterReportErrors thisFile GHC.failM continue (getFilters cfg) Full
 
-mkSrcInfo :: LiquidHaskellContext -> TargetInfo -> [CoreBind] -> AnnInfo SpecType -> SrcInfo
-mkSrcInfo lhContext targetInfo cbs infTypes = SrcInfo
+mkSrcInfo :: LiquidHaskellContext -> TargetInfo -> [CoreBind] -> AnnInfo SpecType -> TypeApplications -> SrcInfo
+mkSrcInfo lhContext targetInfo cbs infTypes typeApps = SrcInfo
     { s_moduleName = moduleName $ ms_mod $ lhModuleSummary lhContext
     , s_summary    = lhModuleSummary lhContext
     , s_targetInfo = targetInfo
     , s_cbs        = cbs
     , s_infTypes   = infTypes
+    , s_typeApps   = typeApps -- RefCore export metadata
     , s_imports    = lhRelevantModules lhContext
     }
 
@@ -460,16 +462,11 @@ checkLiquidHaskellContext lhContext = do
   case pmr of
     Left e -> pure $ Left e
     Right ProcessModuleResult{..} -> do
-      -- Call into the existing Liquid interface
-      (out, infTypes) <- liftIO $ LH.checkTargetInfo pmrTargetInfo
+      -- Read the extra RefCore result from the same LiquidHaskell check.
+      (out, infTypes, typeApps) <- liftIO $ LH.checkTargetInfoWithRefCore pmrTargetInfo
 
       let bareSpec = lhInputSpec lhContext
           cfg     = lhGlobalCfg lhContext
-
-      when (refcore cfg) $ liftIO $ do
-        (calcSource, meta) <- extractCalculus (mkSrcInfo lhContext pmrTargetInfo pmrRefCoreCbs infTypes)
-        writeIlhBin meta calcSource
-        when (refcoreText cfg) $ writeIlh meta calcSource
 
       withPragmas (lhGlobalCfg lhContext) (Ms.pragmas bareSpec) $ \moduleCfg ->  do
         let filters = getFilters moduleCfg
@@ -482,7 +479,13 @@ checkLiquidHaskellContext lhContext = do
         --
         -- F.Crash is also handled by reportResult and errorLogger
         case o_result out of
-          F.Safe _ -> return $ Right pmrClientLib
+          F.Safe _ -> do
+            -- Export only after reporting the unchanged checking result.
+            when (refcore cfg) $ liftIO $ do
+              (calcSource, meta) <- extractCalculus (mkSrcInfo lhContext pmrTargetInfo pmrRefCoreCbs infTypes typeApps)
+              writeIlhBin meta calcSource
+              when (refcoreText cfg) $ writeIlh meta calcSource
+            return $ Right pmrClientLib
           _ | json moduleCfg -> failM
             | otherwise -> return $ Left $ ErrorsOccurred []
 

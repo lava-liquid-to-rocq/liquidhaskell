@@ -21,9 +21,8 @@ import Text.PrettyPrint.HughesPJClass hiding (first)
 
 import Debug.Trace (trace)
 import GHC.Core
-import GHC.Core.TyCo.Rep
 import GHC.Types.Literal
-import GHC.Types.Name (NamedThing, getSrcSpan, getOccString)
+import GHC.Types.Name (NamedThing, getSrcSpan)
 import GHC.Utils.Outputable (ppr, showSDocUnsafe)
 import           Language.Haskell.Liquid.GHC.Misc (isDataConId)
 import           Language.Haskell.Liquid.Types.RType (SpecType)
@@ -32,7 +31,8 @@ import qualified Language.Haskell.Liquid.Types.Types ()
 
 import qualified Language.Haskell.Liquid.RefCore.SpecToLH as SLH
 import           Language.Haskell.Liquid.RefCore.Misc
-import           Language.Haskell.Liquid.RefCore.Names (Id, hashName, vvName)
+import           Language.Haskell.Liquid.RefCore.Simplify (typeAppMarker)
+import           Language.Haskell.Liquid.RefCore.Names (Id, hashName)
 import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
 
 -- | Constraint synonym for GHC Core binder variables
@@ -90,18 +90,20 @@ undefinedReft = Calc.mkVar "undefined"
 instance Show a => Show (AnnInfo a) where
   show (AI hm) = show (HM.toList hm)
 
+data ExtractionTypes = ExtractionTypes (AnnInfo SpecType) (M.Map Int (Either String [SpecType]))
+
 -- | Translate Haskell binders, with mutually recursive binders unsupported for now.
 -- Entry point for the translations in this module
 --
 -- > transBind(NonRec f = e) = trans(f,e)
 -- > transBind(Rec [f_1 = e_1, …, f_n = e_n]) = trans(f_1,e_1)
-transBind :: (CoreBinder b) => String -> AnnInfo SpecType -> Bind b -> Def
--- transBind _ infTypes _ | trace ("infTypes = " ++ show infTypes) False = undefined
-transBind modId infTypes binds = case binds of
+transBind :: (CoreBinder b) => String -> AnnInfo SpecType -> M.Map Int (Either String [SpecType]) -> Bind b -> Def
+transBind modId annotations typeApps binds = case binds of
   NonRec b e -> mkDef b e
   Rec [(b, e)] -> mkDef b e
   Rec defs -> error $ "Mutually recursive definitions " ++ show (map fst defs) ++ " not yet supported."
   where
+    infTypes = ExtractionTypes annotations typeApps
     mkDef b e =
       let (args, body) = flattenFun modId infTypes (f b) e
        in Def (f b) args body False
@@ -151,7 +153,7 @@ instance Pretty AppHead where
 
 -- | Flatten and translate an application, returning a structured head and
 -- surrounding let-bindings used to extract expressions from refinements
-flattenCoreApp :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> (Calc.Expr -> Calc.Expr, (AppHead, [CalcArg]))
+flattenCoreApp :: (CoreBinder b) => Id -> ExtractionTypes -> Id -> Expr b -> (Calc.Expr -> Calc.Expr, (AppHead, [CalcArg]))
 flattenCoreApp modId infTypes f e =
   let (hd, args) = apps e
       (letBindersArgs, sArgs) = first (foldr (.) id) . unzip $ map transArg args
@@ -172,7 +174,19 @@ flattenCoreApp modId infTypes f e =
     apps tm = (tm, [])
     -- Translates an argument as a let-binding context and a CalcArg
     transArg :: (CoreBinder b) => Expr b -> (Calc.Expr -> Calc.Expr, CalcArg)
-    transArg (Type t) = (id, transGHCType modId t)
+    transArg (Tick tick (Type _))
+      | Just index <- typeAppMarker tick =
+          let ExtractionTypes _ typeApps = infTypes
+              translate = SLH.transType modId (SLH.ConstrArgsCtx Nothing [])
+              typeArg = case M.lookup index typeApps of
+                Just (Right (tp : rest))
+                  | let translated = translate tp
+                  , all ((== translated) . translate) rest -> translated
+                  | otherwise -> error ("RefCore: conflicting solved types for argument " ++ show index ++ " in " ++ f)
+                Just (Left err) -> error ("RefCore: " ++ err)
+                _ -> error ("RefCore: missing metadata for type argument " ++ show index ++ " in " ++ f)
+           in (id, TypeArg typeArg)
+    transArg (Type _) = (id, TypeArg (error ("RefCore: unmarked type argument in " ++ f)))
     transArg tm = second ReftArg . extractLets $ trans modId infTypes f tm
     -- Extracts structural expressions into let-bindings
     extractLets :: Calc.Expr -> (Calc.Expr -> Calc.Expr, Calc.Reft)
@@ -222,7 +236,7 @@ toStr = showConstr . toConstr
 -- The first argument is the name of the top-level binder we are translating.
 -- Unsupported: casts, coercions, mutually recursive lets
 -- Ignored: ticks
-trans :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> Calc.Expr
+trans :: (CoreBinder b) => Id -> ExtractionTypes -> Id -> Expr b -> Calc.Expr
 trans modId _ _ (Var n)
   | M.member strippedName SLH.builtinDCs = Calc.Reft $ transName strippedName
   | isDataConId n = Calc.Reft $ Calc.DC strippedName
@@ -241,25 +255,14 @@ trans _ _ _ c@Coercion {} = error $ "coercion expression not supported: " ++ toS
 trans _ _ _ c@Cast {} = error $ "cast expression not supported: " ++ toStr c
 trans _ _ _ l@(Lam {}) = error $ "lambda-abstraction outside of let-binding not supported: " ++ toStr l
 
--- | Translate type arguments
-transGHCType :: Id -> Type -> CalcArg
-transGHCType _ (GHC.Core.TyCo.Rep.TyConApp tyCon []) =
-  TypeArg $ Calc.RefType vvName (M.findWithDefault (Calc.TC tc []) tc SLH.builtinTCs) Calc.ttTm
-  where tc = getOccString tyCon
-transGHCType _ (GHC.Core.TyCo.Rep.TyVarTy α) =
-  TypeArg $ Calc.RefType vvName (Calc.TyVar $ getOccString α) Calc.ttTm
-  {- TypeArg $ Calc.RefType vvName (Calc.TyVar $ strippedName) Calc.ttTm
-  where strippedName = stripLegalName modId $ show α -}
-transGHCType _ t = error $ "GHC Core term not supported in CoreToLH.transGHCtype: " ++ toStr t
-
 -- | Translate applications by flattening them and translating the parsed application
-transApp :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> Calc.Expr
+transApp :: (CoreBinder b) => Id -> ExtractionTypes -> Id -> Expr b -> Calc.Expr
 transApp modId infTypes f app = letBinders $ transFlattenedApp appHead sArgs
   where
     (letBinders, (appHead, sArgs)) = flattenCoreApp modId infTypes f app
 
 -- | Translate case expressions
-transCase :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> [Alt b] -> Calc.Expr
+transCase :: (CoreBinder b) => Id -> ExtractionTypes -> Id -> Expr b -> [Alt b] -> Calc.Expr
 transCase modId infTypes f e [] = trans modId infTypes f e
 -- TODO: we now support match on simple terms, so change mkCase to support it
 transCase modId infTypes f e alts = mkCaseExpr eT
@@ -272,7 +275,7 @@ transCase modId infTypes f e alts = mkCaseExpr eT
     branches = map (altToClause modId infTypes f) alts
 
 -- | Translate let bindings
-transLet :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Bind b -> Expr b -> Calc.Expr
+transLet :: (CoreBinder b) => Id -> ExtractionTypes -> Id -> Bind b -> Expr b -> Calc.Expr
 transLet modId infTypes f bind body =
   let (x, ex) = deconstructBind bind
    in case ex of
@@ -308,8 +311,8 @@ deconstructBind (Rec (_ : _)) = error "Found list of mutually recursive binders 
 deconstructBind (Rec []) = error "Found empty list of mutually recursive binders while translating."
 
 -- | Retrieves the type inferred by Liquid Haskell for a variable
-binderType :: (Show b, NamedThing b) => AnnInfo SpecType -> b -> Maybe SpecType
-binderType (AI infTypes) x =
+binderType :: (Show b, NamedThing b) => ExtractionTypes -> b -> Maybe SpecType
+binderType (ExtractionTypes (AI infTypes) _) x =
   case HM.lookup (getSrcSpan x) infTypes of
     Just [(Just qualifName, tp)] ->
       return $ assert (Text.unpack (snd $ Text.breakOnEnd (Text.singleton '.') qualifName) == show x) tp
@@ -317,7 +320,7 @@ binderType (AI infTypes) x =
     _ -> trace ("Type annotation for " ++ show x ++ " not found.") Nothing
 
 -- | Straightforward translation of Haskell cases
-altToClause :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Alt b -> Branch
+altToClause :: (CoreBinder b) => Id -> ExtractionTypes -> Id -> Alt b -> Branch
 altToClause modId infTypes f (Alt con bs e) =
   ((go con, map (\b -> (stripLegalName modId $ show b, False)) bs), Just (trans modId infTypes f e))
   where
@@ -330,7 +333,7 @@ altToClause modId infTypes f (Alt con bs e) =
 -- | Flattens and translate abstractions
 --
 -- > flattenFun(λx1. λx2.…λxn.e) = λx1…xn.trans(e)
-flattenFun :: (CoreBinder b) => Id -> AnnInfo SpecType -> Id -> Expr b -> ([Id], Calc.Expr)
+flattenFun :: (CoreBinder b) => Id -> ExtractionTypes -> Id -> Expr b -> ([Id], Calc.Expr)
 flattenFun _ _ f _ | trace ("Translatating " ++ f) False = undefined
 flattenFun modId infTypes f (Lam b e) = first ((stripLegalName modId . show) b :) $ flattenFun modId infTypes f e
 flattenFun modId infTypes f e = ([], trans modId infTypes f e)

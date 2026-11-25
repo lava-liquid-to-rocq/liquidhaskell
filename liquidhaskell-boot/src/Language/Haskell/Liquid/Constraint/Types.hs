@@ -54,6 +54,7 @@ module Language.Haskell.Liquid.Constraint.Types
   , getLocation
   ) where
 
+import Language.Haskell.Liquid.RefCore.Misc (TypeApplications) -- RefCore export metadata
 import Prelude hiding (error)
 import           Text.PrettyPrint.HughesPJ hiding ((<>))
 import qualified Data.HashMap.Strict as M
@@ -111,6 +112,8 @@ data CGEnv = CGE
   , cerr   :: !(Maybe (TError SpecType))             -- ^ error that should be reported at the user
   , cgInfo :: !TargetInfo                            -- ^ top-level TargetInfo
   , cgVar  :: !(Maybe Var)                           -- ^ top level function being checked
+  -- RefCore only: the innermost binding whose RHS is being checked.
+  , refCoreBinder :: !(Maybe Var)
   } -- deriving (Data, Typeable)
 
 instance HasConfig CGEnv where
@@ -212,6 +215,8 @@ data CGInfo = CGInfo
   , localRewrites :: !F.LocalRewritesEnv                 -- ^ set of local rewrites
   , ebinds        :: ![F.BindId]                         -- ^ existentials
   , annotMap      :: !(AnnInfo (Annot SpecType))         -- ^ source-position annotation map
+  -- RefCore only: templates observed during type application, before solving.
+  , refCoreTypeApps :: !TypeApplications
   , tyConInfo     :: !TyConMap                           -- ^ information about type-constructors
   , newTyEnv      :: !(M.HashMap Ghc.TyCon SpecType)     -- ^ Mapping of new type type constructors with their refined types.
   , termExprs     :: !(M.HashMap Var [F.Located F.Expr]) -- ^ Terminating Metrics for Recursive functions
@@ -440,7 +445,7 @@ instance NFData RInv where
   rnf (RInv x y z) = rnf x `seq` rnf y `seq` rnf z
 
 instance NFData CGEnv where
-  rnf (CGE x1 _ _ x4 x5 x55 x6 x7 x8 x9 _ _ _ x10 _ _ _ _ _ _ _ _ _ _)
+  rnf (CGE x1 _ _ x4 x5 x55 x6 x7 x8 x9 _ _ _ x10 _ _ _ _ _ _ _ _ _ _ _)
     = x1 `seq` rnf x5
          `seq` rnf x55
          `seq` rnf x6

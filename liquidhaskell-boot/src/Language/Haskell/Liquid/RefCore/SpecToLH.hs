@@ -205,6 +205,8 @@ transExp modId binder = transExpr
     transExpr :: F.Expr -> Reader InternalCont Calc.Reft
     transExpr term = ifM (internal modId term) (pure Calc.ttTm) (go term)
     go :: F.Expr -> Reader InternalCont Calc.Reft
+    go F.PTrue = pure Calc.ttTm
+    go F.PFalse = pure Calc.ffTm
     go (F.PAtom brel e1 e2) =
       Calc.Bop (transBrel brel) <$> transExpr e1 <*> transExpr e2
     go app@(F.EApp {}) = goApp (flattenFixApp app)

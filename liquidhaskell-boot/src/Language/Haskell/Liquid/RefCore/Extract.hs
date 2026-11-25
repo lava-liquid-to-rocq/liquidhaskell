@@ -14,7 +14,7 @@ module Language.Haskell.Liquid.RefCore.Extract
   , outPath
   ) where
 
-import Control.Monad (unless)
+import Control.Monad (forM_, unless, when)
 import qualified Data.Binary as Bin
 import Data.Bifunctor (bimap)
 import Data.Char (isSpace)
@@ -27,18 +27,19 @@ import qualified Text.PrettyPrint.HughesPJClass as PP
 
 import GHC.Core
 import GHC.Plugins hiding (Id, split)
-import qualified Language.Fixpoint.Types as F (Located, val)
+import qualified Language.Fixpoint.Types as F (Located, showpp, symbolString, val)
 import           Language.Fixpoint.Utils.Files (tempDirectory)
 import           Language.Haskell.Liquid.Types.RType (SpecType, TyConP (..))
 import qualified Language.Haskell.Liquid.Types.Specs as Specs
 import           Language.Haskell.Liquid.Types.Types (AnnInfo (..))
-import           Language.Haskell.Liquid.RefCore.Misc (isIgnoredBind, removeSuffix, split, stripLegalName)
+import           Language.Haskell.Liquid.RefCore.Misc (TypeApplications, isIgnoredBind, removeSuffix, split, stripLegalName)
 import           Language.Haskell.Liquid.RefCore.Names (Id)
 import qualified Language.Haskell.Liquid.RefCore.Calculus as Calc
 import qualified Language.Haskell.Liquid.RefCore.CoreToLH as CLH
 import           Language.Haskell.Liquid.RefCore.Parse
-import           Language.Haskell.Liquid.RefCore.Simplify (simplify)
+import           Language.Haskell.Liquid.RefCore.Simplify (prepareBind)
 import qualified Language.Haskell.Liquid.RefCore.SpecToLH as SLH
+import           Language.Haskell.Liquid.UX.Config (dumpNormalizedCore, getConfig)
 
 -- | Contains all information about the source Liquid Haskell file to translate
 data SrcInfo = SrcInfo
@@ -48,6 +49,7 @@ data SrcInfo = SrcInfo
   , s_cbs        :: [CoreBind]
     -- ^ Pre-'?'-elimination ANF binds, saved before 'Specs.giCbs' strips '?' for constraint generation.
   , s_infTypes   :: AnnInfo SpecType
+  , s_typeApps   :: TypeApplications
   , s_imports    :: [Module]
   }
 
@@ -70,7 +72,11 @@ extractCalculus sinfo = do
         localDecls = filterLocalPData (s_moduleName sinfo) (pb_decls pb)
         dataDecls = parsePData moduleId localDecls
         specMap = SLH.transSig moduleId Nothing <$> M.fromList (pb_specs pb)
-        lhDefs = CLH.transBind moduleId (s_infTypes sinfo) . simplify <$> filter (not . isIgnoredBind) (pb_binds pb)
+        lhDefs = translateBind <$> filter (not . isIgnoredBind) (pb_binds pb)
+        translateBind bind =
+          let (prepared, typeApps) = prepareBind adts (s_typeApps sinfo) bind
+           in CLH.transBind moduleId (s_infTypes sinfo) typeApps prepared
+        adts = Specs.gsADTs (Specs.gsName (Specs.giSpec (s_targetInfo sinfo)))
         defDecls = combineDefsAndLemmas $ pairLHDefsWithSigs moduleId lhDefs specMap (pb_vars pb)
         specSig = Specs.gsSig . Specs.giSpec $ s_targetInfo sinfo
         rawSpecs = Specs.gsTySigs specSig
@@ -85,6 +91,10 @@ extractCalculus sinfo = do
     putStrLn $ "Input file: " ++ filename
     unless (null importNames) $
       putStrLn ("Imported external files: " ++ intercalate ", " importedSourceFiles)
+    when (dumpNormalizedCore (getConfig (s_targetInfo sinfo))) $ do
+      putStrLn "RefCore solved type arguments before normalization"
+      forM_ (M.toAscList (s_typeApps sinfo)) $ \((binder, app), types) ->
+        forM_ types $ \tp -> putStrLn (F.symbolString binder ++ " / " ++ app ++ " -> " ++ F.showpp tp)
     pure (calcSource, meta)
   where
     filename = Specs.giTarget $ Specs.giSrc $ s_targetInfo sinfo

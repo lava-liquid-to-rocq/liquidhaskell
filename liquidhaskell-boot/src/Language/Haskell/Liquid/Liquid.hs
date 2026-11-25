@@ -5,14 +5,17 @@
 module Language.Haskell.Liquid.Liquid (
    -- * Checking a single module
     checkTargetInfo
+  , checkTargetInfoWithRefCore
   ) where
 
 import           Prelude hiding (error)
 import           Data.Bifunctor
 import qualified Data.HashSet as S
-import           Text.PrettyPrint.HughesPJ
+import           Text.PrettyPrint.HughesPJ hiding ((<>))
 import           Control.Monad (when)
 import qualified Data.HashMap.Strict as HashMap
+import qualified Data.Map.Strict as Map
+import Language.Haskell.Liquid.RefCore.Misc (TypeApplications) -- RefCore export metadata
 import qualified Data.Maybe as Mb
 import qualified Data.List  as L
 import qualified Language.Haskell.Liquid.UX.DiffCheck as DC
@@ -44,15 +47,22 @@ import Language.Haskell.Liquid.Types.RType (SpecType)
 checkTargetInfo :: TargetInfo -> IO (Output Doc, AnnInfo SpecType)
 --------------------------------------------------------------------------------
 checkTargetInfo info = do
-  (out, infTypes) <- check
-  when (diffcheck cfg && not (compileSpec cfg)) $ DC.saveResult tgt out
+  (out, infTypes, _) <- checkTargetInfoWithRefCore info
   pure (out, infTypes)
+
+-- The additional result is consumed only by the RefCore exporter. Keep the
+-- original checking and annotation interface for other callers.
+checkTargetInfoWithRefCore :: TargetInfo -> IO (Output Doc, AnnInfo SpecType, TypeApplications)
+checkTargetInfoWithRefCore info = do
+  result@(out, _, _) <- check
+  when (diffcheck cfg && not (compileSpec cfg)) $ DC.saveResult tgt out
+  pure result
   where
-    check :: IO (Output Doc, AnnInfo SpecType)
+    check :: IO (Output Doc, AnnInfo SpecType, TypeApplications)
     check
       | compileSpec cfg = do
         -- donePhase Loud "Only compiling specifications [skipping verification]"
-        pure (mempty { o_result = F.Safe mempty }, mempty)
+        pure (mempty { o_result = F.Safe mempty }, mempty, mempty)
       | otherwise = do
         when (loggingVerbosity cfg == Normal) $ do
           F.donePhase F.Loud "Extracted Core using GHC"
@@ -92,13 +102,16 @@ maybeEither :: a -> Maybe b -> Either a [b]
 maybeEither d Nothing  = Left d
 maybeEither _ (Just x) = Right [x]
 
-liquidQueries :: Config -> FilePath -> TargetInfo -> Either [CoreBind] [DC.DiffCheck] -> IO (Output Doc, AnnInfo SpecType)
+liquidQueries :: Config -> FilePath -> TargetInfo -> Either [CoreBind] [DC.DiffCheck] -> IO (Output Doc, AnnInfo SpecType, TypeApplications)
 liquidQueries cfg tgt info (Left cbs')
   = liquidQuery cfg tgt info (Left cbs')
 liquidQueries cfg tgt info (Right dcs)
-  = mconcat <$> mapM (liquidQuery cfg tgt info . Right) dcs
+  = foldr mergeResults (mempty, mempty, mempty) <$> mapM (liquidQuery cfg tgt info . Right) dcs
+  where
+    -- Each query has its own Fixpoint solution, so merge only solved records.
+    mergeResults (a, b, apps) (a', b', apps') = (a <> a', b <> b', Map.unionWith (++) apps apps')
 
-liquidQuery   :: Config -> FilePath -> TargetInfo -> Either [CoreBind] DC.DiffCheck -> IO (Output Doc, AnnInfo SpecType)
+liquidQuery   :: Config -> FilePath -> TargetInfo -> Either [CoreBind] DC.DiffCheck -> IO (Output Doc, AnnInfo SpecType, TypeApplications)
 liquidQuery cfg tgt info edc = do
   let names   = either (const Nothing) (Just . map show . DC.checkedVars)   edc
   let oldOut  = either (const mempty)  DC.oldOutput                         edc
@@ -110,8 +123,8 @@ liquidQuery cfg tgt info edc = do
   when False (dumpCs cgi)
   -- whenLoud $ mapM_ putStrLn [ "****************** CGInfo ********************"
                             -- , render (pprint cgi)                            ]
-  out        <- timedAction names $ solveCs cfg tgt cgi info3 names
-  return      $ mconcat [(oldOut, mempty), out]
+  (out, annotations, apps) <- timedAction names $ solveCs cfg tgt cgi info3 names
+  return (oldOut <> out, annotations, apps)
 
 updTargetInfoTermVars    :: TargetInfo -> TargetInfo
 updTargetInfoTermVars i  = updInfo i  (ST.terminationVars i)
@@ -132,7 +145,7 @@ dumpCs cgi = do
 pprintMany :: (PPrint a) => [a] -> Doc
 pprintMany xs = vcat [ F.pprint x $+$ text " " | x <- xs ]
 
-solveCs :: Config -> FilePath -> CGInfo -> TargetInfo -> Maybe [String] -> IO (Output Doc, AnnInfo SpecType)
+solveCs :: Config -> FilePath -> CGInfo -> TargetInfo -> Maybe [String] -> IO (Output Doc, AnnInfo SpecType, TypeApplications)
 solveCs cfg tgt cgi info names = do
   finfo            <- cgInfoFInfo info cgi
   let fcfg          = fixConfig tgt cfg
@@ -149,7 +162,9 @@ solveCs cfg tgt cgi info names = do
   let lErrors       = applySolution finfo sol <$> logErrors cgi
   let resModel      = resModel' `addErrors` (e2u cfg <$> lErrors)
   let (out0, infTypes) = mkOutput cfg resModel finfo sol (annotMap cgi)
-  return (out0 { o_vars    = names    } { o_result  = resModel }, infTypes)
+  -- Export solved arguments before the lossy source-annotation cleanup.
+  let typeApps = applySolution finfo sol <$> refCoreTypeApps cgi
+  return (out0 { o_vars    = names    } { o_result  = resModel }, infTypes, typeApps)
 
 
 e2u :: Config -> Error -> UserError
